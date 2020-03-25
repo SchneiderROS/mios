@@ -13,3 +13,7 @@ feature_impedance
 feature_collision_detection
 feature_force_control
 telepresence
+place_object
+move_trajectory
+move_to_location
+fetch_object

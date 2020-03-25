@@ -31,6 +31,9 @@ bool telepresence_master::read_skill_parameters(const nlohmann::json &p){
     if(!cpp_utils::read_json_param<double,6,1>(p,"K_joystick_off",c->K_joystick_off)){
         c->K_joystick_off.setZero();
     }
+    if(!cpp_utils::read_json_param<double,4,4>(p,"EE_T_J",c->EE_T_J)){
+        c->EE_T_J=Eigen::Matrix<double,4,4>::Identity();
+    }
     std::string mode;
     if(!cpp_utils::read_json_param(p,"mode",mode)){
         cpp_utils::print_error("Missing parameter: mode");

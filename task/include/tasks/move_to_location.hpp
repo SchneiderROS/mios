@@ -7,7 +7,6 @@ namespace mios{
 class move_to_location : public Task{
 public:
 move_to_location();
-~move_to_location();
 void initialize_task();
 void execute_task();
 const EvalTask& evaluate_task();

@@ -2,11 +2,9 @@
 namespace mios{
 place_object::place_object():Task("place_object"){
 }
-place_object::~place_object(){
-}
 void place_object::initialize_task(){
-    this->create_subtask(new move_to_location(),"move");
-    this->create_subtask(new move_to_cart_pose(),"retreat");
+    this->create_subtask<move_to_location>("move");
+    this->create_subtask<move_to_cart_pose>("retreat");
 }
 void place_object::execute_task(){
     if(!this->is_grasping()){

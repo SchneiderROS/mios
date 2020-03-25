@@ -2,11 +2,9 @@
 namespace mios{
 fetch_object::fetch_object():Task("fetch_object"){
 }
-fetch_object::~fetch_object(){
-}
 void fetch_object::initialize_task(){
-    this->create_subtask(new move_to_location(),"move");
-    this->create_subtask(new move_to_cart_pose(),"retreat");
+    this->create_subtask<move_to_location>("move");
+    this->create_subtask<move_to_cart_pose>("retreat");
 }
 void fetch_object::execute_task(){
 

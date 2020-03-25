@@ -2,11 +2,9 @@
 namespace mios{
 move_to_location::move_to_location():Task("move_to_location"){
 }
-move_to_location::~move_to_location(){
-}
 void move_to_location::initialize_task(){
-    this->create_skill(new move_to_pose,"move_cart");
-    this->create_skill(new move_to_pose_joint,"move_joint");
+    this->create_skill<move_to_pose_cart>("move_cart");
+    this->create_skill<move_to_pose_joint>("move_joint");
 }
 void move_to_location::execute_task(){
 
@@ -42,7 +40,6 @@ bool move_to_location::read_parameters(const nlohmann::json& params){
     if(!cpp_utils::read_json_param<int>(params,"loc_cart",this->loc_cart)){
         this->loc_cart.resize(0);
     }
-    std::cout<<"move: "<<params<<std::endl;
     if(this->loc_cart.size()!=this->loc_intermediate.size()+1){
         cpp_utils::print_error("Size of loc_cart must be the size of loc_intermediate plus one.");
         return false;

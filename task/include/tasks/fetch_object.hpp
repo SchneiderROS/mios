@@ -9,7 +9,6 @@ namespace mios{
 class fetch_object : public Task{
 public:
 fetch_object();
-~fetch_object();
 void initialize_task();
 void execute_task();
 const EvalTask& evaluate_task();

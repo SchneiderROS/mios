@@ -248,8 +248,8 @@ void mp_telepresence::joystick_mode(const Percept &p, std::vector<double> &paylo
         Eigen::Matrix<double,6,1> O_dX_d=cpp_utils::rotate_vector(EE_dX_d,O_T_EE); // Transform incoming velocity form master into O frame
         Eigen::Matrix<double,6,1> EE_F_ext=-Eigen::Matrix<double,6,1>(p.K_F_ext); // Transform into EE frame
         Eigen::Matrix<double,6,1> deadzone;
-        //        deadzone<<0.005,0.005,0.005,0.1,0.08,0.05; // Define deadzone for joystick control. If the Cartesian error of the master is within this margin, the command is set to zero.
-        deadzone<<0.005,0.005,0.005,0.005,0.005,0.005; // Define deadzone for joystick control. If the Cartesian error of the master is within this margin, the command is set to zero.
+                deadzone<<0.008,0.008,0.008,0.1,0.08,0.05; // Define deadzone for joystick control. If the Cartesian error of the master is within this margin, the command is set to zero.
+//        deadzone<<0.005,0.005,0.005,0.005,0.005,0.005; // Define deadzone for joystick control. If the Cartesian error of the master is within this margin, the command is set to zero.
         for(unsigned i=0;i<6;i++){
             double diff=O_dX_d(i)/10; // Calculate back from velocity to difference for deadzone application
             if(fabs(diff)<deadzone(i)){ // If the difference is smaller than the deadzone...

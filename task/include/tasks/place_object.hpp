@@ -9,7 +9,6 @@ namespace mios{
 class place_object : public Task{
 public:
 place_object();
-~place_object();
 void initialize_task();
 void execute_task();
 const EvalTask& evaluate_task();

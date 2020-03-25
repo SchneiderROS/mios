@@ -5,13 +5,13 @@ move_trajectory::move_trajectory():Task("move_trajectory"){
 move_trajectory::~move_trajectory(){
 }
 void move_trajectory::initialize_task(){
-    this->create_skill(new follow_trajectory(),"move");
+    this->create_skill<follow_trajectory>("move");
 }
 void move_trajectory::execute_task(){
-    static_cast<ConfigSkill_follow_trajectory*>(this->get_skill("move")->get_config())->locations=this->locations;
-    static_cast<ConfigSkill_follow_trajectory*>(this->get_skill("move")->get_config())->speed=this->speed;
-    static_cast<ConfigSkill_follow_trajectory*>(this->get_skill("move")->get_config())->acc=this->acc;
-    static_cast<ConfigSkill_follow_trajectory*>(this->get_skill("move")->get_config())->flag_cart=this->flag_cart;
+    std::static_pointer_cast<ConfigSkill_follow_trajectory>(this->get_skill("move")->get_config())->locations=this->locations;
+    std::static_pointer_cast<ConfigSkill_follow_trajectory>(this->get_skill("move")->get_config())->speed=this->speed;
+    std::static_pointer_cast<ConfigSkill_follow_trajectory>(this->get_skill("move")->get_config())->acc=this->acc;
+    std::static_pointer_cast<ConfigSkill_follow_trajectory>(this->get_skill("move")->get_config())->flag_cart=this->flag_cart;
     this->execute_skill("move");
 }
 const EvalTask& move_trajectory::evaluate_task(){
