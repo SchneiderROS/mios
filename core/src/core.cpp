@@ -7,19 +7,16 @@
 #include "cpp_utils/json.hpp"
 #include "cpp_utils/system.hpp"
 #include "utils/exceptions.hpp"
-
 #include "skill/skill.hpp"
+
 #include <iostream>
 #include <chrono>
 #include <fstream>
-#include <pwd.h>
+#include <thread>
 
-#include <pthread.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
-
-#include <spdlog/spdlog.h>
-
 #include <limits.h>
 #include <unistd.h>
 #include <functional>
@@ -27,11 +24,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 
-#include <boost/bind.hpp>
-#include <boost/numeric/ublas/io.hpp>
-#include <boost/numeric/ublas/assignment.hpp>
-
-#include <boost/chrono.hpp>
+#include <spdlog/spdlog.h>
 
 namespace mios {
 
@@ -1063,18 +1056,18 @@ bool Core::start_control_cycle(){
                 }
 
                 if(this->_kb->get_local_memory()->access_config_system().has_simulation){
-                    this->sim_control(boost::bind(&Core::control_cycle_torque_cart,this,_1));
+                    this->sim_control(std::bind(&Core::control_cycle_torque_cart,this,std::placeholders::_1));
                 }else if(this->_kb->get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(boost::bind(&Core::control_cycle_torque_cart,this,_1));
+                    this->_robot->control(std::bind(&Core::control_cycle_torque_cart,this,std::placeholders::_1));
                 }else{
-                    this->dummy_control(boost::bind(&Core::control_cycle_torque_cart,this,_1));
+                    this->dummy_control(std::bind(&Core::control_cycle_torque_cart,this,std::placeholders::_1));
                 }
             }
             else if(this->_kb->get_local_memory()->access_config_general().control_mode==1){
                 if(this->_kb->get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(boost::bind(&Core::control_cycle_velocity_cart,this,_1));
+                    this->_robot->control(std::bind(&Core::control_cycle_velocity_cart,this,std::placeholders::_1));
                 }else{
-                    this->dummy_control(boost::bind(&Core::control_cycle_velocity_cart,this,_1));
+                    this->dummy_control(std::bind(&Core::control_cycle_velocity_cart,this,std::placeholders::_1));
                 }
             }
             else if(this->_kb->get_local_memory()->access_config_general().control_mode==2){
@@ -1091,18 +1084,18 @@ bool Core::start_control_cycle(){
                 }
 
                 if(this->_kb->get_local_memory()->access_config_system().has_simulation){
-                    this->sim_control(boost::bind(&Core::control_cycle_torque_joint,this,_1));
+                    this->sim_control(std::bind(&Core::control_cycle_torque_joint,this,std::placeholders::_1));
                 }else if(this->_kb->get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(boost::bind(&Core::control_cycle_torque_joint,this,_1));
+                    this->_robot->control(std::bind(&Core::control_cycle_torque_joint,this,std::placeholders::_1));
                 }else{
-                    this->dummy_control(boost::bind(&Core::control_cycle_torque_joint,this,_1));
+                    this->dummy_control(std::bind(&Core::control_cycle_torque_joint,this,std::placeholders::_1));
                 }
             }
             else if(this->_kb->get_local_memory()->access_config_general().control_mode==3){
                 if(this->_kb->get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(boost::bind(&Core::control_cycle_velocity_joint,this,_1));
+                    this->_robot->control(std::bind(&Core::control_cycle_velocity_joint,this,std::placeholders::_1));
                 }else{
-                    this->dummy_control(boost::bind(&Core::control_cycle_velocity_joint,this,_1));
+                    this->dummy_control(std::bind(&Core::control_cycle_velocity_joint,this,std::placeholders::_1));
                 }
             }
             else{
@@ -1580,7 +1573,7 @@ void Core::cycle_led(std::function<LEDCmd(const Percept& p)> callback_led){
 }
 
 void Core::cycle_led_wrapper(std::shared_ptr<LEDPattern> p){
-    this->cycle_led(boost::bind(&LEDPattern::cycle_led,p.get(),&this->_percept));
+    this->cycle_led(std::bind(&LEDPattern::cycle_led,p.get(),&this->_percept));
 }
 
 void Core::cycle_sound(std::function<SoundCmd(const Percept& p)> callback_sound){
