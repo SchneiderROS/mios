@@ -89,9 +89,9 @@ add_subdirectory(plugins/cntr_nullsp_proj)
 include_directories(${cntr_nullsp_proj_INCLUDE_DIRS})
 link_directories(${cntr_nullsp_proj_LIBRARIES})
 
-#add_subdirectory(plugins/wave_variables)
-#include_directories(${wave_variables_INCLUDE_DIRS})
-#link_directories(${wave_variables_LIBRARIES})
+add_subdirectory(plugins/wave_variables)
+include_directories(${wave_variables_INCLUDE_DIRS})
+link_directories(${wave_variables_LIBRARIES})
 
 add_subdirectory(
     led_pattern
