@@ -13,6 +13,7 @@ sudo apt-get install -y python3-pip
 sudo -H pip install -U pymongo
 sudo -H pip install -U werkzeug
 sudo -H pip install -U json-rpc
+sudo -H pip install -U websockets
 
 
 n_cpu_total=$(nproc --all)
@@ -93,4 +94,4 @@ make -j$(nproc --all)
 sudo make install
 
 cd ../..
-sudo rm -r Simple-WebSocket-Server.git
+sudo rm -r Simple-WebSocket-Server
