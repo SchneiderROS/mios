@@ -333,18 +333,12 @@ void mp_telepresence::joystick_mode(const Percept &p, std::vector<double> &paylo
         Eigen::Matrix<double,6,1> J_dX_d=Eigen::Matrix<double,6,1>(this->_O_dX_d_in[0].data());
         Eigen::Matrix<double,6,1> EE_e=cpp_utils::rotate_vector(this->_motion_error_0_y.e,cpp_utils::invert_transformation_matrix(O_T_EE));
         Eigen::Matrix<double,3,1> J_e=EE_T_J_r.transpose()*EE_e.block<3,1>(3,0);
-
         for(unsigned i=0;i<3;i++){
             if(J_e(i)<=this->_rot_limits(2*i) && J_dX_d(i+3)>0){
                 J_dX_d(i+3)=0;
             }
             if(J_e(i)>=this->_rot_limits(2*i+1) && J_dX_d(i+3)<0){
                 J_dX_d(i+3)=0;
-            }
-        }
-        for(unsigned i=0;i<6;i++){
-            if(!this->_joystick_selector(i)){
-                J_dX_d(i)=0;
             }
         }
 
@@ -354,6 +348,11 @@ void mp_telepresence::joystick_mode(const Percept &p, std::vector<double> &paylo
         EE_dX_r_d=EE_T_J_r*J_dX_d.block<3,1>(3,0);
         EE_dX_d<<EE_dX_t_d,EE_dX_r_d;
 
+        for(unsigned i=0;i<6;i++){
+            if(!this->_joystick_selector(i)){
+                EE_dX_d(i)=0;
+            }
+        }
         double F_thr=5;
         double sigma;
         Eigen::Matrix<double,6,1> F_e=-p.K_F_ext;

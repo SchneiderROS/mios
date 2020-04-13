@@ -10,22 +10,24 @@ EventPublisher& EventPublisher::get(){
     return instance;
 }
 
-void EventPublisher::publish_event(const char *event){
+void EventPublisher::publish_event(const nlohmann::json& event){
     get().i_publish_event(event);
 }
 
-void EventPublisher::subscribe(const char *subscriber){
-    get().subscribe(subscriber);
+void EventPublisher::subscribe(const std::pair<std::string,unsigned>& subscriber){
+    get().i_subscribe(subscriber);
 }
 
-void EventPublisher::i_publish_event(const char *event){
-    for(const char* addr : m_subscribers){
+void EventPublisher::i_publish_event(const nlohmann::json &event){
+    for(const std::pair<std::string,unsigned>& url : m_subscribers){
         nlohmann::json response;
-        cpp_utils::rpc_call(addr,10000,"event",{event},response);
+        if(!cpp_utils::rpc_call(url.first,url.second,"event",{event},response)){
+
+        }
     }
 }
 
-void EventPublisher::i_subscribe(const char *subscriber){
+void EventPublisher::i_subscribe(const std::pair<std::string, unsigned> &subscriber){
     m_subscribers.insert(subscriber);
 }
 

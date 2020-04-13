@@ -1,5 +1,9 @@
 #include "interface/interface.hpp"
 
+#include "event_publisher/event_publisher.hpp"
+#include "cpp_utils/network.hpp"
+#include "core/core.hpp"
+#include "task/task_handler.hpp"
 namespace mios {
 
 Interface::Interface(){
@@ -40,6 +44,7 @@ void Interface::bind_methods(){
     this->_ws_server->bind_method("wait_for_task",std::bind(&Interface::wait_for_task,this,std::placeholders::_1),{"task_uuid"});
     this->_ws_server->bind_method("check_if_task_finished",std::bind(&Interface::check_if_task_finished,this,std::placeholders::_1),{"task_uuid"});
     this->_ws_server->bind_method("is_busy",std::bind(&Interface::is_busy,this,std::placeholders::_1),{});
+    this->_ws_server->bind_method("subscribe_to_event_stream",std::bind(&Interface::subscribe_to_event_stream,this,std::placeholders::_1),{"address","port"});
 
     this->_ws_server->bind_method("set_grasped_object",std::bind(&Interface::set_grasped_object,this,std::placeholders::_1),{"object"});
     this->_ws_server->bind_method("grasp_object",std::bind(&Interface::grasp_object,this,std::placeholders::_1),{"object","width","speed","force","check_width"});
@@ -344,12 +349,24 @@ nlohmann::json Interface::get_state(const nlohmann::json &request){
         const Percept p = this->_core->request_percept(this->_core->get_kb()->get_local_memory()->access_config_frames().O_R_TF);
         cpp_utils::write_json_array<double,7,1>(response["q"],p.q);
         cpp_utils::write_json_array<double,4,4>(response["O_T_EE"],p.O_T_EE);
+        response["grasped_object"]=this->_core->get_mios_state()->grasped_object;
         response["active_task"]=p.mios_state.active_task;
         response["result"]=true;
     }catch(const CoreException& e){
         response["error"]=e.what();
         response["result"]=false;
     }
+    return response;
+}
+
+nlohmann::json Interface::subscribe_to_event_stream(const nlohmann::json &request){
+    nlohmann::json response;
+    std::string address;
+    unsigned port;
+    request["address"].get_to(address);
+    request["port"].get_to(port);
+    std::cout<<"SUBSCRIBING AS "<<request<<std::endl;
+    EventPublisher::subscribe(std::pair<std::string,unsigned>(address,port));
     return response;
 }
 

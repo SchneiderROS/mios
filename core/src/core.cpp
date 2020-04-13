@@ -8,6 +8,7 @@
 #include "cpp_utils/system.hpp"
 #include "utils/exceptions.hpp"
 #include "skill/skill.hpp"
+#include "event_publisher/event_publisher.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -993,6 +994,7 @@ bool Core::start_control_cycle(){
     this->_flag_stop_control=false;
     this->_flag_virt_cube_valid=false;
     this->_flag_virt_walls_joint_valid=false;
+    this->t_event=std::chrono::system_clock::now();
 
     this->_last_error="none";
 
@@ -1540,6 +1542,12 @@ void Core::process_percept(const franka::RobotState &state, const franka::Grippe
     // post telemetry
     this->_telemetry.q[0]={state.q[0],state.q[1],state.q[2],state.q[3],state.q[4],state.q[5],state.q[6]};
     this->_telemetry.tau_ext[0]={state.tau_ext_hat_filtered[0],state.tau_ext_hat_filtered[1],state.tau_ext_hat_filtered[2],state.tau_ext_hat_filtered[3],state.tau_ext_hat_filtered[4],state.tau_ext_hat_filtered[5],state.tau_ext_hat_filtered[6]};
+    auto t_diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-t_event);
+    if(t_diff.count()>100){
+        std::thread event_thread(&EventPublisher::publish_event,this->event);
+        event_thread.detach();
+        this->t_event = std::chrono::system_clock::now();
+    }
 
 }
 
@@ -2030,16 +2038,21 @@ void Core::check_cartesian_velocity_workspace(Eigen::Matrix<double, 6, 1> &TF_dX
     Eigen::Matrix<double,6,1> VC_dX_d = cpp_utils::rotate_vector(TF_dX_d,cpp_utils::invert_transformation_matrix(this->get_kb()->get_local_memory()->access_config_frames().O_T_VC));
     Eigen::Matrix<double,3,1> VC_x = cpp_utils::invert_transformation_matrix(this->get_kb()->get_local_memory()->access_config_frames().O_T_VC).block<3,3>(0,0)*p.TF_T_EE.block<3,1>(0,3);
     bool stop=false;
+    this->event["wall_hit"]={false,false,false,false,false,false};
     for(unsigned i=0;i<3;i++){
         if(VC_x(i)<=this->get_kb()->get_local_memory()->access_config_user().x_limits(2*i) && VC_dX_d(i)<0){
             stop=true;
+            VC_dX_d(i)=0;
+            this->event["wall_hit"][2*i]=true;
         }
         if(VC_x(i)>=this->get_kb()->get_local_memory()->access_config_user().x_limits(2*i+1) && VC_dX_d(i)>0){
             stop=true;
+            VC_dX_d(i)=0;
+            this->event["wall_hit"][2*i+1]=true;
         }
     }
     if(stop){
-        VC_dX_d.setZero();
+//        VC_dX_d.setZero();
     }
     TF_dX_d=cpp_utils::rotate_vector(VC_dX_d,this->get_kb()->get_local_memory()->access_config_frames().O_T_VC);
 }

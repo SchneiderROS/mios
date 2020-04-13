@@ -7,7 +7,6 @@ namespace mios {
 class handover_object : public Task{
 public:
     handover_object();
-    ~handover_object();
     void initialize_task();
     void execute_task();
     const EvalTask& evaluate_task();

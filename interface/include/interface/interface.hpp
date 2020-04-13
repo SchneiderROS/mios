@@ -1,12 +1,13 @@
 #pragma once
 
 #include <memory>
-
-#include "cpp_utils/network.hpp"
-#include "core/core.hpp"
-#include "task/task_handler.hpp"
-
+#include <nlohmann/json.hpp>
+namespace cpp_utils{
+class JsonWebsocketServer;
+}
 namespace mios {
+class Core;
+class TaskHandler;
 
 class Interface{
 public:
@@ -26,6 +27,8 @@ private:
     nlohmann::json wait_for_task(const nlohmann::json& request);
     nlohmann::json check_if_task_finished(const nlohmann::json& request);
     nlohmann::json is_busy(const nlohmann::json& request);
+
+    nlohmann::json subscribe_to_event_stream(const nlohmann::json& request);
 
     nlohmann::json set_grasped_object(const nlohmann::json& request);
     nlohmann::json grasp_object(const nlohmann::json& request);

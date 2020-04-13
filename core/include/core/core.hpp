@@ -4,6 +4,7 @@
 #include <string.h>
 #include <tuple>
 #include <memory>
+#include <chrono>
 
 #include <franka/robot.h>
 #include <franka/gripper.h>
@@ -274,6 +275,8 @@ private:
     std::shared_ptr<Skill> _active_skill;
 
     std::map<std::string,unsigned> _led_panel_id;
+    nlohmann::json event;
+    std::chrono::system_clock::time_point t_event;
 
 };
 

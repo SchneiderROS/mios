@@ -15,7 +15,6 @@ struct ConfigSkill_gesture_haptic : public ConfigSkill{
 class gesture_haptic : public Skill{
 public:
     gesture_haptic();
-    ~gesture_haptic();
 
     void evaluate();
     bool read_skill_parameters(const nlohmann::json& p);

@@ -6,10 +6,6 @@ gesture_haptic::gesture_haptic():Skill("gesture_haptic"){
 
 }
 
-gesture_haptic::~gesture_haptic(){
-
-}
-
 bool gesture_haptic::read_skill_parameters(const nlohmann::json &p){
 
     std::shared_ptr<ConfigSkill_gesture_haptic> c = this->get_config<ConfigSkill_gesture_haptic>();
@@ -74,13 +70,14 @@ void gesture_haptic::auxiliaries(const Percept &p){
         if(c->F_trigger(i)==0){
             continue;
         }
-        if(p.TF_F_ext(i)>c->F_trigger(i)&&c->dir_trigger(i)==1){
+        if(p.K_F_ext(i)>c->F_trigger(i)&&c->dir_trigger(i)==1){
             this->_triggered(i)=true;
         }
-        if(p.TF_F_ext(i)<-c->F_trigger(i)&&c->dir_trigger(i)==-1){
+        if(p.K_F_ext(i)<-c->F_trigger(i)&&c->dir_trigger(i)==-1){
             this->_triggered(i)=true;
         }
-        if((p.TF_F_ext(i)>c->F_trigger(i) || p.TF_F_ext(i)<-c->F_trigger(i)) && c->dir_trigger(i)==0){
+        if((p.K_F_ext(i)>c->F_trigger(i) || p.K_F_ext(i)<-c->F_trigger(i)) && c->dir_trigger(i)==0){
+            std::cout<<"TRIGGERED"<<std::endl;
             this->_triggered(i)=true;
         }
 

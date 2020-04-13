@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <set>
+#include <nlohmann/json.hpp>
 
 namespace mios {
 
@@ -11,14 +12,15 @@ public:
 
     static EventPublisher& get();
 
-    static void publish_event(const char* event);
-    static void subscribe(const char* subscriber);
+    static void publish_event(const nlohmann::json& event);
+    static void subscribe(const std::pair<std::string, unsigned> &subscriber);
 private:
-    void i_publish_event(const char* event);
-    void i_subscribe(const char* subscriber);
+    void i_publish_event(const nlohmann::json& event);
+    void i_subscribe(const std::pair<std::string,unsigned>&  subscriber);
     EventPublisher(){}
 
-    std::set<const char*> m_subscribers;
+    nlohmann::json events;
+    std::set<std::pair<std::string,unsigned> > m_subscribers;
 };
 
 }

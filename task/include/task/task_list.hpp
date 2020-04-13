@@ -21,6 +21,7 @@
 #include "tasks/move_to_location.hpp"
 #include "tasks/fetch_object.hpp"
 #include "tasks/guiding_mode.hpp"
+#include "tasks/handover_object.hpp"
 namespace mios{
 struct TaskList{
 TaskList();

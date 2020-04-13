@@ -18,3 +18,4 @@ move_trajectory
 move_to_location
 fetch_object
 guiding_mode
+handover_object

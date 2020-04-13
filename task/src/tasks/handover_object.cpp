@@ -4,14 +4,12 @@ namespace mios {
 
 handover_object::handover_object():Task("handover_object"){
 }
-handover_object::~handover_object(){
-}
 void handover_object::initialize_task(){
-    this->create_skill(new gesture_haptic(),"handover");
+    this->create_skill<gesture_haptic>("handover");
 }
 void handover_object::execute_task(){
 
-    static_cast<Config_gesture_haptic*>(this->get_skill("handover")->get_config())->wait_for_relax=this->wait_for_relax;
+    std::static_pointer_cast<ConfigSkill_gesture_haptic>(this->get_skill("handover")->get_config())->wait_for_relax=this->wait_for_relax;
     if(!this->is_grasping()){
         this->move_gripper(0.07,2);
         this->execute_skill("handover");

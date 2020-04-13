@@ -21,5 +21,6 @@ this->tasks.insert(std::pair<std::string,std::shared_ptr<Task> >("move_trajector
 this->tasks.insert(std::pair<std::string,std::shared_ptr<Task> >("move_to_location",std::make_shared<move_to_location>()));
 this->tasks.insert(std::pair<std::string,std::shared_ptr<Task> >("fetch_object",std::make_shared<fetch_object>()));
 this->tasks.insert(std::pair<std::string,std::shared_ptr<Task> >("guiding_mode",std::make_shared<guiding_mode>()));
+this->tasks.insert(std::pair<std::string,std::shared_ptr<Task> >("handover_object",std::make_shared<handover_object>()));
 }
 }
