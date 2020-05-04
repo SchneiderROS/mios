@@ -27,7 +27,7 @@ private:
 
 class TaskHandler{
 public:
-    TaskHandler(std::shared_ptr<Core> core);
+    TaskHandler(Core* core);
     ~TaskHandler();
 
     void activity();
@@ -66,7 +66,7 @@ private:
     std::mutex _mtx_task_queue;
     std::mutex _mtx_termination_phase;
 
-    std::shared_ptr<Core> _core;
+    Core* _core;
 
     std::atomic<bool> _flag_interrupt;
     std::atomic<bool> _flag_user_stop;

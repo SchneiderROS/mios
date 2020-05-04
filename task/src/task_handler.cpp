@@ -2,6 +2,7 @@
 
 #include "core/core.hpp"
 #include "task/task_list.hpp"
+#include "patterns/pattern_custom.hpp"
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -34,8 +35,7 @@ std::string TaskSubscriber::get_id(){
     return this->_id;
 }
 
-TaskHandler::TaskHandler(std::shared_ptr<Core> core){
-    this->_core=core;
+TaskHandler::TaskHandler(Core *core):_core(core){
     this->_task_list = std::make_unique<TaskList>();
     this->_active_task=nullptr;
     this->_sub.insert(std::pair<std::string,std::set<std::shared_ptr<TaskSubscriber> > >("idle_task",std::set<std::shared_ptr<TaskSubscriber> >()));

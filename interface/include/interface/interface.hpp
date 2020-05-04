@@ -11,10 +11,9 @@ class TaskHandler;
 
 class Interface{
 public:
-    Interface();
-    ~Interface();
+    Interface(unsigned port);
 
-    void initialize(std::shared_ptr<Core> core, std::shared_ptr<TaskHandler> task_handler, unsigned port);
+    void initialize(Core* core, TaskHandler* task_handler);
     void start();
     void stop();
 
@@ -67,10 +66,9 @@ private:
     nlohmann::json pack_pose(const nlohmann::json& request);
 
 
-    std::shared_ptr<msrm_utils::JsonWebsocketServer> _ws_server;
-
-    std::shared_ptr<Core> _core;
-    std::shared_ptr<TaskHandler> _task_handler;
+    msrm_utils::JsonWebsocketServer _ws_server;
+    Core* _core;
+    TaskHandler* _task_handler;
 };
 
 

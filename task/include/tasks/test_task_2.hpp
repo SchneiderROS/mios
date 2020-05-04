@@ -5,7 +5,6 @@ namespace mios{
 class test_task_2 : public Task{
 public:
 test_task_2();
-~test_task_2();
 void initialize_task();
 void execute_task();
 void recover_task();

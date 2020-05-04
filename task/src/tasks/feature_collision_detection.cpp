@@ -1,4 +1,7 @@
 #include "tasks/feature_collision_detection.hpp"
+#include "skills/move_to_pose_cart.hpp"
+#include "skills/move_to_pose_joint.hpp"
+#include "skills/gesture_haptic.hpp"
 
 namespace mios {
 

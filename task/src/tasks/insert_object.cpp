@@ -1,11 +1,12 @@
 #include "tasks/insert_object.hpp"
+#include "skills/move_to_pose_joint.hpp"
+#include "skills/move_to_contact.hpp"
+#include "skills/insertion.hpp"
+#include "skills/move_to_pose_cart.hpp"
 
-#include "franka/exception.h"
 namespace mios {
 
 insert_object::insert_object():Task("insert_object"){
-}
-insert_object::~insert_object(){
 }
 void insert_object::initialize_task(){
 
@@ -14,9 +15,6 @@ void insert_object::initialize_task(){
     this->create_skill<move_to_contact>("contact");
     this->create_skill<insertion>("insertion");
     this->create_skill<move_to_pose_cart>("realign");
-    this->create_skill<extraction>("extraction");
-    this->create_skill<motions_generic_wiggle>("motion_success");
-    this->create_skill<motions_generic_wiggle>("motion_failure");
 }
 void insert_object::execute_task(){
 
@@ -44,7 +42,6 @@ void insert_object::execute_task(){
     colors["middle"]={0,0,100};
     colors["right"]={0,0,100};
     colors["far-right"]={0,0,100};
-    this->load_led_pattern(std::shared_ptr<pattern_custom>(new pattern_custom(colors)));
     this->get_skill("approach_joint")->set_object("loc_goal",this->_hole);
     this->get_skill("approach")->set_object("loc_goal",this->_hole);
     this->get_skill("contact")->set_object("surface",this->_hole);
@@ -60,7 +57,7 @@ void insert_object::execute_task(){
     std::static_pointer_cast<ConfigSkill_move_to_pose_cart>(this->get_skill("approach")->get_config())->TF_g_offset=msrm_utils::rotate_matrix(O_T_offset,msrm_utils::invert_matrix(this->get_skill("approach")->get_config()->frames.O_R_TF));
 
     double d_hole;
-    if(!msrm_utils::find_json_value(this->get_skill("insertion")->get_object("hole").geometry,"depth")){
+    if(this->get_skill("insertion")->get_object("hole").geometry.find("depth")==this->get_skill("insertion")->get_object("hole").geometry.end()){
         msrm_utils::print_error("Object "+this->get_skill("insertion")->get_object("hole").name+" has no geometry property <depth>.");
         throw TaskException("Object "+this->get_skill("insertion")->get_object("hole").name+" has no geometry property <depth>.");
     }
@@ -113,46 +110,9 @@ void insert_object::execute_task(){
     }
 
     return;
-
-    Object o;
-    this->_kb->load_object(this->_hole,o);
-    if(this->_extract || !this->get_skill("insertion")->get_eval().success){
-        this->set_state("extraction");
-        while(!this->get_skill("extraction")->get_eval().success && !this->get_stop_flag()){
-            std::static_pointer_cast<ConfigSkill_move_to_pose_cart>(this->get_skill("realign")->get_config())->TF_T_EE_g=this->_kb->transform_to_EE(o.TF_T_o(this->get_skill("realign")->get_config()->frames.O_R_TF));
-            std::static_pointer_cast<ConfigSkill_move_to_pose_cart>(this->get_skill("realign")->get_config())->TF_T_EE_g.block<3,1>(0,3)=this->request_percept(this->get_skill("realign")->get_config()->frames.O_R_TF).TF_T_EE.block<3,1>(0,3);
-            this->execute_skill("realign");
-            this->execute_skill("extraction");
-        }
-    }
-
-    this->set_state("Finished");
-    if(this->_emotions){
-        if(this->get_skill("insertion")->get_eval().success){
-            this->_kb->set_event("inserted","success");
-            this->load_led_pattern(std::shared_ptr<pattern_success>(new pattern_success(2)));
-            this->execute_skill("motion_success");
-            this->execute_skill("approach_joint");
-        }else{
-            this->_kb->set_event("inserted","failure");
-            this->load_led_pattern(std::shared_ptr<pattern_disappointment>(new pattern_disappointment(2)));
-            this->execute_skill("motion_failure");
-        }
-    }
-    this->load_led_pattern(std::shared_ptr<pattern_white>(new pattern_white()));
 }
 
 void insert_object::recover_task(){
-    //    Object o;
-    //    this->_kb->load_object(this->_hole,o);
-    //    if(this->get_state()=="contact" || this->get_state()=="insertion" || this->get_state()=="extraction"){
-    //        while(!this->get_skill("extraction")->get_eval().success && !this->get_stop_flag()){
-    //            static_cast<Config_move_to_pose*>(this->get_skill("realign")->get_config())->TF_T_EE_g=this->_kb->transform_to_EE(o.TF_T_o(this->get_skill("realign")->get_config()->frames.O_R_TF));
-    //            static_cast<Config_move_to_pose*>(this->get_skill("realign")->get_config())->TF_T_EE_g.block<3,1>(0,3)=this->request_percept(this->get_skill("realign")->get_config()->frames.O_R_TF).TF_T_EE.block<3,1>(0,3);
-    //            this->execute_skill("realign");
-    //            this->execute_skill("extraction");
-    //        }
-    //    }
 }
 
 const EvalTask& insert_object::evaluate_task(){
@@ -166,18 +126,8 @@ bool insert_object::read_parameters(const nlohmann::json& params){
     if(!msrm_utils::read_json_param(params,"release",this->_release)){
         this->_release=false;
     }
-    if(!msrm_utils::read_json_param(params,"extract",this->_extract)){
-        this->_extract=true;
-    }
-    //    if(this->_extract && this->_release){
-    //        msrm_utils::print_warning("Can not release and extract the object at the same time. Setting extract to false");
-    //        this->_extract=false;
-    //    }
     if(!msrm_utils::read_json_param(params,"joint",this->_joint)){
         this->_joint=false;
-    }
-    if(!msrm_utils::read_json_param(params,"emotions",this->_emotions)){
-        this->_emotions=false;
     }
     if(!msrm_utils::read_json_param(params,"object",this->_object)){
         msrm_utils::print_error("Specify object to insert.");
@@ -186,9 +136,6 @@ bool insert_object::read_parameters(const nlohmann::json& params){
     if(!msrm_utils::read_json_param(params,"hole",this->_hole)){
         msrm_utils::print_error("Specify hole in which to insert the object.");
         return false;
-    }
-    if(!this->_extract){
-        this->_emotions=false;
     }
 
     return true;

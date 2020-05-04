@@ -1,4 +1,7 @@
 #include "tasks/react_to_event.hpp"
+#include "skills/motions_generic_wiggle.hpp"
+#include "patterns/pattern_disappointment.hpp"
+#include "patterns/pattern_success.hpp"
 namespace mios{
 react_to_event::react_to_event():Task("react_to_event"){
 }

@@ -1,8 +1,7 @@
 #include "tasks/move_trajectory.hpp"
+#include "skills/follow_trajectory.hpp"
 namespace mios{
 move_trajectory::move_trajectory():Task("move_trajectory"){
-}
-move_trajectory::~move_trajectory(){
 }
 void move_trajectory::initialize_task(){
     this->create_skill<follow_trajectory>("move");

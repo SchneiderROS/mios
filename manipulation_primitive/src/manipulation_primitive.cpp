@@ -58,7 +58,7 @@ void ManipulationPrimitive::set_id(const std::string& id){
     this->_id=id;
 }
 
-void ManipulationPrimitive::set_kb(std::shared_ptr<KnowledgeBase> kb){
+void ManipulationPrimitive::set_kb(KnowledgeBase *kb){
     this->_kb=kb;
 }
 

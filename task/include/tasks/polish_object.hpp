@@ -9,7 +9,6 @@ namespace mios {
 class polish_object : public Task{
 public:
     polish_object();
-    ~polish_object();
     void initialize_task();
     void execute_task();
     const EvalTask& evaluate_task();

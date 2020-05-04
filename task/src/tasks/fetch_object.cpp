@@ -1,4 +1,6 @@
 #include "tasks/fetch_object.hpp"
+#include "tasks/move_to_location.hpp"
+#include "tasks/move_to_cart_pose.hpp"
 namespace mios{
 fetch_object::fetch_object():Task("fetch_object"){
 }

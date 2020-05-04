@@ -1,4 +1,6 @@
 #include "tasks/place_object.hpp"
+#include "tasks/move_to_location.hpp"
+#include "tasks/move_to_cart_pose.hpp"
 namespace mios{
 place_object::place_object():Task("place_object"){
 }

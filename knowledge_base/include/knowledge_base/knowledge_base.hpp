@@ -201,7 +201,7 @@ public:
      */
     Eigen::Matrix<double,4,4> transform_to_EE(const Eigen::Matrix<double,4,4>& O_T_F);
 
-    void set_live_parameter_server(std::shared_ptr<ParameterServer> server);
+    void set_live_parameter_server(ParameterServer *server);
 
     bool sync_task_with_primary(std::string t);
     bool sync_skill_with_primary(std::string s);
@@ -310,7 +310,7 @@ private:
 
     std::map<std::string,std::string> _event_memory;
 
-    std::shared_ptr<ParameterServer> _live_parameters;
+    ParameterServer* _live_parameters;
 
     std::mutex _mtx_mongodb;
 };

@@ -15,10 +15,9 @@ namespace mios {
 
 class ParameterServer{
 public:
-    ParameterServer();
-    ~ParameterServer();
+    ParameterServer(unsigned port);
 
-    void initialize(unsigned port);
+    void initialize();
     void start();
     void stop();
 
@@ -29,7 +28,7 @@ private:
 
     nlohmann::json set_parameter(const nlohmann::json &parameter);
 
-    std::unique_ptr<msrm_utils::JsonWebsocketServer> _ws_server;
+    msrm_utils::JsonWebsocketServer _ws_server;
     std::map<std::string,nlohmann::json> _parameters;
     std::mutex _mtx_parameters;
 };

@@ -2,9 +2,6 @@
 
 #include "task/task.hpp"
 
-#include "tasks/move_to_location.hpp"
-#include "tasks/move_to_cart_pose.hpp"
-
 namespace mios{
 class place_object : public Task{
 public:

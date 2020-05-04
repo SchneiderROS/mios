@@ -1,4 +1,5 @@
 #include "tasks/handover_object.hpp"
+#include "skills/gesture_haptic.hpp"
 
 namespace mios {
 

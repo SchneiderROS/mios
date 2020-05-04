@@ -9,8 +9,6 @@
 
 #include "skill/skill.hpp"
 #include "knowledge_base/knowledge_base.hpp"
-#include "skill/header_skills.hpp"
-#include "led_pattern/header_led_patterns.hpp"
 #include <msrm_utils/json.hpp>
 
 namespace mios {
@@ -91,7 +89,7 @@ public:
      * @param core Pointer to the core module.
      * @return Returns true if the task and all its subtasks and skills were successfully loaded.
      */
-    bool load(const nlohmann::json &parameters, std::shared_ptr<Core> core);
+    bool load(const nlohmann::json &parameters, Core *core);
 
     /**
      * Implements task execution in derived tasks.
@@ -300,7 +298,7 @@ protected:
      */
     void execute_desk_timeline(const std::string& id);
 
-    std::shared_ptr<KnowledgeBase> _kb;
+    KnowledgeBase* _kb;
     EvalTask _eval_task;
     std::vector<double> _w_cost_function;
 
@@ -321,7 +319,7 @@ private:
     std::atomic<bool> _flag_stop;
     std::atomic<bool> _flag_recover;
     std::atomic<bool> _flag_in_recovery;
-    std::shared_ptr<Core> _core;
+    Core* _core;
     std::string _id;
 
     std::string _state;

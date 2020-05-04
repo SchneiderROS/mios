@@ -15,7 +15,6 @@
 #include "led_pattern/led_pattern.hpp"
 #include "telemetry/telemetry_udp.hpp"
 #include "interface/parameter_server.hpp"
-#include "interface/sim_interface.hpp"
 
 #include "utils/types.hpp"
 
@@ -66,8 +65,8 @@ public:
 
     std::string get_last_error() const;
 
-    std::shared_ptr<KnowledgeBase> get_kb();
-    void set_live_parameter_server(std::shared_ptr<ParameterServer> server);
+    KnowledgeBase *get_kb();
+    void set_live_parameter_server(ParameterServer *server);
 
     std::string get_ip_primary();
 
@@ -143,8 +142,6 @@ private:
     void dummy_control(std::function<franka::CartesianVelocities(const franka::RobotState& state)> control_cycle);
     void dummy_control(std::function<franka::JointVelocities(const franka::RobotState& state)> control_cycle);
 
-    void sim_control(std::function<franka::Torques(const franka::RobotState& state)> control_cycle);
-
     void gripper_cycle();
     void terminate_gripper();
 
@@ -163,9 +160,6 @@ private:
 
     void start_telemetry();
     void terminate_telemetry();
-
-    bool start_sim_interface();
-    bool terminate_sim_interface();
 
     void gripper_grasp(double width,double speed, double force,double epsilon_inner=0.005,double epsilon_outer=0.005);
     void gripper_move(double width,double speed);
@@ -212,7 +206,6 @@ private:
     Telemetry _telemetry;
 
     Telemetry_UDP _telemetry_udp;
-    std::shared_ptr<SimInterface> _sim_interface;
 
     ConfigInternal _config_internal;
 
@@ -274,7 +267,7 @@ private:
     cntr_nullsp_proj::Out_Y_cntr_nullsp_proj _out_y_cntr_nullsp_proj;
     motion_error_cart::Out_Y_motion_error_cart _out_y_motion_error_cart;
 
-    std::shared_ptr<KnowledgeBase> _kb;
+    KnowledgeBase _kb;
     std::shared_ptr<Skill> _active_skill;
 
     std::map<std::string,unsigned> _led_panel_id;

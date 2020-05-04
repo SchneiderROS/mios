@@ -1,17 +1,8 @@
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <cmath>
-
-#include <franka/exception.h>
-#include <franka/robot.h>
-
 #include "task/task.hpp"
-#include "tasks/move_to_joint_pose.hpp"
-#include "tasks/move_to_cart_pose.hpp"
+#include "primitives/mp_telepresence.hpp"
 
-#include <msrm_utils/network.hpp>
 
 namespace mios {
 

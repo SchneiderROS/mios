@@ -1,4 +1,7 @@
 #include "tasks/feature_force_control.hpp"
+#include "skills/move_to_pose_joint.hpp"
+#include "skills/move_to_contact.hpp"
+#include "skills/push.hpp"
 
 namespace mios {
 

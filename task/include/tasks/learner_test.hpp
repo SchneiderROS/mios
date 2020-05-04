@@ -5,7 +5,6 @@ namespace mios{
 class learner_test : public Task{
 public:
 learner_test();
-~learner_test();
 void initialize_task();
 void execute_task();
 const EvalTask& evaluate_task();

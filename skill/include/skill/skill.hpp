@@ -377,7 +377,7 @@ public:
      * Connects the knowledge base to the skill.
      * @param[in] kb Pointer to knowledge base.
      */
-    void set_kb(std::shared_ptr<KnowledgeBase> kb);
+    void set_kb(KnowledgeBase* kb);
 
     /**
      * Returns the type id of the skill.
@@ -577,7 +577,7 @@ protected:
     EvalSkill _eval;
 
     std::shared_ptr<ManipulationPrimitive> _active_mp;
-    std::shared_ptr<KnowledgeBase> _kb;
+    KnowledgeBase* _kb;
 
     CmdSkill _cmd;
 private:

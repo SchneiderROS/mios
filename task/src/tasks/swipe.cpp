@@ -1,13 +1,15 @@
 #include "tasks/swipe.hpp"
+#include "tasks/move_to_cart_pose.hpp"
+#include "skills/move_to_contact.hpp"
+#include "skills/swiping.hpp"
+
 namespace mios{
 swipe::swipe():Task("swipe"){
 }
-swipe::~swipe(){
-}
 void swipe::initialize_task(){
-    this->create_subtask(new move_to_cart_pose(),"move_to_surface");
-    this->create_skill(new move_to_contact(),"contact");
-    this->create_skill(new swiping(),"swiping");
+    this->create_subtask<move_to_cart_pose>("move_to_surface");
+    this->create_skill<move_to_contact>("contact");
+    this->create_skill<swiping>("swiping");
 }
 void swipe::execute_task(){
 
@@ -26,31 +28,24 @@ void swipe::execute_task(){
     TF_T_EE_o_approach(2,3)+=TF_Dx(2);
 
     nlohmann::json parameters;
-    cpp_utils::write_json_array<double,4,4>(parameters["TF_T_EE_g"],TF_T_EE_o_approach);
+    msrm_utils::write_json_array<double,4,4>(parameters["TF_T_EE_g"],TF_T_EE_o_approach);
 
     if(!this->get_subtask("move_to_surface")->read_parameters(parameters)){
         return;
     }
     this->execute_subtask("move_to_surface");
     if(!this->get_subtask("move_to_surface")->get_eval().success){
-        cpp_utils::print_error("Could not approach surface.");
+        msrm_utils::print_error("Could not approach surface.");
         return;
     }
 
     this->get_skill("contact")->set_object("surface",this->locations[0]);
     this->execute_skill("contact");
     if(!this->get_skill("contact")->get_eval().success){
-        cpp_utils::print_error("Could not establish contact, aborting swipe task");
+        msrm_utils::print_error("Could not establish contact, aborting swipe task");
         return;
     }
 
-    ConfigSkill_swiping* c_swiping = static_cast<ConfigSkill_swiping*>(this->get_skill("swiping")->get_config());
-    c_swiping->TF_T_EE_d.resize(this->locations.size());
-    for(unsigned i=0;i<this->locations.size();i++){
-        Object obj;
-        this->_kb->load_object(this->locations[i],obj);
-        c_swiping->TF_T_EE_d[i]=this->_kb->transform_to_EE(obj.O_T_o);
-    }
     this->execute_skill("swiping");
 
     this->_kb->load_object(this->locations[this->locations.size()-1],obj);
@@ -65,7 +60,7 @@ void swipe::execute_task(){
     TF_T_EE_o_retreat(1,3)+=TF_Dx(1);
     TF_T_EE_o_retreat(2,3)+=TF_Dx(2);
 
-    cpp_utils::write_json_array<double,4,4>(parameters["TF_T_EE_g"],TF_T_EE_o_retreat);
+    msrm_utils::write_json_array<double,4,4>(parameters["TF_T_EE_g"],TF_T_EE_o_retreat);
 
     if(!this->get_subtask("move_to_surface")->read_parameters(parameters)){
         return;
@@ -78,7 +73,7 @@ const EvalTask& swipe::evaluate_task(){
     return this->_eval_task;
 }
 bool swipe::read_parameters(const nlohmann::json& params){
-    if(!cpp_utils::read_json_param<std::string>(params,"locations",this->locations)){
+    if(!msrm_utils::read_json_param<std::string>(params,"locations",this->locations)){
         this->locations.resize(0);
     }
     return true;

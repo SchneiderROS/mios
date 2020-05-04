@@ -1,4 +1,14 @@
 #include "tasks/telepresence.hpp"
+#include "tasks/move_to_joint_pose.hpp"
+#include "tasks/move_to_cart_pose.hpp"
+#include "skills/telepresence_master.hpp"
+#include "skills/telepresence_slave.hpp"
+#include "patterns/pattern_white.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <msrm_utils/network.hpp>
 
 namespace mios {
 

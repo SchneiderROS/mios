@@ -1,4 +1,5 @@
 #include "tasks/external.hpp"
+#include "skills/external_input.hpp"
 namespace mios{
 external::external():Task("external"){
 }

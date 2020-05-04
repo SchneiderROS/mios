@@ -1,5 +1,6 @@
 #pragma once
 
+#include "skills/button_pushing.hpp"
 #include "skills/move_to_pose_joint.hpp"
 #include "skills/move_to_pose_cart.hpp"
 #include "skills/motions_generic_wiggle.hpp"

@@ -1,17 +1,18 @@
 #include "tasks/polish_object.hpp"
+#include "skills/move_to_pose_joint.hpp"
+#include "skills/move_to_contact.hpp"
+#include "skills/polish.hpp"
 
 namespace mios {
 
 polish_object::polish_object():Task("polish_object"){
 }
-polish_object::~polish_object(){
-}
 void polish_object::initialize_task(){
-    this->create_skill(std::shared_ptr<move_to_pose_joint>(new move_to_pose_joint()),"move");
-    this->create_skill(std::shared_ptr<move_to_contact>(new move_to_contact()),"contact");
-    this->create_skill(std::shared_ptr<polish>(new polish()),"polish");
+    this->create_skill<move_to_pose_joint>("move");
+    this->create_skill<move_to_contact>("contact");
+    this->create_skill<polish>("polish");
 
-    this->create_subtask(std::shared_ptr<handover_object>(new handover_object()),"handover");
+    this->create_subtask<handover_object>("handover");
 }
 void polish_object::execute_task(){
 
@@ -35,8 +36,8 @@ return this->_eval_task;
 }
 
 bool polish_object::read_parameters(const nlohmann::json& params){
-    if(!cpp_utils::read_json_param(params,"object",this->object)){
-        cpp_utils::print_error("Missing parameter: object");
+    if(!msrm_utils::read_json_param(params,"object",this->object)){
+        msrm_utils::print_error("Missing parameter: object");
         return false;
     }
     return true;

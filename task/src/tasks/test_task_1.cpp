@@ -1,8 +1,7 @@
 #include "tasks/test_task_1.hpp"
+#include "skills/test_skill_1.hpp"
 namespace mios{
 test_task_1::test_task_1():Task("test_task_1"){
-}
-test_task_1::~test_task_1(){
 }
 void test_task_1::initialize_task(){
     this->create_skill<test_skill_1>("t1_s1");

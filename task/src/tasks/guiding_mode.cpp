@@ -1,4 +1,5 @@
 #include "tasks/guiding_mode.hpp"
+#include "skills/hand_guiding.hpp"
 namespace mios{
 guiding_mode::guiding_mode():Task("guiding_mode"){
 }

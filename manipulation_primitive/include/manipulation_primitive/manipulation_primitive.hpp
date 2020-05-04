@@ -90,7 +90,7 @@ public:
     std::string get_id() const;
 
     void set_id(const std::string& id);
-    void set_kb(std::shared_ptr<KnowledgeBase> kb);
+    void set_kb(KnowledgeBase* kb);
 
     void reset();
     void set_0(const Percept& p);
@@ -119,7 +119,7 @@ protected:
     CmdMP _cmd;
 
     std::shared_ptr<Attractor> _attractor;
-    std::shared_ptr<KnowledgeBase> _kb;
+    KnowledgeBase* _kb;
 
     std::string _type;
     std::string _id;

@@ -37,23 +37,23 @@ int main(int argc, char** argv){
 
     msrm_utils::print_info("############################################################");
     msrm_utils::print_info("MIOS");
-    msrm_utils::print_info("Version: 0.3.5.0");
+    msrm_utils::print_info("Version: 0.4.0.0");
 
-    mios::Interface interface;
-    std::shared_ptr<mios::ParameterServer> live_params = std::make_shared<mios::ParameterServer>();
-    std::shared_ptr<mios::Core> core = std::make_shared<mios::Core>(argc,argv);
-    std::shared_ptr<mios::TaskHandler> task_handler= std::make_shared<mios::TaskHandler>(core);
-    interface.initialize(core,task_handler,port);
+    mios::Interface interface(port);
+    mios::ParameterServer live_params(port+1);
+    mios::Core core(argc,argv);
+    mios::TaskHandler task_handler(&core);
+    interface.initialize(&core,&task_handler);
     interface.start();
-    live_params->initialize(port+1);
-    live_params->start();
-    core->set_live_parameter_server(live_params);
+    live_params.initialize();
+    live_params.start();
+    core.set_live_parameter_server(&live_params);
 
     msrm_utils::print_info("############################################################");
     msrm_utils::print_info("System is ready.");
-    task_handler->activity();
+    task_handler.activity();
     interface.stop();
-    live_params->stop();
+    live_params.stop();
     return 0;
 }
 

@@ -26,7 +26,7 @@ LocalMemory* const KnowledgeBase::get_local_memory(){
     return &this->_local_memory;
 }
 
-void KnowledgeBase::set_live_parameter_server(std::shared_ptr<ParameterServer> server){
+void KnowledgeBase::set_live_parameter_server(ParameterServer* server){
     this->_live_parameters=server;
 }
 

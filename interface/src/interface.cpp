@@ -6,76 +6,66 @@
 #include "task/task_handler.hpp"
 namespace mios {
 
-Interface::Interface(){
-    this->_core=nullptr;
-    this->_task_handler=nullptr;
-    this->_ws_server=nullptr;
+Interface::Interface(unsigned port):_core(nullptr),_task_handler(nullptr),_ws_server(msrm_utils::JsonWebsocketServer("0.0.0.0",port,"mios/core")){
 }
 
-Interface::~Interface(){
-
-}
-
-void Interface::initialize(std::shared_ptr<Core> core, std::shared_ptr<TaskHandler> task_handler, unsigned port){
-    this->_core=core;
-    this->_task_handler=task_handler;
-
-    this->_ws_server = std::make_shared<msrm_utils::JsonWebsocketServer>("0.0.0.0",port,"mios/core");
-
+void Interface::initialize(Core *core, TaskHandler *task_handler){
+    _core=core;
+    _task_handler=task_handler;
     this->bind_methods();
 }
 
 void Interface::start(){
     msrm_utils::print_info("Starting core interface at endpoint mios/core...",false);
-    this->_ws_server->start_listening();
+    this->_ws_server.start_listening();
     msrm_utils::print_info("done.");
 }
 
 void Interface::stop(){
     msrm_utils::print_info("Stopping core interface...",false);
-    this->_ws_server->stop_listening();
+    this->_ws_server.stop_listening();
     msrm_utils::print_info("done.");
 }
 
 void Interface::bind_methods(){
-    this->_ws_server->bind_method("start_task",std::bind(&Interface::start_task,this,std::placeholders::_1),{"task","parameters","queue"});
-    this->_ws_server->bind_method("stop_task",std::bind(&Interface::stop_task,this,std::placeholders::_1),{"nominal","success","recover","empty_queue","cost_suc","cost_err"});
-    this->_ws_server->bind_method("remove_task",std::bind(&Interface::remove_task,this,std::placeholders::_1),{"task_uuid"});
-    this->_ws_server->bind_method("wait_for_task",std::bind(&Interface::wait_for_task,this,std::placeholders::_1),{"task_uuid"});
-    this->_ws_server->bind_method("check_if_task_finished",std::bind(&Interface::check_if_task_finished,this,std::placeholders::_1),{"task_uuid"});
-    this->_ws_server->bind_method("is_busy",std::bind(&Interface::is_busy,this,std::placeholders::_1),{});
-    this->_ws_server->bind_method("subscribe_to_event_stream",std::bind(&Interface::subscribe_to_event_stream,this,std::placeholders::_1),{"address","port"});
-    this->_ws_server->bind_method("unsubscribe_from_event_stream",std::bind(&Interface::unsubscribe_from_event_stream,this,std::placeholders::_1),{"address","port"});
+    this->_ws_server.bind_method("start_task",std::bind(&Interface::start_task,this,std::placeholders::_1),{"task","parameters","queue"});
+    this->_ws_server.bind_method("stop_task",std::bind(&Interface::stop_task,this,std::placeholders::_1),{"nominal","success","recover","empty_queue","cost_suc","cost_err"});
+    this->_ws_server.bind_method("remove_task",std::bind(&Interface::remove_task,this,std::placeholders::_1),{"task_uuid"});
+    this->_ws_server.bind_method("wait_for_task",std::bind(&Interface::wait_for_task,this,std::placeholders::_1),{"task_uuid"});
+    this->_ws_server.bind_method("check_if_task_finished",std::bind(&Interface::check_if_task_finished,this,std::placeholders::_1),{"task_uuid"});
+    this->_ws_server.bind_method("is_busy",std::bind(&Interface::is_busy,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("subscribe_to_event_stream",std::bind(&Interface::subscribe_to_event_stream,this,std::placeholders::_1),{"address","port"});
+    this->_ws_server.bind_method("unsubscribe_from_event_stream",std::bind(&Interface::unsubscribe_from_event_stream,this,std::placeholders::_1),{"address","port"});
 
-    this->_ws_server->bind_method("set_grasped_object",std::bind(&Interface::set_grasped_object,this,std::placeholders::_1),{"object"});
-    this->_ws_server->bind_method("grasp_object",std::bind(&Interface::grasp_object,this,std::placeholders::_1),{"object","width","speed","force","check_width"});
-    this->_ws_server->bind_method("grasp",std::bind(&Interface::grasp,this,std::placeholders::_1),{"width","speed","force"});
-    this->_ws_server->bind_method("release_object",std::bind(&Interface::release_object,this,std::placeholders::_1),{"width","speed"});
-    this->_ws_server->bind_method("move_gripper",std::bind(&Interface::move_gripper,this,std::placeholders::_1),{"width","speed"});
-    this->_ws_server->bind_method("home_gripper",std::bind(&Interface::home_gripper,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("set_grasped_object",std::bind(&Interface::set_grasped_object,this,std::placeholders::_1),{"object"});
+    this->_ws_server.bind_method("grasp_object",std::bind(&Interface::grasp_object,this,std::placeholders::_1),{"object","width","speed","force","check_width"});
+    this->_ws_server.bind_method("grasp",std::bind(&Interface::grasp,this,std::placeholders::_1),{"width","speed","force"});
+    this->_ws_server.bind_method("release_object",std::bind(&Interface::release_object,this,std::placeholders::_1),{"width","speed"});
+    this->_ws_server.bind_method("move_gripper",std::bind(&Interface::move_gripper,this,std::placeholders::_1),{"width","speed"});
+    this->_ws_server.bind_method("home_gripper",std::bind(&Interface::home_gripper,this,std::placeholders::_1),{});
 
-    this->_ws_server->bind_method("lockdown_core",std::bind(&Interface::lockdown_core,this,std::placeholders::_1),{});
-    this->_ws_server->bind_method("lift_core_lockdown",std::bind(&Interface::lift_core_lockdown,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("lockdown_core",std::bind(&Interface::lockdown_core,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("lift_core_lockdown",std::bind(&Interface::lift_core_lockdown,this,std::placeholders::_1),{});
 
-    this->_ws_server->bind_method("set_skill_pause_state",std::bind(&Interface::lift_core_lockdown,this,std::placeholders::_1),{"pause"});
+    this->_ws_server.bind_method("set_skill_pause_state",std::bind(&Interface::lift_core_lockdown,this,std::placeholders::_1),{"pause"});
 
-    this->_ws_server->bind_method("teach_object",std::bind(&Interface::teach_object,this,std::placeholders::_1),{"object","teach_width","reference_frame","is_reference_frame"});
-    this->_ws_server->bind_method("apply_reference_frame",std::bind(&Interface::apply_reference_frame,this,std::placeholders::_1),{"frame"});
-    this->_ws_server->bind_method("download_task_description",std::bind(&Interface::download_task_description,this,std::placeholders::_1),{"task"});
-    this->_ws_server->bind_method("download_skill_description",std::bind(&Interface::download_skill_description,this,std::placeholders::_1),{"skill"});
-    this->_ws_server->bind_method("download_object_description",std::bind(&Interface::download_object_description,this,std::placeholders::_1),{"object"});
+    this->_ws_server.bind_method("teach_object",std::bind(&Interface::teach_object,this,std::placeholders::_1),{"object","teach_width","reference_frame","is_reference_frame"});
+    this->_ws_server.bind_method("apply_reference_frame",std::bind(&Interface::apply_reference_frame,this,std::placeholders::_1),{"frame"});
+    this->_ws_server.bind_method("download_task_description",std::bind(&Interface::download_task_description,this,std::placeholders::_1),{"task"});
+    this->_ws_server.bind_method("download_skill_description",std::bind(&Interface::download_skill_description,this,std::placeholders::_1),{"skill"});
+    this->_ws_server.bind_method("download_object_description",std::bind(&Interface::download_object_description,this,std::placeholders::_1),{"object"});
 
-    this->_ws_server->bind_method("get_state",std::bind(&Interface::get_state,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("get_state",std::bind(&Interface::get_state,this,std::placeholders::_1),{});
 
-    this->_ws_server->bind_method("login_digital_twin",std::bind(&Interface::login_digital_twin,this,std::placeholders::_1),{});
-    this->_ws_server->bind_method("logout_digital_twin",std::bind(&Interface::logout_digital_twin,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("login_digital_twin",std::bind(&Interface::login_digital_twin,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("logout_digital_twin",std::bind(&Interface::logout_digital_twin,this,std::placeholders::_1),{});
 
-    this->_ws_server->bind_method("reset",std::bind(&Interface::reset,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("reset",std::bind(&Interface::reset,this,std::placeholders::_1),{});
 
-    this->_ws_server->bind_method("unlock_brakes",std::bind(&Interface::unlock_brakes,this,std::placeholders::_1),{});
-    this->_ws_server->bind_method("lock_brakes",std::bind(&Interface::lock_brakes,this,std::placeholders::_1),{});
-    this->_ws_server->bind_method("shutdown",std::bind(&Interface::shutdown,this,std::placeholders::_1),{});
-    this->_ws_server->bind_method("pack_pose",std::bind(&Interface::pack_pose,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("unlock_brakes",std::bind(&Interface::unlock_brakes,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("lock_brakes",std::bind(&Interface::lock_brakes,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("shutdown",std::bind(&Interface::shutdown,this,std::placeholders::_1),{});
+    this->_ws_server.bind_method("pack_pose",std::bind(&Interface::pack_pose,this,std::placeholders::_1),{});
 }
 
 nlohmann::json Interface::start_task(const nlohmann::json &request){

@@ -1,4 +1,5 @@
 #include "tasks/move_to_joint_pose.hpp"
+#include "skills/move_to_pose_joint.hpp"
 
 namespace mios {
 
@@ -8,7 +9,6 @@ void move_to_joint_pose::initialize_task(){
     this->create_skill<move_to_pose_joint>("move");
 }
 void move_to_joint_pose::execute_task(){
-    this->load_led_pattern(std::shared_ptr<pattern_white>(new pattern_white()));
     this->get_skill("move")->set_object("loc_goal",this->pose);
     if(this->pose=="none"){
         std::static_pointer_cast<ConfigSkill_move_to_pose_joint>(this->get_skill("move")->get_config())->q_g=this->q_g;

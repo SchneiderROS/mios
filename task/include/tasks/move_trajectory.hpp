@@ -5,7 +5,6 @@ namespace mios{
 class move_trajectory : public Task{
 public:
 move_trajectory();
-~move_trajectory();
 void initialize_task();
 void execute_task();
 const EvalTask& evaluate_task();

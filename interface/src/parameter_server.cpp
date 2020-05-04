@@ -5,34 +5,27 @@
 
 namespace mios {
 
-ParameterServer::ParameterServer(){
-    this->_ws_server=nullptr;
+ParameterServer::ParameterServer(unsigned port):_ws_server(msrm_utils::JsonWebsocketServer("0.0.0.0",port,"mios/live")){
 }
 
-ParameterServer::~ParameterServer(){
-
-}
-
-void ParameterServer::initialize(unsigned port){
-    this->_ws_server = std::make_unique<msrm_utils::JsonWebsocketServer>("0.0.0.0",port,"mios/live");
-
+void ParameterServer::initialize(){
     this->bind_methods();
 }
 
 void ParameterServer::start(){
     msrm_utils::print_info("Starting live parameter server at endpoint mios/live...",false);
-    this->_ws_server->start_listening();
+    this->_ws_server.start_listening();
     msrm_utils::print_info("done.");
 }
 
 void ParameterServer::stop(){
     msrm_utils::print_info("Stopping live parameter server...",false);
-    this->_ws_server->stop_listening();
+    this->_ws_server.stop_listening();
     msrm_utils::print_info("done.");
 }
 
 void ParameterServer::bind_methods(){
-    this->_ws_server->bind_method("set_parameter",std::bind(&ParameterServer::set_parameter,this,std::placeholders::_1),{"parameter_key","parameter_value"});
+    this->_ws_server.bind_method("set_parameter",std::bind(&ParameterServer::set_parameter,this,std::placeholders::_1),{"parameter_key","parameter_value"});
 }
 
 nlohmann::json ParameterServer::set_parameter(const nlohmann::json &request){

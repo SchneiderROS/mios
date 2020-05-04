@@ -732,7 +732,7 @@ void Skill::set_id(const std::string& id){
     this->_id=id;
 }
 
-void Skill::set_kb(std::shared_ptr<KnowledgeBase> kb){
+void Skill::set_kb(KnowledgeBase *kb){
     this->_kb=kb;
 }
 

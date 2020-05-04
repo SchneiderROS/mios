@@ -5,7 +5,6 @@ namespace mios{
 class gesture : public Task{
 public:
 gesture();
-~gesture();
 void initialize_task();
 void execute_task();
 const EvalTask& evaluate_task();

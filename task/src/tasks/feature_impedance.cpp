@@ -1,4 +1,6 @@
 #include "tasks/feature_impedance.hpp"
+#include "skills/move_to_pose_joint.hpp"
+#include "skills/hold_pose.hpp"
 
 namespace mios {
 

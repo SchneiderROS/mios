@@ -1,4 +1,6 @@
 #include "tasks/move_to_location.hpp"
+#include "skills/move_to_pose_cart.hpp"
+#include "skills/move_to_pose_joint.hpp"
 namespace mios{
 move_to_location::move_to_location():Task("move_to_location"){
 }
