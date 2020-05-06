@@ -34,8 +34,8 @@ void Interface::bind_methods(){
     this->_ws_server.bind_method("wait_for_task",std::bind(&Interface::wait_for_task,this,std::placeholders::_1),{"task_uuid"});
     this->_ws_server.bind_method("check_if_task_finished",std::bind(&Interface::check_if_task_finished,this,std::placeholders::_1),{"task_uuid"});
     this->_ws_server.bind_method("is_busy",std::bind(&Interface::is_busy,this,std::placeholders::_1),{});
-    this->_ws_server.bind_method("subscribe_to_event_stream",std::bind(&Interface::subscribe_to_event_stream,this,std::placeholders::_1),{"address","port"});
-    this->_ws_server.bind_method("unsubscribe_from_event_stream",std::bind(&Interface::unsubscribe_from_event_stream,this,std::placeholders::_1),{"address","port"});
+    this->_ws_server.bind_method("subscribe_to_event_stream",std::bind(&Interface::subscribe_to_event_stream,this,std::placeholders::_1),{"address","port","endpoint","method_name"});
+    this->_ws_server.bind_method("unsubscribe_from_event_stream",std::bind(&Interface::unsubscribe_from_event_stream,this,std::placeholders::_1),{"subsciber_uuid"});
 
     this->_ws_server.bind_method("set_grasped_object",std::bind(&Interface::set_grasped_object,this,std::placeholders::_1),{"object"});
     this->_ws_server.bind_method("grasp_object",std::bind(&Interface::grasp_object,this,std::placeholders::_1),{"object","width","speed","force","check_width"});
@@ -352,21 +352,21 @@ nlohmann::json Interface::get_state(const nlohmann::json &request){
 
 nlohmann::json Interface::subscribe_to_event_stream(const nlohmann::json &request){
     nlohmann::json response;
-    std::string address;
-    unsigned port;
-    request["address"].get_to(address);
-    request["port"].get_to(port);
-    EventPublisher::subscribe(std::pair<std::string,unsigned>(address,port));
+    EventSubscriber subscriber;
+    request["address"].get_to(subscriber.address);
+    request["port"].get_to(subscriber.port);
+    request["endpoint"].get_to(subscriber.endpoint);
+    request["method_name"].get_to(subscriber.method_name);
+
+    response["subscriber_uuid"] = EventPublisher::subscribe(subscriber);
     return response;
 }
 
 nlohmann::json Interface::unsubscribe_from_event_stream(const nlohmann::json &request){
     nlohmann::json response;
-    std::string address;
-    unsigned port;
-    request["address"].get_to(address);
-    request["port"].get_to(port);
-    EventPublisher::unsubscribe(std::pair<std::string,unsigned>(address,port));
+    std::string subscriber_uuid;
+    request["subscriber_uuid"].get_to(subscriber_uuid);
+    EventPublisher::unsubscribe(subscriber_uuid);
     return response;
 }
 

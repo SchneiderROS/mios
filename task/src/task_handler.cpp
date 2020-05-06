@@ -493,7 +493,6 @@ std::string TaskHandler::get_unique_task_id(){
     std::stringstream ss;
     ss<<task_uuid;
     return ss.str();
-    return std::to_string(886);
 }
 
 bool TaskHandler::has_id(const std::string &id){

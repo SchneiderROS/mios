@@ -6,6 +6,24 @@
 
 namespace mios {
 
+struct EventSubscriber{
+    std::string uuid;
+    std::string address;
+    unsigned port;
+    std::string endpoint;
+    std::string method_name;
+
+    bool operator<(const EventSubscriber& rhs) const
+    {
+      return uuid < rhs.uuid;
+    }
+
+    bool operator==(const EventSubscriber& rhs) const
+    {
+      return uuid == rhs.uuid;
+    }
+};
+
 class EventPublisher{
 public:
     EventPublisher(const EventPublisher&) = delete;
@@ -13,16 +31,16 @@ public:
     static EventPublisher& get();
 
     static void publish_event(const nlohmann::json& event);
-    static void subscribe(const std::pair<std::string, unsigned> &subscriber);
-    static void unsubscribe(const std::pair<std::string, unsigned> &subscriber);
+    static std::string subscribe(const EventSubscriber &subscriber);
+    static void unsubscribe(const std::string& subscriber_uuid);
 private:
     void i_publish_event(const nlohmann::json& event);
-    void i_subscribe(const std::pair<std::string,unsigned>&  subscriber);
-    void i_unsubscribe(const std::pair<std::string, unsigned> &subscriber);
+    std::string i_subscribe(const EventSubscriber& subscriber);
+    void i_unsubscribe(const std::string& subscriber_uuid);
     EventPublisher(){}
 
     nlohmann::json events;
-    std::set<std::pair<std::string,unsigned> > m_subscribers;
+    std::set<EventSubscriber> m_subscribers;
 };
 
 }
