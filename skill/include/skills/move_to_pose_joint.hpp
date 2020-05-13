@@ -15,8 +15,7 @@ struct ConfigSkill_move_to_pose_joint : public ConfigSkill{
 
 class move_to_pose_joint : public Skill{
 public:
-    move_to_pose_joint();
-    ~move_to_pose_joint();
+    move_to_pose_joint(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config);
 
     void evaluate();
     bool read_skill_parameters(const nlohmann::json& p);

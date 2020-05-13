@@ -12,8 +12,7 @@ struct ConfigSkill_hold_pose : public ConfigSkill{
 
 class hold_pose : public Skill{
 public:
-    hold_pose();
-    ~hold_pose();
+    hold_pose(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config);
 
     void evaluate();
     bool read_skill_parameters(const nlohmann::json& p);

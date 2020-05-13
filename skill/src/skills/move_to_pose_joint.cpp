@@ -2,11 +2,7 @@
 
 namespace mios {
 
-move_to_pose_joint::move_to_pose_joint():Skill("move_to_pose_joint"){
-}
-
-move_to_pose_joint::~move_to_pose_joint(){
-
+move_to_pose_joint::move_to_pose_joint(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config):Skill("move_to_pose_joint",kb,config){
 }
 
 bool move_to_pose_joint::read_skill_parameters(const nlohmann::json &p){
@@ -23,7 +19,7 @@ bool move_to_pose_joint::read_skill_parameters(const nlohmann::json &p){
 }
 
 void move_to_pose_joint::create_config(){
-    this->_config=std::make_shared<ConfigSkill_move_to_pose_joint>();
+    m_config=std::make_shared<ConfigSkill_move_to_pose_joint>();
 }
 
 void move_to_pose_joint::build_primitives(const Percept &p){
@@ -32,7 +28,7 @@ void move_to_pose_joint::build_primitives(const Percept &p){
 
     std::shared_ptr<ConfigMP_mp_basic_joint> c_move_to_pose_joint = std::static_pointer_cast<ConfigMP_mp_basic_joint>(this->get_mp("move_to_pose_joint")->get_config());
 
-    std::shared_ptr<ConfigSkill_move_to_pose_joint> c = std::static_pointer_cast<ConfigSkill_move_to_pose_joint>(this->_config);
+    std::shared_ptr<ConfigSkill_move_to_pose_joint> c = std::static_pointer_cast<ConfigSkill_move_to_pose_joint>(m_config);
 
     c_move_to_pose_joint->dq_d<<c->speed(0)*c->user.dq_max(0);
     c_move_to_pose_joint->ddq_d<<c->acc(0)*c->user.ddq_max(0);
@@ -61,8 +57,8 @@ bool move_to_pose_joint::check_local_ex_conditions(const Percept &p){
 }
 
 void move_to_pose_joint::evaluate(){
-    this->_eval.cost_err=this->_eval.p_1.time-this->_eval.p_0.time;
-    this->_eval.cost_suc=0;
+    m_eval.cost_err=m_eval.p_1.time-m_eval.p_0.time;
+    m_eval.cost_suc=0;
 }
 
 }

@@ -2,9 +2,9 @@
 
 #include "task/task.hpp"
 namespace mios{
-class test_task_1 : public Task{
+class TestTask1 : public Task{
 public:
-test_task_1();
+TestTask1(Core *core);
 void initialize_task();
 void execute_task();
 void recover_task();

@@ -15,6 +15,9 @@
 #include <msrm_utils/math.hpp>
 #include <msrm_utils/output.hpp>
 
+#include "utils/percept.hpp"
+#include "utils/actuator.hpp"
+
 
 namespace mios {
 
@@ -75,12 +78,13 @@ struct ConfigSkill{
  */
 struct EvalSkill{
     EvalSkill(){
-        this->config=nullptr;
+        this->config=std::make_shared<ConfigSkill>();
         this->cost_suc=0;
         this->cost_err=0;
         this->success=false;
         this->last_errors.resize(0);
         this->results=nlohmann::json();
+        exception=false;
     }
 
     /**
@@ -124,6 +128,8 @@ struct EvalSkill{
      */
     bool success;
 
+    bool exception;
+
     /**
      * Lists the last thrown exceptions.
      */
@@ -134,148 +140,7 @@ struct EvalSkill{
 };
 
 
-/**
- * The output struct for a skill. It contains all possible commands and takes care of limiting and buffering.
- */
-struct CmdSkill{
-    CmdSkill();
-
-    /**
-     * Reads the output from a manipulation primitive.
-     * @param[in] in The output of a manipulation primitive.
-     */
-    void read_mp_cmd(const CmdMP& cmd);
-
-    /**
-     * Sets all velocity, torque and force commands to zero.
-     * @param[in] p Current percept.
-     */
-    void stop(const Percept &p);
-
-    /**
-     * Sets the current skill command to the value in the buffer.
-     */
-    void read_from_buffer();
-
-    /**
-     * Limits the output according to the global settings.
-     * @param[in] config Pointer to the global configuration.
-     */
-    void limit_output(const ConfigLimits& config);
-
-    /**
-     * Limits the rate of the output according to the global settings.
-     * @param[in] config Pointer to the global configuration.
-     */
-    void limit_output_rate(const ConfigLimits& config);
-
-    /**
-     * Sets initial values for the output.
-     * @param[in] p Percept struct.
-     */
-    void set_0(const Percept& p);
-
-    /**
-     * Resets all outputs and buffers. Is called once at instantiation of a skill.
-     */
-    void reset();
-
-    bool validity_check();
-
-    /**
-     * Desired Cartesian pose in task frame.
-     */
-    Eigen::Matrix<double,4,4> TF_T_EE_d;
-
-    /**
-     * Desired Cartesian twist in task frame.
-     */
-    Eigen::Matrix<double,6,1> TF_dX_d;
-
-    /**
-     * Desired Cartesian wrench in task frame. Is passed to the force controller.
-     */
-    Eigen::Matrix<double,6,1> TF_F_d;
-
-    /**
-     * Cartesian feed forward wrench in task frame.
-     */
-    Eigen::Matrix<double,6,1> TF_F_ff;
-
-    /**
-     * Cartesian stiffness.
-     */
-    Eigen::Matrix<double,6,1> K_x;
-
-    /**
-     * Cartesian damping factor.
-     */
-    Eigen::Matrix<double,6,1> xi_x;
-
-    /**
-     * Desired joint pose.
-     */
-    Eigen::Matrix<double,7,1> q_d;
-
-    /**
-     * Desired joint velocities.
-     */
-    Eigen::Matrix<double,7,1> dq_d;
-
-    /**
-     * Desired joint torques.
-     */
-    Eigen::Matrix<double,7,1> tau_d;
-
-    /**
-     * Feed forward joint torques.
-     */
-    Eigen::Matrix<double,7,1> tau_ff;
-
-    /**
-     * Joint stiffness.
-     */
-    Eigen::Matrix<double,7,1> K_theta;
-
-    /**
-     * Joint damping factor.
-     */
-    Eigen::Matrix<double,7,1> xi_theta;
-
-    bool on_cntrl_imp;
-    bool on_cntrl_force;
-
-    Eigen::Matrix<double,4,4> TF_T_EE_d_buffer;
-    Eigen::Matrix<double,6,1> TF_dX_d_buffer;
-    Eigen::Matrix<double,6,1> TF_F_d_buffer;
-    Eigen::Matrix<double,6,1> TF_F_ff_buffer;
-    Eigen::Matrix<double,6,1> K_x_buffer;
-    Eigen::Matrix<double,6,1> xi_x_buffer;
-
-    Eigen::Matrix<double,7,1> q_d_buffer;
-    Eigen::Matrix<double,7,1> dq_d_buffer;
-    Eigen::Matrix<double,7,1> tau_d_buffer;
-    Eigen::Matrix<double,7,1> tau_ff_buffer;
-    Eigen::Matrix<double,7,1> K_theta_buffer;
-    Eigen::Matrix<double,7,1> xi_theta_buffer;
-
-    Eigen::Matrix<double,4,4> TF_T_EE_d_limiter;
-    Eigen::Matrix<double,6,1> TF_dX_d_limiter;
-    Eigen::Matrix<double,6,1> TF_F_d_limiter;
-    Eigen::Matrix<double,6,1> TF_F_ff_limiter;
-    Eigen::Matrix<double,6,1> K_x_limiter;
-    Eigen::Matrix<double,6,1> xi_x_limiter;
-
-    Eigen::Matrix<double,7,1> q_d_limiter;
-    Eigen::Matrix<double,7,1> dq_d_limiter;
-    Eigen::Matrix<double,7,1> tau_d_limiter;
-    Eigen::Matrix<double,7,1> tau_ff_limiter;
-    Eigen::Matrix<double,7,1> K_theta_limiter;
-    Eigen::Matrix<double,7,1> xi_theta_limiter;
-
-    bool flag_stop;
-
-};
+enum SkillLifeCycle{slInit,slTransition,slExecution,slSettle,slTerminate};
 
 /**
  * The skill base class provides handling of manipulation primitives, error handling and more. Every skill inherits from this class.
@@ -286,18 +151,12 @@ public:
      * The skill base constructor. It is called by the constructor of any derived skill class.
      * @param[in] type The type id of the skill.
      */
-    Skill(const std::string& type);
+    Skill(const std::string& type, KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config, const Percept& p);
 
     /**
      * The skill destructor.
      */
     virtual ~Skill();
-
-    /**
-     * Resets all flags and containers of the skill and its evaluation struct.
-     */
-    void reset();
-
     /**
      * Initializes the skill by building the manipulation primitives, calculating the task frame, preparing the output struct
      * and making validity checks.
@@ -320,7 +179,7 @@ public:
      * @param[in] p Percept struct.
      * @return Output of the skill.
      */
-    const CmdSkill &cycle(const Percept& p);
+    Actuator *cycle(const Percept& p);
 
     /**
      * Is called at the end of skill execution. Terminates manipulation primitives and calls the evaluate function.
@@ -336,11 +195,6 @@ public:
      * Invokes a skill success, this will stop skill execution and set the success indicator to true.
      */
     void invoke_success();
-
-    /**
-     * Stops the skill.
-     */
-    void stop_skill();
 
     /**
      * Sets the pause status for the skill. When paused, all twist and wrench commands are set to zero.
@@ -361,23 +215,8 @@ public:
      * @return A pointer to the configuratin struct of this skill.
      */
     template<typename T=ConfigSkill>std::shared_ptr<T> get_config() const{
-        if(this->_config==nullptr){
-            throw SkillException("Skill config is not being created for skill "+this->_type+".");
-        }
-        return std::static_pointer_cast<T>(this->_config);
+        return std::static_pointer_cast<T>(m_config);
     }
-
-    /**
-     * Sets the instance id for the skill. Will be removed in future updates.
-     * @param[in] id Intended instance id.
-     */
-    void set_id(const std::string& id);
-
-    /**
-     * Connects the knowledge base to the skill.
-     * @param[in] kb Pointer to knowledge base.
-     */
-    void set_kb(KnowledgeBase* kb);
 
     /**
      * Returns the type id of the skill.
@@ -390,12 +229,6 @@ public:
      * @return Instance id of the skill.
      */
     const std::string& get_id() const;
-
-    /**
-     * Returns the termination flag of the skill that indicates whether the skill has been terminated.
-     * @return Returns the termination flag.
-     */
-    bool get_flag_terminate() const;
 
     void read_configuration(const nlohmann::json & p);
 
@@ -451,12 +284,6 @@ public:
      * To be defined by developer. This function sets up the evaluation struct based on the skill execution.
      */
     virtual void evaluate() = 0;
-
-    /**
-     * Needs to be defined by the developer. Has to contain the line "this->_config = new <SkillConfig>();" where <SkillConfig> needs to be
-     * replaced by the derived configuration struct.
-     */
-    virtual void create_config() = 0;
 protected:
 
     /**
@@ -497,15 +324,12 @@ protected:
      *
      * @throw SkillException if manipulation primitive with id already exists.
      */
-    template<typename T>void insert_mp(const std::string& id, const Percept &p){
-        if(this->_mp.find(id)!=this->_mp.end()){
+    template<typename T_primitive,typename T_config,typename T_attractor>void insert_mp(const std::string& id, const Percept &p){
+        if(m_mp_graph.find(id)!=m_mp_graph.end()){
             throw SkillException("Could not insert new manipulation primitive. MP with id "+id+" already exists.");
         }else{
-            this->_mp.insert(std::pair<std::string,std::shared_ptr<ManipulationPrimitive> >(id,std::make_shared<T>()));
-            this->_mp[id]->set_id(id);
-            this->_mp[id]->set_kb((this->_kb));
-            this->_mp[id]->get_attractor()->reset();
-            this->_mp[id]->init_attractor(p,std::make_shared<ConfigUser>(this->_config->user));
+            m_mp_graph.insert(std::pair<std::string,std::shared_ptr<ManipulationPrimitive> >(id,std::make_shared<T_primitive>(p,std::make_shared<T_config>(),
+                                                                                                                      std::make_shared<T_attractor>(),m_kb,id)));
         }
     }
 
@@ -573,42 +397,37 @@ protected:
 
     double get_t_init() const;
 
-    std::shared_ptr<ConfigSkill> _config;
-    EvalSkill _eval;
+    std::shared_ptr<ConfigSkill> m_config;
+    EvalSkill m_eval;
 
-    std::shared_ptr<ManipulationPrimitive> _active_mp;
-    KnowledgeBase* _kb;
+    std::shared_ptr<ManipulationPrimitive> m_active_mp;
+    KnowledgeBase* m_kb;
 
-    CmdSkill _cmd;
 private:
 
     void run_parallels();
     void terminate_parallels();
+    bool has_settled();
 
-    std::map<std::string,std::shared_ptr<ManipulationPrimitive> > _mp;
-    std::map<std::string,std::shared_ptr<ManipulationPrimitive> > _mp_graph;
-    std::string _init_mp;
+    std::map<std::string,std::shared_ptr<ManipulationPrimitive> > m_mp_graph;
+    std::string m_init_mp;
 
-    std::map<std::string,Object> _objects;
+    std::map<std::string,Object> m_objects;
 
 
-    double _time_start;
+    double m_time_start;
 
-    std::atomic<bool> _flag_init;
-    std::atomic<bool> _flag_terminate;
-    std::atomic<bool> _flag_aborted;
-    std::atomic<bool> _flag_invoke_failure;
-    std::atomic<bool> _flag_invoke_success;
-    std::atomic<bool> _flag_fade_out;
-    std::atomic<bool> _flag_success;
-    std::atomic<bool> _flag_pause;
-    std::atomic<bool> _flag_parallels_running;
-    std::atomic<bool> _flag_run_parallels;
+    std::atomic<bool> m_flag_invoke_failure;
+    std::atomic<bool> m_flag_invoke_success;
+    std::atomic<bool> m_flag_pause;
+    std::atomic<bool> m_flag_parallels_running;
+    std::atomic<bool> m_flag_run_parallels;
 
-    std::string _id;
-    std::string const _type;
+    std::string m_id;
+    std::string const m_type;
 
-    std::thread _thr_parallels;
+    std::thread m_thr_parallels;
+    SkillLifeCycle m_life_cycle;
 
 };
 

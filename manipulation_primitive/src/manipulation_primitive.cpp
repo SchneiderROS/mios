@@ -2,88 +2,65 @@
 
 namespace mios {
 
-ManipulationPrimitive::ManipulationPrimitive(const std::string &type):_type(type){
-    this->_eval=nullptr;
-    this->_config=nullptr;
-    this->_attractor=nullptr;
-    this->reset();
+ManipulationPrimitive::ManipulationPrimitive(const std::string &type, const Percept &p_0, std::shared_ptr<ConfigMP> config, std::shared_ptr<Attractor> attractor, KnowledgeBase* kb, const std::string &id)
+    :m_type(type),m_config(config),m_attractor(attractor),m_kb(kb),m_id(id),m_cmd(Actuator(p_0)),m_flag_initialized(false),m_flag_terminated(false){
 }
 
 ManipulationPrimitive::~ManipulationPrimitive(){
-
+    terminate();
 }
 
-void ManipulationPrimitive::reset(){
-    this->_flag_init=true;
-    this->_flag_terminate=false;
-    this->_flag_error=false;
-    this->_eval=nullptr;
-
-    this->_log=false;
-    this->_step=0;
-    this->_time=0;
-
-    this->_cmd.reset();
+Actuator* ManipulationPrimitive::initialize(const Percept &p_0){
+    m_cmd.initialize(p_0);
+    i_initialize(p_0);
+    m_flag_initialized=true;
+    m_flag_terminated=false;
+    return &m_cmd;
 }
 
-void ManipulationPrimitive::set_0(const Percept &p){
-    this->_cmd.set_0(p);
+Actuator* ManipulationPrimitive::initialize(const Percept &p_0, const Actuator& cmd){
+    m_cmd=cmd;
+    i_initialize(p_0);
+    m_flag_initialized=true;
+    m_flag_terminated=false;
+    return &m_cmd;
 }
 
-std::string ManipulationPrimitive::get_type() const{
-    return this->_type;
+void ManipulationPrimitive::terminate(){
+    if(m_flag_initialized && !m_flag_terminated){
+        i_terminate();
+    }
 }
 
-bool ManipulationPrimitive::get_flag_init() const{
-    return this->_flag_init;
+Actuator* ManipulationPrimitive::cmd_from_buffer(){
+    m_cmd.read_from_buffer();
+    return &m_cmd;
 }
 
-bool ManipulationPrimitive::get_flag_terminate() const{
-    return this->_flag_terminate;
+Actuator* ManipulationPrimitive::stop(const Percept& p){
+    m_cmd.initialize(p);
+    return &m_cmd;
 }
 
-void ManipulationPrimitive::set_flag_terminate(){
-    this->_flag_terminate=true;
-}
 
 bool ManipulationPrimitive::get_flag_error() const{
-    return this->_flag_error;
+    return m_flag_error;
 }
 
 void ManipulationPrimitive::set_flag_error(){
-    this->_flag_error=true;
-}
-
-void ManipulationPrimitive::set_id(const std::string& id){
-    this->_id=id;
-}
-
-void ManipulationPrimitive::set_kb(KnowledgeBase *kb){
-    this->_kb=kb;
+    m_flag_error=true;
 }
 
 std::string ManipulationPrimitive::get_id() const{
-    return this->_id;
+    return m_id;
 }
 
-void ManipulationPrimitive::set_time(double t){
-    this->_time=t;
+std::string ManipulationPrimitive::get_type() const{
+    return m_type;
 }
 
-double ManipulationPrimitive::get_time() const{
-    return this->_time;
-}
-
-std::shared_ptr<ConfigMP> ManipulationPrimitive::get_config() const{
-    return this->_config;
-}
-
-std::shared_ptr<Attractor> ManipulationPrimitive::get_attractor() const{
-    return this->_attractor;
-}
-
-std::shared_ptr<EvalMP> ManipulationPrimitive::get_eval() const{
-    return this->_eval;
+bool ManipulationPrimitive::is_settled() const{
+    return m_cmd.is_settled(m_kb->get_local_memory()->access_config_limits());
 }
 
 }

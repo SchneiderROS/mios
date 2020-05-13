@@ -2,7 +2,8 @@
 import time
 
 #from python.utils.ws_client import *
-from ws_client import *
+from udp_client import *
+
 
 class TestException(Exception):
     pass
@@ -36,46 +37,59 @@ def test_exception_handling(hostname):
     address = hostname
     print('Testing exception handling...')
 
-    rtn = start_task(address, 'test_task_1', {"parameters": {"exception": "task"}})
+    print("TASK")
+    rtn = start_task(address, 'TestTask1', {"parameters": {"exception": "task"}})
     msg_error(rtn is not None, 'exception_handling_task', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_task', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_task', 'Result has no unique task id', rtn)
 
+    print("WAIT_TASK")
     wait_for_task(address,rtn['result']['task_uuid'])
 
-    rtn = start_task(address, 'test_task_1', {"parameters": {'exception': "skill"}})
+    print("SKILL")
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "skill"}})
     msg_error(rtn is not None, 'exception_handling_skill', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_skill', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_skill', 'Result has no unique task id', rtn)
 
+    print("WAIT_SKILL")
+
     wait_for_task(address,rtn['result']['task_uuid'])
 
-    rtn = start_task(address, 'test_task_1', {"parameters": {'exception': "control"}})
+    print("CONTROL")
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "control"}})
     msg_error(rtn is not None, 'exception_handling_control', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_control', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_control', 'Result has no unique task id', rtn)
 
+    print("WAIT_CONTROL")
     wait_for_task(address,rtn['result']['task_uuid'])
 
-    rtn = start_task(address, 'test_task_1', {"parameters": {'exception': "invalid"}})
+    print("INVALID")
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "invalid"}})
     msg_error(rtn is not None, 'exception_handling_invalid', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_invalid', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_invalid', 'Result has no unique task id', rtn)
 
+    print("WAIT_INVALID")
     wait_for_task(address,rtn['result']['task_uuid'])
 
-    rtn = start_task(address, 'test_task_1', {"parameters": {'exception': "network"}})
+    print("NETWORK")
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "network"}})
     msg_error(rtn is not None, 'exception_handling_network', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_network', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_network', 'Result has no unique task id', rtn)
 
+    print("WAIT_NETWORK")
     wait_for_task(address,rtn['result']['task_uuid'])
 
-    rtn = start_task(address, 'test_task_1', {"parameters":{"exception": "realtime"}})
+    print("REALTIME")
+    rtn = start_task(address, 'TestTask1', {"parameters":{"exception": "realtime"}})
     msg_error(rtn is not None, 'exception_handling_realtime', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_realtime', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_realtime', 'Result has no unique task id', rtn)
 
+    print("WAIT_REALTIME")
     wait_for_task(address,rtn['result']['task_uuid'])
 
 
@@ -85,7 +99,8 @@ def test_start_stop(hostname):
 
     # start and various stops after 1 second
     print('Testing non-nominal stop...')
-    rtn = start_task(address, "test_task_1", queue=True)
+    rtn = start_task(address, "TestTask1", queue=True)
+    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
     rtn = stop_task(address)
@@ -94,7 +109,8 @@ def test_start_stop(hostname):
     wait_for_task(address, task_uuid)
 
     print('Testing nominal unsuccessful stop without recovery...')
-    rtn = start_task(address, "test_task_1", queue=True)
+    rtn = start_task(address, "TestTask1", queue=True)
+    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
     rtn = stop_task(address, nominal=True)
@@ -103,7 +119,8 @@ def test_start_stop(hostname):
     wait_for_task(address, task_uuid)
 
     print('Testing nominal unsuccessful stop with recovery...')
-    rtn = start_task(address, "test_task_1", queue=True)
+    rtn = start_task(address, "TestTask1", queue=True)
+    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
     rtn = stop_task(address, nominal=True, recover=True)
@@ -112,7 +129,7 @@ def test_start_stop(hostname):
     wait_for_task(address, task_uuid)
 
     print('Testing nominal successful stop without recovery...')
-    rtn = start_task(address, "test_task_1", queue=True)
+    rtn = start_task(address, "TestTask1", queue=True)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
     rtn = stop_task(address, nominal=True, success=True)
@@ -121,7 +138,8 @@ def test_start_stop(hostname):
     wait_for_task(address, task_uuid)
 
     print('Testing nominal successful stop with recovery...')
-    rtn = start_task(address, "test_task_1", queue=True)
+    rtn = start_task(address, "TestTask1", queue=True)
+    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
     rtn = stop_task(address, nominal=True, success=True, recover=True)
@@ -135,19 +153,21 @@ def test_start_wait(hostname):
     url = "http://" + hostname + ":8383"
 
     print('Testing execution with successful stop...')
-    rtn = start_task(address, "test_task_1", {"parameters":{"success": True}}, queue=True)
+    rtn = start_task(address, "TestTask1", {"parameters":{"success": True}}, queue=True)
+    msg_error(rtn['result']['result'], 'start_wait_success', 'Result is false', rtn)
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
     msg_error(rtn["result"]["eval"]["success"] is True, 'start_wait_success', 'Not successful', rtn)
 
     print('Testing execution with unsuccessful stop...')
-    rtn = start_task(address, "test_task_1", {"parameters":{"success": False}}, queue=True)
+    rtn = start_task(address, "TestTask1", {"parameters":{"success": False}}, queue=True)
+    msg_error(rtn['result']['result'], 'start_wait_success', 'Result is false', rtn)
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
     msg_error(rtn["result"]["eval"]["success"] is False, 'start_wait_failure', 'No failure', rtn)
 
 
 def test_multilayer_tasks(address):
     print('Testing two-layer task...')
-    rtn = start_task(address, "test_task_2", queue=False, parameters={"parameters":{'d': [1, 2],'e': True,'success': False,
+    rtn = start_task(address, "TestTask2", queue=False, parameters={"parameters":{'d': [1, 2],'e': True,'success': False,
                                                                    'stop_level': 4},
                                                                   "skills": { "t2_s1": {
                                                "skill": {
@@ -176,7 +196,7 @@ def test_multilayer_tasks(address):
     msg_error(results["t2_t1"]["t1_s2"]["exception"] == "cba", 'two_layer_task', 'Parameter throughput is faulty.', rtn)
 
     print('Testing three-layer task...')
-    rtn = start_task(address, "test_task_3", queue=False, parameters={'parameters': {'g': [20, 21, 22, 23], 'h': False, 'i': 98.33,
+    rtn = start_task(address, "TestTask3", queue=False, parameters={'parameters': {'g': [20, 21, 22, 23], 'h': False, 'i': 98.33,
                                                                           'j': 'this is j', 'stop_level': 3,
                                                                           'success': True, },
                     'subtasks': {'t2': {'parameters': {'d': [1, 2],
@@ -194,35 +214,35 @@ def test_multilayer_tasks(address):
 def test_subtask_start_stop(address):
     print('Testing non-nominal stop...')
     #input('Press Enter to continue...')
-    rtn = start_task(address, "test_task_3", queue=True)
+    rtn = start_task(address, "TestTask3", queue=True)
     time.sleep(1)
     stop_task(address)
     wait_for_task(address, rtn["result"]["task_uuid"])
 
     print('Testing nominal unsuccessful stop without recovery...')
     #input('Press Enter to continue...')
-    rtn = start_task(address, "test_task_3", queue=True)
+    rtn = start_task(address, "TestTask3", queue=True)
     time.sleep(1)
     stop_task(address, nominal=True)
     wait_for_task(address, rtn["result"]["task_uuid"])
 
     print('Testing nominal unsuccessful stop with recovery...')
     #input('Press Enter to continue...')
-    rtn = start_task(address, "test_task_3", queue=True)
+    rtn = start_task(address, "TestTask3", queue=True)
     time.sleep(1)
     stop_task(address, nominal=True, recover=True)
     wait_for_task(address, rtn["result"]["task_uuid"])
 
     print('Testing nominal successful stop without recovery...')
     #input('Press Enter to continue...')
-    rtn = start_task(address, "test_task_3", queue=True)
+    rtn = start_task(address, "TestTask3", queue=True)
     time.sleep(1)
     stop_task(address, nominal=True, success=True)
     wait_for_task(address, rtn["result"]["task_uuid"])
 
     print('Testing nominal successful stop with recovery...')
     #input('Press Enter to continue...')
-    rtn = start_task(address, "test_task_3", queue=True)
+    rtn = start_task(address, "TestTask3", queue=True)
     time.sleep(1)
     stop_task(address, nominal=True, success=True, recover=True)
     wait_for_task(address, rtn["result"]["task_uuid"])
@@ -232,21 +252,21 @@ def test_knowledgebase(address):
     url = "http://" + address + ":8383"
     print("Testing task description download...")
     for i in range(100):
-        response = call_method(address, method="download_task_description", payload={"task": "test_task_1"})
+        response = call_method(address, 8383, method="download_task_description", payload={"task": "test_task_1"})
         msg_error(response is not None, "knowledgebase", "Response is none", response)
         msg_error(response["result"]["result"] is True, "knowledgebase", "Could not load task.", response)
         msg_error(response["result"]["description"]["parameters"]["a"] == [1, 2, 3], "knowledgebase", "Task description is faulty.", response)
 
     print("Testing skill description download...")
     for i in range(100):
-        response = call_method(address, method="download_skill_description", payload={"skill": "test_skill_1"})
+        response = call_method(address, 8383, method="download_skill_description", payload={"skill": "test_skill_1"})
         msg_error(response is not None, "knowledgebase", "Response is none", response)
         msg_error(response["result"]["result"] is True, "knowledgebase", "Could not load skill.", response)
         msg_error(response["result"]["description"]["success"] is False, "knowledgebase", "Skill description is faulty.", response)
 
     print("Testing object description download...")
     for i in range(100):
-        response = call_method(address, method="download_object_description", payload={"object": "test_object_1"})
+        response = call_method(address, 8383, method="download_object_description", payload={"object": "test_object_1"})
         msg_error(response is not None, "knowledgebase", "Response is none", response)
         msg_error(response["result"]["result"] is True, "knowledgebase", "Could not load task.", response)
         msg_error(response["result"]["description"]["EE_ob_com"] == [0, 0, 0], "knowledgebase", "Object description is faulty.", response)
@@ -258,11 +278,11 @@ def test_task_queue(address):
     # input('Press Enter to continue...')
     results = []
     for i in range(10):
-        results.append(start_task(address, "test_task_1", queue=True))
+        results.append(start_task(address, "TestTask1", queue=True))
 
-    call_method(address, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     time.sleep(1)
     stop_task(address)
     time.sleep(0.5)
@@ -273,11 +293,11 @@ def test_task_queue(address):
     # input('Press Enter to continue...')
     results = []
     for i in range(10):
-        results.append(start_task(address, "test_task_1", queue=True))
+        results.append(start_task(address, "TestTask1", queue=True))
 
-    call_method(address, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, nominal=True)
     wait_for_task(address, results[5]['result']['task_uuid'])
     wait_for_task(address, results[8]['result']['task_uuid'])
@@ -287,11 +307,11 @@ def test_task_queue(address):
     # input('Press Enter to continue...')
     results = []
     for i in range(10):
-        results.append(start_task(address, "test_task_1", queue=True))
+        results.append(start_task(address, "TestTask1", queue=True))
 
-    call_method(address, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, nominal=True, recover=True)
     wait_for_task(address, results[5]['result']['task_uuid'])
     wait_for_task(address, results[8]['result']['task_uuid'])
@@ -301,11 +321,11 @@ def test_task_queue(address):
     # input('Press Enter to continue...')
     results = []
     for i in range(10):
-        results.append(start_task(address, "test_task_1", queue=True))
+        results.append(start_task(address, "TestTask1", queue=True))
 
-    call_method(address, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, nominal=True, success=True)
     wait_for_task(address, results[5]['result']['task_uuid'])
     wait_for_task(address, results[8]['result']['task_uuid'])
@@ -315,11 +335,11 @@ def test_task_queue(address):
     # input('Press Enter to continue...')
     results = []
     for i in range(10):
-        results.append(start_task(address, "test_task_1", queue=True))
+        results.append(start_task(address, "TestTask1", queue=True))
 
-    call_method(address, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, nominal=True, success=True, recover=True)
     wait_for_task(address, results[5]['result']['task_uuid'])
     wait_for_task(address, results[8]['result']['task_uuid'])
@@ -329,11 +349,11 @@ def test_task_queue(address):
     # input('Press Enter to continue...')
     results = []
     for i in range(10):
-        results.append(start_task(address, "test_task_1", queue=True))
+        results.append(start_task(address, "TestTask1", queue=True))
 
-    call_method(address, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 8383, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, nominal=True, success=True, recover=True, empty_queue=True)
     wait_for_task(address, results[5]['result']['task_uuid'])
     wait_for_task(address, results[8]['result']['task_uuid'])
@@ -352,7 +372,7 @@ def skill_tests(address):
     # rpc_call(url, 'wait_for_task', {'task_uuid': rtn['result']['task_uuid']})
 
     print('Testing parallel thread...')
-    response = start_task(address, "test_task_1", queue=True, parameters={'parameters': {'skill_test': 2}})
+    response = start_task(address, "TestTask1", queue=True, parameters={'parameters': {'skill_test': 2}})
     response = wait_for_task(address, response['result']['task_uuid'])
     msg_error(response is not None, 'live_parameter_server', 'None returned', response)
     eval = response["result"]["eval"]
@@ -379,13 +399,13 @@ def live_parameter_server_test(address):
     url_parameter_server = "http://" + address + ":8384"
 
     print("Testing live parameter server...")
-    response = start_task(address, "test_task_1", queue=True, parameters={'parameters': {'skill_test': 2}})
+    response = start_task(address, "TestTask1", queue=True, parameters={'parameters': {'skill_test': 2}})
     time.sleep(1)
-    response_set1 = call_method(address, "set_parameter", {"parameter_key": "test_parameter_1", "parameter_value": 42}, 8384, "mios/live")
+    response_set1 = call_method(address, 8383, "set_parameter", {"parameter_key": "test_parameter_1", "parameter_value": 42}, 8384)
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set1)
-    response_set2 = call_method(address, "set_parameter", {"parameter_key": "test_parameter_2", "parameter_value": "hello world"}, 8384, "mios/live")
+    response_set2 = call_method(address, 8383, "set_parameter", {"parameter_key": "test_parameter_2", "parameter_value": "hello world"})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set2)
-    response_set3 = call_method(address, "set_parameter", {"parameter_key": "test_parameter_3", "parameter_value": [1,2,3,4,5]}, 8384, "mios/live")
+    response_set3 = call_method(address, 8383, "set_parameter", {"parameter_key": "test_parameter_3", "parameter_value": [1,2,3,4,5]})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set3)
     response = wait_for_task(address, response['result']['task_uuid'])
     msg_error(response is not None, 'live_parameter_server', 'None returned', response)

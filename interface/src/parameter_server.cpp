@@ -5,7 +5,7 @@
 
 namespace mios {
 
-ParameterServer::ParameterServer(unsigned port):_ws_server(msrm_utils::JsonWebsocketServer("0.0.0.0",port,"mios/live")){
+ParameterServer::ParameterServer(unsigned port):_ws_server(msrm_utils::JsonUDPServer(port)){
 }
 
 void ParameterServer::initialize(){

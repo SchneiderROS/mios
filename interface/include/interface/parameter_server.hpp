@@ -28,7 +28,7 @@ private:
 
     nlohmann::json set_parameter(const nlohmann::json &parameter);
 
-    msrm_utils::JsonWebsocketServer _ws_server;
+    msrm_utils::JsonUDPServer _ws_server;
     std::map<std::string,nlohmann::json> _parameters;
     std::mutex _mtx_parameters;
 };

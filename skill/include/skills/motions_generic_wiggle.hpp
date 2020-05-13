@@ -19,8 +19,7 @@ struct ConfigSkill_motions_generic_wiggle : public ConfigSkill{
 
 class motions_generic_wiggle : public Skill{
 public:
-    motions_generic_wiggle();
-    ~motions_generic_wiggle();
+    motions_generic_wiggle(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config);
 
     void evaluate();
     bool read_skill_parameters(const nlohmann::json& p);

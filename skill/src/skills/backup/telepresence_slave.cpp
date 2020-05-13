@@ -87,6 +87,7 @@ void telepresence_slave::build_primitives(const Percept &p){
     c_network->joystick_funnel_pose=this->_kb->transform_to_EE(msrm_utils::rotate_matrix(o.O_T_o,msrm_utils::invert_matrix(this->_config->frames.O_R_TF)));
     c_network->joystick_stepwise=c->joystick_stepwise;
     c_network->joystick_step_size=c->joystick_step_size;
+    c_network->joint_walls=this->_kb->get_local_memory()->access_config_cntr().virt_walls_joint_walls;
 }
 
 std::tuple<bool,std::string> telepresence_slave::check_edges(const Percept &p){

@@ -1,0 +1,63 @@
+#pragma once
+
+#include <functional>
+
+#include <franka/robot.h>
+#include <franka/gripper.h>
+#include <franka/model.h>
+#include <franka/robot_state.h>
+#include <franka/gripper_state.h>
+
+namespace mios {
+
+class PandaBody{
+public:
+    bool connect_to_robot(const std::string& ip);
+    bool connect_to_gripper(const std::string &ip);
+    void disconnect_from_robot();
+    void disconnect_from_gripper();
+    bool recover();
+
+    void start_desk_task(const std::string& task);
+    void stop_desk_task();
+    bool wait_for_desk_task();
+    bool shutdown_robot();
+    bool move_to_pack_pose();
+    bool unlock_brakes();
+    bool lock_brakes();
+
+
+    bool grasp(double width,double speed,double force,double epsilon_inner,double epsilon_outer);
+    bool move_to_finger_position(double width, double speed);
+    bool home_gripper();
+
+public:
+    bool torque_control(std::functional<franka::Torques(const franka::RobotState&)> controller_callback);
+    bool cartesian_velocity_control(std::functional<franka::CartesianVelocities(const franka::RobotState&)> controller_callback);
+    bool joint_velocity_control(std::functional<franka::JointVelocities(const franka::RobotState&)> controller_callback);
+    bool cartesian_pose_control(std::functional<franka::CartesianPose(const franka::RobotState&)> controller_callback);
+    bool joint_pose_control(std::functional<franka::JointPositions(const franka::RobotState&)> controller_callback);
+
+public:
+    bool set_robot_parameters();
+
+public:
+    bool get_robot_state(franka::RobotState& state) const;
+    bool get_gripper_state(franka::GripperState& state) const;
+    std::optional<std::string> get_robot_ip(const std::optional<std::string> last_ip);
+private:
+
+
+    bool is_robot(const std::string& ip);
+    std::optional<std::string> find_robot();
+private:
+
+    std::unique_ptr<franka::Robot> m_panda_arm;
+    std::unique_ptr<franka::Model> m_panda_model;
+    std::unique_ptr<franka::Gripper> m_panda_hand;
+
+    std::atomic<bool> m_arm_connected;
+    std::atomic<bool> m_hand_connected;
+};
+
+}

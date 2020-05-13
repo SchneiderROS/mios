@@ -1,13 +1,13 @@
 #include "tasks/test_task_1.hpp"
 #include "skills/test_skill_1.hpp"
 namespace mios{
-test_task_1::test_task_1():Task("test_task_1"){
+TestTask1::TestTask1(Core* core):Task("TestTask1",core){
 }
-void test_task_1::initialize_task(){
-    this->create_skill<test_skill_1>("t1_s1");
-    this->create_skill<test_skill_1>("t1_s2");
+void TestTask1::initialize_task(){
+    this->create_skill<test_skill_1>("t1_s1",m_kb,std::make_shared<ConfigSkill_test_skill_1>());
+    this->create_skill<test_skill_1>("t1_s2",m_kb,std::make_shared<ConfigSkill_test_skill_1>());
 }
-void test_task_1::execute_task(){
+void TestTask1::execute_task(){
 
     if(this->skill_test==0){
 
@@ -41,18 +41,18 @@ void test_task_1::execute_task(){
     }
 
 }
-const EvalTask& test_task_1::evaluate_task(){
-    this->_eval_task.success=this->get_skill("t1_s1")->get_eval().success;
-    this->_eval_task.cost_suc=this->get_skill("t1_s1")->get_eval().cost_suc;
-    this->_eval_task.cost_err=this->get_skill("t1_s1")->get_eval().cost_err;
+const EvalTask& TestTask1::evaluate_task(){
+    m_eval_task.success=this->get_skill("t1_s1")->get_eval().success;
+    m_eval_task.cost_suc=this->get_skill("t1_s1")->get_eval().cost_suc;
+    m_eval_task.cost_err=this->get_skill("t1_s1")->get_eval().cost_err;
 
-    this->_eval_task.results["t1_s1"]=this->get_skill("t1_s1")->get_eval().results;
-    this->_eval_task.results["t1_s2"]=this->get_skill("t1_s2")->get_eval().results;
-    msrm_utils::write_json_array<double,3,1>(this->_eval_task.results["a"],a);
-    this->_eval_task.results["b"]=b;
-    return this->_eval_task;
+    m_eval_task.results["t1_s1"]=this->get_skill("t1_s1")->get_eval().results;
+    m_eval_task.results["t1_s2"]=this->get_skill("t1_s2")->get_eval().results;
+    msrm_utils::write_json_array<double,3,1>(m_eval_task.results["a"],a);
+    m_eval_task.results["b"]=b;
+    return m_eval_task;
 }
-bool test_task_1::read_parameters(const nlohmann::json& params){
+bool TestTask1::read_parameters(const nlohmann::json& params){
     msrm_utils::print_debug("Reading parameters for task "+this->get_id());
 
     if(!msrm_utils::read_json_param(params,"b",this->b)){
@@ -82,7 +82,7 @@ bool test_task_1::read_parameters(const nlohmann::json& params){
     return true;
 }
 
-void test_task_1::recover_task(){
+void TestTask1::recover_task(){
     msrm_utils::print_debug("RECOVERY OF TEST TASK 1");
 }
 }

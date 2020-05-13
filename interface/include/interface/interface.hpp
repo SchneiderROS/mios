@@ -3,7 +3,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 namespace msrm_utils{
-class JsonWebsocketServer;
+class JsonUDPServer;
 }
 namespace mios {
 class Core;
@@ -66,7 +66,7 @@ private:
     nlohmann::json pack_pose(const nlohmann::json& request);
 
 
-    msrm_utils::JsonWebsocketServer _ws_server;
+    msrm_utils::JsonUDPServer _ws_server;
     Core* _core;
     TaskHandler* _task_handler;
 };

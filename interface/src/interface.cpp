@@ -4,9 +4,10 @@
 #include <msrm_utils/network.hpp>
 #include "core/core.hpp"
 #include "task/task_handler.hpp"
+#include <spdlog/spdlog.h>
 namespace mios {
 
-Interface::Interface(unsigned port):_core(nullptr),_task_handler(nullptr),_ws_server(msrm_utils::JsonWebsocketServer("0.0.0.0",port,"mios/core")){
+Interface::Interface(unsigned port):_core(nullptr),_task_handler(nullptr),_ws_server(msrm_utils::JsonUDPServer(port)){
 }
 
 void Interface::initialize(Core *core, TaskHandler *task_handler){
@@ -35,7 +36,7 @@ void Interface::bind_methods(){
     this->_ws_server.bind_method("check_if_task_finished",std::bind(&Interface::check_if_task_finished,this,std::placeholders::_1),{"task_uuid"});
     this->_ws_server.bind_method("is_busy",std::bind(&Interface::is_busy,this,std::placeholders::_1),{});
     this->_ws_server.bind_method("subscribe_to_event_stream",std::bind(&Interface::subscribe_to_event_stream,this,std::placeholders::_1),{"address","port","endpoint","method_name"});
-    this->_ws_server.bind_method("unsubscribe_from_event_stream",std::bind(&Interface::unsubscribe_from_event_stream,this,std::placeholders::_1),{"subsciber_uuid"});
+    this->_ws_server.bind_method("unsubscribe_from_event_stream",std::bind(&Interface::unsubscribe_from_event_stream,this,std::placeholders::_1),{"subscriber_uuid"});
 
     this->_ws_server.bind_method("set_grasped_object",std::bind(&Interface::set_grasped_object,this,std::placeholders::_1),{"object"});
     this->_ws_server.bind_method("grasp_object",std::bind(&Interface::grasp_object,this,std::placeholders::_1),{"object","width","speed","force","check_width"});
@@ -70,14 +71,13 @@ void Interface::bind_methods(){
 
 nlohmann::json Interface::start_task(const nlohmann::json &request){
     nlohmann::json response;
-    std::pair<bool,std::string> result=this->_task_handler->start_task(request["task"],request["parameters"],request["queue"]);
-    if(result.first){
-        response["task_uuid"]=result.second;
-        response["result"]=true;
-    }else{
-        response["error"]=result.second;
-        response["result"]=false;
-    }
+    bool result;
+    std::string task_uuid;
+    std::string error_message;
+    std::tie(result,task_uuid,error_message)=this->_task_handler->start_task(request["task"],request["parameters"],request["queue"]);
+    response["task_uuid"]=task_uuid;
+    response["error"]=error_message;
+    response["result"]=result;
     return response;
 }
 
@@ -97,52 +97,39 @@ nlohmann::json Interface::stop_task(const nlohmann::json &request){
 
 nlohmann::json Interface::remove_task(const nlohmann::json &request){
     nlohmann::json response;
+    bool result;
+    std::string error_message;
     std::string task_uuid;
     request["task_uuid"].get_to(task_uuid);
 
-    if(this->_task_handler->get_active_task_id()==task_uuid){
-        response["error"]="Cannot remove the currently running task.";
-        response["result"]=false;
-    }else if(this->_task_handler->has_id(task_uuid)){
-        std::pair<bool,std::string> result;
-        msrm_utils::print_info("Removing task with uuid " + task_uuid + ".");
-        result=this->_task_handler->remove_task(task_uuid);
-        if(result.first){
-            response["result"]=true;
-        }else{
-            response["error"]=result.second;
-            response["result"]=false;
-        }
-    }else{
-        response["error"]="Task uuid " + task_uuid + " is not known to the task scheduler.";
-        response["result"]=false;
-    }
+    spdlog::info("Removing task with uuid " + task_uuid + ".");
+    std::tie(result,error_message)=this->_task_handler->remove_task(task_uuid);
+    response["result"]=result;
+    response["error"]=error_message;
     return response;
 }
 
 nlohmann::json Interface::wait_for_task(const nlohmann::json &request){
     nlohmann::json response;
     std::string task_uuid;
+    bool result;
+    std::string error_message;
+    EvalTask e;
     request["task_uuid"].get_to(task_uuid);
-    std::pair<EvalTask,bool> e =this->_task_handler->wait_for_task(task_uuid);
-    if(e.second==false){
-        msrm_utils::print_error("Could not subscribe to task with uuid "+task_uuid+" or find its evaluation in memory.");
-        response["error"]="Could not subscribe to task with uuid "+task_uuid+" or find its evaluation in memory.";
-        response["result"]=false;
-        response["eval"]=nlohmann::json();
-        return response;
-    }else{
-        response["result"]=true;
-        nlohmann::json eval;
-        eval["success"]=e.first.success;
-        eval["cost_err"]=e.first.cost_err;
-        eval["cost_suc"]=e.first.cost_suc;
-        eval["nominal_termination"]=e.first.nominal_termination;
-        eval["results"]=e.first.results;
-        eval["error"]=e.first.last_error;
-        response["eval"]=eval;
-        return response;
+    std::tie(result,e,error_message)=this->_task_handler->wait_for_task(task_uuid);
+    nlohmann::json eval;
+    if(result){
+        eval["success"]=e.success;
+        eval["cost_err"]=e.cost_err;
+        eval["cost_suc"]=e.cost_suc;
+        eval["nominal_termination"]=e.nominal_termination;
+        eval["results"]=e.results;
+        eval["error"]=e.last_error;
     }
+    response["result"]=result;
+    response["error"]=error_message;
+    response["eval"]=eval;
+    return response;
 }
 
 nlohmann::json Interface::check_if_task_finished(const nlohmann::json &request){
@@ -172,6 +159,7 @@ nlohmann::json Interface::check_if_task_finished(const nlohmann::json &request){
 
 nlohmann::json Interface::is_busy(const nlohmann::json &request){
     nlohmann::json response;
+    std::cout<<request<<std::endl;
     response["result"]=true;
     response["busy"]=this->_task_handler->is_busy();
     return response;
@@ -384,7 +372,6 @@ nlohmann::json Interface::logout_digital_twin(const nlohmann::json &request){
 
 nlohmann::json Interface::reset(const nlohmann::json &request){
     nlohmann::json response;
-    this->_task_handler->set_interrupt(true);
     msrm_utils::print_info("Resetting task handler");
     this->_task_handler->reset();
     msrm_utils::print_info("Resetting core");
@@ -394,7 +381,6 @@ nlohmann::json Interface::reset(const nlohmann::json &request){
         response["error"]="Reset failed, could not reinitialize core.";
         response["result"]=false;
     }
-    this->_task_handler->set_interrupt(false);
     return response;
 }
 

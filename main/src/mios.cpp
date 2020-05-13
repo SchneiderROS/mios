@@ -5,7 +5,9 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-//#include <jsonrpccxx/server.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "core/core.hpp"
 #include "task/task_handler.hpp"
@@ -20,6 +22,7 @@ void exit_handler(int s);
 
 
 int main(int argc, char** argv){
+    std::cout<<"FIRST LINE OF CODE"<<std::endl;
 
     struct sigaction sigIntHandler;
 
@@ -39,6 +42,17 @@ int main(int argc, char** argv){
     msrm_utils::print_info("MIOS");
     msrm_utils::print_info("Version: 0.4.1.0");
 
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    console_sink->set_level(spdlog::level::debug);
+    console_sink->set_pattern("[mios] [%^%l%$] %v");
+
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/mios.txt", true);
+    file_sink->set_level(spdlog::level::debug);
+
+    auto logger = std::shared_ptr<spdlog::logger>(new spdlog::logger("mios", {console_sink, file_sink}));
+    logger->set_level(spdlog::level::debug);
+    spdlog::set_default_logger(logger);
+
     mios::Interface interface(port);
     mios::ParameterServer live_params(port+1);
     mios::Core core(argc,argv);
@@ -51,9 +65,10 @@ int main(int argc, char** argv){
 
     msrm_utils::print_info("############################################################");
     msrm_utils::print_info("System is ready.");
-    task_handler.activity();
+    task_handler.life_cycle();
     interface.stop();
     live_params.stop();
+    spdlog::debug("LAST LINE OF CODE");
     return 0;
 }
 

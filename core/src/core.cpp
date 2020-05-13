@@ -8,6 +8,7 @@
 #include <msrm_utils/system.hpp>
 #include "utils/exceptions.hpp"
 #include "skill/skill.hpp"
+#include "skills/nullskill.hpp"
 #include "event_publisher/event_publisher.hpp"
 
 #include <iostream>
@@ -29,11 +30,7 @@
 
 namespace mios {
 
-Core::Core(int argc, char **argv){
-
-    this->_robot=nullptr;
-    this->_model=nullptr;
-    this->_gripper=nullptr;
+Core::Core(int argc, char **argv):_active_skill(std::make_shared<NullSkill>(&_kb,std::make_shared<ConfigSkill>())){
 
     this->_flag_stop_control=false;
     this->_flag_invalid_mode=false;
@@ -54,8 +51,6 @@ Core::Core(int argc, char **argv){
     this->_config_internal.path_executable=msrm_utils::get_path_executable(argv);
     this->_config_internal.grasped_object="none";
 
-    this->_active_skill=nullptr;
-
     spdlog::info("Initializing knowledgebase...");
     if(!this->_kb.initialize(this->_config_internal)){
         spdlog::error("Could not initialize knowledge base, shutting down. Mongodb service must run on port 27017. Check status with <systemctl status mongodb.service>.");
@@ -72,56 +67,32 @@ Core::~Core(){
     this->terminate();
 }
 
-bool Core::initialize(bool silent){
+bool Core::initialize(){
 
     if(!this->_kb.load_parameters()){
         spdlog::error("Could not load all parameters. Robot is not operational.");
         return false;
     }
-    this->_flag_run_beacon=true;
-    this->_thr_beacons = std::thread(&Core::listen_to_beacons,this);
-    this->_thr_beacons.detach();
-    this->init_sound();
-    if(!this->init_led()){
-        nlohmann::json p;
-        p["has_led"]=false;
-        this->get_kb()->get_local_memory()->modify_config_system(p);
-    }
-    if(!this->_kb.get_local_memory()->access_config_system().has_robot){
 
-    }else if(!this->connect_to_robot()){
-        return false;
-    }
-    if(!this->_kb.get_local_memory()->access_config_system().has_gripper){
+    std::optional<std::string> panda_ip = m_panda_body.get_robot_ip(_kb.get_local_memory()->access_config_system().ip_robot);
 
-    }else if(!this->connect_to_gripper()){
-        return false;
+    if(this->_kb.get_local_memory()->access_config_system().has_robot && panda_ip.has_value()){
+        if(!m_panda_body.connect_to_robot(panda_ip.value())){
+            return false;
+        }
     }
-    if(!this->set_ee()){
-        return false;
+    if(this->_kb.get_local_memory()->access_config_system().has_gripper && panda_ip.has_value()){
+        if(!m_panda_body.connect_to_gripper(panda_ip.value())){
+            return false;
+        }
     }
     return true;
 }
 
-bool Core::terminate(){
-    this->terminate_sound();
-    this->terminate_led();
-    if(this->_thr_beacons.joinable()){
-        this->_flag_run_beacon=false;
-    }
-    //    this->terminate_telemetry();
-    if(!this->_kb.get_local_memory()->access_config_system().has_gripper){
-
-    }else if(!this->disconnect_from_gripper()){
-        return false;
-    }
-    if(!this->_kb.get_local_memory()->access_config_system().has_robot){
-
-    }else if(!this->disconnect_from_robot()){
-        return false;
-    }
+void Core::terminate(){
+    m_panda_body.disconnect_from_robot();
+    m_panda_body.disconnect_from_gripper();
     this->_kb.terminate();
-    return true;
 }
 
 bool Core::has_terminated() const{
@@ -149,7 +120,7 @@ bool Core::check_lockdown() const{
 
 bool Core::recover(){
     if(this->_kb.get_local_memory()->access_config_system().has_robot){
-        if(this->_robot==nullptr){
+        if(this->m_panda_body==nullptr){
             spdlog::error("Robot is not connected, attempting to reinitialize.");
             if(!this->terminate()){
                 spdlog::error("Re-initialization has failed.");
@@ -164,7 +135,7 @@ bool Core::recover(){
         return true;
     }
     try{
-        this->_robot->automaticErrorRecovery();
+        this->m_panda_body->automaticErrorRecovery();
     }catch(const franka::NetworkException& e){
         std::cout<<e.what()<<std::endl;
         return false;
@@ -193,7 +164,7 @@ void Core::unlock_robot_connection(){
 }
 
 bool Core::has_robot_connection() const{
-    if(this->_robot==nullptr){
+    if(this->m_panda_body==nullptr){
         return false;
     }else{
         return true;
@@ -201,7 +172,7 @@ bool Core::has_robot_connection() const{
 }
 
 bool Core::has_gripper_connection() const{
-    if(this->_gripper==nullptr){
+    if(this->m_panda_hand==nullptr){
         return false;
     }else{
         return true;
@@ -266,7 +237,7 @@ bool Core::write_config_to_robot(){
     if(!this->_kb.get_local_memory()->access_config_system().has_robot){
         return true;
     }
-    if(this->_robot==nullptr){
+    if(this->m_panda_body==nullptr){
         spdlog::error("Cannot set global config, no robot connected, CHECK THIS ERROR!");
         return false;
     }
@@ -276,20 +247,20 @@ bool Core::write_config_to_robot(){
     Object o;
     try{
         if(this->_kb.load_object(this->_kb.get_local_memory()->access_config_user().grasped_object,o) || this->_kb.get_local_memory()->access_config_user().grasped_object=="none"){
-            this->_robot->setLoad(o.mass,msrm_utils::convert_to_array<double,3,1>(o.EE_ob_com),msrm_utils::convert_to_array<double,3,3>(o.ob_I));
+            this->m_panda_body->setLoad(o.mass,msrm_utils::convert_to_array<double,3,1>(o.EE_ob_com),msrm_utils::convert_to_array<double,3,3>(o.ob_I));
         }else{
-            this->_robot->setLoad(c_user.load_m,msrm_utils::convert_to_array<double,3,1>(c_user.load_com),msrm_utils::convert_to_array<double,3,3>(c_user.load_I));
+            this->m_panda_body->setLoad(c_user.load_m,msrm_utils::convert_to_array<double,3,1>(c_user.load_com),msrm_utils::convert_to_array<double,3,3>(c_user.load_I));
         }
         if(!this->set_ee()){
             return false;
         }
-        this->_robot->setCollisionBehavior(msrm_utils::convert_to_array<double,7,1>(c_user.tau_contact),
+        this->m_panda_body->setCollisionBehavior(msrm_utils::convert_to_array<double,7,1>(c_user.tau_contact),
                                            msrm_utils::convert_to_array<double,7,1>(c_limits.tau_ext_max),
                                            msrm_utils::convert_to_array<double,6,1>(c_user.F_contact),
         {c_limits.F_ext_max(0),c_limits.F_ext_max(0),c_limits.F_ext_max(0),c_limits.F_ext_max(1),c_limits.F_ext_max(1),c_limits.F_ext_max(1)});
-        this->_robot->setK(msrm_utils::convert_to_array<double,4,4>(c_frames.EE_T_K));
+        this->m_panda_body->setK(msrm_utils::convert_to_array<double,4,4>(c_frames.EE_T_K));
 
-        this->_robot->setJointImpedance({9000,9000,9000,7500,7500,6000,6000});
+        this->m_panda_body->setJointImpedance({9000,9000,9000,7500,7500,6000,6000});
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
         return false;
@@ -308,7 +279,7 @@ bool Core::set_ee(){
     if(!this->_kb.get_local_memory()->access_config_system().has_robot){
         return true;
     }
-    if(this->_robot==nullptr){
+    if(this->m_panda_body==nullptr){
         spdlog::error("Can not set EE, no connection to robot.");
         return false;
     }
@@ -322,7 +293,7 @@ bool Core::set_ee(){
     this->get_kb()->get_local_memory()->get_persistent_data()->EE_T_TCP=obj.EE_T_O;
     Eigen::Matrix<double,4,4> F_T_TCP=msrm_utils::rotate_matrix(this->get_kb()->get_local_memory()->get_persistent_data()->EE_T_TCP,this->_kb.get_local_memory()->access_config_frames().F_T_EE);
     try{
-        this->_robot->setEE(msrm_utils::convert_to_array<double,4,4>(F_T_TCP));
+        this->m_panda_body->setEE(msrm_utils::convert_to_array<double,4,4>(F_T_TCP));
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
         return false;
@@ -569,8 +540,8 @@ bool Core::connect_to_robot(){
         return false;
     }
     try{
-        this->_robot = std::make_unique<franka::Robot>(ip);
-        this->_model = std::make_unique<franka::Model>(this->_robot->loadModel());
+        this->m_panda_body = std::make_unique<franka::Robot>(ip);
+        this->m_panda_model = std::make_unique<franka::Model>(this->m_panda_body->loadModel());
         this->_flag_robot_connected=true;
     }catch(const franka::NetworkException& e){
         std::cout << e.what() << std::endl;
@@ -591,7 +562,7 @@ bool Core::connect_to_robot(){
 
 bool Core::connect_to_gripper(){
     try{
-        this->_gripper = std::make_unique<franka::Gripper>(this->_kb.get_local_memory()->access_config_system().ip_robot);
+        this->m_panda_hand = std::make_unique<franka::Gripper>(this->_kb.get_local_memory()->access_config_system().ip_robot);
         this->_flag_gripper_connected=true;
     }catch(const franka::NetworkException& e){
         std::cout << e.what() << std::endl;
@@ -611,15 +582,15 @@ bool Core::conncet_to_primary(){
 }
 
 bool Core::disconnect_from_robot(){
-    this->_model=nullptr;
-    this->_robot=nullptr;
+    this->m_panda_model=nullptr;
+    this->m_panda_body=nullptr;
     this->_flag_robot_connected=false;
     return true;
 }
 
 bool Core::disconnect_from_gripper(){
     this->terminate_gripper();
-    this->_gripper=nullptr;
+    this->m_panda_hand=nullptr;
     this->_flag_gripper_connected=false;
     return true;
 }
@@ -636,27 +607,28 @@ bool Core::load_skill(std::shared_ptr<Skill> skill, bool log){
     spdlog::info("Loading skill "+skill->get_id()+".");
     // set active skill and setup
     this->_active_skill=skill;
-    this->_active_skill->reset();
     try{
         if(this->_kb.get_local_memory()->access_config_system().has_robot){
             this->lock_robot_connection();
             if(this->_kb.get_local_memory()->access_config_system().has_gripper){
-                this->_gripper->readOnce();
-                this->_gripper_state=this->_gripper->readOnce();
+                this->m_panda_hand->readOnce();
+                this->_gripper_state=this->m_panda_hand->readOnce();
             }
-            franka::RobotState state=this->_robot->readOnce();
+            franka::RobotState state=this->m_panda_body->readOnce();
             this->process_percept(state,this->_gripper_state);
             this->unlock_robot_connection();
         }
+        spdlog::info("Write O_R_TF");
         this->_active_skill->write_O_R_TF(this->_percept);
         if(this->_kb.get_local_memory()->access_config_system().has_robot){
             this->lock_robot_connection();
             if(this->_kb.get_local_memory()->access_config_system().has_gripper){
-                this->_gripper_state=this->_gripper->readOnce();
+                this->_gripper_state=this->m_panda_hand->readOnce();
             }
-            this->process_percept(this->_robot->readOnce(),this->_gripper_state);
+            this->process_percept(this->m_panda_body->readOnce(),this->_gripper_state);
             this->unlock_robot_connection();
         }
+        spdlog::info("Write O_R_TF_end");
         this->_percept.K_x=this->_active_skill->get_config<>()->controller.K_0;
         this->_percept.xi_x=this->_active_skill->get_config<>()->controller.xi;
         this->_percept.K_theta=this->_active_skill->get_config<>()->controller.K_theta;
@@ -686,25 +658,21 @@ bool Core::load_skill(std::shared_ptr<Skill> skill, bool log){
 }
 
 void Core::unload_skill(){
-    this->_active_skill=nullptr;
+    this->_active_skill=std::make_shared<NullSkill>(&_kb,std::make_shared<ConfigSkill>());
     this->_kb.load_parameters();
     this->_flag_stop_control=false;
     this->terminate_telemetry();
 }
 
 void Core::toggle_skill_pause(bool pause){
-    if(this->_active_skill!=nullptr){
-        this->_active_skill->set_pause(pause);
-    }else{
-        spdlog::warn("Cannot pause, no active skill.");
-    }
+    this->_active_skill->set_pause(pause);
 }
 
 void Core::gripper_cycle(){
     while(true){
         if(!this->_flag_gripper && !this->_flag_gripper_busy){
             try{
-                this->_gripper_state=this->_gripper->readOnce();
+                this->_gripper_state=this->m_panda_hand->readOnce();
                 this->_flag_gripper=true;
             }catch(const franka::NetworkException& e){
                 std::cout<<e.what()<<std::endl;
@@ -980,6 +948,7 @@ void Core::terminate_control(){
 }
 
 bool Core::start_control_cycle(){
+    spdlog::debug("CORE: start_control_cycle");
     if(this->check_lockdown()){
         spdlog::error("Core is under lockdown.");
         return false;
@@ -992,15 +961,10 @@ bool Core::start_control_cycle(){
 
     this->_last_error="none";
 
-    if(this->_active_skill==nullptr){
-        spdlog::warn("No skill has been loaded, can not start control.");
-        return false;
-    }
-
     if(this->_flag_invalid_mode){
         //        spdlog::warn("Robot is in invalid mode, attempting automatic error recovery...");
         try{
-            this->_robot->automaticErrorRecovery();
+            this->m_panda_body->automaticErrorRecovery();
             this->_flag_invalid_mode=false;
             //            msrm_utils::print_success("Recovery successful.");
         }catch(const franka::CommandException& e){
@@ -1016,14 +980,15 @@ bool Core::start_control_cycle(){
     bool flag_recovery=false;
     this->lock_robot_connection();
 
+    spdlog::debug("CORE: start_control_cycle: while-loop");
     while(!this->_flag_stop_control){
         try{
             this->_tau_J_old={0,0,0,0,0,0,0};
             if(this->_kb.get_local_memory()->access_config_system().has_robot){
                 if(this->_kb.get_local_memory()->access_config_system().has_gripper){
-                    this->_gripper_state=this->_gripper->readOnce();
+                    this->_gripper_state=this->m_panda_hand->readOnce();
                 }
-                this->process_percept(this->_robot->readOnce(),this->_gripper_state);
+                this->process_percept(this->m_panda_body->readOnce(),this->_gripper_state);
                 CmdSkill cmd;
                 cmd.set_0(this->_percept);
                 this->process_commands(cmd);
@@ -1065,14 +1030,14 @@ bool Core::start_control_cycle(){
                 }
 
                 if(this->_kb.get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(std::bind(&Core::control_cycle_torque_cart,this,std::placeholders::_1));
+                    this->m_panda_body->control(std::bind(&Core::control_cycle_torque_cart,this,std::placeholders::_1));
                 }else{
                     this->dummy_control(std::bind(&Core::control_cycle_torque_cart,this,std::placeholders::_1));
                 }
             }
             else if(this->_kb.get_local_memory()->access_config_general().control_mode==1){
                 if(this->_kb.get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(std::bind(&Core::control_cycle_velocity_cart,this,std::placeholders::_1));
+                    this->m_panda_body->control(std::bind(&Core::control_cycle_velocity_cart,this,std::placeholders::_1));
                 }else{
                     this->dummy_control(std::bind(&Core::control_cycle_velocity_cart,this,std::placeholders::_1));
                 }
@@ -1091,14 +1056,14 @@ bool Core::start_control_cycle(){
                 }
 
                 if(this->_kb.get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(std::bind(&Core::control_cycle_torque_joint,this,std::placeholders::_1));
+                    this->m_panda_body->control(std::bind(&Core::control_cycle_torque_joint,this,std::placeholders::_1));
                 }else{
                     this->dummy_control(std::bind(&Core::control_cycle_torque_joint,this,std::placeholders::_1));
                 }
             }
             else if(this->_kb.get_local_memory()->access_config_general().control_mode==3){
                 if(this->_kb.get_local_memory()->access_config_system().has_robot){
-                    this->_robot->control(std::bind(&Core::control_cycle_velocity_joint,this,std::placeholders::_1));
+                    this->m_panda_body->control(std::bind(&Core::control_cycle_velocity_joint,this,std::placeholders::_1));
                 }else{
                     this->dummy_control(std::bind(&Core::control_cycle_velocity_joint,this,std::placeholders::_1));
                 }
@@ -1147,10 +1112,10 @@ bool Core::start_control_cycle(){
             this->_active_skill->append_error("skill_exception");
         }
         flag_recovery=true;
-        if(flag_recovery){
+        if(flag_recovery && this->_kb.get_local_memory()->access_config_system().has_robot){
             try{
                 spdlog::info("Attempting automatic error recovery...",false);
-                this->_robot->automaticErrorRecovery();
+                this->m_panda_body->automaticErrorRecovery();
                 spdlog::info("done.");
             }catch(const franka::CommandException& e){
                 spdlog::info("failed.");
@@ -1184,11 +1149,6 @@ void Core::terminate_control_cycle(){
 bool Core::control_base_cycle(const franka::RobotState state,CmdSkill& cmd){
 
     this->process_percept(state,this->_gripper_state);
-    if(this->_active_skill==nullptr){
-        spdlog::warn("No skill has been loaded, terminating control.");
-        this->terminate_control_cycle();
-        return false;
-    }
 
     this->input_motion_error(this->_percept);
     this->_motion_error_cart.step(this->_in_u_motion_error_cart,this->_out_y_motion_error_cart);
@@ -1230,7 +1190,7 @@ franka::Torques Core::control_cycle_torque_cart(const franka::RobotState state){
     this->input_control_nullspace(this->_percept);
 
     this->check_cartesian_velocity_workspace(cmd_skill.TF_dX_d,this->_percept);
-    this->base_avoidance(cmd_skill.TF_dX_d,this->_percept);
+//    this->base_avoidance(cmd_skill.TF_dX_d,this->_percept);
 
     this->_in_u_vel2pose.TF_dX_d=cmd_skill.TF_dX_d;
     this->_conv_vel2pose.step(this->_in_u_vel2pose,this->_out_y_vel2pose);
@@ -1293,7 +1253,10 @@ franka::Torques Core::control_cycle_torque_cart(const franka::RobotState state){
             this->_in_u_mux.tau_J_d(i)+=this->_out_y_cntr_nullsp_proj.tau_n(i);
         }
         for(unsigned i=0;i<7;i++){
-            this->_in_u_mux.tau_J_d(i)-=this->get_kb()->get_local_memory()->access_config_cntr().D_additional(i)*this->_percept.dq(i);
+            if(fabs(this->_percept.dq(i))>0.5){
+                this->_in_u_mux.tau_J_d(i)-=this->get_kb()->get_local_memory()->access_config_cntr().D_additional(i)*(fabs(this->_percept.dq(i))-0.5)*msrm_utils::sgn(this->_percept.dq(i));
+            }
+//            this->_in_u_mux.tau_J_d(i)-=this->get_kb()->get_local_memory()->access_config_cntr().D_additional(i)*this->_percept.dq(i);
         }
     }
 
@@ -1462,17 +1425,18 @@ franka::JointVelocities Core::control_cycle_velocity_joint(const franka::RobotSt
 }
 
 void Core::process_percept(const franka::RobotState &state, const franka::GripperState &state_gripper,Eigen::Matrix<double,3,3> O_R_TF){
+//    spdlog::info("process_percept");
     if(!this->_kb.get_local_memory()->access_config_system().has_robot){
         this->_percept.set_0();
         this->_percept.time+=0.001;
         return;
     }
 
-    this->_percept.B_J_EE=Eigen::Map<Eigen::Matrix<double,6,7> > (this->_model->bodyJacobian(franka::Frame::kEndEffector,state).data());
-    this->_percept.B_J_O=Eigen::Map<Eigen::Matrix<double,6,7> >(this->_model->zeroJacobian(franka::Frame::kEndEffector,state).data());
-    this->_percept.M=Eigen::Map<Eigen::Matrix<double,7,7> >(this->_model->mass(state).data());
-    this->_percept.C=Eigen::Map<Eigen::Matrix<double,7,1> >(this->_model->coriolis(state).data());
-    this->_percept.G=Eigen::Map<Eigen::Matrix<double,7,1> >(this->_model->gravity(state).data());
+    this->_percept.B_J_EE=Eigen::Map<Eigen::Matrix<double,6,7> > (this->m_panda_model->bodyJacobian(franka::Frame::kEndEffector,state).data());
+    this->_percept.B_J_O=Eigen::Map<Eigen::Matrix<double,6,7> >(this->m_panda_model->zeroJacobian(franka::Frame::kEndEffector,state).data());
+    this->_percept.M=Eigen::Map<Eigen::Matrix<double,7,7> >(this->m_panda_model->mass(state).data());
+    this->_percept.C=Eigen::Map<Eigen::Matrix<double,7,1> >(this->m_panda_model->coriolis(state).data());
+    this->_percept.G=Eigen::Map<Eigen::Matrix<double,7,1> >(this->m_panda_model->gravity(state).data());
 
     this->_percept.q=Eigen::Map<Eigen::Matrix<double,7,1> >(std::array<double,7>(state.q).data());
     this->_percept.dq=Eigen::Map<Eigen::Matrix<double,7,1> >(std::array<double,7>(state.dq).data());
@@ -1487,7 +1451,7 @@ void Core::process_percept(const franka::RobotState &state, const franka::Grippe
 
     msrm_utils::write_json_array<double,6,1>(this->event["K_F_ext"],this->_percept.K_F_ext);
 
-    if(this->_active_skill==nullptr && O_R_TF.isZero(0)){
+    if(this->_active_skill->get_type()=="NullSkill" && O_R_TF.isZero(0)){
         this->_percept.TF_dX=msrm_utils::rotate_vector(this->_percept.O_dX,msrm_utils::invert_matrix(this->_kb.get_local_memory()->access_config_frames().O_R_TF));
         if(this->_kb.get_local_memory()->access_config_cntr().TF_control){
             this->_percept.TF_F_ext=msrm_utils::rotate_vector(this->_percept.K_F_ext,msrm_utils::invert_matrix(this->_kb.get_local_memory()->access_config_frames().O_R_TF));
@@ -1495,7 +1459,7 @@ void Core::process_percept(const franka::RobotState &state, const franka::Grippe
             this->_percept.TF_F_ext=this->_percept.K_F_ext;
         }
         this->_percept.TF_T_EE=msrm_utils::rotate_matrix(Eigen::Matrix<double,4,4>(Eigen::Map<Eigen::Matrix<double,4,4> >(std::array<double,16>(state.O_T_EE).data())),msrm_utils::invert_matrix(this->_kb.get_local_memory()->access_config_frames().O_R_TF));
-    }else if(this->_active_skill==nullptr && !O_R_TF.isZero(0)){
+    }else if(this->_active_skill->get_type()=="NullSkill" && !O_R_TF.isZero(0)){
         this->_percept.TF_dX=msrm_utils::rotate_vector(this->_percept.O_dX,msrm_utils::invert_matrix(O_R_TF));
         if(this->_kb.get_local_memory()->access_config_cntr().TF_control){
             this->_percept.TF_F_ext=msrm_utils::rotate_vector(this->_percept.K_F_ext,msrm_utils::invert_matrix(O_R_TF));
@@ -1503,7 +1467,7 @@ void Core::process_percept(const franka::RobotState &state, const franka::Grippe
             this->_percept.TF_F_ext=this->_percept.K_F_ext;
         }
         this->_percept.TF_T_EE=msrm_utils::rotate_matrix(Eigen::Matrix<double,4,4>(Eigen::Map<Eigen::Matrix<double,4,4> >(std::array<double,16>(state.O_T_EE).data())),msrm_utils::invert_matrix(O_R_TF));
-    }else if(this->_active_skill!=nullptr){
+    }else if(this->_active_skill->get_type()!="NullSkill"){
         this->_percept.TF_dX=msrm_utils::rotate_vector(this->_percept.O_dX,msrm_utils::invert_matrix(this->_active_skill->get_config<>()->frames.O_R_TF));
         if(this->_kb.get_local_memory()->access_config_cntr().TF_control){
             Eigen::Matrix<double,3,3> O_R_EE = this->_percept.O_T_EE.block<3,3>(0,0);
@@ -1542,8 +1506,7 @@ void Core::process_percept(const franka::RobotState &state, const franka::Grippe
     this->_telemetry.tau_ext[0]={state.tau_ext_hat_filtered[0],state.tau_ext_hat_filtered[1],state.tau_ext_hat_filtered[2],state.tau_ext_hat_filtered[3],state.tau_ext_hat_filtered[4],state.tau_ext_hat_filtered[5],state.tau_ext_hat_filtered[6]};
     auto t_diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-t_event);
     if(t_diff.count()>100){
-        std::thread event_thread(&EventPublisher::publish_event,this->event);
-        event_thread.detach();
+        EventPublisher::publish_event(this->event);
         this->t_event = std::chrono::system_clock::now();
     }
 
@@ -1669,7 +1632,7 @@ bool Core::set_grasped_object(const std::string &o){
         p["grasped_object"]=o;
         this->_kb.get_local_memory()->modify_hidden_config_user(p);
         this->_percept.mios_state.grasped_object=o;
-        this->_robot->setLoad(obj.mass,msrm_utils::convert_to_array<double,3,1>(obj.EE_ob_com),msrm_utils::convert_to_array<double,3,3>(obj.ob_I));
+        this->m_panda_body->setLoad(obj.mass,msrm_utils::convert_to_array<double,3,1>(obj.EE_ob_com),msrm_utils::convert_to_array<double,3,3>(obj.ob_I));
         nlohmann::json p_frame;
         msrm_utils::write_json_array<double,4,4>(p_frame["EE_T_TCP"],obj.EE_T_O);
         result=true;
@@ -1716,8 +1679,8 @@ bool Core::grasp_object(const std::string &o, double width, double speed, double
     }
     bool result=false;
     try{
-        double max_width=this->_gripper->readOnce().max_width;
-        double current_width=this->_gripper->readOnce().width;
+        double max_width=this->m_panda_hand->readOnce().max_width;
+        double current_width=this->m_panda_hand->readOnce().width;
         if(width==-1){
             width=0;
         }else{
@@ -1732,15 +1695,15 @@ bool Core::grasp_object(const std::string &o, double width, double speed, double
                 return false;
             }
         }
-        if(!this->_gripper->readOnce().is_grasped){
-            result=this->_gripper->grasp(width,speed,force,1,1);
+        if(!this->m_panda_hand->readOnce().is_grasped){
+            result=this->m_panda_hand->grasp(width,speed,force,1,1);
         }else{
             result=true;
         }
-        franka::GripperState gripper_state=this->_gripper->readOnce();
+        franka::GripperState gripper_state=this->m_panda_hand->readOnce();
         if(check_width && (gripper_state.width<obj.grasp_width-0.005 || gripper_state.width>obj.grasp_width+0.005)){
             spdlog::error("Dimensions of object "+o+" not within expected limits. Expected: " + std::to_string(obj.grasp_width) + ", but measured: " + std::to_string(gripper_state.width));
-            this->_gripper->move(current_width,1);
+            this->m_panda_hand->move(current_width,1);
             this->unlock_robot_connection();
             return false;
         }
@@ -1748,7 +1711,7 @@ bool Core::grasp_object(const std::string &o, double width, double speed, double
         p["grasped_object"]=o;
         this->_kb.get_local_memory()->modify_hidden_config_user(p);
         this->_percept.mios_state.grasped_object=o;
-        this->_robot->setLoad(obj.mass,msrm_utils::convert_to_array<double,3,1>(obj.EE_ob_com),msrm_utils::convert_to_array<double,3,3>(obj.ob_I));
+        this->m_panda_body->setLoad(obj.mass,msrm_utils::convert_to_array<double,3,1>(obj.EE_ob_com),msrm_utils::convert_to_array<double,3,3>(obj.ob_I));
         nlohmann::json p_frame;
         msrm_utils::write_json_array<double,4,4>(p_frame["EE_T_TCP"],obj.EE_T_O);
     }catch(franka::CommandException& e){
@@ -1788,11 +1751,11 @@ bool Core::home_gripper(){
     if(!this->lock_robot_connection(false)) return false;
     bool result=false;
     try{
-        if(this->_gripper->readOnce().is_grasped){
+        if(this->m_panda_hand->readOnce().is_grasped){
             spdlog::error("Cannot home the gripper while grasping.");
             result=false;
         }else{
-            result=this->_gripper->homing();
+            result=this->m_panda_hand->homing();
         }
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
@@ -1823,7 +1786,7 @@ bool Core::grasp(double width, double speed, double force){
     }
     bool result=false;
     try{
-        result=this->_gripper->grasp(width,speed,force,1,1);
+        result=this->m_panda_hand->grasp(width,speed,force,1,1);
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
         return false;
@@ -1849,7 +1812,7 @@ bool Core::move_gripper(double width, double speed){
     }
     bool result=false;
     try{
-        result=this->_gripper->move(width,speed);
+        result=this->m_panda_hand->move(width,speed);
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
         return false;
@@ -1879,7 +1842,7 @@ bool Core::release_object(double width, double speed){
     if(!this->lock_robot_connection(false)) return false;
     bool result=false;
     try{
-        double max_width=this->_gripper->readOnce().max_width;
+        double max_width=this->m_panda_hand->readOnce().max_width;
         if(width==-1){
             width=max_width;
         }else{
@@ -1889,12 +1852,12 @@ bool Core::release_object(double width, double speed){
                 return false;
             }
         }
-        result=this->_gripper->move(width,speed);
+        result=this->m_panda_hand->move(width,speed);
         nlohmann::json p;
         p["grasped_object"]="none";
         this->_percept.mios_state.grasped_object="none";
         this->_kb.get_local_memory()->modify_hidden_config_user(p);
-        this->_robot->setLoad(0,{0,0,0},{0,0,0,0,0,0,0,0,0});
+        this->m_panda_body->setLoad(0,{0,0,0},{0,0,0,0,0,0,0,0,0});
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
         result=false;
@@ -1920,7 +1883,7 @@ void Core::gripper_grasp(double width, double speed, double force, double epsilo
         return;
     }
     try{
-        this->_gripper->grasp(width,speed,force,epsilon_inner,epsilon_outer);
+        this->m_panda_hand->grasp(width,speed,force,epsilon_inner,epsilon_outer);
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
     }catch(franka::NetworkException& e){
@@ -1935,7 +1898,7 @@ void Core::gripper_move(double width, double speed){
         return;
     }
     try{
-        this->_gripper->move(width,speed);
+        this->m_panda_hand->move(width,speed);
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
     }catch(franka::NetworkException& e){
@@ -1950,7 +1913,7 @@ void Core::gripper_homing(){
         return;
     }
     try{
-        this->_gripper->homing();
+        this->m_panda_hand->homing();
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
     }catch(franka::NetworkException& e){
@@ -1965,7 +1928,7 @@ bool Core::is_grasping() const{
         return false;
     }
     try{
-        return this->_gripper->readOnce().is_grasped;
+        return this->m_panda_hand->readOnce().is_grasped;
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
         return false;
@@ -1985,7 +1948,7 @@ void Core::gripper_stop(){
         return;
     }
     try{
-        this->_gripper->stop();
+        this->m_panda_hand->stop();
     }catch(franka::CommandException& e){
         std::cout<<e.what()<<std::endl;
     }catch(franka::NetworkException& e){
@@ -1994,42 +1957,39 @@ void Core::gripper_stop(){
     this->_flag_gripper_busy=false;
 }
 
-const Percept& Core::request_percept(Eigen::Matrix<double,3,3> O_R_TF, bool wait){
+bool Core::refresh_percept(Eigen::Matrix<double,3,3> O_R_TF, bool wait){
     if(!this->_kb.get_local_memory()->access_config_system().has_robot){
         this->_percept.robot_mode=franka::RobotMode::kIdle;
-        return this->_percept;
+        return true;
     }
     if(!this->has_robot_connection()){
         spdlog::warn("Not connected to robot, could not refresh perception.");
-        return this->_percept;
+        return false;
     }
     if(!this->lock_robot_connection(wait)){
-        return this->_percept;
+        return false;
     }
     try{
-        franka::RobotState state_robot;
-        franka::GripperState state_gripper;
+        franka::RobotState robot_state;
+        franka::GripperState gripper_state;
         if(this->_kb.get_local_memory()->access_config_system().has_robot){
-            state_robot=this->_robot->readOnce();
+            robot_state=m_panda_body->readOnce();
         }
         if(this->_kb.get_local_memory()->access_config_system().has_gripper){
-            state_gripper=this->_gripper->readOnce();
+            gripper_state=m_panda_hand->readOnce();
         }
-        this->_flag_gripper=true;
-        this->process_percept(state_robot,state_gripper,O_R_TF);
-        this->_flag_gripper=false;
+        m_percept.update(m_panda_model,robot_state,gripper_state);
     }catch(franka::InvalidOperationException& e){
-        std::cout<<e.what()<<std::endl;
+        spdlog::debug(e.what());
         this->unlock_robot_connection();
-        spdlog::warn("Cannot read robot state, another operation is blocking. Unpredictable behavior possible.");
-        return this->_percept;
+        return false;
     }catch(franka::NetworkException& e){
-        std::cout<<e.what()<<std::endl;
+        spdlog::debug(e.what());
         this->unlock_robot_connection();
-        throw CoreException("Encountered network problems.");
+        return false;
     }
     this->unlock_robot_connection();
-    return this->_percept;
+    return true;
 }
 
 void Core::check_cartesian_velocity_workspace(Eigen::Matrix<double, 6, 1> &TF_dX_d, const Percept& p){
@@ -2077,13 +2037,14 @@ void Core::base_avoidance(Eigen::Matrix<double, 6, 1> &TF_dX_d, const Percept &p
     cp1<<0,0,0;
     cp2<<0,0,0.5;
     p_ee<<p.O_T_EE(0,3),p.O_T_EE(1,3),p.O_T_EE(2,3);
-    msrm_utils::Cylinder base_cylinder(cp1,cp2,0.4);
+    msrm_utils::Cylinder base_cylinder(this->get_kb()->get_local_memory()->access_config_user().base_cylinder_p1,
+                                       this->get_kb()->get_local_memory()->access_config_user().base_cylinder_p2,
+                                       this->get_kb()->get_local_memory()->access_config_user().base_cylinder_radius);
     if(base_cylinder.contains(p_ee)){
         Eigen::Matrix<double,3,3> O_R_Cyl = base_cylinder.get_frame(p_ee);
         Eigen::Matrix<double,6,1> Cyl_dX_d = msrm_utils::rotate_vector(TF_dX_d,msrm_utils::invert_matrix(O_R_Cyl));
-        std::cout<<"Cyl_dX_d: "<<Cyl_dX_d<<std::endl;
         if(Cyl_dX_d(0)<0){
-            Cyl_dX_d(0)=0.05;
+            Cyl_dX_d(0)=0.01;
         }
         TF_dX_d=msrm_utils::rotate_vector(Cyl_dX_d,O_R_Cyl);
     }
@@ -2102,7 +2063,7 @@ void Core::dummy_control(std::function<franka::Torques (const franka::RobotState
         tau_J=control_cycle(state);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
-        usleep(1000-t);
+        std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
@@ -2114,7 +2075,7 @@ void Core::dummy_control(std::function<franka::CartesianVelocities (const franka
         dX_d=control_cycle(state);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
-        usleep(1000-t);
+        std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
@@ -2126,7 +2087,7 @@ void Core::dummy_control(std::function<franka::JointVelocities (const franka::Ro
         dq_d=control_cycle(state);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
-        usleep(1000-t);
+        std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
@@ -2575,6 +2536,7 @@ bool Core::listen_to_beacons(){
         }
     }
     while(true){
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         for(unsigned i=0;i<s.size();i++){
             char recvString[255];
             int recvStringLen;
@@ -2583,7 +2545,13 @@ bool Core::listen_to_beacons(){
             }else{
                 std::string buffer(recvString);
                 std::string msg_str=std::string(buffer.begin(),buffer.begin()+recvStringLen);
-                nlohmann::json msg=nlohmann::json::parse(msg_str);
+                nlohmann::json msg;
+                try{
+                    msg=nlohmann::json::parse(msg_str);
+                }catch(const nlohmann::detail::parse_error& e){
+                    spdlog::debug(e.what());
+                    continue;
+                }
                 if(msg["designation"]=="digital_twin"){
                     nlohmann::json p;
                     p["telemetry_udp_ip"]=msg["ip"];

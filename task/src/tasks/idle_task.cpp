@@ -6,16 +6,14 @@
 
 namespace mios {
 
-idle_task::idle_task():Task("idle_task"){
+IdleTask::IdleTask(Core *core):Task("IdleTask",core){
 }
-idle_task::~idle_task(){
+void IdleTask::initialize_task(){
+    this->create_skill<motions_generic_wiggle>("sleep",m_kb,std::make_shared<ConfigSkill_motions_generic_wiggle>());
+    this->create_skill<hold_pose>("hold",m_kb,std::make_shared<ConfigSkill_hold_pose>());
+    this->create_skill<move_to_pose_joint>("move",m_kb,std::make_shared<ConfigSkill_move_to_pose_joint>());
 }
-void idle_task::initialize_task(){
-    this->create_skill<motions_generic_wiggle>("sleep");
-    this->create_skill<hold_pose>("hold");
-    this->create_skill<move_to_pose_joint>("move");
-}
-void idle_task::execute_task(){
+void IdleTask::execute_task(){
     std::map<std::string,std::array<unsigned,3> > colors;
     colors["far-left"]={0,0,100};
     colors["left"]={0,0,100};
@@ -44,22 +42,22 @@ void idle_task::execute_task(){
         break;
     }
 }
-void idle_task::recover_task(){
+void IdleTask::recover_task(){
 
 }
 
-bool idle_task::read_parameters(const nlohmann::json& params){
+bool IdleTask::read_parameters(const nlohmann::json& params){
     if(!msrm_utils::read_json_param(params,"idle_mode",this->idle_mode)){
         this->idle_mode="none";
     }
 return true;
 }
 
-const EvalTask& idle_task::evaluate_task(){
-this->_eval_task.cost_suc=0;
-this->_eval_task.cost_err=0;
-this->_eval_task.success=true;
-return this->_eval_task;
+const EvalTask& IdleTask::evaluate_task(){
+m_eval_task.cost_suc=0;
+m_eval_task.cost_err=0;
+m_eval_task.success=true;
+return m_eval_task;
 }
 
 }

@@ -17,8 +17,8 @@ Percept::Percept(){
 }
 
 void Percept::set_0(){
-    O_T_EE.setZero();
-    TF_T_EE.setZero();
+    O_T_EE=Eigen::Matrix<double,4,4>::Identity();
+    TF_T_EE=Eigen::Matrix<double,4,4>::Identity();
     q.setZero();
     dq.setZero();
     theta.setZero();

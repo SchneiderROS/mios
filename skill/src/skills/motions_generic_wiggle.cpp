@@ -2,16 +2,12 @@
 
 namespace mios {
 
-motions_generic_wiggle::motions_generic_wiggle():Skill("motions_generic_wiggle"){
-
-}
-
-motions_generic_wiggle::~motions_generic_wiggle(){
+motions_generic_wiggle::motions_generic_wiggle(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config):Skill("motions_generic_wiggle",kb,config){
 
 }
 
 bool motions_generic_wiggle::read_skill_parameters(const nlohmann::json &p){
-    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(this->_config);
+    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(m_config);
     msrm_utils::read_json_param<double,6,1>(p,"dX_fourier_a_a",c->dX_fourier_a_a);
     msrm_utils::read_json_param<double,6,1>(p,"dX_fourier_b_a",c->dX_fourier_b_a);
     msrm_utils::read_json_param<double,6,1>(p,"dX_fourier_a_f",c->dX_fourier_a_f);
@@ -24,7 +20,7 @@ bool motions_generic_wiggle::read_skill_parameters(const nlohmann::json &p){
 }
 
 void motions_generic_wiggle::create_config(){
-    this->_config=std::make_shared<ConfigSkill_motions_generic_wiggle>();
+    m_config=std::make_shared<ConfigSkill_motions_generic_wiggle>();
 }
 
 void motions_generic_wiggle::build_primitives(const Percept &p){
@@ -32,7 +28,7 @@ void motions_generic_wiggle::build_primitives(const Percept &p){
     this->insert_mp<mp_basic>("wiggle",p);
     this->set_init_mp("wiggle");
 
-    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(this->_config);
+    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(m_config);
     std::shared_ptr<ConfigMP_mp_basic> c_wiggle = std::static_pointer_cast<ConfigMP_mp_basic>(this->get_mp("wiggle")->get_config());
 
     c_wiggle->dX_fourier_a_a=c->dX_fourier_a_a;
@@ -44,7 +40,7 @@ void motions_generic_wiggle::build_primitives(const Percept &p){
 }
 
 Eigen::Matrix<double,3,3> motions_generic_wiggle::get_O_R_TF(const Percept &p){
-    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(this->_config);
+    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(m_config);
     if(c->use_EE){
         return p.TF_T_EE.block<3,3>(0,0);
     }else{
@@ -57,10 +53,10 @@ std::tuple<bool,std::string> motions_generic_wiggle::check_edges(const Percept &
 }
 
 bool motions_generic_wiggle::check_local_suc_conditions(const Percept &p){
-    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(this->_config);
+    std::shared_ptr<ConfigSkill_motions_generic_wiggle> c = std::static_pointer_cast<ConfigSkill_motions_generic_wiggle>(m_config);
     if(c->tap_to_finish){
         for(unsigned i=0;i<p.K_F_ext.rows();i++){
-            if(fabs(p.K_F_ext(i))>this->_config->user.F_contact(i)){
+            if(fabs(p.K_F_ext(i))>m_config->user.F_contact(i)){
                 return true;
             }
         }
@@ -73,8 +69,8 @@ bool motions_generic_wiggle::check_local_ex_conditions(const Percept &p){
 }
 
 void motions_generic_wiggle::evaluate(){
-    this->_eval.cost_err=0;
-    this->_eval.cost_suc=0;
+    m_eval.cost_err=0;
+    m_eval.cost_suc=0;
 }
 
 }

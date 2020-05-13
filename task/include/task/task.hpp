@@ -6,10 +6,11 @@
 #include <atomic>
 #include <stdlib.h>
 #include <memory>
+#include <msrm_utils/json.hpp>
 
 #include "skill/skill.hpp"
+#include "task/taskobserver.hpp"
 #include "knowledge_base/knowledge_base.hpp"
-#include <msrm_utils/json.hpp>
 
 namespace mios {
 
@@ -54,13 +55,8 @@ struct EvalTask{
  */
 class Task{
 public:
-    Task(const std::string &id);
+    Task(const std::string &id, Core* core);
     virtual ~Task();
-
-    /**
-     * Resets all flags and clears all skills and subtasks.
-     */
-    void reset();
 
     /**
      * Resets some of the flags and indicators of this task and its skills, but not the subtasks.
@@ -89,7 +85,7 @@ public:
      * @param core Pointer to the core module.
      * @return Returns true if the task and all its subtasks and skills were successfully loaded.
      */
-    bool load(const nlohmann::json &parameters, Core *core);
+    bool load(const nlohmann::json &parameters);
 
     /**
      * Implements task execution in derived tasks.
@@ -159,6 +155,10 @@ public:
      */
     virtual bool read_parameters(const nlohmann::json& params);
 
+    std::string get_uuid() const;
+    void notify_observers();
+    void subscribe(std::shared_ptr<TaskObserver> observer);
+
 protected:
 
     /**
@@ -204,7 +204,7 @@ protected:
      * not consider whether it acutally grasps an object or whether the gripper is just closed.
      * @return True if gripper is grasping, false otherwise.
      */
-    bool is_grasping();
+    bool is_grasping() const;
 
     /**
      * This function attempts to grasp the specified object. The obejct has to exist in the knowledge base. In the current implementation the gripper
@@ -247,12 +247,12 @@ protected:
      *
      * @throw TaskException if a skill with the given name id already exists.
      */
-    template<typename T>void create_skill(const std::string& name){
-        if(this->_skill.find(name)!=this->_skill.end()){
+    template<typename T>void create_skill(const std::string& name,KnowledgeBase* kb,std::shared_ptr<ConfigSkill> config){
+        if(m_skills.find(name)!=m_skills.end()){
             throw TaskException("Skill with name "+name+" already exists, aborting...");
         }else{
-            this->_skill.insert(std::pair<std::string,std::shared_ptr<Skill> >(name,std::make_shared<T>()));
-            this->_skill[name]->set_id(name);
+            m_skills.insert(std::pair<std::string,std::shared_ptr<Skill> >(name,std::make_shared<T>(kb,config)));
+            m_skills[name]->set_id(name);
         }
     }
 
@@ -267,10 +267,10 @@ protected:
 //        if(this->get_id()==t->get_id()){
 //            throw TaskException("Can not create subtask of same type as parent task.");
 //        }
-        if(this->_subtask.find(name)!=this->_subtask.end()){
+        if(m_subtasks.find(name)!=m_subtasks.end()){
             throw TaskException("Subtask with name "+name+" already exists, aborting...");
         }else{
-            this->_subtask.insert(std::pair<std::string,std::shared_ptr<Task> >(name,std::make_shared<T>()));
+            m_subtasks.insert(std::pair<std::string,std::shared_ptr<Task> >(name,std::make_shared<T>(m_core)));
         }
     }
 
@@ -298,9 +298,9 @@ protected:
      */
     void execute_desk_timeline(const std::string& id);
 
-    KnowledgeBase* _kb;
-    EvalTask _eval_task;
-    std::vector<double> _w_cost_function;
+    KnowledgeBase* m_kb;
+    EvalTask m_eval_task;
+    std::vector<double> m_w_cost_function;
 
 private:
 
@@ -312,17 +312,22 @@ private:
     bool check_task_description(const nlohmann::json& description) const;
     bool check_user_input(const nlohmann::json& parameters, const nlohmann::json &description) const;
     void load_description_category(const nlohmann::json& parameters, const std::string& category, const std::string& id_skill, nlohmann::json& task_descr) const;
+    static std::string generate_uuid();
 
-    std::map<std::string,std::shared_ptr<Skill> > _skill;
-    std::map<std::string,std::shared_ptr<Task> > _subtask;
+    std::map<std::string,std::shared_ptr<Skill> > m_skills;
+    std::map<std::string,std::shared_ptr<Task> > m_subtasks;
 
-    std::atomic<bool> _flag_stop;
-    std::atomic<bool> _flag_recover;
-    std::atomic<bool> _flag_in_recovery;
-    Core* _core;
-    std::string _id;
+    std::atomic<bool> m_flag_stop;
+    std::atomic<bool> m_flag_recover;
+    std::atomic<bool> m_flag_in_recovery;
+    Core* m_core;
+    std::string m_id;
 
-    std::string _state;
+    std::string m_state;
+
+    const std::string m_uuid;
+
+    std::set<std::shared_ptr<TaskObserver> > m_observers;
 
 };
 

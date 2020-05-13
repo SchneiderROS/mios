@@ -6,10 +6,22 @@ from concurrent.futures import TimeoutError as ConnectionTimeoutError
 import websockets.exceptions
 
 
+class Client:
+    def __init__(self, hostname, port, endpoint):
+        uri = "ws://" + hostname + ":" + str(port) + "/" + endpoint
+        self.connection = websockets.connect(uri).ws_client
+
+    def send(self, request):
+        message = json.dumps(request)
+        self.connection.ws_client.send(message)
+        response = asyncio.wait_for(websocket.recv(), timeout=timeout)
+        return json.loads(response)
+
+
 async def send(hostname, port=8383, endpoint="mios/core", request=None, timeout=100, silent=False):
     uri = "ws://" + hostname + ":" + str(port) + "/" +endpoint
     try:
-        async with websockets.connect(uri, close_timeout=1) as websocket:
+        async with websockets.connect(uri, close_timeout=1000) as websocket:
             message = json.dumps(request)
             await websocket.send(message)
             response = await asyncio.wait_for(websocket.recv(), timeout=timeout)

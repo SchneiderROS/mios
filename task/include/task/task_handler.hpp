@@ -12,68 +12,37 @@ namespace mios {
 class Core;
 class TaskList;
 
-class TaskSubscriber{
-public:
-    TaskSubscriber(const std::string &id);
+enum TaskLifeCycle{PreChecks,Startup,Termination,Execution,Recovery,Switch,Idle};
 
-    const EvalTask &wait();
-    void finish(const EvalTask &e);
-    std::string get_id();
-private:
-    EvalTask _e;
-    std::atomic<bool> _finished;
-    std::string _id;
-};
 
 class TaskHandler{
 public:
     TaskHandler(Core* core);
-    ~TaskHandler();
 
-    void activity();
-    void set_interrupt(bool on);
+    void life_cycle();
 
-    std::string get_active_task_id();
+    std::string get_active_task_id() const;
+    bool is_busy() const;
 
-    std::pair<bool, std::string> start_task(const std::string& task, const nlohmann::json &parameters, bool queue_task=false);
+    std::tuple<bool, std::string, std::string> start_task(const std::string& task_id, const nlohmann::json &parameters, bool queue_task=false);
     std::pair<bool, std::string> stop_task(bool nominal=false, bool success=false, bool recover=true, bool empty_queue=false, double cost_suc=0, double cost_err=0);
-    std::pair<bool, std::string> terminate_all_tasks();
-    std::pair<bool, std::string> remove_task(const std::string &id);
-    bool has_id(const std::string& id);
-    bool subscribe(std::shared_ptr<TaskSubscriber> sub);
-    void unsubcribe(const std::string& task_uuid, const std::set<std::shared_ptr<TaskSubscriber> >::iterator& it);
-    bool is_valid_subscriber(const std::string& task_uuid,const std::set<std::shared_ptr<TaskSubscriber> >::iterator& it);
-    bool request_eval(const std::string& id,EvalTask& e);
-    const std::list<std::tuple<std::string,std::string,nlohmann::json> >* get_task_queue();
-    std::pair<EvalTask, bool> wait_for_task(const std::string& task_uuid);
+    std::pair<bool, std::string> remove_task(const std::string &uuid);
+    bool subscribe(const std::string &task_uuid, std::shared_ptr<TaskObserver> observer);
+    bool request_eval(const std::string& id,EvalTask& e) const;
+    const std::list<std::tuple<std::string, std::shared_ptr<Task>, nlohmann::json> > *get_task_queue();
+    std::tuple<bool, EvalTask, std::string> wait_for_task(const std::string& task_uuid);
     std::pair<EvalTask, bool> check_if_finished(const std::string& task_uuid);
 
-    bool is_busy();
     void reset();
 
 private:
-    bool add_id(const std::string& id);
-    bool terminate_task(const std::string& id, const EvalTask& e);
+    std::mutex m_mtx_task_queue;
+    std::list<std::tuple<std::string,std::shared_ptr<Task>,nlohmann::json> > m_task_queue;
+    TaskLifeCycle m_task_life_cycle;
+    std::shared_ptr<Task> m_active_task;
+    std::map<std::string,EvalTask> m_eval_storage;
 
-    std::string get_unique_task_id();
-
-    std::unique_ptr<TaskList> _task_list;
-    std::list<std::tuple<std::string,std::string,nlohmann::json> > _task_queue;
-    std::map<std::string,std::set<std::shared_ptr<TaskSubscriber> > > _sub;
-    std::map<std::string,EvalTask> _eval_storage;
-    std::shared_ptr<Task> _active_task;
-
-    std::mutex _mtx_task_queue;
-    std::mutex _mtx_termination_phase;
-
-    Core* _core;
-
-    std::atomic<bool> _flag_interrupt;
-    std::atomic<bool> _flag_user_stop;
-    std::atomic<bool> _flag_invalid;
-    std::atomic<bool> _flag_shutdown;
-    std::atomic<bool> _flag_busy;
-
+    Core* m_core;
 };
 
 }

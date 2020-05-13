@@ -4,10 +4,9 @@
 
 namespace mios {
 
-class idle_task : public Task{
+class IdleTask : public Task{
 public:
-    idle_task();
-    ~idle_task();
+    IdleTask(Core* core);
     void initialize_task();
     void execute_task();
     void recover_task();

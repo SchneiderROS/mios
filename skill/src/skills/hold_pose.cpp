@@ -2,11 +2,7 @@
 
 namespace mios {
 
-hold_pose::hold_pose():Skill("hold_pose"){
-
-}
-
-hold_pose::~hold_pose(){
+hold_pose::hold_pose(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config):Skill("hold_pose",kb,config){
 
 }
 
@@ -20,7 +16,7 @@ bool hold_pose::read_skill_parameters(const nlohmann::json &p){
 }
 
 void hold_pose::create_config(){
-    this->_config=std::make_shared<ConfigSkill_hold_pose>();
+    m_config=std::make_shared<ConfigSkill_hold_pose>();
 }
 
 void hold_pose::build_primitives(const Percept &p){
@@ -46,8 +42,8 @@ bool hold_pose::check_local_ex_conditions(const Percept &p){
 }
 
 void hold_pose::evaluate(){
-    this->_eval.cost_err=this->_eval.p_1.time-this->_eval.p_0.time;
-    this->_eval.cost_suc=0;
+    m_eval.cost_err=m_eval.p_1.time-m_eval.p_0.time;
+    m_eval.cost_suc=0;
 }
 
 }

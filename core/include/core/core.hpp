@@ -15,8 +15,11 @@
 #include "led_pattern/led_pattern.hpp"
 #include "telemetry/telemetry_udp.hpp"
 #include "interface/parameter_server.hpp"
+#include "panda/panda_body.hpp"
 
 #include "utils/types.hpp"
+#include "utils/percept.hpp"
+
 
 #include "plugins/cntr_aic_wrapper.hpp"
 #include "plugins/cntr_force_wrapper.hpp"
@@ -41,8 +44,9 @@ public:
     Core(int argc, char **argv);
     ~Core();
 
-    bool initialize(bool silent=false);
-    bool terminate();
+    bool initialize();
+    void terminate();
+
     bool reset();
     bool write_config_to_robot();
 //    void stop();
@@ -68,8 +72,6 @@ public:
     KnowledgeBase *get_kb();
     void set_live_parameter_server(ParameterServer *server);
 
-    std::string get_ip_primary();
-
     bool start_control_cycle();
     void terminate_control_cycle();
 
@@ -88,7 +90,7 @@ public:
     bool home_gripper();
     bool set_grasped_object(const std::string& o);
 
-    const Percept& request_percept(Eigen::Matrix<double, 3, 3> O_R_TF=Eigen::Matrix<double,3,3>::Zero(3,3), bool wait=false);
+    bool refresh_percept(Eigen::Matrix<double, 3, 3> O_R_TF=Eigen::Matrix<double,3,3>::Zero(3,3), bool wait=false);
 
     // Sound output
     bool init_sound();
@@ -100,18 +102,8 @@ public:
     void load_led_pattern(std::shared_ptr<LEDPattern> pattern);
     void unload_led_pattern();
 
-    // Desk
-    void start_desk_task(const std::string& task);
-    void stop_desk_task();
-    bool wait_for_desk_task();
-    bool shutdown_robot();
-    bool move_to_pack_pose();
-    bool unlock_brakes();
-    bool lock_brakes();
-
 private:
 
-    std::string get_ip_robot();
     bool listen_to_beacons();
 
     bool set_ee();
@@ -161,18 +153,6 @@ private:
     void start_telemetry();
     void terminate_telemetry();
 
-    void gripper_grasp(double width,double speed, double force,double epsilon_inner=0.005,double epsilon_outer=0.005);
-    void gripper_move(double width,double speed);
-    void gripper_stop();
-    void gripper_homing();
-
-    bool connect_to_robot();
-    bool connect_to_gripper();
-    bool disconnect_from_robot();
-    bool disconnect_from_gripper();
-
-    bool conncet_to_primary();
-
     void process_percept(const franka::RobotState& state, const franka::GripperState &state_gripper, Eigen::Matrix<double, 3, 3> O_R_TF=Eigen::Matrix<double,3,3>::Zero(3,3));
     void process_commands(const CmdSkill& cmd);
     bool validity_check_torque(std::array<double, 7>& tau_J);
@@ -182,16 +162,6 @@ private:
     bool validity_check_velocity_joint(std::array<double, 7>& dq_d);
 
     std::tuple<std::string,std::string,std::string> get_desk_data();
-
-    // network
-    std::string find_robot() const;
-    bool test_robot_connection(const std::string& ip) const;
-    std::string find_primary();
-    bool test_primary_connection(const std::string& ip);
-
-    std::unique_ptr<franka::Robot> _robot;
-    std::unique_ptr<franka::Model> _model;
-    std::unique_ptr<franka::Gripper> _gripper;
 
     std::thread _thr_gripper;
     std::thread _thr_led;
@@ -209,7 +179,7 @@ private:
 
     ConfigInternal _config_internal;
 
-    Percept _percept;
+    Percept m_percept;
     std::array<double,7> _tau_J_old;
     std::array<double,7> _tau_J_last;
 //    CmdSkill _skill_last;
@@ -232,6 +202,7 @@ private:
     std::string _last_error;
 
     std::mutex _mtx_control_cycle;
+    std::mutex m_mtx_robot;
     std::thread _thr_beacons;
 
     cntr_aic::cntr_aic _cntr_aic;
@@ -273,6 +244,8 @@ private:
     std::map<std::string,unsigned> _led_panel_id;
     nlohmann::json event;
     std::chrono::system_clock::time_point t_event;
+
+    PandaBody m_panda_body;
 
 };
 

@@ -12,8 +12,7 @@ struct ConfigSkill_test_skill_1: public ConfigSkill{
 };
 class test_skill_1 : public Skill{
 public:
-    test_skill_1();
-    ~test_skill_1();
+    test_skill_1(KnowledgeBase *kb, std::shared_ptr<ConfigSkill> config);
     void evaluate();
     bool read_skill_parameters(const nlohmann::json& p);
     Eigen::Matrix<double,3,3> get_O_R_TF(const Percept &p);

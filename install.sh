@@ -32,8 +32,12 @@ if [ ! -d "${ROOT}/build" ]; then
 mkdir ${ROOT}/build
 fi
 
-cd ${ROOT}/build
-cmake ..
+if [ ! -d "${ROOT}/build/release" ]; then
+mkdir ${ROOT}/build/release
+fi
+
+cd ${ROOT}/build/release
+cmake ../..
 make -j$n_cpu install
 
 ### push all libraries ###
