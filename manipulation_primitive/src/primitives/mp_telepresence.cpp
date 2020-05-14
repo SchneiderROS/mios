@@ -55,15 +55,13 @@ void mp_telepresence::initialize(const Percept &p_0, const std::shared_ptr<Confi
     motion_error_cart::In_P_motion_error_cart motion_error_0_p;
     this->_motion_error_0.initialize(this->_motion_error_0_u,motion_error_0_p);
 
-    //    this->_wave_variables.p.master<<c->master;
-    //    this->_wave_variables.p.b<<0,0,0,0,0,0;
-    //    this->_wave_variables.p.lambda_u_l<<0,0,0,0,0,0;
-    //    this->_wave_variables.p.lambda_u_r<<0,0,0,0,0,0;
-    //    this->_wave_variables.u.dX_l<<0,0,0,0,0,0;
-    //    this->_wave_variables.u.F_r<<0,0,0,0,0,0;
-    //    this->_wave_variables.u.v_l<<0,0,0,0,0,0;
-    //    this->_wave_variables.u.v_r<<0,0,0,0,0,0;
-    //    this->_wave_variables.initialize();
+    this->_tp_joint_lim_u.B_J_EE=p_0.B_J_EE;
+    this->_tp_joint_lim_u.q=p_0.q;
+    this->_tp_joint_lim_u.dx.setZero();
+
+    tp_joint_lim::In_P_tp_joint_lim tp_joint_lim_p;
+    tp_joint_lim_p.joint_lims<<2.7, -2.7, 1.45, -1.45, 2.7, -2.7, 0.1, -2.75, 2.7, -2.7, 3.55, -0.1, 2.7, -2.7;
+    this->_tp_joint_lim.initialize(this->_tp_joint_lim_u,tp_joint_lim_p);
 }
 
 CmdMP& mp_telepresence::step(const Percept &p){
@@ -80,6 +78,7 @@ void mp_telepresence::terminate(){
     std::shared_ptr<ConfigMP_mp_telepresence> c = std::static_pointer_cast<ConfigMP_mp_telepresence>(this->_config);
     this->_motion_error.terminate();
     this->_motion_error_0.terminate();
+    this->_tp_joint_lim.terminate();
     int r=close(this->_s_out);
     if(r<0){
         msrm_utils::print_error("Socket could not be closed successfully.");
@@ -329,7 +328,7 @@ void mp_telepresence::joystick_mode(const Percept &p, std::vector<double> &paylo
             EE_T_J_r=c->EE_T_J_r;
         }
 
-        param=this->_kb->get_live_parameter("dX_max");
+        param=this->_kb->get_live_parameter("joystick_max_speed");
         Eigen::Matrix<double,2,1> dX_max;
         if(!param.is_null()){
             msrm_utils::read_json_param<double,2,1>(param,dX_max);
@@ -398,6 +397,16 @@ void mp_telepresence::joystick_mode(const Percept &p, std::vector<double> &paylo
             if(sigma>1)sigma=1;
             if(sigma<0)sigma=0;
             EE_dX_d(i)*=sigma;
+        }
+
+        this->_tp_joint_lim_u.B_J_EE=p.B_J_EE;
+        this->_tp_joint_lim_u.q=p.q;
+        this->_tp_joint_lim_u.dx=EE_dX_d;
+        this->_tp_joint_lim.step(this->_tp_joint_lim_u,this->_tp_joint_lim_y);
+        for(unsigned i=0;i<14;i++){
+            if(this->_tp_joint_lim_y.lim_triggered(i)==1){
+                EE_dX_d.setZero();
+            }
         }
 
         Eigen::Matrix<double,6,1> O_dX_d=msrm_utils::rotate_vector(EE_dX_d,O_T_EE); // Transform incoming velocity form master into O frame
@@ -663,4 +672,3 @@ void mp_telepresence::write_safe_message(){
 }
 
 }
-

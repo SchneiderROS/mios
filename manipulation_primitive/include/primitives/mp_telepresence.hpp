@@ -11,8 +11,8 @@
 #include <thread>
 
 #include "manipulation_primitive/manipulation_primitive.hpp"
-#include "motion_error_cart/motion_error_cart_wrapper.hpp"
-//#include "wave_variables/wave_variables_wrapper.hpp"
+#include "plugins/motion_error_cart_wrapper.hpp"
+#include "plugins/tp_joint_lim_wrapper.hpp"
 
 
 namespace mios {
@@ -41,6 +41,7 @@ struct ConfigMP_mp_telepresence : public ConfigMP{
         joint_direct_alpha.setZero();
         joystick_stepwise=false;
         joystick_step_size.setZero();
+        joint_walls<<5,-5,5,-5,5,-5,5,-5,5,-5,5,-5,5,-5;
     }
 
     Eigen::Matrix<double,3,3> EE_T_J_t;
@@ -59,6 +60,7 @@ struct ConfigMP_mp_telepresence : public ConfigMP{
     Eigen::Matrix<double,2,1> joystick_step_size;
 
     Eigen::Matrix<double,7,1> joint_direct_alpha;
+    Eigen::Matrix<double,14,1> joint_walls;
 
 
     std::string ip_dst;
@@ -160,6 +162,10 @@ private:
     motion_error_cart::motion_error_cart _motion_error_0;
     motion_error_cart::In_U_motion_error_cart _motion_error_0_u;
     motion_error_cart::Out_Y_motion_error_cart _motion_error_0_y;
+
+    tp_joint_lim::tp_joint_lim _tp_joint_lim;
+    tp_joint_lim::In_U_tp_joint_lim _tp_joint_lim_u;
+    tp_joint_lim::Out_Y_tp_joint_lim _tp_joint_lim_y;
 
 //    wave_variables::wave_variables _wave_variables;
 
