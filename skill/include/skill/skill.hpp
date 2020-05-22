@@ -3,6 +3,7 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <atomic>
 
 #include "manipulation_primitive/manipulation_primitive.hpp"
@@ -15,17 +16,14 @@
 
 namespace mios {
 
+class Object;
+
 /**
  * The evaluation struct contains quality metrics for the skill execution and further meta information.
  */
 class SkillResult{
+public:
     SkillResult();
-
-    /**
-     * Pointer to the skill configuration.
-     */
-    std::shared_ptr<SkillParameters> config;
-
     /**
      * Map that contains the percept struct at the beginning of execution of each manipulation primitive of the skill.
      * The key is the name of the respective primitive.
@@ -85,7 +83,7 @@ public:
      * The skill base constructor. It is called by the constructor of any derived skill class.
      * @param[in] type The type id of the skill.
      */
-    Skill(const std::string& type, const std::vector<std::string>& objects, const std::string &id, Memory *memory, const Percept& p);
+    Skill(const std::string& type, const std::unordered_set<std::string> &objects, const std::string &id, Memory *memory, const Percept& p);
 
     /**
      * The skill destructor.
@@ -142,15 +140,12 @@ public:
      * Returns a const reference to the evaluation struct of this skill.
      * @return A const reference to the evaluation struct of this skill.
      */
-    SkillResult get_eval() const;
+    SkillResult get_result() const;
 
     /**
      * Returns a pointer to the configuration struct of this skill. It is explicitly allowed to modify the struct.
      * @return A pointer to the configuratin struct of this skill.
      */
-    template<typename T=SkillParameters>std::shared_ptr<T> get_config() const{
-        return std::static_pointer_cast<T>(m_config);
-    }
 
     /**
      * Returns the type id of the skill.
@@ -182,7 +177,7 @@ public:
      *
      * @throw SkillException if o is not a skill object.
      */
-    const Object * const get_object(const std::string& o) const;
+    const Object *get_object(const std::string& o) const;
 
 
     /**
@@ -191,7 +186,7 @@ public:
      * @param TF Determines whether the pose should be given in task frame or base frame.
      * @return Object pose.
      */
-    Eigen::Matrix<double,4,4> get_object_pose(const std::string& o, bool TF=true);
+    Eigen::Matrix<double,4,4> get_object_grasp_pose(const std::string& o, bool TF=true);
 
     /**
      * To be defined by developer. This function sets up the evaluation struct based on the skill execution.
@@ -226,7 +221,7 @@ protected:
      *
      * @throw SkillException if mp id does not exist.
      */
-    void set_init_mp(const std::string& id);
+    void set_init_mp(const std::string& name);
 
     /**
      * Creates manipulation primitive.
@@ -254,7 +249,7 @@ protected:
      *
      * @throw SkillException if configuration struct has not been set by developer via the function "create_config".
      */
-    bool check_global_err_conditions(const Percept& p);
+    bool check_global_err_conditions(const Percept& p) const;
 
     /**
      * Checks global success conditions that hold for any skill. These are external trigger.
@@ -301,15 +296,12 @@ protected:
      * @param[in] p Percept struct.
      * @return A tuple consisting of a bool (to indicate whether to trigger a transition) and a string that is the id of the successor MP if the transition is activated.
      */
-    virtual std::tuple<bool,std::string> check_edges(const Percept& p) = 0;
+    virtual std::optional<std::tuple<bool,std::string> > check_edges(const Percept& p) = 0;
 
     /**
      * This function runs as a parallel thread at a specified frequency.
      */
     virtual void parallels();
-
-    double get_t_init() const;
-
 
     std::shared_ptr<ManipulationPrimitive> m_active_mp;
     Memory* m_memory;
@@ -324,23 +316,23 @@ private:
     std::map<std::string,std::shared_ptr<ManipulationPrimitive> > m_mp_graph;
     std::string m_init_mp;
 
-    std::unordered_map<std::string,Object*> m_grounded_objects;
+    std::unordered_map<std::string,const Object*> m_grounded_objects;
 
 
-    double m_time_start;
+    std::chrono::high_resolution_clock::time_point m_time_start;
 
+    SkillLifeCycle m_life_cycle;
     std::atomic<bool> m_flag_invoke_failure;
     std::atomic<bool> m_flag_invoke_success;
     std::atomic<bool> m_flag_pause;
     std::atomic<bool> m_flag_parallels_running;
     std::atomic<bool> m_flag_run_parallels;
 
-    const std::string m_id;
     const std::string m_type;
+    const std::string m_id;
     const std::unordered_set<std::string> m_objects;
 
     std::thread m_thr_parallels;
-    SkillLifeCycle m_life_cycle;
 
 };
 

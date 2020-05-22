@@ -19,7 +19,7 @@ public:
      * Transforms the internal object representation into json format.
      * @return Object representation in json format.
      */
-    nlohmann::json to_json();
+    nlohmann::json to_json() const;
 
     /**
      * Reads an object description from json format.

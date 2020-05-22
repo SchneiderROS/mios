@@ -22,7 +22,7 @@ public:
     bool is_ok() const;
     void link_to_st_memory(STMemory* st_memory);
     bool initialize();
-    bool load_default_parameters(const nlohmann::json& parameters);
+    bool load_default_parameters(nlohmann::json &parameters);
 
     bool get_task_data(const std::string uuid,TaskData& data) const;
 

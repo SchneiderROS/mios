@@ -12,6 +12,7 @@ class Object;
 enum CommandMode{None,Torque,CartesianVelocity,JointVelocity,CartesianPose,JointPose};
 
 class LimitParameters{
+public:
     LimitParameters();
 
     bool read_parameters(const nlohmann::json& parameters);
@@ -38,7 +39,7 @@ class LimitParameters{
         Eigen::Matrix<double,2,1> dX_max;
         Eigen::Matrix<double,2,1> ddX_max;
         Eigen::Matrix<double,2,1> dddX_max;
-        Eigen::Matrix<double,6,1> F_ext_max;
+        Eigen::Matrix<double,2,1> F_ext_max;
 
         Eigen::Matrix<double,2,1> F_J_max;
         Eigen::Matrix<double,2,1> dF_J_max;
@@ -51,6 +52,7 @@ class LimitParameters{
 };
 
 class UserParameters{
+public:
     UserParameters();
 
     bool read_parameters(const nlohmann::json& parameters);
@@ -75,7 +77,8 @@ class UserParameters{
 
 };
 
-struct FramesParameters{
+class FramesParameters{
+public:
     FramesParameters();
 
     bool read_parameters(const nlohmann::json& parameters);
@@ -87,7 +90,8 @@ struct FramesParameters{
     Eigen::Matrix<double,4,4> EE_T_K;
 };
 
-struct GeneralParameters{
+class GeneralParameters{
+public:
     GeneralParameters();
 
     bool read_parameters(const nlohmann::json& parameters);
@@ -99,7 +103,8 @@ struct GeneralParameters{
     unsigned command_mode;
 };
 
-struct SystemParameters{
+class SystemParameters{
+public:
     SystemParameters();
 
     bool read_parameters(const nlohmann::json& parameters);
@@ -117,6 +122,7 @@ struct SystemParameters{
 enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity};
 
 class ControlParameters{
+public:
     ControlParameters();
     bool read_parameters(const nlohmann::json& parameters);
     static nlohmann::json get_default_values();
@@ -230,6 +236,9 @@ public:
 
     template<typename T>void create_skill_parameters(){
         skill = std::make_unique<T>();
+    }
+    template<typename T>const std::unique_ptr<T>& get_skill_parameters(){
+        return std::static_pointer_cast<T>(skill);
     }
 };
 

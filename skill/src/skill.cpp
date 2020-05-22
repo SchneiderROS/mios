@@ -4,6 +4,8 @@
 
 #include "primitives/nullprimitive.hpp"
 #include "skills/nullskill.hpp"
+#include "utils/exceptions.hpp"
+#include "data_structures/object.hpp"
 #include <msrm_utils/math.hpp>
 #include <spdlog/spdlog.h>
 
@@ -19,9 +21,9 @@ SkillResult::SkillResult(){
     exception=false;
 }
 
-Skill::Skill(const std::string &type, const std::vector<std::string> &objects, const std::string& id, Memory *memory, const Percept &p):m_type(type),m_id(id),m_objects(objects),m_memory(memory),m_active_mp(std::make_shared<NullPrimitive>()),
-m_life_cycle(SkillLifeCycle::slInit),m_active_mp(std::make_shared<NullPrimitive>(p,std::make_shared<ConfigMP_NullPrimitive>(),std::make_shared<NullAttractor>(),memory,"NullPrimitive")),
-m_flag_pause(false),m_flag_invoke_failure(false),m_flag_invoke_success(false),m_flag_parallels_running(false){
+Skill::Skill(const std::string &type, const std::unordered_set<std::string> &objects, const std::string& id, Memory *memory, const Percept &p):
+m_active_mp(std::make_shared<NullPrimitive>(p,std::make_shared<ConfigMP_NullPrimitive>(),std::make_shared<NullAttractor>(),memory,"NullPrimitive")),m_memory(memory),m_life_cycle(SkillLifeCycle::slInit),
+m_flag_invoke_failure(false),m_flag_invoke_success(false),m_flag_pause(false),m_flag_parallels_running(false),m_type(type),m_id(id),m_objects(objects){
 }
 
 Skill::~Skill(){
@@ -35,25 +37,24 @@ std::shared_ptr<ManipulationPrimitive> Skill::get_mp(const std::string &mp) cons
     return m_mp_graph.at(mp);
 }
 
-Eigen::Matrix<double,4,4> Skill::get_object_pose(const std::string &o, bool TF){
-    if(TF){
-        return m_memory->transform_to_EE(msrm_utils::rotate_matrix(this->get_object(o).O_T_o,msrm_utils::invert_matrix(m_config->frames.O_R_TF)));
-    }else{
-        return m_memory->transform_to_EE(this->get_object(o).O_T_o);
+Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose(const std::string &o, bool TF){
+    if(m_grounded_objects.find(o)==m_grounded_objects.end()){
+        throw SkillException("No object of type "+o+" in skill "+ this->get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
     }
+    const Object* object=m_memory->get_object(o);
+    return msrm_utils::rotate_matrix(object->O_T_OB*object->OB_T_gp,msrm_utils::invert_matrix(m_memory->read_parameters()->frames.O_R_T));
 }
 
-const Object* const Skill::get_object(const std::string &o) const{
+const Object* Skill::get_object(const std::string &o) const{
     if(m_grounded_objects.find(o)==m_grounded_objects.end()){
-        throw SkillException("No object of type "+o+" in skill "+ this->get_id() +" of type "+m_type+" has been assigned. "
-                                                                                                          "Check the task description or assign it manually in the task implementation.");
+        throw SkillException("No object of type "+o+" in skill "+ this->get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
     }
-    return m_objects.at(o);
+    return m_grounded_objects.at(o);
 }
 
 void Skill::write_O_R_TF_to_config(const Percept &p){
     if(!this->get_O_R_TF(p).isZero(0)){
-        m_memory->read_parameters()->frames.O_R_T=this->get_O_R_TF(p);
+        m_memory->get_parameters()->frames.O_R_T=get_O_R_TF(p);
     }
 }
 
@@ -71,10 +72,9 @@ bool Skill::initialize(const Percept &p){
 Actuator* Skill::cycle(const Percept &p){
     m_result.p_1=p;
     Actuator* cmd;
-    std::optional<std::string> transition={};
+    std::optional<std::tuple<bool,std::string> > transition;
 
     if(m_life_cycle==SkillLifeCycle::slInit){
-        m_result.config=m_config;
         m_result.p_0=p;
         m_result.percepts.emplace(std::make_pair(m_active_mp->get_id(),p));
         if(!this->check_local_pre_conditions(p)){
@@ -98,43 +98,43 @@ Actuator* Skill::cycle(const Percept &p){
         terminate_parallels();
         cmd=m_active_mp->stop(p);
         cmd->stop();
-        m_eval.p_1=p;
+        m_result.p_1=p;
         return cmd;
     }
 
     if(check_global_suc_conditions(p)){
         spdlog::info("Global success conditions of skill" + m_id + " have been triggered.");
-        m_eval.success=true;
+        m_result.success=true;
         m_life_cycle=SkillLifeCycle::slSettle;
         return m_active_mp->stop(p);
     }
     if(check_local_suc_conditions(p)){
         spdlog::info("Local success conditions of skill" + m_id + " have been triggered.");
-        m_eval.success=true;
+        m_result.success=true;
     }
-    if(check_local_ex_conditions(p) && m_eval.success){
+    if(check_local_ex_conditions(p) && m_result.success){
         spdlog::info("Local exit conditions of skill" + m_id + " have been triggered.");
         m_life_cycle=SkillLifeCycle::slSettle;
         return m_active_mp->stop(p);
     }
     if(check_global_err_conditions(p)){
         spdlog::error("Global error conditions of skill " + m_id + " have been triggered.");
-        m_eval.success=false;
+        m_result.success=false;
         m_life_cycle=SkillLifeCycle::slSettle;
         return m_active_mp->stop(p);
     }
     if(check_local_err_conditions(p)){
         spdlog::error("Local error conditions of skill " + m_id + " have been triggered.");
-        m_eval.success=false;
+        m_result.success=false;
         m_life_cycle=SkillLifeCycle::slSettle;
         return m_active_mp->stop(p);
     }
-    transition=this->check_edges(p);
+    transition=check_edges(p);
     if(transition.has_value()){
-        if(m_mp_graph.find(transition.value()==m_mp_graph.end())){
-            m_eval.last_errors.emplace_back("Missing manipulation primitive");
-            m_eval.success=false;
-            m_eval.exception=true;
+        if(m_mp_graph.find(std::get<1>(transition.value()))==m_mp_graph.end()){
+            m_result.last_errors.emplace_back("Missing manipulation primitive");
+            m_result.success=false;
+            m_result.exception=true;
             m_life_cycle=SkillLifeCycle::slSettle;
             return m_active_mp->stop(p);
         }else{
@@ -144,8 +144,8 @@ Actuator* Skill::cycle(const Percept &p){
 
     if(m_life_cycle==SkillLifeCycle::slTransition){
         Actuator blend_cmd=*(m_active_mp->cmd_from_buffer());
-        m_active_mp=m_mp_graph[std::get<1>(transition)];
-        m_eval.percepts.emplace(std::make_pair(m_active_mp->get_id(),p));
+        m_active_mp=m_mp_graph[std::get<1>(transition.value())];
+        m_result.percepts.emplace(std::make_pair(m_active_mp->get_id(),p));
         m_life_cycle=SkillLifeCycle::slExecution;
         return m_active_mp->initialize(p,blend_cmd);
     }
@@ -155,8 +155,8 @@ Actuator* Skill::cycle(const Percept &p){
         return m_active_mp->step(p);
     }
     spdlog::critical("Skill life cycle is undefined");
-    m_eval.success=false;
-    m_eval.exception=true;
+    m_result.success=false;
+    m_result.exception=true;
     m_life_cycle=SkillLifeCycle::slSettle;
     return m_active_mp->stop(p);
 }
@@ -166,7 +166,7 @@ void Skill::set_pause(bool pause){
 }
 
 void Skill::append_error(const std::string& error){
-    m_eval.last_errors.emplace_back(error);
+    m_result.last_errors.emplace_back(error);
 }
 
 Eigen::Matrix<double,3,3> Skill::get_O_R_TF(const Percept &p){
@@ -175,8 +175,11 @@ Eigen::Matrix<double,3,3> Skill::get_O_R_TF(const Percept &p){
     return O_R_TF;
 }
 
-void Skill::set_init_mp(std::shared_ptr<ManipulationPrimitive> mp){
-    m_active_mp=mp;
+void Skill::set_init_mp(const std::string& name){
+    if(m_mp_graph.find(name)==m_mp_graph.end()){
+        throw SkillException("Error when setting initial mp. No mp with name " + name + " available.");
+    }
+    m_active_mp=m_mp_graph[name];
 }
 
 void Skill::terminate(){
@@ -194,29 +197,30 @@ void Skill::invoke_success(){
     m_flag_invoke_success=true;
 }
 
-bool Skill::check_global_err_conditions(const Percept& p){
+bool Skill::check_global_err_conditions(const Percept& p) const{
     for(unsigned i=0;i<6;i++){
-        if(fabs(p.TF_F_ext(i))>=m_config->user.F_max[i]){
+        if(fabs(p.proprioception.TF_F_ext_K(i))>=m_memory->read_parameters()->user.F_ext_max(i)){
             spdlog::error("Skill "+m_id+" has violated the maximum allowed external cartesian forces.");
-            std::cout<<"F_ext: "<<p.TF_F_ext<<std::endl;
+            std::cout<<"F_ext: "<<p.proprioception.TF_F_ext_K<<std::endl;
             return true;
         }
     }
     for(unsigned i=0;i<7;i++){
-        if(fabs(p.tau_ext(i))>=m_config->user.tau_max[i]){
+        if(fabs(p.proprioception.tau_ext(i))>=m_memory->read_parameters()->user.tau_ext_max(i)){
             spdlog::error("Skill "+m_id+" has violated the maximum allowed external joint torques at joint "+std::to_string(i)+".");
-            std::cout<<"tau_ext: "<<p.tau_ext<<std::endl;
+            std::cout<<"tau_ext: "<<p.proprioception.tau_ext<<std::endl;
             return true;
         }
     }
     for(unsigned i=0;i<7;i++){
-        if(fabs(p.tau_ext[i])>=m_config->limits.tau_ext_max[i]){
+        if(fabs(p.proprioception.tau_ext(i))>=m_memory->read_parameters()->user.tau_ext_max(i)){
             spdlog::error("Skill "+m_id+" has violated the maximum external joint torques at joint "+std::to_string(i)+".");
             return true;
         }
     }
-    if(p.time-m_time_start>m_config->time_max && m_config->time_max>0){
-        spdlog::error("Skill "+m_id+" has violated the maximum time limit of "+std::to_string(m_config->time_max)+" s.");
+    double run_time = std::chrono::duration_cast<std::chrono::seconds>(p.time-m_time_start).count();
+    if(run_time>m_memory->read_parameters()->skill->common.time_max && m_memory->read_parameters()->skill->common.time_max>0){
+        spdlog::error("Skill "+m_id+" has violated the maximum time limit of "+std::to_string(m_memory->read_parameters()->skill->common.time_max)+" s.");
         return true;
     }
     if(m_flag_invoke_failure){
@@ -234,10 +238,6 @@ bool Skill::check_global_suc_conditions(const Percept &p) const{
     return false;
 }
 
-double Skill::get_t_init() const{
-    return m_time_start;
-}
-
 bool Skill::check_local_pre_conditions(const Percept &p){
     return true;
 }
@@ -250,8 +250,8 @@ bool Skill::check_local_ex_conditions(const Percept &p){
     return true;
 }
 
-SkillResult Skill::get_eval() const{
-    return m_eval;
+SkillResult Skill::get_result() const{
+    return m_result;
 }
 
 const std::string& Skill::get_type() const{
@@ -272,12 +272,12 @@ bool Skill::ground_objects(){
             spdlog::error("Skill " + m_id + " already has a grounded object of type " + m.first + ".");
             return false;
         }
-        Object* o = m_memory->get_object(m.second);
+        const Object* o = m_memory->get_object(m.second);
         if(o==nullptr){
             spdlog::error("No object with name "+m.second+" exists.");
             return false;
         }
-        m_grounded_objects.insert(std::make_pair(m.first,o));
+        m_grounded_objects.emplace(std::make_pair(m.first,o));
     }
     return true;
 }
@@ -296,7 +296,7 @@ void Skill::run_parallels(){
         this->parallels();
         auto finish = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
-        double t_sleep_max = 1.0/m_config->parallels_frequency;
+        double t_sleep_max = 1.0/m_memory->read_parameters()->skill->common.parallels_frequency;
 
         std::this_thread::sleep_for(std::chrono::microseconds(long(t_sleep_max*1000000-elapsed.count())));
     }

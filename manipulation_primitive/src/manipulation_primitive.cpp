@@ -1,4 +1,5 @@
 #include "manipulation_primitive/manipulation_primitive.hpp"
+#include "memory/memory.hpp"
 
 namespace mios {
 
@@ -60,7 +61,7 @@ std::string ManipulationPrimitive::get_type() const{
 }
 
 bool ManipulationPrimitive::is_settled() const{
-    return m_cmd.is_settled(m_kb->get_local_memory()->access_config_limits());
+    return m_cmd.is_settled(m_memory->read_parameters()->limits);
 }
 
 }

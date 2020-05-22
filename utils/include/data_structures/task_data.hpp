@@ -10,7 +10,7 @@ namespace mios {
 
 struct TaskData{
     nlohmann::json context;
-    EvalTask result;
+    TaskResult result;
     std::string name;
 };
 

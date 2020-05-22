@@ -87,10 +87,16 @@ bool MongodbClient::read_document(const std::string& name, const std::string& co
 
 bool MongodbClient::read_documents(const std::string &collection, std::set<nlohmann::json> &docs){
     spdlog::debug("[MONGODBCLIENT]: READ_DOCUMENTS("+collection+")");
-    std::scoped_lock<std::mutex> lock(m_mutex_db_access);
-    try{
-        bsoncxx::stdx::optional<bsoncxx::document::value> docs = m_collections[collection].find({});
+    for(const auto& d : docs){
+        if(d.find("name")==d.end()){
+            spdlog::error("Cannot upload document to database since it has no field <name>.");
+            return false;
+        }
+        if(!write_document(d["name"],collection,d)){
+            return false;
+        }
     }
+    return true;
 }
 
 bool MongodbClient::write_document(const std::string& name, const std::string& collection, const nlohmann::json &descr){
@@ -105,7 +111,6 @@ bool MongodbClient::write_document(const std::string& name, const std::string& c
         bsoncxx::document::view_or_value doc=bsoncxx::from_json(descr_in.dump());
         if(m_collections[collection].count_documents({bsoncxx::builder::stream::document{}<<"name"<<name<<bsoncxx::builder::stream::finalize})>1){
             m_mongodb[collection].replace_one(bsoncxx::builder::stream::document{} << "name" << name << bsoncxx::builder::stream::finalize,doc);
-
         }else{
             m_mongodb[collection].insert_one(doc);
         }

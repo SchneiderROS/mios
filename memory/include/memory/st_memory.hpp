@@ -24,16 +24,16 @@ public:
 
     LiveContext* get_live_context();
     Parameters* get_parameters();
-    const Parameters* const read_parameters() const;
-    const TaskData* const get_task_data() const;
+    const Parameters* read_parameters() const;
+    const TaskData* get_task_data() const;
     void set_live_parameter(const std::string& key, const nlohmann::json& value);
     std::optional<nlohmann::json> get_live_parameter(const std::string& parameter)const;
     bool apply_skill_context(const std::string& skill_id);
 
     bool set_default_parameters();
 
-    bool update_object(const std::string& name, const Percept& p);
-    const Object* const get_object(const std::string& name) const;
+    bool update_object(const std::string& name, bool teach_width, const Percept& p);
+    const Object* get_object(const std::string& name) const;
 private:
 
     void merge_live_context();

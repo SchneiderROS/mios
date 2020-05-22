@@ -10,7 +10,6 @@
 namespace mios {
 
 class Core;
-class TaskList;
 class Memory;
 
 enum TaskLifeCycle{PreChecks,Startup,Termination,Execution,Recovery,Switch,Idle};
@@ -35,13 +34,13 @@ public:
     void reset();
 
 private:
+    Core* m_core;
+    Memory* m_memory;
+
     std::mutex m_mtx_task_queue;
     std::list<std::tuple<std::string,std::shared_ptr<Task>,nlohmann::json> > m_task_queue;
     TaskLifeCycle m_task_life_cycle;
     std::shared_ptr<Task> m_active_task;
-
-    Core* m_core;
-    Memory* m_memory;
 };
 
 }

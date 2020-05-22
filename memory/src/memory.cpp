@@ -58,7 +58,7 @@ Parameters* Memory::get_parameters(){
     return m_st_memory.get_parameters();
 }
 
-const Parameters* const Memory::read_parameters() const{
+const Parameters* Memory::read_parameters() const{
     return m_st_memory.read_parameters();
 }
 
@@ -70,7 +70,7 @@ bool Memory::get_task_data(const std::string uuid, TaskData &data) const{
     return m_lt_memory.get_task_data(uuid,data);
 }
 
-bool Memory::store_task_result(const std::string &uuid, const nlohmann::json &result){
+bool Memory::store_task_result(const std::string &uuid, const TaskResult& result){
     return m_st_memory.store_task_result(uuid,result);
 }
 
@@ -82,11 +82,11 @@ std::optional<nlohmann::json> Memory::get_live_parameter(const std::string &para
     return m_st_memory.get_live_parameter(parameter);
 }
 
-bool Memory::update_object(const std::string &name, const Percept &p){
-    return m_st_memory.update_object(name,p);
+bool Memory::update_object(const std::string &name, bool teach_width,const Percept &p){
+    return m_st_memory.update_object(name,teach_width,p);
 }
 
-const Object* const Memory::get_object(const std::string& name) const{
+const Object* Memory::get_object(const std::string& name) const{
     return m_st_memory.get_object(name);
 }
 

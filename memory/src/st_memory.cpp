@@ -1,4 +1,5 @@
 #include "memory/st_memory.hpp"
+#include "memory/lt_memory.hpp"
 #include <spdlog/spdlog.h>
 
 #include <msrm_utils/system.hpp>
@@ -55,15 +56,15 @@ Parameters* STMemory::get_parameters(){
     return &m_parameters;
 }
 
-const Parameters* const STMemory::read_parameters() const{
+const Parameters* STMemory::read_parameters() const{
     return &m_parameters;
 }
 
-const TaskData* const STMemory::get_task_data() const{
+const TaskData* STMemory::get_task_data() const{
     return &m_task_data;
 }
 
-void STMemory::store_task_result(const std::string uuid, const TaskResult& result){
+void STMemory::store_task_result(const std::string& uuid, const TaskResult& result){
     m_task_data.result=result;
     m_lt_memory->save_task_data(uuid,m_task_data);
 }
@@ -147,21 +148,25 @@ void STMemory::merge_live_context(){
     }
 }
 
-bool STMemory::update_object(const std::string &name, const Percept& p){
+bool STMemory::update_object(const std::string &name, bool teach_width, const Percept& p){
     if(name=="NullObject"){
         spdlog::error("Cannot overwrite NullObject");
         return false;
     }
     if(m_environment.find(name)==m_environment.end()){
-        return false;
+        m_environment.insert(std::make_pair(name,Object(name)));
     }
-//    m_environment[object].O_T_OB
+    m_environment[name].O_T_OB=p.proprioception.O_T_EE*msrm_utils::invert_transformation_matrix(m_environment[name].OB_T_gp);
+    m_environment[name].q=p.proprioception.q;
+    if(teach_width){
+        m_environment[name].grasp_width=p.proprioception.finger_width;
+    }
     if(!m_lt_memory->upload_environment_element(m_environment[name])){
         return false;
     }
 }
 
-const Object* const STMemory::get_object(const std::string &name) const{
+const Object* STMemory::get_object(const std::string &name) const{
     if(m_environment.find(name)==m_environment.end()){
         return &m_environment.at("NullObject");
     }else{

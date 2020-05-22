@@ -13,11 +13,12 @@
 #include "skill/skill.hpp"
 #include "core/core.hpp"
 #include "task/taskobserver.hpp"
+#include "skill/skill_engine.hpp"
+#include "utils/exceptions.hpp"
 
 namespace mios {
 
 class Memory;
-
 
 /**
  * The evaluation struct contains quality metrics about the task execution as well as necessary information for the task handling procedures.
@@ -38,7 +39,6 @@ struct TaskResult{
     }
 
     std::unordered_map<std::string,SkillResult> m_skill_results;
-    std::unordered_map<std::string,TaskResult> m_subtask_results;
 
     double cost_suc;
     double cost_err;
@@ -59,11 +59,6 @@ public:
     virtual ~Task();
 
     /**
-     * Resets some of the flags and indicators of this task and its skills, but not the subtasks.
-     */
-    void reset_soft();
-
-    /**
      * Stops the currently running task.
      * @param[in] nominal Indicates whether the the stop is nominal. Non-nominal stops take effect immediately,
      * nominal stops fierst scale down any output to zero according to valid limits.
@@ -72,12 +67,7 @@ public:
      * @param cost_suc[in] Sets the cost for the task execution in case of success.
      * @param cost_err[in] Sets the cost for the task execution in case of failure.
      */
-    void stop_task(bool raise_exception=false, bool success=false, bool recover=true, bool empty_queue=false, double cost_suc=0, double cost_err=0);
-
-    /**
-     * Will be removed in future updates.
-     */
-    void abort_task();
+    void stop_task(bool raise_exception=false, bool success=false, bool recover=true, bool empty_queue=false, std::optional<double> cost_suc=0, std::optional<double> cost_err=0);
 
     /**
      * Loads its description and that of all subtasks and all skill descriptions from the knowledge base. Furthermore it merges all user provided parameters.
@@ -85,7 +75,8 @@ public:
      * @param core Pointer to the core module.
      * @return Returns true if the task and all its subtasks and skills were successfully loaded.
      */
-    bool load_context(const nlohmann::json &user_context, nlohmann::json& active_context);
+    bool load_context(const nlohmann::json &user_context);
+    nlohmann::json get_context() const;
 
     /**
      * Implements task execution in derived tasks.
@@ -100,7 +91,7 @@ public:
     /**
      * Implements the initialization routine in derived tasks. This function is called in the beginning of a task execution.
      */
-    virtual void initialize_task() = 0;
+    virtual void initialize_context() = 0;
 
     /**
      * Implements the evaluation routine. The user has to define how the members of the evaluation struct are set. This function is called at the end of a nominal task execution.
@@ -122,12 +113,6 @@ public:
      * @return Returns true if recovery is necessary/desired.
      */
     bool do_recovery() const;
-
-    /**
-     * Returns the current evaluation struct of the task.
-     * @return The current evaluation struct of the task.
-     */
-    EvalTask get_eval() const;
 
     /**
      * Returns the type if of the task.
@@ -162,25 +147,6 @@ public:
 
 protected:
 
-    /**
-     * Returns a pointer to the specified skill.
-     * @param[in] id Name id of the skill.
-     * @return Pointer to specified skill.
-     */
-    std::shared_ptr<Skill> get_skill(const std::string& id) const;
-
-    /**
-     * Returns a pointer to the specified subtask.
-     * @param[in] id Name id of the subtask.
-     * @return Pointer to specified subtask.
-     */
-    std::shared_ptr<Task> get_subtask(const std::string& id) const;
-
-    /**
-     * Loads the specified LED pattern. The pattern starts immediately after loading.
-     * @param[in] pattern Pointer to LED pattern class. Recommended is an implicit construction of the object.
-     */
-    void load_led_pattern(std::shared_ptr<LEDPattern> pattern);
     // helper functions
 
     /**
@@ -216,7 +182,7 @@ protected:
      * @param[in] force Desired grasping force. Default is 30 N.
      * @return True if grasping was successful, false otherwise.
      */
-    bool grasp_object(const std::string& o, double width=-1, double speed=1, double force=30, bool check_width=false);
+    bool grasp_object(const std::string& name, double speed=1);
 
     /**
      * Releases any object that is currently grasped. The fingers are opened to maximum width.
@@ -224,7 +190,7 @@ protected:
      * @param[in] speed Desired speed of gripper. Default is 1 m/s.
      * @return True if releasing was successful, false otherwise.
      */
-    bool release_object(double width=-1,double speed=1);
+    bool release_object(double speed=1);
 
     /**
      * Moves the gripper fingers to the specified position.
@@ -239,7 +205,7 @@ protected:
      * @param[in] O_R_TF If specified the percept is calculated in the given task frame.
      * @return Current percept struct.
      */
-    const Percept& request_percept(Eigen::Matrix<double, 3, 3> O_R_TF=Eigen::Matrix<double,3,3>::Zero(3,3));
+    bool request_percept(Percept& percept,std::optional<Eigen::Matrix<double, 3, 3> > O_R_T);
 
 
     bool reserve_skill(const std::string& name);
@@ -256,21 +222,24 @@ protected:
     template<typename T>void execute_skill(const std::string &skill_id){
         if(m_context["skills"].find(skill_id)==m_context["skills"].end()){
             spdlog::error("Skill with id "+skill_id+" not in this task. Check the task context for consistency. Stopping task.");
-            this->abort_task();
+            stop_task(true);
             throw TaskException("Skill with id "+skill_id+" not in this task. Check the task context for consistency. Stopping task.");
         }
         if(m_flag_stop){
             return;
         }
+        if(!m_core->refresh_percept({})){
+            throw TaskException("Could not refresh perception.");
+        }
         std::shared_ptr<Skill> skill = std::make_shared<T>(skill_id,m_memory,m_context[skill_id],m_core->get_percept());
-        if(!m_core->load_skill(skill)){
+        if(!m_skill_engine->load_skill(skill)){
             throw TaskException("Skill could not be loaded into core.");
         }
         spdlog::info("Executing skill "+skill_id+".");
-        m_core->execute_skill();
-        m_core->unload_skill();
+        m_skill_engine->execute_skill();
+        m_skill_engine->unload_skill();
         skill->terminate();
-        m_result.m_skill_results.insert(std::make_pair(skill_id,skill->get_eval()));
+        m_result.m_skill_results.emplace(std::make_pair(skill_id,skill->get_result()));
     }
 
     /**
@@ -298,19 +267,21 @@ private:
      * @return True if the given task description is valid, false otherwise.
      */
     bool check_context(const nlohmann::json& default_context, const nlohmann::json &user_context) const;
-    static std::string generate_uuid() const;
+    static std::string generate_uuid();
 
     nlohmann::json m_context;
     TaskResult m_result;
+    std::unordered_map<std::string,TaskResult> m_subtask_results;
 
     std::unordered_set<std::string> m_reserved_skills;
     std::unordered_set<std::string> m_reserved_subtasks;
 
+    Core* m_core;
+    Memory* m_memory;
+    SkillEngine* m_skill_engine;
     std::atomic<bool> m_flag_stop;
     std::atomic<bool> m_flag_recover;
     std::atomic<bool> m_flag_in_recovery;
-    Core* m_core;
-    Memory* m_memory;
 
     std::string m_state;
 

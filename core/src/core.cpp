@@ -23,10 +23,8 @@
 
 namespace mios {
 
-Core::Core(int argc, char **argv):m_active_skill(std::make_shared<NullSkill>(&m_memory,std::make_shared<SkillParametersNullSkill>())){
-
-    this->_config_internal.path_executable=msrm_utils::get_path_executable(argv);
-    this->_config_internal.grasped_object="none";
+Core::Core():m_skill_engine(SkillEngine(this)),m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_task_engine(TaskEngine(this)),
+m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)){
 
     spdlog::info("Initializing knowledgebase...");
     if(!m_memory.initialize()){
@@ -49,15 +47,14 @@ bool Core::initialize(){
         return false;
     }
 
-    std::optional<std::string> panda_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip);
-
+    m_memory.get_parameters()->system.robot_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip).value_or("");
     if(m_memory.read_parameters()->system.has_robot){
-        if(!m_panda_body.connect_to_robot(panda_ip.value())){
+        if(!m_panda_body.connect_to_robot(m_memory.read_parameters()->system.robot_ip)){
             return false;
         }
     }
     if(m_memory.read_parameters()->system.has_gripper){
-        if(!m_panda_body.connect_to_gripper(panda_ip.value())){
+        if(!m_panda_body.connect_to_gripper(m_memory.read_parameters()->system.robot_ip)){
             return false;
         }
     }
@@ -81,25 +78,16 @@ Memory* Core::get_memory(){
     return &m_memory;
 }
 
-bool Core::load_skill(std::shared_ptr<Skill> skill){
-    spdlog::info("Loading skill "+skill->get_id()+".");
-    m_active_skill=skill;
-    refresh_percept({});
-    m_active_skill->write_O_R_TF_to_config(m_percept);
-    refresh_percept(m_memory.read_parameters()->frames.O_R_T);
-    m_controller_pipeline->update_percept(m_percept.controller);
-    spdlog::info("Applying skill context...");
-    m_memory.apply_skill_context(m_active_skill->get_id());
-    m_active_skill->ground_objects();
-    spdlog::info("Initializing skill...");
-    if(!m_active_skill->initialize(m_percept)){
-        return false;
-    }
-    return true;
+SkillEngine* Core::get_skill_engine(){
+    return &m_skill_engine;
 }
 
-void Core::unload_skill(){
-    m_active_skill=std::make_shared<NullSkill>(&m_memory,std::make_shared<SkillParametersNullSkill>());
+Portal* Core::get_portal(){
+    return &m_portal;
+}
+
+CommandInterface* Core::get_command_interface(){
+    return &m_command_interface;
 }
 
 bool Core::execute_skill(){
@@ -164,7 +152,7 @@ franka::Finishable* Core::control_base_cycle(const franka::RobotState& state){
 
     franka::GripperState gripper_state;
     m_percept.update(m_panda_body.get_panda_model(),state,gripper_state,m_memory.read_parameters()->frames.O_R_T);
-    Actuator* cmd=m_active_skill->cycle(m_percept);
+    Actuator* cmd=m_skill_engine.get_next_command(m_percept);
     franka::Finishable* panda_cmd=m_controller_pipeline->step(m_percept,*cmd);
     if(!m_controller_pipeline->is_valid_command(panda_cmd)){
         cmd->stop();
@@ -194,7 +182,7 @@ franka::JointVelocities Core::joint_velocity_controller_pipeline(const franka::R
 
 bool Core::grasp_object(const std::string &name,double speed){
     Object* object=m_memory.get_object(name);
-    if(object=="NullObject"){
+    if(object->name=="NullObject"){
         spdlog::error("Cannot find object "+name+" in knowledge base.");
         return false;
     }
@@ -213,19 +201,19 @@ bool Core::grasp_object(const std::string &name,double speed){
     }
 }
 
-bool Core::home_gripper(){
+bool Core::home_gripper() const{
     return m_panda_body.home_gripper();
 }
 
-bool Core::grasp(double width, double speed, double force,double epsilon_inner,double epsilon_outer){
+bool Core::grasp(double width, double speed, double force,double epsilon_inner,double epsilon_outer) const{
     return m_panda_body.grasp(width,speed,force,epsilon_inner,epsilon_outer);
 }
 
-bool Core::move_gripper(double width, double speed){
+bool Core::move_gripper(double width, double speed) const{
     return m_panda_body.move_to_finger_position(width,speed);
 }
 
-bool Core::is_grasping() const{
+bool Core::is_grasping(){
     refresh_percept({});
     return m_percept.proprioception.is_grasping;
 }
@@ -244,13 +232,13 @@ bool Core::set_grasped_object(const std::string &name){
     return set_robot_parameters();
 }
 
-bool Core::release_object(double width, double speed){
-    Object* object=m_memory.get_live_context()->grasped_object;
+bool Core::release_object(double speed){
+    const Object* object=m_memory.get_live_context()->grasped_object;
     if(object->name=="NullObject"){
         spdlog::error("I am not grasping anything.");
         return false;
     }
-    Object* object=m_memory.get_object("NullObject");
+    object=m_memory.get_object("NullObject");
     if(m_panda_body.move_to_finger_position(m_percept.internal_model.max_finger_width,speed)){
         m_memory.get_live_context()->grasped_object=object;
         m_memory.get_parameters()->user.load_m=object->mass;
@@ -274,11 +262,32 @@ bool Core::refresh_percept(std::optional<Eigen::Matrix<double,3,3> > O_R_TF){
         return false;
     }
     m_percept.update(m_panda_body.get_panda_model(),robot_state,gripper_state,O_R_TF);
+    m_controller_pipeline->update_percept(m_percept.controller);
     return true;
 }
 
-const Percept* const Core::get_percept() const{
-    return m_percept;
+bool Core::unlock_body(){
+    return m_panda_body.unlock_brakes(m_memory.read_parameters()->system.robot_ip,m_memory.read_parameters()->system.desk_user,m_memory.read_parameters()->system.desk_pwd);
+}
+
+bool Core::lock_body(){
+    return m_panda_body.lock_brakes(m_memory.read_parameters()->system.robot_ip,m_memory.read_parameters()->system.desk_user,m_memory.read_parameters()->system.desk_pwd);
+}
+
+bool Core::shutdown_body(){
+    return m_panda_body.shutdown_robot(m_memory.read_parameters()->system.robot_ip,m_memory.read_parameters()->system.desk_user,m_memory.read_parameters()->system.desk_pwd);
+}
+
+bool Core::pack_body(){
+    return m_panda_body.move_to_pack_pose(m_memory.read_parameters()->system.robot_ip,m_memory.read_parameters()->system.desk_user,m_memory.read_parameters()->system.desk_pwd);
+}
+
+bool Core::recover_body(){
+    return m_panda_body.recover();
+}
+
+const Percept* Core::get_percept() const{
+    return &m_percept;
 }
 
 //void Core::check_cartesian_velocity_workspace(Eigen::Matrix<double, 6, 1> &TF_dX_d, const Percept& p){

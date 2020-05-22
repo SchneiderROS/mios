@@ -2,21 +2,16 @@
 
 #include <memory>
 #include <nlohmann/json.hpp>
-namespace msrm_utils{
-class JsonUDPServer;
-}
+
 namespace mios {
 class Core;
 class TaskEngine;
+class Portal;
+class Memory;
 
-class Interface{
+class CommandInterface{
 public:
-    Interface(unsigned port);
-
-    void initialize(Core* core, TaskEngine* task_handler);
-    void start();
-    void stop();
-
+    CommandInterface(Core *core, TaskEngine *task_engine, Portal *portal, Memory* memory);
 private:
     void bind_methods();
 
@@ -24,7 +19,6 @@ private:
     nlohmann::json stop_task(const nlohmann::json& request);
     nlohmann::json remove_task(const nlohmann::json& request);
     nlohmann::json wait_for_task(const nlohmann::json& request);
-    nlohmann::json check_if_task_finished(const nlohmann::json& request);
     nlohmann::json is_busy(const nlohmann::json& request);
 
     nlohmann::json subscribe_to_event_stream(const nlohmann::json& request);
@@ -37,12 +31,6 @@ private:
     nlohmann::json move_gripper(const nlohmann::json& request);
     nlohmann::json home_gripper(const nlohmann::json& request);
 
-    nlohmann::json lockdown_core(const nlohmann::json& request);
-    nlohmann::json lift_core_lockdown(const nlohmann::json& request);
-
-    // skill level
-    nlohmann::json set_skill_pause_state(const nlohmann::json& request);
-
     // knowledge base level
     nlohmann::json teach_object(const nlohmann::json& request);
     nlohmann::json apply_reference_frame(const nlohmann::json& request);
@@ -53,22 +41,17 @@ private:
     // info level
     nlohmann::json get_state(const nlohmann::json& request);
 
-    nlohmann::json login_digital_twin(const nlohmann::json& request);
-    nlohmann::json logout_digital_twin(const nlohmann::json& request);
-
-    // global level
-    nlohmann::json reset(const nlohmann::json& request);
-
     // robot level
     nlohmann::json unlock_brakes(const nlohmann::json& request);
     nlohmann::json lock_brakes(const nlohmann::json& request);
     nlohmann::json shutdown(const nlohmann::json& request);
     nlohmann::json pack_pose(const nlohmann::json& request);
 
-
-    msrm_utils::JsonUDPServer _ws_server;
-    Core* _core;
-    TaskEngine* _task_handler;
+private:
+    Core* m_core;
+    TaskEngine* m_task_engine;
+    Portal* m_portal;
+    Memory* m_memory;
 };
 
 

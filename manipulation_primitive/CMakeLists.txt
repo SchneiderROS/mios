@@ -8,7 +8,7 @@ foreach(mp ${ACTIVE_MP})
     set(SOURCES src/primitives/${mp}.cpp)
     add_library(${mp} SHARED
         ${SOURCES})
-    target_link_libraries(${mp} mogen_p2p mogen_p2p_joint motion_error_cart)
+    target_link_libraries(${mp} mogen_p2p mogen_p2p_joint motion_error_cart wave_variables)
 
     install(TARGETS ${mp} DESTINATION ${CMAKE_SOURCE_DIR}/lib/primitives)
 

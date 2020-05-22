@@ -1,4 +1,4 @@
-#include "task/task_handler.hpp"
+#include "task/task_engine.hpp"
 #include "task/taskfactory.hpp"
 #include "core/core.hpp"
 #include "memory/memory.hpp"
@@ -31,10 +31,9 @@ void TaskEngine::life_cycle(){
         bool recovery=false;
         if(m_task_life_cycle==TaskLifeCycle::PreChecks){
             franka::RobotMode mode;
-            try{
-                mode=m_core->request_percept().robot_mode;
-            }catch(const CoreException& e){
-                std::cout<<e.what()<<std::endl;
+            if(m_core->refresh_percept({})){
+                mode=m_core->get_percept()->robot_mode;
+            }else{
                 mode=franka::RobotMode::kOther;
             }
             if(mode==franka::RobotMode::kMove){
@@ -48,7 +47,7 @@ void TaskEngine::life_cycle(){
             }
             if(!reflex && mode==franka::RobotMode::kReflex){
                 spdlog::warn("Robot has executed a reflex, attempting to recover...");
-                if(!m_core->recover()){
+                if(!m_core->recover_body()){
                     spdlog::error("Automatic recovery failed, please toggle the user stop...");
                 }
                 m_mtx_task_queue.lock();
@@ -66,7 +65,7 @@ void TaskEngine::life_cycle(){
             }
             if(!invalid_mode && mode==franka::RobotMode::kOther){
                 spdlog::warn("Robot is in invalid mode, attempting to recover...");
-                if(!m_core->recover()){
+                if(!m_core->recover_body()){
                     spdlog::error("Automatic recovery failed, please toggle the user stop...");
                 }
                 m_mtx_task_queue.lock();
@@ -127,21 +126,8 @@ void TaskEngine::life_cycle(){
         }
         if(m_task_life_cycle==TaskLifeCycle::Startup){
             spdlog::debug("TaskLifeCycle: startup, task_uuid: "+m_active_task->get_uuid());
-            try{
-                spdlog::info("Loading task " + m_active_task->get_id() + " with uuid " + m_active_task->get_uuid());
-                std::scoped_lock<std::mutex> queue_lock(m_mtx_task_queue);
-                if(!m_active_task->load(std::get<2>(m_task_queue.front()))){
-                    spdlog::error("Could not load task "+m_active_task->get_id()+".");
-                    m_task_life_cycle=TaskLifeCycle::Termination;
-                    exceptional_event=true;
-                }else{
-                    m_task_life_cycle=TaskLifeCycle::Execution;
-                }
-            }catch(const std::exception& e){
-                std::cout<<e.what()<<std::endl;
-                exceptional_event=true;
-                m_task_life_cycle=TaskLifeCycle::Termination;
-            }
+            spdlog::info("Loading task " + m_active_task->get_id() + " with uuid " + m_active_task->get_uuid());
+            m_task_life_cycle=TaskLifeCycle::Execution;
         }
         if(m_task_life_cycle==TaskLifeCycle::Execution){
             spdlog::debug("TaskLifeCycle: execution, task_uuid: "+m_active_task->get_uuid());
@@ -186,7 +172,7 @@ void TaskEngine::life_cycle(){
             if(!m_task_queue.empty()){
                 m_task_queue.pop_front();
             }
-            if(!m_active_task->get_eval().nominal_termination || exceptional_event || m_active_task->get_eval().empty_queue){
+            if(m_active_task->get_result().exception || exceptional_event || m_active_task->get_result().empty_queue){
                 m_task_queue.clear();
             }
             if(m_task_queue.empty()){
@@ -278,20 +264,20 @@ bool TaskEngine::subscribe(const std::string& task_uuid, std::shared_ptr<TaskObs
 
 std::tuple<bool,TaskResult,std::string> TaskEngine::wait_for_task(const std::string &task_uuid){
     std::shared_ptr<TaskObserver> observer = std::make_shared<TaskObserver>();
-    TaskResult task_result;
+    TaskData task_data;
     std::string err="";
     bool result=false;
     if(this->subscribe(task_uuid,observer)){
         observer->wait_for_finish();
     }
-    if(m_memory->get_task_data(task_uuid,task_result)){
+    if(m_memory->get_task_data(task_uuid,task_data)){
         msrm_utils::print_info("Loaded task result for task with uuid "+task_uuid+" from memory.");
         result=true;
     }else{
         err="I have no memory of a task with uuid " + task_uuid;
         result=false;
     }
-    return std::make_tuple(result,task_result,err);
+    return std::make_tuple(result,task_data.result,err);
 }
 
 bool TaskEngine::is_busy() const{

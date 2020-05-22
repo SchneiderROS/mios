@@ -9,7 +9,7 @@
 
 namespace mios {
 
-Task::Task(const std::string& id, Core* core,Memory* memory):m_id(id),m_memory(memory),m_uuid(Task::generate_uuid()),m_core(core),m_flag_stop(false),m_flag_in_recovery(false),m_flag_recover(false){
+Task::Task(const std::string& id, Core* core):m_core(core),m_memory(core->get_memory()),m_skill_engine(core->get_skill_engine()),m_flag_stop(false),m_flag_recover(false),m_flag_in_recovery(false),m_id(id),m_uuid(Task::generate_uuid()){
 
 }
 
@@ -21,7 +21,7 @@ void Task::recover_task(){
     msrm_utils::print_warning("Recovery routine of task "+m_id+" is empty.");
 }
 
-void Task::stop_task(bool raise_exception,bool success,bool recover, bool empty_queue, double cost_suc, double cost_err){
+void Task::stop_task(bool raise_exception,bool success,bool recover, bool empty_queue, std::optional<double> cost_suc, std::optional<double> cost_err){
     if(m_flag_stop){
         return;
     }
@@ -34,28 +34,14 @@ void Task::stop_task(bool raise_exception,bool success,bool recover, bool empty_
     }
     m_result.exception=raise_exception;
     m_result.empty_queue=empty_queue;
+    if(cost_suc.has_value()){
+        m_result.cost_suc=cost_suc.value();
+    }
+    if(cost_err.has_value()){
+        m_result.cost_err=cost_err.value();
+    }
     m_flag_recover=recover && !raise_exception;
-    for(auto& s : m_skills){
-        if(success && nominal){
-            s.second->invoke_success();
-        }else{
-            s.second->invoke_failure();
-        }
-    }
-    for(auto& t : m_subtasks){
-        t.second->stop_task(nominal,success,recover,empty_queue,cost_suc,cost_err);
-    }
-    m_flag_stop=true;
-}
-
-void Task::abort_task(){
-    m_eval_task.nominal_termination=false;
-    for(auto& s : m_skills){
-        s.second->stop_skill();
-    }
-    for(auto& t : m_subtasks){
-        t.second->abort_task();
-    }
+    m_skill_engine->stop_skill(success && !raise_exception);
     m_flag_stop=true;
 }
 
@@ -63,7 +49,7 @@ void Task::execute_desk_timeline(const std::string &id){
     if(m_flag_stop){
         return;
     }
-    m_core->start_desk_task(id);
+//    m_core->start_desk_task(id);
 }
 
 void Task::write_result(bool success, double cost_suc, double cost_err, nlohmann::json custom_results){
@@ -73,20 +59,7 @@ void Task::write_result(bool success, double cost_suc, double cost_err, nlohmann
     m_result.custom_results=custom_results;
 }
 
-void Task::reset_soft(){
-    m_eval_task=EvalTask();
-    m_flag_stop=false;
-    m_flag_in_recovery=false;
-    m_flag_recover=false;
-    for(auto& s : m_skills){
-        s.second->reset();
-    }
-    for(auto& t : m_subtasks){
-        t.second->reset_soft();
-    }
-}
-
-bool Task::load_context(const nlohmann::json &user_context, nlohmann::json& active_context){
+bool Task::load_context(const nlohmann::json &user_context){
     try{
         spdlog::info("Loading description for task " + m_id + "...");
         if(!m_memory->load_default_task_context(m_id,m_context)){
@@ -133,9 +106,9 @@ bool Task::load_context(const nlohmann::json &user_context, nlohmann::json& acti
                     if(m_context["skills"][id_skill].find(cat.key())!=m_context["skills"][id_skill].end()){
                         tmp_params = m_context["skills"][id_skill][cat.key()];
                     }
-                    m_context["skills"][id_skill][cat.key]=cat.value();
+                    m_context["skills"][id_skill][cat.key()]=cat.value();
                     for(auto& p : tmp_params.items()){
-                        m_context["skills"][id_skill][cat.key()][p.first]=p.second;
+                        m_context["skills"][id_skill][cat.key()][p.key()]=p.value();
                     }
                 }
 
@@ -144,10 +117,10 @@ bool Task::load_context(const nlohmann::json &user_context, nlohmann::json& acti
 
         if(user_context.find("skills")!=user_context.end()){
             for(auto& s : user_context["skills"].items()){
-                std::string id_skill=s.first;
+                std::string id_skill=s.key();
                 for(auto& cat : user_context["skills"][id_skill].items()){
-                    for(auto& p: user_context["skills"][id_skill][cat.first].items()){
-                        m_context["skills"][id_skill][cat.first][p.first]=p.second;
+                    for(auto& p: user_context["skills"][id_skill][cat.key()].items()){
+                        m_context["skills"][id_skill][cat.key()][p.key()]=p.value();
                     }
                 }
 
@@ -168,17 +141,21 @@ bool Task::load_context(const nlohmann::json &user_context, nlohmann::json& acti
     return true;
 }
 
-bool Task::grasp_object(const std::string &o, double width, double speed, double force, bool check_width){
+nlohmann::json Task::get_context() const{
+    return m_context;
+}
+
+bool Task::grasp_object(const std::string &name, double speed){
     if(!m_flag_stop){
-        return m_core->grasp_object(o,width,speed,force,check_width);
+        return m_core->grasp_object(name,speed);
     }else{
         return true;
     }
 }
 
-bool Task::release_object(double width, double speed){
+bool Task::release_object(double speed){
     if(!m_flag_stop){
-        return m_core->release_object(width,speed);
+        return m_core->release_object(speed);
     }else{
         return true;
     }
@@ -192,8 +169,13 @@ bool Task::move_gripper(double width, double speed){
     }
 }
 
-const Percept& Task::request_percept(Eigen::Matrix<double, 3, 3> O_R_TF){
-    return m_core->request_percept(O_R_TF);
+bool Task::request_percept(Percept &percept, std::optional<Eigen::Matrix<double, 3, 3> > O_R_T){
+    if(!m_core->refresh_percept(O_R_T)){
+        return false;
+    }else{
+        percept=*m_core->get_percept();
+        return true;
+    }
 }
 
 void Task::set_state(const std::string& state){
@@ -228,27 +210,27 @@ bool Task::reserve_subtask(const std::string &name){
 
 void Task::execute_subtask(const std::string& task_id,const std::string task_name){
     if(m_reserved_subtasks.find(task_name)==m_reserved_subtasks.end()){
-        this->abort_task();
-        throw TaskException("Subtask with id "+t+" not in task "+ m_id +". Stopping task.");
+        this->stop_task(true);
+        throw TaskException("Subtask with id "+task_id+" is not contained in task "+ m_id +". Stopping task.");
     }
     if(m_flag_stop){
         return;
     }
     spdlog::info("Executing subtask "+task_name+"...");
-    std::shared_ptr<Task> subtask = m_memory->load_subtask(task_id,m_context["subtasks"][t],m_core);
+    std::shared_ptr<Task> subtask = m_memory->load_subtask(task_id,m_context["subtasks"][task_id],m_core);
     if(subtask->get_id()=="IdleTask"){
         throw TaskException("Error when loading subtask with name " + task_name);
     }
     spdlog::info("Executing subtask "+task_name+"...");
     subtask->execute_task();
-    spdlog::info("Subtask "+t+" has terminated.");
+    spdlog::info("Subtask "+task_id+" has terminated.");
     subtask->evaluate_task();
     if(subtask->do_recovery()){
         subtask->start_recovery();
         spdlog::info("Subtask "+task_name+" is attempting recovery.");
         subtask->recover_task();
     }
-    m_result.m_subtask_results.insert(std::make_pair(task_name,subtask->get_result()));
+    m_subtask_results.emplace(std::make_pair(task_name,subtask->get_result()));
     spdlog::info("End of lifecycle of subtask "+task_name+".");
 }
 
@@ -269,28 +251,12 @@ void Task::complete_recovery(){
     m_flag_in_recovery=false;
 }
 
-std::shared_ptr<Skill> Task::get_skill(const std::string& id) const{
-    if(m_skills.find(id)==m_skills.end()){
-        throw TaskException("Skill with id "+id+" not in task "+ get_id() +". Check your task configuration file and cpp-file for consistency.");
-    }else{
-        return m_skills.at(id);
-    }
-}
-
 bool Task::do_recovery() const{
     return m_flag_recover;
 }
 
-std::shared_ptr<Task> Task::get_subtask(const std::string& id) const{
-    if(m_subtasks.find(id)==m_subtasks.end()){
-        throw TaskException("Subtask with id "+id+" not in task "+ get_id() +". Check your cpp-file for consistency.");
-    }else{
-        return m_subtasks.at(id);
-    }
-}
-
-EvalTask Task::get_eval() const{
-    return m_eval_task;
+TaskResult Task::get_result() const{
+    return m_result;
 }
 
 void Task::sleep_1ms() const{
@@ -319,10 +285,6 @@ std::string Task::get_uuid() const{
     return m_uuid;
 }
 
-TaskResult Task::get_result() const{
-    return m_result;
-}
-
 bool Task::check_context(const nlohmann::json &default_context, const nlohmann::json &user_context) const{
 
     std::unordered_set<std::string> top_level={"name","parameters","skills","_id","subtasks"};
@@ -331,13 +293,13 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
 
     try{
         for(const auto& el : default_context.items()){
-            if(top_level.find(itr.key())==top_level.end()){
+            if(top_level.find(el.key())==top_level.end()){
                 spdlog::error("Syntax error in default task context. Symbol with value "+el.key()+" is not valid on top level.");
                 return false;
             }
         }
         for(const auto& el : user_context.items()){
-            if(top_level.find(itr.key())==top_level.end()){
+            if(top_level.find(el.key())==top_level.end()){
                 spdlog::error("Syntax error in user task context. Symbol with value "+el.key()+" is not valid on top level.");
                 return false;
             }
@@ -356,8 +318,8 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
             }
         }
         if(default_context.find("skills")!=default_context.end()){
-            std::string skill=el_skill.key();
             for(const auto& el_skill : default_context["skills"].items()){
+                std::string skill=el_skill.key();
                 if(default_context["skills"][skill].find("type")==default_context["skills"][skill].end()){
                     spdlog::error("Syntax error in task context for task "+m_id+". Skill " + skill + " is missing a type definition.");
                     return false;
@@ -386,7 +348,7 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
                 }
                 for(const auto& el_cat : default_context["skills"][skill].items()){
                     if(skill_level.find(el_cat.key())==skill_level.end()){
-                        spdlog::error("Syntax error in task context for task "+m_id+". Symbol with value "+el_cat.key()+" is not valid on skill level for skill " +skill+" of type "+default_context["skills"][skill]["type"] +".");
+                        spdlog::error("Syntax error in task context for task "+m_id+". Symbol with value "+el_cat.key()+" is not valid on skill level for skill " +skill+" of type "+skill_type +".");
                         return false;
                     }
                 }
@@ -425,7 +387,7 @@ void Task::subscribe(std::shared_ptr<TaskObserver> observer){
     m_observers.insert(observer);
 }
 
-std::string Task::generate_uuid() const{
+std::string Task::generate_uuid(){
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 15);

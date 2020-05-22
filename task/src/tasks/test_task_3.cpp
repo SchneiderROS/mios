@@ -5,7 +5,7 @@
 namespace mios{
 TestTask3::TestTask3(Core *core):Task("TestTask3",core){
 }
-void TestTask3::initialize_task(){
+void TestTask3::initialize_context(){
     this->create_skill<test_skill_1>("t3_s1",m_kb,std::make_shared<SkillParameters_test_skill_1>());
     this->create_skill<test_skill_1>("t3_s2",m_kb,std::make_shared<SkillParameters_test_skill_1>());
     this->create_skill<test_skill_1>("t3_s3",m_kb,std::make_shared<SkillParameters_test_skill_1>());

@@ -7,15 +7,14 @@
 namespace mios {
 
 
-std::optional<std::string> PandaBody::get_robot_ip(const std::optional<std::string> last_ip){
-    std::optional<std::stirng> new_ip={};
+std::optional<std::string> PandaBody::get_robot_ip(const std::optional<std::string>& last_ip){
+    std::optional<std::string> new_ip={};
     if(last_ip.has_value()){
         if(msrm_utils::ping(last_ip.value().c_str())==false){
             spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
         }else{
             if(!is_robot(last_ip.value())){
                 spdlog::warn("IP was set to "+last_ip.value()+" but no compatible robot seems to be connected. Searching for new connection...");
-                last_ip={};
             }
         }
     }
@@ -25,18 +24,21 @@ std::optional<std::string> PandaBody::get_robot_ip(const std::optional<std::stri
     return new_ip;
 }
 
-bool PandaBody::connect_to_robot(const std::string& ip){
+bool PandaBody::connect_to_robot(const std::optional<std::string> &ip){
+    if(!ip.has_value()){
+        return false;
+    }
     try{
-        m_panda_arm = std::make_unique<franka::Robot>(ip);
+        m_panda_arm = std::make_unique<franka::Robot>(ip.value());
         m_panda_model = std::make_unique<franka::Model>(m_panda_arm->loadModel());
         return true;
     }catch(const franka::NetworkException& e){
         spdlog::debug(e.what());
-        spdlog::error("Cannot connect to robot at IP "+ip);
+        spdlog::error("Cannot connect to robot at IP "+ip.value());
         return false;
     }catch(const franka::IncompatibleVersionException& e){
         spdlog::debug(e.what());
-        spdlog::error("Panda: Detected incompatible version on robot at IP "+ip);
+        spdlog::error("Panda: Detected incompatible version on robot at IP "+ip.value());
         return false;
     }catch(const franka::ModelException& e){
         spdlog::debug(e.what());
@@ -45,16 +47,20 @@ bool PandaBody::connect_to_robot(const std::string& ip){
     }
 }
 
-bool PandaBody::connect_to_gripper(const std::string &ip){
+bool PandaBody::connect_to_gripper(const std::optional<std::string> &ip){
+    if(!ip.has_value()){
+        return false;
+    }
     try{
-        m_panda_hand = std::make_unique<franka::Gripper>(ip);
+        m_panda_hand = std::make_unique<franka::Gripper>(ip.value());
+        return true;
     }catch(const franka::NetworkException& e){
         spdlog::debug(e.what());
-        spdlog::error("Can not connect to gripper at IP " + ip);
+        spdlog::error("Can not connect to gripper at IP " + ip.value());
         return false;
     }catch(const franka::IncompatibleVersionException& e){
         spdlog::debug(e.what());
-        spdlog::error("Panda: Detected incompatible version on robot at IP "+ip);
+        spdlog::error("Panda: Detected incompatible version on robot at IP "+ip.value());
         return false;
     }
 }
@@ -146,89 +152,163 @@ std::optional<std::string> PandaBody::find_robot(){
     return robot_address;
 }
 
-bool PandaBody::control(std::function<franka::Torques (const franka::RobotState &)> controller_callback){
+bool PandaBody::control(std::function<franka::Torques (const franka::RobotState&,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
+            return false;
+        }catch(const franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::RealtimeException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const std::invalid_argument& e){
+            spdlog::debug(e.what());
+            return false;
         }
     }else{
         dummy_control(controller_callback);
+        return true;
     }
 }
 
-bool PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &)> controller_callback){
+bool PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
+            return false;
+        }catch(const franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::RealtimeException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const std::invalid_argument& e){
+            spdlog::debug(e.what());
+            return false;
         }
     }else{
         dummy_control(controller_callback);
+        return true;
     }
 }
 
-bool PandaBody::control(std::function<franka::JointVelocities (const franka::RobotState &)> controller_callback){
+bool PandaBody::control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
+            return false;
+        }catch(const franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::RealtimeException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const std::invalid_argument& e){
+            spdlog::debug(e.what());
+            return false;
         }
     }else{
         dummy_control(controller_callback);
+        return true;
     }
 }
 
-bool PandaBody::control(std::function<franka::CartesianPose (const franka::RobotState &)> controller_callback){
+bool PandaBody::control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
+            return false;
+        }catch(const franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::RealtimeException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const std::invalid_argument& e){
+            spdlog::debug(e.what());
+            return false;
         }
     }else{
         dummy_control(controller_callback);
+        return true;
     }
 }
 
-bool PandaBody::control(std::function<franka::JointPositions (const franka::RobotState &)> controller_callback){
+bool PandaBody::control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
+            return false;
+        }catch(const franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const franka::RealtimeException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(const std::invalid_argument& e){
+            spdlog::debug(e.what());
+            return false;
         }
     }else{
         dummy_control(controller_callback);
+        return true;
     }
 }
 
-void PandaBody::dummy_control(std::function<franka::Torques (const franka::RobotState &)> controller_callback){
+void PandaBody::dummy_control(std::function<franka::Torques (const franka::RobotState &,franka::Duration)> controller_callback){
     franka::Torques tau_J={0,0,0,0,0,0,0};
     franka::RobotState state;
+
     state.K_F_ext_hat_K={0,0,0,0,0,0};
     state.O_F_ext_hat_K={0,0,0,0,0,0};
     state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
     state.q={0,0,0,0,0,0,0};
     state.dq={0,0,0,0,0,0,0};
+    std::chrono::high_resolution_clock::time_point t_0;
+    franka::Duration duration(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t_0));
     while(!tau_J.motion_finished){
         auto t_s_start = std::chrono::system_clock::now();
-        tau_J=controller_callback(state);
+        tau_J=controller_callback(state,duration);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
+        duration=franka::Duration(t);
         std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
-void PandaBody::dummy_control(std::function<franka::CartesianVelocities (const franka::RobotState &)> controller_callback){
+void PandaBody::dummy_control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     franka::CartesianVelocities tau_J={0,0,0,0,0,0,0};
     franka::RobotState state;
     state.K_F_ext_hat_K={0,0,0,0,0,0};
@@ -236,16 +316,19 @@ void PandaBody::dummy_control(std::function<franka::CartesianVelocities (const f
     state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
     state.q={0,0,0,0,0,0,0};
     state.dq={0,0,0,0,0,0,0};
+    std::chrono::high_resolution_clock::time_point t_0;
+    franka::Duration duration(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t_0));
     while(!tau_J.motion_finished){
         auto t_s_start = std::chrono::system_clock::now();
-        tau_J=controller_callback(state);
+        tau_J=controller_callback(state,duration);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
+        duration=franka::Duration(t);
         std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
-void PandaBody::dummy_control(std::function<franka::JointVelocities (const franka::RobotState &)> controller_callback){
+void PandaBody::dummy_control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     franka::JointVelocities tau_J={0,0,0,0,0,0,0};
     franka::RobotState state;
     state.K_F_ext_hat_K={0,0,0,0,0,0};
@@ -253,16 +336,19 @@ void PandaBody::dummy_control(std::function<franka::JointVelocities (const frank
     state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
     state.q={0,0,0,0,0,0,0};
     state.dq={0,0,0,0,0,0,0};
+    std::chrono::high_resolution_clock::time_point t_0;
+    franka::Duration duration(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t_0));
     while(!tau_J.motion_finished){
         auto t_s_start = std::chrono::system_clock::now();
-        tau_J=controller_callback(state);
+        tau_J=controller_callback(state,duration);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
+        duration=franka::Duration(t);
         std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
-void PandaBody::dummy_control(std::function<franka::CartesianPose (const franka::RobotState &)> controller_callback){
+void PandaBody::dummy_control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
     franka::CartesianPose tau_J={0,0,0,0,0,0,0};
     franka::RobotState state;
     state.K_F_ext_hat_K={0,0,0,0,0,0};
@@ -270,16 +356,19 @@ void PandaBody::dummy_control(std::function<franka::CartesianPose (const franka:
     state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
     state.q={0,0,0,0,0,0,0};
     state.dq={0,0,0,0,0,0,0};
+    std::chrono::high_resolution_clock::time_point t_0;
+    franka::Duration duration(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t_0));
     while(!tau_J.motion_finished){
         auto t_s_start = std::chrono::system_clock::now();
-        tau_J=controller_callback(state);
+        tau_J=controller_callback(state,duration);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
+        duration=franka::Duration(t);
         std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
 
-void PandaBody::dummy_control(std::function<franka::JointPositions (const franka::RobotState &)> controller_callback){
+void PandaBody::dummy_control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
     franka::JointPositions tau_J={0,0,0,0,0,0,0};
     franka::RobotState state;
     state.K_F_ext_hat_K={0,0,0,0,0,0};
@@ -287,11 +376,14 @@ void PandaBody::dummy_control(std::function<franka::JointPositions (const franka
     state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
     state.q={0,0,0,0,0,0,0};
     state.dq={0,0,0,0,0,0,0};
+    std::chrono::high_resolution_clock::time_point t_0;
+    franka::Duration duration(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t_0));
     while(!tau_J.motion_finished){
         auto t_s_start = std::chrono::system_clock::now();
-        tau_J=controller_callback(state);
+        tau_J=controller_callback(state,duration);
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
+        duration=franka::Duration(t);
         std::this_thread::sleep_for(std::chrono::microseconds(1000-static_cast<int>(t)));
     }
 }
@@ -383,13 +475,16 @@ const std::unique_ptr<franka::Model>& PandaBody::get_panda_model() const{
     return m_panda_model;
 }
 
-bool PandaBody::start_desk_task(const std::string &task,const std::string& ip, const std::string user, const std::stirng& password){
+bool PandaBody::start_desk_task(const std::string &task,const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
+    if(!ip.has_value()){
+        return false;
+    }
 
     nlohmann::json response;
     nlohmann::json request={
-        {"ip",ip},
+        {"ip",ip.value()},
         {"user",user},
         {"password",password},
         {"task",task}
@@ -409,23 +504,20 @@ bool PandaBody::start_desk_task(const std::string &task,const std::string& ip, c
     return true;
 }
 
-void PandaBody::stop_desk_task(const std::string& ip, const std::string user, const std::stirng& password){
+void PandaBody::stop_desk_task(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     nlohmann::json response;
     nlohmann::json request={
-        {"ip",ip},
+        {"ip",ip.value()},
         {"user",user},
         {"password",password}
     };
-    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"stop_task",request,response)){
-        return false;
-    }
-    return true;
+    msrm_utils::JsonUDPClient::call_method("localhost",9001,"stop_task",request,response);
 }
 
 bool PandaBody::wait_for_desk_task(){
     nlohmann::json response,request;
     while(true){
-        if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"start_task",request,response)){
+        if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"wait_for_task",request,response)){
             return false;
         }
         bool finished;
@@ -442,12 +534,12 @@ bool PandaBody::wait_for_desk_task(){
     return true;
 }
 
-bool PandaBody::shutdown_robot(const std::string& ip, const std::string user, const std::stirng& password){
+bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
     nlohmann::json response;
     nlohmann::json request={
-        {"ip",ip},
+        {"ip",ip.value()},
         {"user",user},
         {"password",password}
     };
@@ -457,12 +549,12 @@ bool PandaBody::shutdown_robot(const std::string& ip, const std::string user, co
     return true;
 }
 
-bool PandaBody::unlock_brakes(const std::string& ip, const std::string user, const std::stirng& password){
+bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
     nlohmann::json response;
     nlohmann::json request={
-        {"ip",ip},
+        {"ip",ip.value()},
         {"user",user},
         {"password",password}
     };
@@ -478,12 +570,12 @@ bool PandaBody::unlock_brakes(const std::string& ip, const std::string user, con
     return true;
 }
 
-bool PandaBody::lock_brakes(const std::string& ip, const std::string user, const std::stirng& password){
+bool PandaBody::lock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
     nlohmann::json response;
     nlohmann::json request={
-        {"ip",ip},
+        {"ip",ip.value()},
         {"user",user},
         {"password",password}
     };
@@ -499,12 +591,12 @@ bool PandaBody::lock_brakes(const std::string& ip, const std::string user, const
     return true;
 }
 
-bool PandaBody::move_to_pack_pose(const std::string& ip, const std::string user, const std::stirng& password){
+bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
     nlohmann::json response;
     nlohmann::json request={
-        {"ip",ip},
+        {"ip",ip.value()},
         {"user",user},
         {"password",password}
     };

@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <msrm_utils/json.hpp>
 #include <nlohmann/json.hpp>
+#include "skills/nullskill.hpp"
 
 namespace mios {
 
@@ -204,11 +205,11 @@ bool UserParameters::read_parameters(const nlohmann::json &parameters){
         spdlog::error("Could not read ddq_max.");
         return false;
     }
-    if(!msrm_utils::read_json_param<double,6,1>(parameters,"F_ext_contact",F_ext_contact)){
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"F_ext_contact",F_ext_contact)){
         spdlog::error("Could not read F_ext_contact.");
         return false;
     }
-    if(!msrm_utils::read_json_param<double,6,1>(parameters,"F_ext_max",F_ext_max)){
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"F_ext_max",F_ext_max)){
         spdlog::error("Could not read F_ext_max.");
         return false;
     }
@@ -359,7 +360,8 @@ void SkillParameters::read_skill_objects(const nlohmann::json &p){
     }
 }
 
-Parameters::Parameters():limits(LimitParameters()),system(ParametersSystem()),control(ParametersControl()),prototype(nullptr){
+Parameters::Parameters():control(ControlParameters()),system(SystemParameters()),limits(LimitParameters()),user(UserParameters()),
+    frames(FramesParameters()),skill(std::make_unique<SkillParametersNullSkill>()){
 
 }
 

@@ -21,10 +21,10 @@ public:
     bool apply_skill_context(const std::string skill_id);
 
     Parameters* get_parameters();
-    const Parameters* const read_parameters() const;
+    const Parameters *read_parameters() const;
     LiveContext* get_live_context();
     bool get_task_data(const std::string uuid,TaskData& data) const;
-    bool store_task_result(const std::string& uuid, const nlohmann::json& result);
+    bool store_task_result(const std::string& uuid, const TaskResult &result);
     std::shared_ptr<Task> load_task(const std::string& task_id, const nlohmann::json& parameters,Core* core);
     std::shared_ptr<Task> load_subtask(const std::string& task_id, const nlohmann::json& parameters,Core* core);
     bool load_default_task_context(const std::string task_id, nlohmann::json &task_context);
@@ -33,8 +33,10 @@ public:
     void set_live_parameter(const std::string& key, const nlohmann::json& value);
     std::optional<nlohmann::json> get_live_parameter(const std::string& parameter)const;
 
-    bool update_object(const std::string& name,const Percept& p);
-    const Object* const get_object(const std::string& name) const;
+    bool update_object(const std::string& name, bool teach_width, const Percept& p);
+
+private:
+    const Object *get_object(const std::string& name) const;
 
 private:
 

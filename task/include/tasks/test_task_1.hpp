@@ -5,7 +5,7 @@ namespace mios{
 class TestTask1 : public Task{
 public:
 TestTask1(Core *core);
-void initialize_task();
+void initialize_context();
 void execute_task();
 void recover_task();
 const EvalTask& evaluate_task();

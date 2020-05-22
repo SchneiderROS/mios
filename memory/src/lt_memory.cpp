@@ -80,27 +80,25 @@ bool LTMemory::get_task_data(const std::string uuid, TaskData &data) const{
 
 std::shared_ptr<Task> LTMemory::load_task(const std::string& task_id, const nlohmann::json& user_context,Core* core){
     std::shared_ptr<Task> task = TaskFactory::create_task(TaskFactory::get_task_name(task_id),core);
-    nlohmann::json active_context;
-    task->initialize_task();
-    if(!task->load_context(user_context,active_context)){
+    task->initialize_context();
+    if(!task->load_context(user_context)){
         return TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
     }
-    m_st_memory->put_task(task_id,active_context);
+    m_st_memory->put_task(task_id,task->get_context());
     return task;
 }
 
 std::shared_ptr<Task> LTMemory::load_subtask(const std::string& task_id, const nlohmann::json& user_context,Core* core){
     std::shared_ptr<Task> task = TaskFactory::create_task(TaskFactory::get_task_name(task_id),core);
-    nlohmann::json active_context;
-    task->initialize_task();
-    if(!task->load_context(user_context,active_context)){
+    task->initialize_context();
+    if(!task->load_context(user_context)){
         return TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
     }
-    m_st_memory->put_subtask(task_id,active_context);
+    m_st_memory->put_subtask(task_id,task->get_context());
     return task;
 }
 
-bool LTMemory::load_default_parameters(const nlohmann::json &parameters){
+bool LTMemory::load_default_parameters(nlohmann::json &parameters){
     if(!m_mongodb_client.read_document("control","parameters",parameters["control"])){
         return false;
     }

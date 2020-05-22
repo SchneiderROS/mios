@@ -7,7 +7,6 @@
 namespace mios{
 class Task;
 class Core;
-class KnowledgeBase;
 
 enum TaskName{TaskName_IdleTask,TaskName_TestTask1,TaskName_TestTask2,TaskName_TestTask3,TaskName_None};
 

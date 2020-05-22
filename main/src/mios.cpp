@@ -10,12 +10,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "core/core.hpp"
-#include "task/task_handler.hpp"
-//#include "interface/rpc_server.hpp"
-#include "interface/interface.hpp"
-#include "interface/parameter_server.hpp"
 
-#include <msrm_utils/system.hpp>
 #include <msrm_utils/network.hpp>
 
 void exit_handler(int s);
@@ -31,16 +26,18 @@ int main(int argc, char** argv){
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
 
-    unsigned port=8383;
-    if(!msrm_utils::is_port_available("localhost",port)){
-        msrm_utils::print_error("Port "+std::to_string(port)+" is blocked by another process. You can check which process is blocking the port"
-                         "by typing 'netstat -ntlup | grep "+std::to_string(port)+"' in a terminal. Terminating...");
-        return -1;
-    }
+
 
     msrm_utils::print_info("############################################################");
     msrm_utils::print_info("MIOS");
-    msrm_utils::print_info("Version: 0.4.1.0");
+    msrm_utils::print_info("Version: 0.6.0.0");
+
+    unsigned port=12000;
+    if(!msrm_utils::is_port_available("localhost",port)){
+        spdlog::error("Port "+std::to_string(port)+" is blocked by another process. You can check which process is blocking the port"
+                         "by typing 'netstat -ntlup | grep "+std::to_string(port)+"' in a terminal. Terminating...");
+        return -1;
+    }
 
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console_sink->set_level(spdlog::level::debug);
@@ -53,21 +50,10 @@ int main(int argc, char** argv){
     logger->set_level(spdlog::level::debug);
     spdlog::set_default_logger(logger);
 
-    mios::Interface interface(port);
-    mios::ParameterServer live_params(port+1);
-    mios::Core core(argc,argv);
-    mios::TaskEngine task_handler(&core);
-    interface.initialize(&core,&task_handler);
-    interface.start();
-    live_params.initialize();
-    live_params.start();
-    core.set_live_parameter_server(&live_params);
-
+    mios::Core core;
     msrm_utils::print_info("############################################################");
     msrm_utils::print_info("System is ready.");
-    task_handler.life_cycle();
-    interface.stop();
-    live_params.stop();
+    core.get_task_engine()->life_cycle();
     spdlog::debug("LAST LINE OF CODE");
     return 0;
 }
