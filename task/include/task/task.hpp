@@ -48,7 +48,7 @@ public:
      * @return Returns true if the task and all its subtasks and skills were successfully loaded.
      */
     bool load_context(const nlohmann::json &user_context);
-    nlohmann::json get_context() const;
+    const nlohmann::json &get_context() const;
     void overwrite_context(const std::string& skill_name, const std::string& parameter_type, const std::string& parameter, const nlohmann::json &value);
     void overwrite_context(const std::string& subtask_name, const std::string& skill_name, const std::string& parameter_type, const std::string& parameter, const nlohmann::json &value);
 
@@ -196,7 +196,7 @@ protected:
      */
 
 //    void execute_skill(const std::string& name);
-    template<typename T>void execute_skill(const std::string &name){
+    template<typename T_skill, typename T_param>void execute_skill(const std::string &name){
         if(m_context["skills"].find(name)==m_context["skills"].end()){
             spdlog::error("Skill with id "+name+" not in this task. Check the task context for consistency. Stopping task.");
             stop_task(true);
@@ -210,13 +210,15 @@ protected:
             throw TaskException("Could not refresh perception.");
         }
 
-        std::shared_ptr<Skill> skill = std::make_shared<T>(name,m_memory,p);
+        std::shared_ptr<Skill> skill = std::make_shared<T_skill>(name,m_memory,p);
+        m_memory->get_parameters()->create_skill_parameters<T_param>();
         spdlog::info("Executing skill "+name+".");
-        if(!m_skill_engine->execute_skill(skill)){
-            throw TaskException("Could not execute skill " + name + ".");
-        }
+        bool result=m_skill_engine->execute_skill(m_context,skill);
         m_result.m_skill_results.emplace(std::make_pair(name,skill->get_result()));
         m_flag_stop = skill->get_result().exception;
+        if(!result){
+            throw TaskException("Could not execute skill " + name + ".");
+        }
     }
 
     /**

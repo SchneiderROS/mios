@@ -68,6 +68,7 @@ public:
     TaskEngine* get_task_engine();
     CommandInterface* get_command_interface();
     const Percept *get_percept() const;
+    bool is_ready() const;
 
 private:
 
@@ -94,6 +95,9 @@ private:
     TaskEngine m_task_engine;
     CommandInterface m_command_interface;
     std::unique_ptr<ControllerPipeline> m_controller_pipeline;
+
+private:
+    bool m_is_ready;
 };
 
 }

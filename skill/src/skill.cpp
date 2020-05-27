@@ -27,7 +27,7 @@ std::shared_ptr<ManipulationPrimitive> Skill::get_mp(const std::string &mp) cons
     return m_mp_graph.at(mp);
 }
 
-Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_T(const std::string &object_name){
+Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_T(const std::string &object_name) const{
     if(m_grounded_objects.find(object_name)==m_grounded_objects.end()){
         throw SkillException("No object of type "+object_name+" in skill "+ get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
     }
@@ -35,7 +35,7 @@ Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_T(const std::string &obje
     return msrm_utils::rotate_matrix(object->O_T_OB*object->OB_T_gp,m_memory->read_parameters()->frames.O_R_T.transpose());
 }
 
-Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_O(const std::string &object_name){
+Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_O(const std::string &object_name) const{
     if(m_grounded_objects.find(object_name)==m_grounded_objects.end()){
         throw SkillException("No object of type "+object_name+" in skill "+ get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
     }
@@ -50,14 +50,10 @@ const Object* Skill::get_object(const std::string &o) const{
     return m_grounded_objects.at(o);
 }
 
-void Skill::write_O_R_TF_to_config(const Percept &p){
-    m_memory->get_parameters()->frames.O_R_T=get_O_R_T_0(p);
-}
-
 bool Skill::initialize(const Percept &p){
     if(!msrm_utils::is_orthonormal(m_memory->read_parameters()->frames.O_R_T)){
-        msrm_utils::print_error("O_R_TF of skill "+m_id+" is invalid. Aborting execution.");
-        std::cout<<"O_R_TF: "<<m_memory->read_parameters()->frames.O_R_T<<std::endl;
+        spdlog::error("O_R_T of skill "+m_id+" is invalid. Aborting execution.");
+        std::cout<<"O_R_T: "<<m_memory->read_parameters()->frames.O_R_T<<std::endl;
         return false;
     }
     return true;
@@ -74,6 +70,7 @@ Actuator* Skill::cycle(const Percept &p){
         m_memory->get_live_context()->t_skill=std::chrono::high_resolution_clock::now();
         m_result.percepts.emplace(std::make_pair(m_active_mp->get_name(),p));
         if(!this->check_local_pre_conditions(p)){
+            spdlog::error("Preconditions are not fulfilled.");
             cmd=m_active_mp->stop(p);
             m_life_cycle=SkillLifeCycle::slTerminate;
         }else{
@@ -92,6 +89,7 @@ Actuator* Skill::cycle(const Percept &p){
     }
     if(m_life_cycle==SkillLifeCycle::slTerminate){
         terminate_parallels();
+        m_active_mp->terminate();
         cmd=m_active_mp->stop(p);
         cmd->stop();
         m_result.p_1=p;
@@ -132,6 +130,7 @@ Actuator* Skill::cycle(const Percept &p){
 
     if(m_life_cycle==SkillLifeCycle::slTransition){
         Actuator blend_cmd=*(m_active_mp->cmd_from_buffer());
+        m_active_mp->terminate();
         m_active_mp=next_mp.value();
         m_result.percepts.emplace(std::make_pair(m_active_mp->get_name(),p));
         m_life_cycle=SkillLifeCycle::slExecution;
@@ -184,8 +183,15 @@ void Skill::invoke_success(){
 }
 
 bool Skill::check_global_err_conditions(const Percept& p) const{
-    for(unsigned i=0;i<6;i++){
-        if(fabs(p.proprioception.TF_F_ext_K(i))>=m_memory->read_parameters()->user.F_ext_max(i)){
+    for(unsigned i=0;i<3;i++){
+        if(fabs(p.proprioception.TF_F_ext_K(i))>=m_memory->read_parameters()->user.F_ext_max(0)){
+            spdlog::error("Skill "+m_id+" has violated the maximum allowed external cartesian forces.");
+            std::cout<<"F_ext: "<<p.proprioception.TF_F_ext_K<<std::endl;
+            return true;
+        }
+    }
+    for(unsigned i=0;i<3;i++){
+        if(fabs(p.proprioception.TF_F_ext_K(i+3))>=m_memory->read_parameters()->user.F_ext_max(1)){
             spdlog::error("Skill "+m_id+" has violated the maximum allowed external cartesian forces.");
             std::cout<<"F_ext: "<<p.proprioception.TF_F_ext_K<<std::endl;
             return true;
@@ -205,8 +211,8 @@ bool Skill::check_global_err_conditions(const Percept& p) const{
         }
     }
     double run_time = std::chrono::duration_cast<std::chrono::seconds>(p.time-m_time_start).count();
-    if(run_time>m_memory->read_parameters()->skill->common.time_max && m_memory->read_parameters()->skill->common.time_max>0){
-        spdlog::error("Skill "+m_id+" has violated the maximum time limit of "+std::to_string(m_memory->read_parameters()->skill->common.time_max)+" s.");
+    if(run_time>m_memory->read_parameters()->skill->time_max && m_memory->read_parameters()->skill->time_max>0){
+        spdlog::error("Skill "+m_id+" has violated the maximum time limit of "+std::to_string(m_memory->read_parameters()->skill->time_max)+" s.");
         return true;
     }
     if(m_flag_invoke_failure){
@@ -253,7 +259,7 @@ const std::string& Skill::get_id() const{
 }
 
 bool Skill::ground_objects(){
-    for(const std::pair<std::string,std::string>& m : m_memory->get_parameters()->skill->common.objects){
+    for(const std::pair<std::string,std::string>& m : m_memory->get_parameters()->skill->objects){
         if(m_objects.find(m.first)==m_objects.end()){
             spdlog::error("Skill of type " + m_type + " does not use an object of type " + m.first +".");
             return false;
@@ -286,7 +292,7 @@ void Skill::run_parallels(){
         this->parallels();
         auto finish = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
-        double t_sleep_max = 1.0/m_memory->read_parameters()->skill->common.parallels_frequency;
+        double t_sleep_max = 1.0/m_memory->read_parameters()->skill->parallels_frequency;
 
         std::this_thread::sleep_for(std::chrono::microseconds(long(t_sleep_max*1000000-elapsed.count())));
     }

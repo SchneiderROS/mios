@@ -1,4 +1,5 @@
 #include "skills/move_to_pose_joint.hpp"
+#include <spdlog/spdlog.h>
 
 namespace mios {
 
@@ -8,7 +9,7 @@ bool SkillParametersMoveToPoseJoint::read_parameters(const nlohmann::json &p){
     msrm_utils::read_json_param<double,7,1>(p,"q_g_offset",q_g_offset);
 
     if(!msrm_utils::read_json_param<double,7,1>(p,"q_g",q_g)){
-        msrm_utils::print_error("Parameter q_g could not be loaded but is mandatory.");
+        spdlog::error("Parameter q_g could not be loaded but is mandatory.");
         return false;
     }
     return true;

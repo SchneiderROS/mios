@@ -10,6 +10,7 @@ namespace mios {
 using msrm_utils::ArgPair;
 
 CommandInterface::CommandInterface(Core *core, TaskEngine *task_engine,Portal* portal,Memory* memory):m_core(core),m_task_engine(task_engine),m_portal(portal),m_memory(memory){
+    bind_methods();
 }
 
 void CommandInterface::bind_methods(){
@@ -151,7 +152,7 @@ nlohmann::json CommandInterface::grasp(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::release_object(const nlohmann::json &request){
-    msrm_utils::print_info("Releasing object");
+    spdlog::info("Releasing object");
     nlohmann::json response;
     if(!m_core->release_object(request["speed"])){
         response["result"]=false;

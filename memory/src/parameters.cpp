@@ -147,9 +147,9 @@ nlohmann::json LimitParameters::get_default_values(){
     nlohmann::json default_values;
     nlohmann::json joint_space;
     nlohmann::json cartesian_space;
-    joint_space["dddq"]={7500,3750,5000,6250,7500,10000,10000};
-    joint_space["ddq"]={15,7.5,10,12.5,15,20,20};
-    joint_space["dq"]={2.1,2.1,2.1,2.1,2.6,2.6,2.6};
+    joint_space["dddq_max"]={7500,3750,5000,6250,7500,10000,10000};
+    joint_space["ddq_max"]={15,7.5,10,12.5,15,20,20};
+    joint_space["dq_max"]={2.1,2.1,2.1,2.1,2.6,2.6,2.6};
     joint_space["q_upper"]={2.85,1.7,2.85,0,2.85,3.7,2.85};
     joint_space["q_lower"]={-2.85,-1.7,-2.85,-3,-2.85,-0.05,-2.85};
     joint_space["tau_J_max"]={87,87,87,87,12,12,12};
@@ -313,9 +313,9 @@ nlohmann::json FramesParameters::get_default_values(){
 }
 
 SystemParameters::SystemParameters(){
-    robot_ip={};
-    desk_user={};
-    desk_pwd={};
+    robot_ip="";
+    desk_user="";
+    desk_pwd="";
 
     has_robot=false;
     has_gripper=false;
@@ -356,6 +356,8 @@ nlohmann::json SystemParameters::get_default_values(){
 }
 
 ControlParameters::ControlParameters(){
+    control_mode=ControlMode::mNoControl;
+
     cart_imp_adaptation_stage.L.setZero();
     cart_imp_adaptation_stage.alpha.setZero();
     cart_imp_adaptation_stage.beta.setZero();
@@ -427,6 +429,11 @@ bool ControlParameters::read_parameters(const nlohmann::json &parameters){
     }
     if(parameters.find("nullspace_control")==parameters.end()){
         spdlog::error("Control parameters do not have nullspace_control subsection.");
+        return false;
+    }
+
+    if(!msrm_utils::read_json_param(parameters,"control_mode",control_mode)){
+        spdlog::error("Could not read control_mode.");
         return false;
     }
 
@@ -597,6 +604,9 @@ nlohmann::json ControlParameters::get_default_values(){
     nlohmann::json virtual_cube;
     nlohmann::json virtual_joint_walls;
     nlohmann::json nullspace_control;
+
+    default_values["control_mode"]=4;
+
     cart_imp["K_x"]={1000,1000,1000,100,100,100};
     cart_imp["xi_x"]={0.7,0.7,0.7,0.7,0.7,0.7};
 
@@ -621,19 +631,19 @@ nlohmann::json ControlParameters::get_default_values(){
     force_control["sf_on"]=false;
 
     virtual_cube["damping"]={0};
-    virtual_cube["damping-dist"]={0};
+    virtual_cube["damping_dist"]={0};
     virtual_cube["eta"]={0};
     virtual_cube["rho_min"]={0};
     virtual_cube["walls"]={0,0,0,0,0,0};
     virtual_cube["f_max"]={0};
     virtual_cube["active"]=false;
 
-    virtual_joint_walls["damping"]={0};
-    virtual_joint_walls["damping-dist"]={0};
-    virtual_joint_walls["eta"]={0};
-    virtual_joint_walls["rho_min"]={0};
+    virtual_joint_walls["damping"]={0,0,0,0,0,0,0};
+    virtual_joint_walls["damping_dist"]={0,0,0,0,0,0,0};
+    virtual_joint_walls["eta"]={0,0,0,0,0,0,0};
+    virtual_joint_walls["rho_min"]={0,0,0,0,0,0,0};
     virtual_joint_walls["walls"]={0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    virtual_joint_walls["f_max"]={0};
+    virtual_joint_walls["f_max"]={0,0,0,0,0,0,0};
     virtual_joint_walls["active"]=false;
 
     nullspace_control["q_d"]={0,0,0,0,0,0,0};
@@ -652,36 +662,52 @@ nlohmann::json ControlParameters::get_default_values(){
 }
 
 SkillParameters::SkillParameters(){
-    common.time_max=0;
-    common.w_cost_function.resize(1);
-    common.w_cost_function[0]=1;
-    common.parallels_frequency=1;
+    time_max=0;
+    w_cost_function.resize(1);
+    w_cost_function[0]=1;
+    parallels_frequency=1;
 }
 
 bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
-    if(!msrm_utils::read_json_param(p,"time_max",common.time_max)){
+    if(!msrm_utils::read_json_param(p,"time_max",time_max)){
         spdlog::error("Could not read time_max.");
         return false;
     }
-    if(!msrm_utils::read_json_param(p,"w_cost_function",common.w_cost_function)){
+    if(!msrm_utils::read_json_param(p,"w_cost_function",w_cost_function)){
         spdlog::error("Could not read cost_function.");
         return false;
     }
-    if(!msrm_utils::read_json_param(p,"parallels_frequency",common.parallels_frequency)){
+    if(!msrm_utils::read_json_param(p,"parallels_frequency",parallels_frequency)){
         spdlog::error("Could not read parallels_frequency.");
         return false;
+    }
+    if(p.find("objects")!=p.end()){
+        read_skill_objects(p["objects"]);
     }
     return true;
 }
 
 void SkillParameters::read_skill_objects(const nlohmann::json &p){
     for(const auto& o : p.items()){
-        common.objects.insert(std::make_pair(o.key(),o.value()));
+        objects.insert(std::make_pair(o.key(),o.value()));
     }
+}
+
+nlohmann::json SkillParameters::get_default_values(){
+    nlohmann::json default_values;
+    default_values["time_max"]=-1;
+    default_values["w_cost_function"]={1};
+    default_values["parallels_frequency"]=1;
+    default_values["objects"]={};
+    return default_values;
 }
 
 Parameters::Parameters():control(ControlParameters()),system(SystemParameters()),limits(LimitParameters()),user(UserParameters()),
     frames(FramesParameters()),skill(std::make_unique<SkillParametersNullSkill>()){
+
+}
+
+LiveContext::LiveContext(Object* grasped_object):grasped_object(grasped_object){
 
 }
 

@@ -46,8 +46,6 @@ public:
      */
     bool initialize(const Percept &p);
 
-    void write_O_R_TF_to_config(const Percept& p);
-
     /**
      * Calculates O_R_TF for this skill. It can be static, provided in the task description or based on the percept at time of skill execution.
      * @param[in] p Percept struct.
@@ -135,8 +133,8 @@ public:
      * @param TF Determines whether the pose should be given in task frame or base frame.
      * @return Object pose.
      */
-    Eigen::Matrix<double,4,4> get_object_grasp_pose_T(const std::string& object_name);
-    Eigen::Matrix<double,4,4> get_object_grasp_pose_O(const std::string& object_name);
+    Eigen::Matrix<double,4,4> get_object_grasp_pose_T(const std::string& object_name) const;
+    Eigen::Matrix<double,4,4> get_object_grasp_pose_O(const std::string& object_name) const;
 
     /**
      * To be defined by developer. This function sets up the evaluation struct based on the skill execution.

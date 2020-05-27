@@ -8,7 +8,6 @@ ManipulationPrimitive::ManipulationPrimitive(const std::string &type, const std:
 }
 
 ManipulationPrimitive::~ManipulationPrimitive(){
-    terminate();
 }
 
 Actuator* ManipulationPrimitive::initialize(const Percept &p_0){

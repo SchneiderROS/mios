@@ -23,6 +23,8 @@ void Actuator::initialize(const Percept &p_0){
     tau_ff.setZero();
     K_theta=p_0.controller.K_theta;
     xi_theta=p_0.controller.xi_theta;
+
+    m_stop=false;
 }
 
 void Actuator::stop(){

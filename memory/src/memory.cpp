@@ -34,8 +34,8 @@ bool Memory::set_default_parameters(){
     return m_st_memory.set_default_parameters();
 }
 
-bool Memory::apply_skill_context(const std::string skill_id){
-    return m_st_memory.apply_skill_context(skill_id);
+bool Memory::apply_skill_context(const nlohmann::json& context, const std::string skill_id){
+    return m_st_memory.apply_skill_context(context, skill_id);
 }
 
 std::shared_ptr<Task> Memory::load_task(const std::string &task_id, const nlohmann::json &parameters,Core* core){
@@ -70,8 +70,8 @@ bool Memory::get_task_data(const std::string uuid, TaskData &data) const{
     return m_lt_memory.get_task_data(uuid,data);
 }
 
-void Memory::store_task_result(const std::string &uuid, const TaskResult& result){
-    m_st_memory.store_task_result(uuid,result);
+void Memory::store_task_data(const std::string &uuid, const std::string& task_id, const nlohmann::json& context, const TaskResult& result){
+    m_lt_memory.store_task_data(uuid, task_id, context, result);
 }
 
 void  Memory::set_live_parameter(const std::string &key, const nlohmann::json &value){

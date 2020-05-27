@@ -13,6 +13,7 @@ namespace mios {
 
 class PandaBody{
 public:
+    PandaBody();
     bool connect_to_robot(const std::optional<std::string> &ip);
     bool connect_to_gripper(const std::optional<std::string> &ip);
     void disconnect_from_robot();
@@ -63,6 +64,8 @@ public:
 private:
     bool is_robot(const std::string& ip);
     std::optional<std::string> find_robot();
+    void get_default_robot_state(franka::RobotState& state) const;
+    void get_default_gripper_state(franka::GripperState& state) const;
 
 private:
     std::unique_ptr<franka::Robot> m_panda_arm;

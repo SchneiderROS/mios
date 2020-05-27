@@ -11,6 +11,7 @@
 #include "controller_pipeline/joint_torque_pipeline.hpp"
 #include "controller_pipeline/cart_velocity_pipeline.hpp"
 #include "controller_pipeline/joint_velocity_pipeline.hpp"
+#include "controller_pipeline/null_pipeline.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -23,7 +24,7 @@
 namespace mios {
 
 Core::Core():m_skill_engine(SkillEngine(this)),m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_task_engine(TaskEngine(this)),
-m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)){
+m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)),m_controller_pipeline(std::make_unique<NullControllerPipeline>()),m_is_ready(false){
 
     spdlog::info("Initializing knowledgebase...");
     if(!m_memory.initialize()){
@@ -46,7 +47,9 @@ bool Core::initialize(){
         return false;
     }
 
-    m_memory.get_parameters()->system.robot_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip).value_or("");
+    if(m_memory.read_parameters()->system.has_robot || m_memory.read_parameters()->system.has_gripper){
+        m_memory.get_parameters()->system.robot_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip).value_or("");
+    }
     if(m_memory.read_parameters()->system.has_robot){
         if(!m_panda_body.connect_to_robot(m_memory.read_parameters()->system.robot_ip)){
             return false;
@@ -58,6 +61,7 @@ bool Core::initialize(){
         }
     }
     m_memory.get_live_context()->t_core=std::chrono::high_resolution_clock::now();
+    m_is_ready=true;
     return true;
 }
 
@@ -99,7 +103,7 @@ bool Core::execute_skill(){
     refresh_percept(m_memory.read_parameters()->frames.O_R_T);
     set_robot_parameters();
 
-    bool result;
+    bool result=false;
     if(m_memory.read_parameters()->control.control_mode==ControlMode::mCartTorque){
         m_controller_pipeline=std::make_unique<CartTorqueControllerPipeline>();
         m_controller_pipeline->initialize(m_percept,&m_memory);
@@ -119,6 +123,9 @@ bool Core::execute_skill(){
         m_controller_pipeline=std::make_unique<JointVelocityControllerPipeline>();
         m_controller_pipeline->initialize(m_percept,&m_memory);
         result=m_panda_body.control(std::bind(&Core::joint_torque_controller_pipeline,this,std::placeholders::_1));
+    }
+    if(m_memory.read_parameters()->control.control_mode==ControlMode::mNoControl){
+        spdlog::error("No control mode has been selected.");
     }
 
     m_controller_pipeline->terminate();
@@ -284,6 +291,10 @@ bool Core::recover_body(){
 
 const Percept* Core::get_percept() const{
     return &m_percept;
+}
+
+bool Core::is_ready() const{
+    return m_is_ready;
 }
 
 //void Core::check_cartesian_velocity_workspace(Eigen::Matrix<double, 6, 1> &TF_dX_d, const Percept& p){

@@ -37,60 +37,59 @@ def test_exception_handling(hostname):
     address = hostname
     print('Testing exception handling...')
 
-    print("TASK")
-    rtn = start_task(address, 'TestTask1', {"parameters": {"exception": "task"}})
+    rtn = start_task(address, 'TestTask1', {"parameters": {"exception": "task", "success": True}})
     msg_error(rtn is not None, 'exception_handling_task', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_task', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_task', 'Result has no unique task id', rtn)
 
-    print("WAIT_TASK")
-    wait_for_task(address,rtn['result']['task_uuid'])
+    rtn = wait_for_task(address,rtn['result']['task_uuid'])
+    msg_error(rtn["result"]["task_result"]["results"]["result_code"] == 9,"exception_handling_task",
+              "Wrong result code", rtn)
 
-    print("SKILL")
-    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "skill"}})
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "skill", "success": True}})
     msg_error(rtn is not None, 'exception_handling_skill', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_skill', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_skill', 'Result has no unique task id', rtn)
 
-    print("WAIT_SKILL")
+    rtn = wait_for_task(address,rtn['result']['task_uuid'])
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 5, "exception_handling_task",
+              "Wrong result code", rtn)
 
-    wait_for_task(address,rtn['result']['task_uuid'])
-
-    print("CONTROL")
-    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "control"}})
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "control", "success": True}})
     msg_error(rtn is not None, 'exception_handling_control', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_control', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_control', 'Result has no unique task id', rtn)
 
-    print("WAIT_CONTROL")
-    wait_for_task(address,rtn['result']['task_uuid'])
+    rtn = wait_for_task(address,rtn['result']['task_uuid'])
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 1, "exception_handling_task",
+              "Wrong result code", rtn)
 
-    print("INVALID")
-    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "invalid"}})
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "invalid", "success": True}})
     msg_error(rtn is not None, 'exception_handling_invalid', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_invalid', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_invalid', 'Result has no unique task id', rtn)
 
-    print("WAIT_INVALID")
-    wait_for_task(address,rtn['result']['task_uuid'])
+    rtn = wait_for_task(address,rtn['result']['task_uuid'])
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 2, "exception_handling_task",
+              "Wrong result code", rtn)
 
-    print("NETWORK")
-    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "network"}})
+    rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "network", "success": True}})
     msg_error(rtn is not None, 'exception_handling_network', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_network', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_network', 'Result has no unique task id', rtn)
 
-    print("WAIT_NETWORK")
-    wait_for_task(address,rtn['result']['task_uuid'])
+    rtn = wait_for_task(address,rtn['result']['task_uuid'])
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 3, "exception_handling_task",
+              "Wrong result code", rtn)
 
-    print("REALTIME")
-    rtn = start_task(address, 'TestTask1', {"parameters":{"exception": "realtime"}})
+    rtn = start_task(address, 'TestTask1', {"parameters":{"exception": "realtime", "success": True}})
     msg_error(rtn is not None, 'exception_handling_realtime', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'exception_handling_realtime', 'Result is false', rtn)
     msg_error('task_uuid' in rtn['result'], 'exception_handling_realtime', 'Result has no unique task id', rtn)
 
-    print("WAIT_REALTIME")
-    wait_for_task(address,rtn['result']['task_uuid'])
+    rtn = wait_for_task(address,rtn['result']['task_uuid'])
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 4, "exception_handling_task",
+              "Wrong result code", rtn)
 
 
 def test_start_stop(hostname):

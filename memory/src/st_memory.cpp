@@ -7,6 +7,10 @@
 
 namespace mios {
 
+STMemory::STMemory():m_environment({{"NullObject",Object("NullObject")}}),m_live_context(LiveContext(&m_environment.at("NullObject"))){
+
+}
+
 bool STMemory::is_ok() const{
     return true;
 }
@@ -31,16 +35,11 @@ bool STMemory::syncronize_with_lt_memory(){
     }
 }
 
-void STMemory::put_task(const std::string &name, const nlohmann::json &context){
-    m_task_data.name=name;
-    m_task_data.context=context;
-}
-
 void STMemory::put_subtask(const std::string &name, const nlohmann::json &context){
-    if(m_task_data.context.find("subtasks")==m_task_data.context.end()){
-        m_task_data.context["subtasks"]=nlohmann::json();
-    }
-    m_task_data.context["subtasks"][name]=context;
+//    if(m_task_data.context.find("subtasks")==m_task_data.context.end()){
+//        m_task_data.context["subtasks"]=nlohmann::json();
+//    }
+//    m_task_data.context["subtasks"][name]=context;
 }
 
 LiveContext* STMemory::get_live_context(){
@@ -55,15 +54,6 @@ const Parameters* STMemory::read_parameters() const{
     return &m_parameters;
 }
 
-const TaskData* STMemory::get_task_data() const{
-    return &m_task_data;
-}
-
-void STMemory::store_task_result(const std::string& uuid, const TaskResult& result){
-    m_task_data.result=result;
-    m_lt_memory->save_task_data(uuid,m_task_data);
-}
-
 void STMemory::set_live_parameter(const std::string &key, const nlohmann::json &value){
     m_live_context.live_parameters[key]=value;
 }
@@ -76,35 +66,41 @@ std::optional<nlohmann::json> STMemory::get_live_parameter(const std::string &pa
     }
 }
 
-bool STMemory::apply_skill_context(const std::string &skill_id){
-    if(m_task_data.context.find("skills")==m_task_data.context.end()){
+bool STMemory::apply_skill_context(const nlohmann::json task_context, const std::string &skill_id){
+    if(task_context.find("skills")==task_context.end()){
         spdlog::error("The current task context contains no skills");
         return false;
     }
-    if(m_task_data.context["skills"].find(skill_id)==m_task_data.context["skills"].end()){
+    if(task_context["skills"].find(skill_id)==task_context["skills"].end()){
         spdlog::error("The current task context contains no skill with id " + skill_id);
         return false;
     }
-    if(!m_parameters.control.read_parameters(m_task_data.context["skills"][skill_id]["control"])){
-        spdlog::error("Could not apply controller parameters from context for skill " + skill_id);
+    if(!m_parameters.control.read_parameters(task_context["skills"][skill_id]["control"])){
+        spdlog::error("Could not apply control parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.frames.read_parameters(m_task_data.context["skills"][skill_id]["frames"])){
+    if(!m_parameters.frames.read_parameters(task_context["skills"][skill_id]["frames"])){
+        spdlog::error("Could not apply frames parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.limits.read_parameters(m_task_data.context["skills"][skill_id]["limits"])){
+    if(!m_parameters.limits.read_parameters(task_context["skills"][skill_id]["limits"])){
+        spdlog::error("Could not apply limits parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.skill->read_parameters(m_task_data.context["skills"][skill_id]["skill"])){
+    if(!m_parameters.skill->read_parameters(task_context["skills"][skill_id]["skill"])){
+        spdlog::error("Could not apply skill parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.skill->read_global_skill_parameters(m_task_data.context["skills"][skill_id]["skill"])){
+    if(!m_parameters.skill->read_global_skill_parameters(task_context["skills"][skill_id]["skill"])){
+        spdlog::error("Could not apply global skill parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.system.read_parameters(m_task_data.context["skills"][skill_id]["system"])){
+    if(!m_parameters.system.read_parameters(task_context["skills"][skill_id]["system"])){
+        spdlog::error("Could not apply system parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.user.read_parameters(m_task_data.context["skills"][skill_id]["user"])){
+    if(!m_parameters.user.read_parameters(task_context["skills"][skill_id]["user"])){
+        spdlog::error("Could not apply user parameters from context for skill " + skill_id);
         return false;
     }
     return true;

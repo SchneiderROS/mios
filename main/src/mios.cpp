@@ -28,9 +28,9 @@ int main(int argc, char** argv){
 
 
 
-    msrm_utils::print_info("############################################################");
-    msrm_utils::print_info("MIOS");
-    msrm_utils::print_info("Version: 0.6.0.0");
+    spdlog::info("############################################################");
+    spdlog::info("MIOS");
+    spdlog::info("Version: 0.6.0.0");
 
     unsigned port=12000;
     if(!msrm_utils::is_port_available("localhost",port)){
@@ -51,8 +51,8 @@ int main(int argc, char** argv){
     spdlog::set_default_logger(logger);
 
     mios::Core core;
-    msrm_utils::print_info("############################################################");
-    msrm_utils::print_info("System is ready.");
+    spdlog::info("############################################################");
+    spdlog::info("System is ready.");
     core.get_task_engine()->life_cycle();
     spdlog::debug("LAST LINE OF CODE");
     return 0;

@@ -81,8 +81,39 @@ bool LTMemory::make_default_skills_consistent(){
     default_values["run_time"]=0;
     default_values["success"]=false;
     default_values["t_exception"]=0;
-    default_values["exception"]="";
+    default_values["exception"]="none";
     if(!m_mongodb_client.make_document_consistent("TestSkill1","skills",default_values)){
+        return false;
+    }
+
+    default_values.clear();
+    default_values["name"]="HoldPose";
+    default_values["t_max"]=0;
+    if(!m_mongodb_client.make_document_consistent("HoldPose","skills",default_values)){
+        return false;
+    }
+
+    default_values.clear();
+    default_values["name"]="GenericWiggleMotion";
+    default_values["dX_fourier_a_a"]={0,0,0,0,0,0};
+    default_values["dX_fourier_b_a"]={0,0,0,0,0,0};
+    default_values["dX_fourier_a_f"]={0,0,0,0,0,0};
+    default_values["dX_fourier_b_f"]={0,0,0,0,0,0};
+    default_values["dX_fourier_a_phi"]={0,0,0,0,0,0};
+    default_values["dX_fourier_b_phi"]={0,0,0,0,0,0};
+    default_values["use_EE"]=true;
+    default_values["tap_to_finish"]=false;
+    if(!m_mongodb_client.make_document_consistent("GenericWiggleMotion","skills",default_values)){
+        return false;
+    }
+
+    default_values.clear();
+    default_values["name"]="MoveToPoseJoint";
+    default_values["speed"]={0};
+    default_values["acc"]={0};
+    default_values["q_g"]={0,0,0,0,0,0,0};
+    default_values["t_q_g_offset"]={0,0,0,0,0,0,0};
+    if(!m_mongodb_client.make_document_consistent("MoveToPoseJoint","skills",default_values)){
         return false;
     }
     return true;
@@ -94,12 +125,17 @@ bool LTMemory::make_default_tasks_consistent(){
     default_values["skills"]={
     {"t1_s1",{
         {"type","TestSkill1"},
+            {"skill",{
+    {"objects",{{"object","TestObject1"}}}
+            }
+        },
+    {"control",{{"control_mode",0}}}
         },
     }
     };
     default_values["parameters"]={
     {"a",{0,0,0}},
-    {"b",0},
+    {"b",false},
     {"success",false},
     {"exception",""},
     {"skill_test",0}
@@ -108,14 +144,25 @@ bool LTMemory::make_default_tasks_consistent(){
         return false;
     }
 
+    default_values.clear();
     default_values["name"]="TestTask2";
     default_values["skills"]={
     {"t1_s1",{
         {"type","TestSkill1"},
+            {"skill",{
+    {"objects",{{"object","TestObject1"}}}
+            }
+        },
+            {"control",{{"control_mode",0}}}
         },
     },
     {"t1_s2",{
         {"type","TestSkill1"},
+            {"skill",{
+    {"objects",{{"object","TestObject1"}}}
+            }
+        },
+            {"control",{{"control_mode",0}}}
         },
     }
     };
@@ -130,18 +177,34 @@ bool LTMemory::make_default_tasks_consistent(){
         return false;
     }
 
+    default_values.clear();
     default_values["name"]="TestTask3";
     default_values["skills"]={
     {"t1_s1",{
         {"type","TestSkill1"},
+            {"skill",{
+    {"objects",{{"object","TestObject1"}}}
+            }
+        },
+            {"control",{{"control_mode",0}}}
         },
     },
     {"t1_s2",{
         {"type","TestSkill1"},
+            {"skill",{
+    {"objects",{{"object","TestObject1"}}}
+            }
+        },
+    {"control",{{"control_mode",0}}}
         },
     },
     {"t1_s3",{
         {"type","TestSkill1"},
+            {"skill",{
+    {"objects",{{"object","TestObject1"}}}
+            }
+        },
+    {"control",{{"control_mode",0}}}
         },
     }
     };
@@ -158,6 +221,7 @@ bool LTMemory::make_default_tasks_consistent(){
     }
 
 
+    default_values.clear();
     default_values["name"]="IdleTask";
     default_values["skills"]={
     {"sleep",{
@@ -174,7 +238,7 @@ bool LTMemory::make_default_tasks_consistent(){
     default_values["parameters"]={
     {"idle_mode","none"},
     };
-    if(!m_mongodb_client.make_document_consistent("TestTask1","tasks",default_values)){
+    if(!m_mongodb_client.make_document_consistent("IdleTask","tasks",default_values)){
         return false;
     }
 
@@ -203,9 +267,17 @@ std::shared_ptr<Task> LTMemory::load_task(const std::string& task_id, const nloh
     std::shared_ptr<Task> task = TaskFactory::create_task(TaskFactory::get_task_name(task_id),core);
     task->initialize_context();
     if(!task->load_context(user_context)){
-        return TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
+        task = TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
+        if(!task->load_context(nlohmann::json())){
+            spdlog::critical("Cannot load default context for idle task.");
+        }
+        return task;
     }
-    m_st_memory->put_task(task_id,task->get_context());
+    if(task->get_context().find("parameters")!=task->get_context().end()){
+        if(!task->read_parameters(task->get_context()["parameters"])){
+            task = TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
+        }
+    }
     return task;
 }
 
@@ -214,6 +286,11 @@ std::shared_ptr<Task> LTMemory::load_subtask(const std::string& task_id, const n
     task->initialize_context();
     if(!task->load_context(user_context)){
         return TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
+    }
+    if(task->get_context().find("parameters")!=task->get_context().end()){
+        if(!task->read_parameters(task->get_context()["parameters"])){
+            return TaskFactory::create_task(TaskName::TaskName_IdleTask,core);
+        }
     }
     m_st_memory->put_subtask(task_id,task->get_context());
     return task;
@@ -243,11 +320,16 @@ bool LTMemory::load_default_task_context(const std::string task_id,nlohmann::jso
 }
 
 bool LTMemory::load_default_skill_context(const std::string skill_type,nlohmann::json& skill_context){
-    return m_mongodb_client.read_document(skill_type,"skills",skill_context);
+    bool result = m_mongodb_client.read_document(skill_type,"skills",skill_context);
+    nlohmann::json parameters = SkillParameters::get_default_values();
+    for(const auto& param : parameters.items()){
+        skill_context[param.key()]=param.value();
+    }
+    return result;
 }
 
-void LTMemory::save_task_data(const std::string &uuid, const TaskData &data){
-    m_task_data.insert(std::make_pair(uuid,data));
+void LTMemory::store_task_data(const std::string &uuid, const std::string &task_id, const nlohmann::json &context, const TaskResult &result){
+    m_task_data.emplace(std::make_pair(uuid,TaskData(task_id,context,result)));
 }
 
 bool LTMemory::load_environment(std::unordered_map<std::string, Object> &environment){

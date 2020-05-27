@@ -16,5 +16,6 @@ bool m_b;
 bool m_success;
 std::string m_exception;
 unsigned m_skill_test;
+int result_code;
 };
 }

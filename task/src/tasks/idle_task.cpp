@@ -4,6 +4,7 @@
 #include "skills/move_to_pose_joint.hpp"
 
 #include <msrm_utils/files.hpp>
+#include <spdlog/spdlog.h>
 
 namespace mios {
 
@@ -22,14 +23,14 @@ void IdleTask::execute_task(){
     case msrm_utils::str_to_int("sleep"):
 //        this->get_skill("move")->set_object("loc_goal","pose_sleep");
 //        this->execute_skill("move");
-        execute_skill<GenericWiggleMotion>("sleep");
+        execute_skill<GenericWiggleMotion,SkillParametersGenericWiggleMotion>("sleep");
         this->sleep_1ms();
         break;
     case msrm_utils::str_to_int("hold"):
-        execute_skill<HoldPose>("hold");
+        execute_skill<HoldPose,SkillParametersHoldPose>("hold");
         break;
     default:
-        msrm_utils::print_warning("Idle mode with id "+this->idle_mode+" does not exist, reverting to default mode.");
+        spdlog::warn("Idle mode with id "+this->idle_mode+" does not exist, reverting to default mode.");
         this->sleep_1ms();
         break;
     }
@@ -39,8 +40,8 @@ void IdleTask::recover_task(){
 }
 
 bool IdleTask::read_parameters(const nlohmann::json& params){
-    if(!msrm_utils::read_json_param(params,"idle_mode",this->idle_mode)){
-        this->idle_mode="none";
+    if(!msrm_utils::read_json_param(params,"idle_mode",idle_mode)){
+        idle_mode="none";
     }
 return true;
 }

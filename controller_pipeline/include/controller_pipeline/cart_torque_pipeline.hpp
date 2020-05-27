@@ -47,14 +47,13 @@ private:
     bool is_virt_joint_walls_valid(const Percept &p);
 
 private:
+    Eigen::Matrix<double,6,1> m_virt_cube_distances;
+    Eigen::Matrix<double,14,1> m_virt_joint_walls_distances;
+    franka::Torques m_panda_cmd;
+
     bool m_virtual_cube_on;
     bool m_virtual_joint_walls_on;
     bool m_nullspace_control_on;
-
-    Eigen::Matrix<double,6,1> m_virt_cube_distances;
-    Eigen::Matrix<double,14,1> m_virt_joint_walls_distances;
-
-    franka::Torques m_panda_cmd;
 
 private:
     cntr_aic::cntr_aic m_cntr_aic;

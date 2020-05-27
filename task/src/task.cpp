@@ -18,7 +18,7 @@ Task::~Task(){
 }
 
 void Task::recover_task(){
-    msrm_utils::print_warning("Recovery routine of task "+m_id+" is empty.");
+    spdlog::warn("Recovery routine of task "+m_id+" is empty.");
 }
 
 void Task::stop_task(bool raise_exception,bool success,bool recover, bool empty_queue, std::optional<double> cost_suc, std::optional<double> cost_err){
@@ -49,7 +49,7 @@ void Task::execute_desk_timeline(const std::string &id){
     if(m_flag_stop){
         return;
     }
-//    m_core->start_desk_task(id);
+    //    m_core->start_desk_task(id);
 }
 
 void Task::write_result(bool success, double cost_suc, double cost_err, std::optional<nlohmann::json> custom_results){
@@ -94,11 +94,11 @@ bool Task::load_context(const nlohmann::json &user_context){
             for(auto& s : m_context["skills"].items()){
                 std::string id_skill=s.key();
                 // CHECK: skill has type
-                if(m_context["skills"][id_skill].find("type")==m_context.end()){
+                if(s.value().find("type")==s.value().end()){
                     spdlog::error("Skill " + id_skill + " in task " + m_id + " has no type.");
                     return false;
                 }
-                std::string skill_type=m_context["skills"][id_skill]["type"];
+                std::string skill_type=s.value()["type"];
                 // CHECK: skill has valid context
                 default_parameters["skill"]=nlohmann::json();
                 if(!m_memory->load_default_skill_context(skill_type,default_parameters["skill"])){
@@ -107,12 +107,12 @@ bool Task::load_context(const nlohmann::json &user_context){
                 }
                 nlohmann::json tmp_params;
                 for(auto& cat : default_parameters.items()){
-                    if(m_context["skills"][id_skill].find(cat.key())!=m_context["skills"][id_skill].end()){
-                        tmp_params = m_context["skills"][id_skill][cat.key()];
+                    if(s.value().find(cat.key())!=s.value().end()){
+                        tmp_params = s.value()[cat.key()];
                     }
-                    m_context["skills"][id_skill][cat.key()]=cat.value();
+                    s.value()[cat.key()]=cat.value();
                     for(auto& p : tmp_params.items()){
-                        m_context["skills"][id_skill][cat.key()][p.key()]=p.value();
+                        s.value()[cat.key()][p.key()]=p.value();
                     }
                 }
 
@@ -145,7 +145,7 @@ bool Task::load_context(const nlohmann::json &user_context){
     return true;
 }
 
-nlohmann::json Task::get_context() const{
+const nlohmann::json& Task::get_context() const{
     return m_context;
 }
 
@@ -252,14 +252,15 @@ void Task::execute_subtask(const std::string& task_id,const std::string task_nam
         spdlog::info("Subtask "+task_name+" is attempting recovery.");
         subtask->recover_task();
     }
+    if(m_context.find("subtasks")==m_context.end()){
+        m_context["subtasks"]=nlohmann::json();
+    }
+    m_context["subtasks"][task_name]=subtask->get_context();
     m_subtask_results.emplace(std::make_pair(task_name,subtask->get_result()));
     spdlog::info("End of lifecycle of subtask "+task_name+".");
 }
 
 bool Task::read_parameters(const nlohmann::json &params){
-    if(params.is_null()){
-        return true;
-    }
     spdlog::error("This task has not overwritten the read_parameters method, yet the task description contains user-defined parameters. Undefined behavior is possible, aborting...");
     return false;
 }
@@ -317,7 +318,7 @@ std::string Task::get_uuid() const{
 bool Task::check_context(const nlohmann::json &default_context, const nlohmann::json &user_context) const{
 
     std::unordered_set<std::string> top_level={"name","parameters","skills","_id","subtasks"};
-    std::unordered_set<std::string> skill_level={"skill","control","general","frames","user","objects","type"};
+    std::unordered_set<std::string> skill_level={"skill","control","limits","system","frames","user","objects","type"};
     std::unordered_set<std::string> common_skill_parameters={"time_max","parallels_frequency"};
 
     try{
@@ -359,19 +360,28 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
                     spdlog::error("Could not load a valid skill context for "+skill+" of type " + skill_type +".");
                     return false;
                 }
-                if(user_context["skills"].find(skill)==user_context["skills"].end()){
-                    for(const auto& el_cat : user_context["skills"][skill].items()){
-                        if(skill_level.find(el_cat.key())==skill_level.end()){
-                            spdlog::error("Syntax error in user input for task "+m_id+". Symbol with value "+el_cat.key()+" is not valid on skill level for skill " +skill+" of type "+skill_type +".");
-                            return false;
-                        }
-                    }
-                    if(user_context["skills"][skill].find("skill")==user_context["skills"][skill].end()){
-                        for(const auto& el_p : user_context["skills"][skill]["skill"].items()){
-                            if(skill_context.find(el_p.key())==skill_context.end() && common_skill_parameters.find(el_p.key())==common_skill_parameters.end()){
-                                spdlog::error("Syntax error in user task context for task "+m_id+". Symbol with value "+el_p.key()+" is not valid in skill context for skill "+skill+" of type "+skill_type+".");
+                if(user_context.find("skills")!=user_context.end()){
+                    if(user_context["skills"].find(skill)==user_context["skills"].end()){
+                        for(const auto& el_cat : user_context["skills"][skill].items()){
+                            if(skill_level.find(el_cat.key())==skill_level.end()){
+                                spdlog::error("Syntax error in user input for task "+m_id+". Symbol with value "+el_cat.key()+" is not valid on skill level for skill " +skill+" of type "+skill_type +".");
                                 return false;
                             }
+                        }
+                        if(user_context["skills"][skill].find("skill")==user_context["skills"][skill].end()){
+                            for(const auto& el_p : user_context["skills"][skill]["skill"].items()){
+                                if(skill_context.find(el_p.key())==skill_context.end() && common_skill_parameters.find(el_p.key())==common_skill_parameters.end()){
+                                    spdlog::error("Syntax error in user task context for task "+m_id+". Symbol with value "+el_p.key()+" is not valid in skill context for skill "+skill+" of type "+skill_type+".");
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    for(const auto& el_skill : user_context["skills"].items()){
+                        std::string skill=el_skill.key();
+                        if(default_context["skills"].find(skill)==default_context["skills"].end()){
+                            spdlog::error("Syntax error in user input for task "+m_id+". Skill " + skill + " does not exist in default task context.");
+                            return false;
                         }
                     }
                 }
@@ -388,14 +398,6 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
                             return false;
                         }
                     }
-                }
-
-            }
-            for(const auto& el_skill : user_context["skills"].items()){
-                std::string skill=el_skill.key();
-                if(default_context["skills"].find(skill)==default_context["skills"].end()){
-                    spdlog::error("Syntax error in user input for task "+m_id+". Skill " + skill + " does not exist in default task context.");
-                    return false;
                 }
             }
         }

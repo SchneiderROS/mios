@@ -2,7 +2,7 @@
 
 namespace mios {
 
-CartTorqueControllerPipeline::CartTorqueControllerPipeline():m_panda_cmd({0,0,0,0,0,0,0}){
+CartTorqueControllerPipeline::CartTorqueControllerPipeline():m_panda_cmd({0,0,0,0,0,0,0}),m_virtual_cube_on(false),m_virtual_joint_walls_on(false),m_nullspace_control_on(false){
 
 }
 
@@ -200,6 +200,8 @@ void CartTorqueControllerPipeline::initialize_virt_cube(const Percept &p,Memory*
     input_virt_cube(p);
 
     m_virt_cube.initialize(m_in_u_virt_cube,in_p_virt_cube);
+
+    m_virtual_cube_on=memory->read_parameters()->control.virtual_cube.active;
 }
 
 void CartTorqueControllerPipeline::input_virt_cube(const Percept &p){
@@ -223,6 +225,8 @@ void CartTorqueControllerPipeline::initialize_virt_walls_joint(const Percept &p,
     input_virt_joint_walls(p);
 
     m_virt_walls_joint.initialize(m_in_u_virt_walls_joint,in_p_virt_walls_joint);
+
+    m_virtual_joint_walls_on=memory->read_parameters()->control.virtual_joint_walls.active;
 }
 
 void CartTorqueControllerPipeline::input_virt_joint_walls(const Percept &p){
@@ -251,6 +255,8 @@ void CartTorqueControllerPipeline::initialize_cntr_nullsp(const Percept& p,Memor
 
     m_cntr_nullsp_q.initialize(m_in_u_cntr_nullsp_q,in_p_cntr_nullsp_q);
     m_cntr_nullsp_proj.initialize(m_in_u_cntr_nullsp_proj,in_p_cntr_nullsp_proj);
+
+    m_nullspace_control_on = memory->read_parameters()->control.nullspace_control.active;
 }
 
 void CartTorqueControllerPipeline::input_cntr_nullsp(const Percept &p){

@@ -29,7 +29,7 @@ def start_task(hostname: str, task: str, parameters={}, queue=False, timeout=-1)
         "parameters": parameters,
         "queue": queue
     }
-    return call_method(hostname, 8383, "start_task", payload, timeout)
+    return call_method(hostname, 12002, "start_task", payload, timeout)
 
 
 def stop_task(hostname: str, nominal=False, success=False, recover=False, empty_queue=False, cost_suc=0.0, cost_err=0.0) -> dict:
@@ -41,12 +41,12 @@ def stop_task(hostname: str, nominal=False, success=False, recover=False, empty_
         "cost_suc": cost_suc,
         "cost_err": cost_err
     }
-    return call_method(hostname, 8383, "stop_task", payload)
+    return call_method(hostname, 12002, "stop_task", payload)
 
 
 def wait_for_task(hostname: str, task_uuid: str) -> dict:
     payload = {
         "task_uuid": task_uuid
     }
-    return call_method(hostname, 8383, "wait_for_task", payload)
+    return call_method(hostname, 12002, "wait_for_task", payload)
 

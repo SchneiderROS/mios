@@ -6,11 +6,13 @@ namespace mios {
 void Percept::update(std::unique_ptr<franka::Model> const& model, const franka::RobotState &robot_state, const franka::GripperState &gripper_state,std::optional<Eigen::Matrix<double,3,3> > O_R_TF){
 
     // Internal Model
-    internal_model.B_J_EE=Eigen::Matrix<double,6,7>(model->bodyJacobian(franka::Frame::kEndEffector,robot_state).data());
-    internal_model.B_J_O=Eigen::Matrix<double,6,7>(model->zeroJacobian(franka::Frame::kEndEffector,robot_state).data());
-    internal_model.M=Eigen::Matrix<double,7,7>(model->mass(robot_state).data());
-    internal_model.C=Eigen::Matrix<double,7,1>(model->coriolis(robot_state).data());
-    internal_model.G=Eigen::Matrix<double,7,1>(model->gravity(robot_state).data());
+    if(model!=nullptr){
+        internal_model.B_J_EE=Eigen::Matrix<double,6,7>(model->bodyJacobian(franka::Frame::kEndEffector,robot_state).data());
+        internal_model.B_J_O=Eigen::Matrix<double,6,7>(model->zeroJacobian(franka::Frame::kEndEffector,robot_state).data());
+        internal_model.M=Eigen::Matrix<double,7,7>(model->mass(robot_state).data());
+        internal_model.C=Eigen::Matrix<double,7,1>(model->coriolis(robot_state).data());
+        internal_model.G=Eigen::Matrix<double,7,1>(model->gravity(robot_state).data());
+    }
     internal_model.max_finger_width=gripper_state.max_width;
 
     // proprioception

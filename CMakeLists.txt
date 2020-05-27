@@ -43,7 +43,8 @@ set(SOURCES core/src/core.cpp interface/src/interface.cpp manipulation_primitive
     task/src/taskfactory.cpp task/src/taskobserver.cpp skill/src/skill_engine.cpp portal/src/portal.cpp panda/src/panda_body.cpp)
 set(UTILS_SRC utils/src/actuator.cpp utils/src/percept.cpp utils/src/object.cpp utils/src/exceptions.cpp utils/src/results.cpp)
 set(MEMORY_SRC memory/src/memory.cpp memory/src/lt_memory.cpp memory/src/st_memory.cpp memory/src/mongodb_client.cpp memory/src/parameters.cpp)
-set(CONTROLLER_SRC controller_pipeline/src/cart_torque_pipeline.cpp controller_pipeline/src/joint_torque_pipeline.cpp controller_pipeline/src/cart_velocity_pipeline.cpp controller_pipeline/src/joint_velocity_pipeline.cpp)
+set(CONTROLLER_SRC controller_pipeline/src/cart_torque_pipeline.cpp controller_pipeline/src/joint_torque_pipeline.cpp controller_pipeline/src/cart_velocity_pipeline.cpp
+    controller_pipeline/src/joint_velocity_pipeline.cpp controller_pipeline/src/null_pipeline.cpp)
 
 set(SOURCES_PRIMITIVES manipulation_primitive/src/primitives/mp_basic.cpp manipulation_primitive/src/primitives/mp_basic_joint.cpp manipulation_primitive/src/primitives/nullprimitive.cpp)
 

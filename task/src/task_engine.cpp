@@ -30,6 +30,14 @@ void TaskEngine::life_cycle(){
         bool reflex=false;
         bool recovery=false;
         if(m_task_life_cycle==TaskLifeCycle::PreChecks){
+            if(!m_core->is_ready()){
+                spdlog::warn("Core is not ready, I will attempt to reinitialize...");
+                if(!m_core->initialize()){
+                    spdlog::error("Core initialization failed. I will re-attempt in 1 second.");
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    continue;
+                }
+            }
             franka::RobotMode mode;
             if(m_core->refresh_percept({})){
                 mode=m_core->get_percept()->robot_mode;
@@ -136,7 +144,7 @@ void TaskEngine::life_cycle(){
                 spdlog::info("Executing task " + m_active_task->get_id() + " with uuid " + m_active_task->get_uuid());
                 m_active_task->execute_task();
             }catch(const std::exception& e){
-                std::cout<<e.what()<<std::endl;
+                spdlog::debug(e.what());
                 exceptional_event=true;
             }
             m_task_life_cycle=TaskLifeCycle::Recovery;
@@ -151,7 +159,7 @@ void TaskEngine::life_cycle(){
                     m_active_task->complete_recovery();
                 }
             }catch(const std::exception& e){
-                std::cout<<e.what()<<std::endl;
+                spdlog::debug(e.what());
                 exceptional_event=true;
             }
             m_task_life_cycle=TaskLifeCycle::Termination;
@@ -162,9 +170,9 @@ void TaskEngine::life_cycle(){
                 spdlog::info("Terminating task " + m_active_task->get_id() + " with uuid " + m_active_task->get_uuid());
                 m_active_task->evaluate_task();
             }catch(const std::exception& e){
-                std::cout<<e.what()<<std::endl;
+                spdlog::debug(e.what());
             }
-            m_memory->store_task_result(m_active_task->get_uuid(),m_active_task->get_result());
+            m_memory->store_task_data(m_active_task->get_uuid(),m_active_task->get_id(),m_active_task->get_context(),m_active_task->get_result());
             m_task_life_cycle=TaskLifeCycle::Switch;
         }
         if(m_task_life_cycle==TaskLifeCycle::Switch){
@@ -180,7 +188,7 @@ void TaskEngine::life_cycle(){
                 m_task_queue.emplace_back(std::make_tuple("IdleTask",m_memory->load_task("IdleTask",nlohmann::json(),m_core),nlohmann::json()));
             }
             m_active_task = std::get<1>(m_task_queue.front());
-            m_task_life_cycle = TaskLifeCycle::Startup;
+            m_task_life_cycle = TaskLifeCycle::PreChecks;
             spdlog::debug("TaskLifeCycle: switched to task "+m_active_task->get_id() + " with uuid " + m_active_task->get_uuid());
         }
     }
@@ -217,7 +225,7 @@ std::tuple<bool,std::string,std::string> TaskEngine::start_task(const std::strin
             task_uuid=new_task->get_uuid();
             if(m_active_task->get_id()=="IdleTask"){
                 spdlog::debug("Stopping IdleTask with uuid " +m_active_task->get_uuid());
-                m_active_task->stop_task(true,true,true);
+                m_active_task->stop_task(false,true,true);
             }
         }
     }
@@ -272,7 +280,7 @@ std::tuple<bool,TaskResult,std::string> TaskEngine::wait_for_task(const std::str
         observer->wait_for_finish();
     }
     if(m_memory->get_task_data(task_uuid,task_data)){
-        msrm_utils::print_info("Loaded task result for task with uuid "+task_uuid+" from memory.");
+        spdlog::info("Loaded task result for task with uuid "+task_uuid+" from memory.");
         result=true;
     }else{
         err="I have no memory of a task with uuid " + task_uuid;

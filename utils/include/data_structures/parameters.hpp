@@ -120,7 +120,7 @@ public:
     bool has_gripper;
 };
 
-enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity};
+enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity,mNoControl};
 
 class ControlParameters{
 public:
@@ -199,30 +199,29 @@ public:
      */
     bool read_global_skill_parameters(const nlohmann::json& p);
     void read_skill_objects(const nlohmann::json& p);
+    static nlohmann::json get_default_values();
     virtual bool read_parameters(const nlohmann::json& parameters) = 0;
 
-    struct Common{
-        /**
+    /**
          * Mapping of skill objects to objects in the knowledge base.
          */
-        std::unordered_map<std::string,std::string> objects;
+    std::unordered_map<std::string,std::string> objects;
 
-        /**
+    /**
          * Maximum time for skill execution. After exceeding this time the skill is terminated unsuccessful. A value of 0 allows for infinite execution time.
          */
-        double time_max;
+    double time_max;
 
-        /**
+    /**
          * Id to select a custom cost function.
          */
-        std::vector<double> w_cost_function;
+    std::vector<double> w_cost_function;
 
-        /**
+    /**
          * Frequency of parallel thread
          */
-        unsigned parallels_frequency;
+    unsigned parallels_frequency;
 
-    }common;
 };
 
 class Parameters{
@@ -245,6 +244,7 @@ public:
 
 class LiveContext{
 public:
+    LiveContext(Object* grasped_object);
     std::string executable_path;
     nlohmann::json live_parameters;
     const Object* grasped_object;

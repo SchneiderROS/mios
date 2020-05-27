@@ -6,6 +6,9 @@
 
 namespace mios {
 
+PandaBody::PandaBody():m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(nullptr),m_arm_connected(false),m_hand_connected(false){
+
+}
 
 std::optional<std::string> PandaBody::get_robot_ip(const std::optional<std::string>& last_ip){
     std::optional<std::string> new_ip={};
@@ -77,7 +80,7 @@ void PandaBody::disconnect_from_gripper(){
 }
 
 bool PandaBody::recover(){
-    if(m_arm_connected){
+    if(!m_arm_connected){
         return true;
     }
     try{
@@ -153,30 +156,31 @@ std::optional<std::string> PandaBody::find_robot(){
 }
 
 bool PandaBody::control(std::function<franka::Torques (const franka::RobotState&,franka::Duration)> controller_callback){
-    if(m_arm_connected){
-        try{
+    try{
+        if(m_arm_connected){
             m_panda_arm->control(controller_callback);
             return true;
-        }catch(const franka::ControlException& e){
-            spdlog::debug(e.what());
-            return false;
-        }catch(const franka::InvalidOperationException& e){
-            spdlog::debug(e.what());
-            return false;
-        }catch(const franka::NetworkException& e){
-            spdlog::debug(e.what());
-            return false;
-        }catch(const franka::RealtimeException& e){
-            spdlog::debug(e.what());
-            return false;
-        }catch(const std::invalid_argument& e){
-            spdlog::debug(e.what());
-            return false;
+        }else{
+            dummy_control(controller_callback);
+            return true;
         }
-    }else{
-        dummy_control(controller_callback);
-        return true;
+    }catch(const franka::ControlException& e){
+        spdlog::debug(e.what());
+        return false;
+    }catch(const franka::InvalidOperationException& e){
+        spdlog::debug(e.what());
+        return false;
+    }catch(const franka::NetworkException& e){
+        spdlog::debug(e.what());
+        return false;
+    }catch(const franka::RealtimeException& e){
+        spdlog::debug(e.what());
+        return false;
+    }catch(const std::invalid_argument& e){
+        spdlog::debug(e.what());
+        return false;
     }
+
 }
 
 bool PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
@@ -450,7 +454,8 @@ bool PandaBody::get_robot_state(franka::RobotState &state) const{
             return false;
         }
     }else{
-        return false;
+        get_default_robot_state(state);
+        return true;
     }
 }
 
@@ -467,7 +472,8 @@ bool PandaBody::get_gripper_state(franka::GripperState &state) const{
             return false;
         }
     }else{
-        return false;
+        get_default_gripper_state(state);
+        return true;
     }
 }
 
@@ -685,6 +691,14 @@ bool PandaBody::home_gripper() const{
         spdlog::debug(e.what());
         return false;
     }
+}
+
+void PandaBody::get_default_robot_state(franka::RobotState &state) const{
+    state.robot_mode=franka::RobotMode::kIdle;
+}
+
+void PandaBody::get_default_gripper_state(franka::GripperState &state) const{
+
 }
 
 }

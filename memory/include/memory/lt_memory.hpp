@@ -31,7 +31,7 @@ public:
     bool load_default_task_context(const std::string task_id, nlohmann::json &task_context);
     bool load_default_skill_context(const std::string skill_id, nlohmann::json &skill_context);
 
-    void save_task_data(const std::string& uuid,const TaskData& data);
+    void store_task_data(const std::string& uuid, const std::string& task_id, const nlohmann::json& context, const TaskResult& result);
 
     bool load_environment(std::unordered_map<std::string,Object>& environment);
     bool upload_environment_element(const Object &element);
