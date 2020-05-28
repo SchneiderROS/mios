@@ -32,9 +32,9 @@ def start_task(hostname: str, task: str, parameters={}, queue=False, timeout=-1)
     return call_method(hostname, 12002, "start_task", payload, timeout)
 
 
-def stop_task(hostname: str, nominal=False, success=False, recover=False, empty_queue=False, cost_suc=0.0, cost_err=0.0) -> dict:
+def stop_task(hostname: str, raise_exception=False, success=False, recover=False, empty_queue=False, cost_suc=0.0, cost_err=0.0) -> dict:
     payload = {
-        "nominal": nominal,
+        "raise_exception": raise_exception,
         "success": success,
         "recover": recover,
         "empty_queue": empty_queue,

@@ -97,54 +97,129 @@ def test_start_stop(hostname):
     url = "http://" + hostname + ":8383"
 
     # start and various stops after 1 second
-    print('Testing non-nominal stop...')
+    print('Testing exceptional stop...')
     rtn = start_task(address, "TestTask1", queue=True)
-    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_exception', 'Result is false', rtn)
+    task_uuid = rtn["result"]["task_uuid"]
+    time.sleep(1)
+    rtn = stop_task(address, True)
+    msg_error(rtn is not None, 'start_stop_exception', 'None returned', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_exception', 'Result is false', rtn)
+    rtn = wait_for_task(address, task_uuid)
+
+    msg_error(rtn['result']['task_result']["exception"] is True, 'start_stop_exception', 'Result has no exception', rtn)
+    msg_error(rtn['result']['task_result']["success"] is False, 'start_stop_exception', 'Result is successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_exception",
+              "Has recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception",
+              "Wrong success costs", rtn)
+
+
+    print('Testing exceptional stop with recovery...')
+    rtn = start_task(address, "TestTask1", queue=True)
+    msg_error(rtn['result']['result'], 'start_stop_exception', 'Result is false', rtn)
+    task_uuid = rtn["result"]["task_uuid"]
+    time.sleep(1)
+    rtn = stop_task(address, True, recover=True)
+    msg_error(rtn is not None, 'start_stop_exception', 'None returned', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_exception', 'Result is false', rtn)
+    rtn = wait_for_task(address, task_uuid)
+
+    msg_error(rtn['result']['task_result']["exception"] is True, 'start_stop_exception', 'Result has no exception', rtn)
+    msg_error(rtn['result']['task_result']["success"] is False, 'start_stop_exception', 'Result is successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_exception",
+              "Has recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception",
+              "Wrong success costs", rtn)
+
+
+    print('Testing unsuccessful stop without recovery...')
+    rtn = start_task(address, "TestTask1", queue=True)
+    msg_error(rtn['result']['result'], 'start_stop_unsuccessful', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
     rtn = stop_task(address)
-    msg_error(rtn is not None, 'start_stop_non_nominal', 'None returned', rtn)
-    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
-    wait_for_task(address, task_uuid)
+    msg_error(rtn is not None, 'start_stop_unsuccessful', 'None returned', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_unsuccessful', 'Result is false', rtn)
+    rtn = wait_for_task(address, task_uuid)
 
-    print('Testing nominal unsuccessful stop without recovery...')
-    rtn = start_task(address, "TestTask1", queue=True)
-    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
-    task_uuid = rtn["result"]["task_uuid"]
-    time.sleep(1)
-    rtn = stop_task(address, nominal=True)
-    msg_error(rtn is not None, 'start_stop_nominal', 'None returned', rtn)
-    msg_error(rtn['result']['result'], 'start_stop_nominal', 'Result is false', rtn)
-    wait_for_task(address, task_uuid)
+    msg_error(rtn['result']['task_result']["exception"] is False, 'start_stop_unsuccessful', 'Result has exception', rtn)
+    msg_error(rtn['result']['task_result']["success"] is False, 'start_stop_unsuccessful', 'Result is successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_unsuccessful",
+              "Recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful",
+              "Wrong success costs", rtn)
 
     print('Testing nominal unsuccessful stop with recovery...')
     rtn = start_task(address, "TestTask1", queue=True)
-    msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_unsuccessful_recovery', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
-    rtn = stop_task(address, nominal=True, recover=True)
-    msg_error(rtn is not None, 'start_stop_recover', 'None returned', rtn)
-    msg_error(rtn['result']['result'], 'start_stop_recover', 'Result is false', rtn)
-    wait_for_task(address, task_uuid)
+    rtn = stop_task(address, recover=True)
+    msg_error(rtn is not None, 'start_stop_unsuccessful_recovery', 'None returned', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_unsuccessful_recovery', 'Result is false', rtn)
+    rtn = wait_for_task(address, task_uuid)
+    msg_error(rtn['result']['task_result']["exception"] is False, 'start_stop_unsuccessful_recovery', 'Result has exception',
+              rtn)
+    msg_error(rtn['result']['task_result']["success"] is False, 'start_stop_unsuccessful_recovery', 'Result is successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is True, "start_stop_unsuccessful_recovery",
+              "Not recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful_recovery",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful_recovery",
+              "Wrong success costs", rtn)
 
     print('Testing nominal successful stop without recovery...')
     rtn = start_task(address, "TestTask1", queue=True)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
-    rtn = stop_task(address, nominal=True, success=True)
+    rtn = stop_task(address, success=True)
     msg_error(rtn is not None, 'start_stop_success', 'None returned', rtn)
     msg_error(rtn['result']['result'], 'start_stop_success', 'Result is false', rtn)
-    wait_for_task(address, task_uuid)
+    rtn = wait_for_task(address, task_uuid)
+    msg_error(rtn['result']['task_result']["exception"] is False, 'start_stop_success',
+              'Result has exception',
+              rtn)
+    msg_error(rtn['result']['task_result']["success"] is True, 'start_stop_success',
+              'Result is not successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_success",
+              "Recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success",
+              "Wrong success costs", rtn)
 
     print('Testing nominal successful stop with recovery...')
     rtn = start_task(address, "TestTask1", queue=True)
     msg_error(rtn['result']['result'], 'start_stop_non_nominal', 'Result is false', rtn)
     task_uuid = rtn["result"]["task_uuid"]
     time.sleep(1)
-    rtn = stop_task(address, nominal=True, success=True, recover=True)
+    rtn = stop_task(address, success=True, recover=True)
     msg_error(rtn is not None, 'start_stop_all_true', 'None returned', rtn)
-    msg_error(rtn['result']['result'], 'start_stop_all_true', 'Result is false', rtn)
-    wait_for_task(address, task_uuid)
+    msg_error(rtn['result']['result'], 'start_stop_success_recovery', 'Result is false', rtn)
+    rtn = wait_for_task(address, task_uuid)
+    msg_error(rtn['result']['task_result']["exception"] is False, 'start_stop_success_recovery', 'Result has exception',
+              rtn)
+    msg_error(rtn['result']['task_result']["success"] is True, 'start_stop_success_recovery', 'Result is not successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is True, "start_stop_success_recovery",
+              "Not recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
+              "Wrong success costs", rtn)
+    return
 
 
 def test_start_wait(hostname):
@@ -155,13 +230,33 @@ def test_start_wait(hostname):
     rtn = start_task(address, "TestTask1", {"parameters":{"success": True}}, queue=True)
     msg_error(rtn['result']['result'], 'start_wait_success', 'Result is false', rtn)
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["eval"]["success"] is True, 'start_wait_success', 'Not successful', rtn)
+    msg_error(rtn['result']['task_result']["exception"] is False, 'start_stop_success_recovery', 'Result has exception',
+              rtn)
+    msg_error(rtn['result']['task_result']["success"] is True, 'start_stop_success_recovery',
+              'Result is not successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_success_recovery",
+              "Not recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
+              "Wrong success costs", rtn)
 
     print('Testing execution with unsuccessful stop...')
     rtn = start_task(address, "TestTask1", {"parameters":{"success": False}}, queue=True)
     msg_error(rtn['result']['result'], 'start_wait_success', 'Result is false', rtn)
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["eval"]["success"] is False, 'start_wait_failure', 'No failure', rtn)
+    msg_error(rtn['result']['task_result']["exception"] is False, 'start_stop_success_recovery', 'Result has exception',
+              rtn)
+    msg_error(rtn['result']['task_result']["success"] is False, 'start_stop_success_recovery',
+              'Result is not successful',
+              rtn)
+    msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_success_recovery",
+              "Not recovered", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
+              "Wrong error costs", rtn)
+    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
+              "Wrong success costs", rtn)
 
 
 def test_multilayer_tasks(address):

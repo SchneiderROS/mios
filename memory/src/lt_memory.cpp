@@ -81,6 +81,8 @@ bool LTMemory::make_default_skills_consistent(){
     default_values["run_time"]=0;
     default_values["success"]=false;
     default_values["t_exception"]=0;
+    default_values["cost_suc"]=0;
+    default_values["cost_err"]=0;
     default_values["exception"]="none";
     if(!m_mongodb_client.make_document_consistent("TestSkill1","skills",default_values)){
         return false;
@@ -137,7 +139,7 @@ bool LTMemory::make_default_tasks_consistent(){
     {"a",{0,0,0}},
     {"b",false},
     {"success",false},
-    {"exception",""},
+    {"exception","none"},
     {"skill_test",0}
 };
     if(!m_mongodb_client.make_document_consistent("TestTask1","tasks",default_values)){

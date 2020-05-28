@@ -58,7 +58,7 @@ nlohmann::json CommandInterface::stop_task(const nlohmann::json &request){
     nlohmann::json response;
     bool result;
     std::string error_message;
-    std::tie(result,error_message)=m_task_engine->stop_task(request["nominal"],request["success"],request["recover"],request["empty_queue"],request["cost_suc"],request["cost_err"]);
+    std::tie(result,error_message)=m_task_engine->stop_task(request["raise_exception"],request["success"],request["recover"],request["empty_queue"],request["cost_suc"],request["cost_err"]);
     response["error"]=error_message;
     response["result"]=result;
     return response;

@@ -24,9 +24,8 @@ n_cpu=$(ceil)
 
 
 # install libmongoc (v1.15)
-git clone https://github.com/mongodb/mongo-c-driver.git
+git clone https://github.com/mongodb/mongo-c-driver.git --branch r1.15
 cd mongo-c-driver
-git checkout r1.15
 mkdir cmake-build
 cd cmake-build
 cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF -DCMAKE_BUILD_TYPE=Release ..
@@ -37,7 +36,7 @@ cd ../..
 sudo rm -r mongo-c-driver
 
 # install mongocxx (latest version)
-git clone https://github.com/mongodb/mongo-cxx-driver.git --branch releases/stable --depth 1
+git clone https://github.com/mongodb/mongo-cxx-driver.git --branch releases/v3.5
 cd mongo-cxx-driver/build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 sudo make EP_mnmlstc_core
@@ -50,6 +49,7 @@ sudo ldconfig
 # http lib
 git clone https://github.com/yhirose/cpp-httplib.git
 cd cpp-httplib
+git checkout v0.6.5
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -63,6 +63,7 @@ sudo rm -r cpp-httplib
 
 git clone https://github.com/nlohmann/json.git
 cd json
+git checkout v3.7.3
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -75,6 +76,7 @@ sudo rm -r json
 # json rpc
 git clone https://github.com/jsonrpcx/json-rpc-cxx.git
 cd json-rpc-cxx
+git checkout v0.1.0
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -87,6 +89,7 @@ sudo rm -r json-rpc-cxx
 # websocket
 git clone https://gitlab.com/eidheim/Simple-WebSocket-Server.git
 cd Simple-WebSocket-Server
+git checkout v2.0.0
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..

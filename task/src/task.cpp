@@ -361,14 +361,14 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
                     return false;
                 }
                 if(user_context.find("skills")!=user_context.end()){
-                    if(user_context["skills"].find(skill)==user_context["skills"].end()){
+                    if(user_context["skills"].find(skill)!=user_context["skills"].end()){
                         for(const auto& el_cat : user_context["skills"][skill].items()){
                             if(skill_level.find(el_cat.key())==skill_level.end()){
                                 spdlog::error("Syntax error in user input for task "+m_id+". Symbol with value "+el_cat.key()+" is not valid on skill level for skill " +skill+" of type "+skill_type +".");
                                 return false;
                             }
                         }
-                        if(user_context["skills"][skill].find("skill")==user_context["skills"][skill].end()){
+                        if(user_context["skills"][skill].find("skill")!=user_context["skills"][skill].end()){
                             for(const auto& el_p : user_context["skills"][skill]["skill"].items()){
                                 if(skill_context.find(el_p.key())==skill_context.end() && common_skill_parameters.find(el_p.key())==common_skill_parameters.end()){
                                     spdlog::error("Syntax error in user task context for task "+m_id+". Symbol with value "+el_p.key()+" is not valid in skill context for skill "+skill+" of type "+skill_type+".");

@@ -11,6 +11,7 @@ void recover_task();
 void evaluate_task();
 bool read_parameters(const nlohmann::json& params);
 private:
+bool recovered;
 Eigen::Matrix<double,3,1> m_a;
 bool m_b;
 bool m_success;

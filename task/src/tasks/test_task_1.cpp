@@ -1,7 +1,7 @@
 #include "tasks/test_task_1.hpp"
 #include "skills/test_skill_1.hpp"
 namespace mios{
-TestTask1::TestTask1(Core* core):Task("TestTask1",core),result_code(-1){
+TestTask1::TestTask1(Core* core):Task("TestTask1",core),result_code(-1),recovered(false){
 }
 void TestTask1::initialize_context(){
     reserve_skill("t1_s1");
@@ -50,6 +50,7 @@ void TestTask1::evaluate_task(){
     custom_results["t1_s1"]=get_result().m_skill_results["t1_s1"].results;
     custom_results["t1_s2"]=get_result().m_skill_results["t1_s2"].results;
     custom_results["result_code"]=result_code;
+    custom_results["recovered"]=recovered;
     msrm_utils::write_json_array<double,3,1>(custom_results["a"],m_a);
     custom_results["b"]=m_b;
     write_result(get_result().m_skill_results["t1_s1"].success,get_result().m_skill_results["t1_s1"].cost_suc,get_result().m_skill_results["t1_s1"].cost_err,custom_results);
@@ -83,6 +84,7 @@ bool TestTask1::read_parameters(const nlohmann::json& params){
 }
 
 void TestTask1::recover_task(){
+    recovered=true;
     spdlog::debug("RECOVERY OF TEST TASK 1");
 }
 }

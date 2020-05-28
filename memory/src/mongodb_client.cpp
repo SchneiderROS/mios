@@ -30,6 +30,7 @@ MongodbClient::MongodbClient(const std::string &database, unsigned port){
         m_collections.insert(std::pair<const char*,mongocxx::collection>("frames",m_mongodb["frames"]));
         m_collections.insert(std::pair<const char*,mongocxx::collection>("environment",m_mongodb["environment"]));
         m_collections.insert(std::pair<const char*,mongocxx::collection>("parameters",m_mongodb["parameters"]));
+        spdlog::debug("Mongodb client initialized.");
     }catch(const mongocxx::exception& e){
         spdlog::debug(e.what());
     }
@@ -200,7 +201,11 @@ bool MongodbClient::make_document_consistent(const std::string& name, std::strin
         spdlog::debug(e.what());
         spdlog::error("Could not make document with name " + name + " in collection " + collection + " consistent.");
         return false;
+    }catch(const mongocxx::operation_exception& e){
+        spdlog::debug(e.what());
+        return false;
     }
+
     return true;
 }
 

@@ -22,6 +22,14 @@ bool SkillParametersTestSkill1::read_parameters(const nlohmann::json& parameters
         spdlog::debug("Could not load parameter: exception [string]");
         exception="none";
     }
+    if(!msrm_utils::read_json_param(parameters,"cost_suc",cost_suc)){
+        spdlog::debug("Could not load parameter: cost_suc [double]");
+        cost_suc=0;
+    }
+    if(!msrm_utils::read_json_param(parameters,"cost_err",cost_err)){
+        spdlog::debug("Could not load parameter: cost_err [double]");
+        cost_err=0;
+    }
     spdlog::debug("###############################   Skill parameters   ######################################");
     spdlog::debug("run_time: "+std::to_string(run_time));
     spdlog::debug("success: "+std::to_string(success));
@@ -94,6 +102,7 @@ void TestSkill1::auxiliaries(const Percept &p){
             throw SkillException("This is a skill exception that has been thrown for test purposes");
         }
     }
+    write_costs(c->cost_suc,c->cost_err);
     result_code=-1;
 }
 

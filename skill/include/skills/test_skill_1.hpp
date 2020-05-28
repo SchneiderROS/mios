@@ -11,6 +11,8 @@ public:
     bool success;
     double t_exception;
     std::string exception;
+    double cost_err;
+    double cost_suc;
 };
 class TestSkill1 : public Skill{
 public:
