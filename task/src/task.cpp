@@ -23,7 +23,7 @@ void Task::recover_task(){
     spdlog::warn("Recovery routine of task "+m_id+" is empty.");
 }
 
-void Task::stop_task(bool raise_exception,bool success,bool recover, bool empty_queue, std::optional<double> cost_suc, std::optional<double> cost_err){
+void Task::stop_task(bool raise_exception,bool recover, bool empty_queue){
     if(m_flag_stop){
         return;
     }
@@ -35,19 +35,16 @@ void Task::stop_task(bool raise_exception,bool success,bool recover, bool empty_
         spdlog::warn("Exception has been raised. I will not attempt to recover task " + m_id + ".");
     }
     m_result.exception=raise_exception;
+    m_result.external_stop=true;
     m_result.empty_queue=empty_queue;
-    if(cost_suc.has_value()){
-        m_result.cost_suc=cost_suc.value();
-    }
-    if(cost_err.has_value()){
-        m_result.cost_err=cost_err.value();
-    }
     m_flag_recover=recover && !raise_exception;
     if(m_active_subtask!=nullptr){
-        m_active_subtask->stop_task(raise_exception,success,recover,empty_queue,cost_suc,cost_err);
+        m_active_subtask->stop_task(raise_exception,recover,false);
     }
-    m_skill_engine->stop_skill(success && !raise_exception);
+    m_skill_engine->stop_skill();
     m_flag_stop=true;
+    m_mtx_execution.lock();
+    m_mtx_execution.unlock();
 }
 
 void Task::execute_desk_timeline(const std::string &id){
@@ -256,6 +253,7 @@ bool Task::reserve_subtask(const std::string &name){
 }
 
 void Task::execute_subtask(const std::string& task_id,const std::string task_name){
+    std::scoped_lock<std::mutex> lock(m_mtx_execution);
     if(m_reserved_subtasks.find(task_name)==m_reserved_subtasks.end()){
         stop_task(true);
         throw TaskException("Subtask with name "+task_name+" is not contained in task "+ m_id +". Stopping task.");

@@ -232,7 +232,7 @@ std::tuple<bool,std::string,std::string> TaskEngine::start_task(const std::strin
                 task_uuid=new_task->get_uuid();
                 if(m_active_task->get_id()=="IdleTask"){
                     spdlog::debug("Stopping IdleTask with uuid " +m_active_task->get_uuid());
-                    m_active_task->stop_task(false,true,true);
+                    m_active_task->stop_task(false,true,false);
                 }
             }else{
                 result=false;
@@ -243,12 +243,12 @@ std::tuple<bool,std::string,std::string> TaskEngine::start_task(const std::strin
     return std::make_tuple(result,task_uuid,err);
 }
 
-std::pair<bool,std::string> TaskEngine::stop_task(bool raise_exception, bool success, bool recover,bool empty_queue, double cost_suc, double cost_err){
+std::pair<bool,std::string> TaskEngine::stop_task(bool raise_exception, bool recover,bool empty_queue){
     if(m_active_task->get_id()=="IdleTask"){
         return std::pair<bool,std::string>(true,"");
     }
     spdlog::info("Stopping active task.");
-    m_active_task->stop_task(raise_exception,success,recover,empty_queue,cost_suc,cost_err);
+    m_active_task->stop_task(raise_exception,recover,empty_queue);
     return std::pair<bool,std::string>(true,"");
 }
 

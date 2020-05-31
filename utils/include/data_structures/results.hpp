@@ -73,6 +73,7 @@ struct TaskResult{
         cost_suc=0;
         cost_err=0;
         success=false;
+        external_stop=false;
         exception=false;
         empty_queue=false;
         custom_results=nlohmann::json();
@@ -84,6 +85,7 @@ struct TaskResult{
     double cost_suc;
     double cost_err;
     bool success;
+    bool external_stop;
     bool exception;
     bool empty_queue;
     nlohmann::json custom_results;

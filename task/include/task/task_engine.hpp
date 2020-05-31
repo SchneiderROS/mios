@@ -25,7 +25,7 @@ public:
     bool is_busy() const;
 
     std::tuple<bool, std::string, std::string> start_task(const std::string& task_id, const nlohmann::json &parameters, bool queue_task=false);
-    std::pair<bool, std::string> stop_task(bool raise_exception=false, bool success=false, bool recover=true, bool empty_queue=false, double cost_suc=0, double cost_err=0);
+    std::pair<bool, std::string> stop_task(bool raise_exception, bool recover, bool empty_queue);
     std::pair<bool, std::string> remove_task(const std::string &uuid);
     bool subscribe(const std::string &task_uuid, std::shared_ptr<TaskObserver> observer);
     const std::list<std::tuple<std::string, std::shared_ptr<Task>, nlohmann::json> > *get_task_queue();

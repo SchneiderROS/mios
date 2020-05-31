@@ -3,7 +3,7 @@
 #include "tasks/test_task_2.hpp"
 #include "skills/test_skill_1.hpp"
 namespace mios{
-TestTask3::TestTask3(Core *core):Task("TestTask3",core){
+TestTask3::TestTask3(Core *core):Task("TestTask3",core),recovered(false){
 }
 void TestTask3::initialize_context(){
     reserve_skill("t3_s1");
@@ -34,6 +34,7 @@ void TestTask3::evaluate_task(){
     msrm_utils::write_json_array<double,4,1>(custom_results["g"],m_g);
     custom_results["h"]=m_h;
     custom_results["i"]=m_i;
+    custom_results["recovered"]=recovered;
     write_result(false,0,0,custom_results);
 }
 bool TestTask3::read_parameters(const nlohmann::json& params){
@@ -70,6 +71,7 @@ bool TestTask3::read_parameters(const nlohmann::json& params){
 }
 
 void TestTask3::recover_task(){
+    recovered=true;
     spdlog::debug("RECOVERY OF TEST TASK 3");
 }
 

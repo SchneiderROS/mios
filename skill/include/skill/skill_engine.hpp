@@ -17,7 +17,7 @@ public:
     SkillEngine(Core* core);
 
     bool execute_skill(const nlohmann::json &task_context, std::shared_ptr<Skill> skill);
-    void stop_skill(bool success);
+    void stop_skill();
     Actuator* get_next_command(const Percept& percept);
 
 private:

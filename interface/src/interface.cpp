@@ -16,7 +16,7 @@ CommandInterface::CommandInterface(Core *core, TaskEngine *task_engine,Portal* p
 void CommandInterface::bind_methods(){
     m_portal->bind_method_to_all("start_task",std::bind(&CommandInterface::start_task,this,std::placeholders::_1),{ArgPair("task",{}),ArgPair("parameters",{}),ArgPair("queue",false)});
     m_portal->bind_method_to_all("stop_task",std::bind(&CommandInterface::stop_task,this,std::placeholders::_1),
-    {ArgPair("raise_exception",false),ArgPair("success",false),ArgPair("recover",false),ArgPair("empty_queue",false),ArgPair("cost_suc",nlohmann::json()),ArgPair("cost_err",nlohmann::json())});
+    {ArgPair("raise_exception",false),ArgPair("recover",false),ArgPair("empty_queue",false)});
     m_portal->bind_method_to_all("remove_task",std::bind(&CommandInterface::remove_task,this,std::placeholders::_1),{ArgPair("task_uuid",{})});
     m_portal->bind_method_to_all("wait_for_task",std::bind(&CommandInterface::wait_for_task,this,std::placeholders::_1),{ArgPair("task_uuid",{})});
     m_portal->bind_method_to_all("is_busy",std::bind(&CommandInterface::is_busy,this,std::placeholders::_1),{});
@@ -58,7 +58,7 @@ nlohmann::json CommandInterface::stop_task(const nlohmann::json &request){
     nlohmann::json response;
     bool result;
     std::string error_message;
-    std::tie(result,error_message)=m_task_engine->stop_task(request["raise_exception"],request["success"],request["recover"],request["empty_queue"],request["cost_suc"],request["cost_err"]);
+    std::tie(result,error_message)=m_task_engine->stop_task(request["raise_exception"],request["recover"],request["empty_queue"]);
     response["error"]=error_message;
     response["result"]=result;
     return response;
@@ -91,6 +91,7 @@ nlohmann::json CommandInterface::wait_for_task(const nlohmann::json &request){
         task_result_response["success"]=task_result.success;
         task_result_response["cost_err"]=task_result.cost_err;
         task_result_response["cost_suc"]=task_result.cost_suc;
+        task_result_response["external_stop"]=task_result.external_stop;
         task_result_response["exception"]=task_result.exception;
         task_result_response["results"]=task_result.custom_results;
         task_result_response["error"]=task_result.errors;
@@ -98,6 +99,7 @@ nlohmann::json CommandInterface::wait_for_task(const nlohmann::json &request){
         task_result_response["success"]=false;
         task_result_response["cost_err"]=0;
         task_result_response["cost_suc"]=0;
+        task_result_response["external_stop"]=false;
         task_result_response["exception"]=true;
         task_result_response["results"]=nlohmann::json();
         task_result_response["error"]={};

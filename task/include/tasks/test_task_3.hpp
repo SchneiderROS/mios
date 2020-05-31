@@ -17,5 +17,6 @@ double m_i;
 std::string m_j;
 double m_stop_level;
 bool m_success;
+bool recovered;
 };
 }

@@ -39,7 +39,7 @@ public:
      * @param cost_suc[in] Sets the cost for the task execution in case of success.
      * @param cost_err[in] Sets the cost for the task execution in case of failure.
      */
-    void stop_task(bool raise_exception=false, bool success=false, bool recover=true, bool empty_queue=false, std::optional<double> cost_suc=0, std::optional<double> cost_err=0);
+    void stop_task(bool raise_exception=false, bool recover=true, bool empty_queue=false);
 
     /**
      * Loads its description and that of all subtasks and all skill descriptions from the knowledge base. Furthermore it merges all user provided parameters.
@@ -197,6 +197,7 @@ protected:
 
 //    void execute_skill(const std::string& name);
     template<typename T_skill, typename T_param>void execute_skill(const std::string &name){
+        std::scoped_lock<std::mutex> lock(m_mtx_execution);
         if(m_context["skills"].find(name)==m_context["skills"].end()){
             spdlog::error("Skill with id "+name+" not in this task. Check the task context for consistency. Stopping task.");
             stop_task(true);
@@ -273,6 +274,8 @@ private:
     std::set<std::shared_ptr<TaskObserver> > m_observers;
 
     std::shared_ptr<Task> m_active_subtask;
+
+    std::mutex m_mtx_execution;
 
 };
 

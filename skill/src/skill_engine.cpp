@@ -55,12 +55,8 @@ bool SkillEngine::execute_skill(const nlohmann::json& task_context, std::shared_
     return result;
 }
 
-void SkillEngine::stop_skill(bool success){
-    if(success){
-        m_active_skill->invoke_success();
-    }else{
-        m_active_skill->invoke_failure();
-    }
+void SkillEngine::stop_skill(){
+    m_active_skill->invoke_failure();
 }
 
 Actuator* SkillEngine::get_next_command(const Percept& percept){
