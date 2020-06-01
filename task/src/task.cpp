@@ -279,7 +279,9 @@ void Task::execute_subtask(const std::string& task_id,const std::string task_nam
         m_context["subtasks"]=nlohmann::json();
     }
     m_context["subtasks"][task_name]=m_active_subtask->get_context();
-    m_subtask_results.emplace(std::make_pair(task_name,m_active_subtask->get_result()));
+    TaskResult r = m_active_subtask->get_result();
+    assert(m_subtask_results.find(task_name)!=m_subtask_results.end());
+    m_subtask_results[task_name]=m_active_subtask->get_result();
     spdlog::info("End of lifecycle of subtask "+task_name+".");
     m_active_subtask.reset();
 }

@@ -40,6 +40,8 @@ void CommandInterface::bind_methods(){
     m_portal->bind_method_to_all("lock_brakes",std::bind(&CommandInterface::lock_brakes,this,std::placeholders::_1),{});
     m_portal->bind_method_to_all("shutdown",std::bind(&CommandInterface::shutdown,this,std::placeholders::_1),{});
     m_portal->bind_method_to_all("pack_pose",std::bind(&CommandInterface::pack_pose,this,std::placeholders::_1),{});
+
+    m_portal->bind_method_to_all("set_live_parameter",std::bind(&CommandInterface::set_live_parameter,this,std::placeholders::_1),{ArgPair("key",{}),ArgPair("value",{})});
 }
 
 nlohmann::json CommandInterface::start_task(const nlohmann::json &request){
@@ -332,6 +334,14 @@ nlohmann::json CommandInterface::pack_pose(const nlohmann::json &request){
     }else{
         response["result"]=m_core->unlock_body();
     }
+    return response;
+}
+
+nlohmann::json CommandInterface::set_live_parameter(const nlohmann::json &request){
+    nlohmann::json response;
+    m_memory->set_live_parameter(request["key"],request["value"]);
+    response["error"]="";
+    response["result"]=true;
     return response;
 }
 

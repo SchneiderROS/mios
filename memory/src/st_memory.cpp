@@ -55,13 +55,19 @@ const Parameters* STMemory::read_parameters() const{
 }
 
 void STMemory::set_live_parameter(const std::string &key, const nlohmann::json &value){
+    std::scoped_lock<std::mutex> lock(m_mtx_live_context);
     m_live_context.live_parameters[key]=value;
 }
 
-std::optional<nlohmann::json> STMemory::get_live_parameter(const std::string &parameter) const{
+std::optional<nlohmann::json> STMemory::get_live_parameter(const std::string &parameter) {
+    if(!m_mtx_live_context.try_lock()){
+        return {};
+    }
     if(m_live_context.live_parameters.find(parameter)==m_live_context.live_parameters.end()){
+        m_mtx_live_context.unlock();
         return {};
     }else{
+        m_mtx_live_context.unlock();
         return m_live_context.live_parameters[parameter];
     }
 }

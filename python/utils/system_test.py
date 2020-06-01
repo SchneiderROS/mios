@@ -24,9 +24,9 @@ def system_diagnose(address):
         test_multilayer_tasks(address)
         test_subtask_start_stop(address)
         test_task_queue(address)
-        skill_tests(address)
-        live_parameter_server_test(address)
-        test_knowledgebase(address)
+        test_skill_parallel(address)
+        test_live_parameters(address)
+        test_memory(address)
         print("System diagnose has revealed no errors.")
     except TestException as e:
         print(e)
@@ -247,7 +247,6 @@ def test_multilayer_tasks(address):
                                                }
                                            }}}})
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    print(rtn)
     results = rtn["result"]["task_result"]["results"]
     msg_error(results["d"] == [1, 2], 'two_layer_task', 'Parameter throughput is faulty.', rtn)
     msg_error(results["e"] == True, 'two_layer_task', 'Parameter throughput is faulty.', rtn)
@@ -268,7 +267,6 @@ def test_multilayer_tasks(address):
                                             'b': True,
                                             'success': True}}}}}})
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    print(rtn)
     results = rtn["result"]["task_result"]["results"]
     msg_error(results["g"] == [20, 21, 22, 23], 'three_layer_task', 'Parameter throughput is faulty.', rtn)
     msg_error(results["t3_t1"]["t2_t1"]["a"] == [30, 31, 32], 'three_layer_task', 'Parameter throughput is faulty.', rtn)
@@ -509,65 +507,39 @@ def test_task_queue(address):
                       "Result is not False", rtn)
 
 
-def skill_tests(address):
-    url = "http://" + address + ":8383"
-
-    # print('Testing repetitive skill execution...')
-    # rtn = rpc_call(url, 'start_task', {'task': 'test_task_1', 'queue': True, 'parameters': {'skill_test': 1}})
-    # rpc_call(url, 'wait_for_task', {'task_uuid': rtn['result']['task_uuid']})
-    #
-    # print('Testing repetitive skill execution with object...')
-    # rtn = rpc_call(url, 'start_task', {'task': 'test_task_1', 'queue': True, 'parameters': {'skill_test': 3}})
-    # rpc_call(url, 'wait_for_task', {'task_uuid': rtn['result']['task_uuid']})
+def test_skill_parallel(address):
 
     print('Testing parallel thread...')
     response = start_task(address, "TestTask1", queue=True, parameters={'parameters': {'skill_test': 2}})
     response = wait_for_task(address, response['result']['task_uuid'])
     msg_error(response is not None, 'live_parameter_server', 'None returned', response)
-    eval = response["result"]["eval"]
-    msg_error("parallels_cnt" in eval["results"]["t1_s2"], 'parallels_thread', 'Parallels counter not in results', response)
-    msg_error(eval["results"]["t1_s2"]["parallels_cnt"] > 290, 'parallels_thread',
+    task_result = response["result"]["task_result"]
+    msg_error("parallels_cnt" in task_result["results"]["t1_s2"], 'parallels_thread', 'Parallels counter not in results', response)
+    msg_error(task_result["results"]["t1_s2"]["parallels_cnt"] > 290, 'parallels_thread',
               'Parallels counter is wrong.', response)
 
-    return
-    print('Testing skill pause...')
-    rtn = rpc_call(url, 'start_task', {'task': 'test_task_1', 'queue': True, 'parameters': {'skill_test': 2}})
-    time.sleep(1)
-    rpc_call(url,'toggle_skill_pause',{'pause':True})
-    time.sleep(2)
-    rpc_call(url, 'toggle_skill_pause', {'pause': False})
-    rpc_call(url, 'wait_for_task', {'task_uuid': rtn['result']['task_uuid']})
 
-    # pause skill execution
-    # trigger skill conditions
-    # exception handling check
-    pass
-
-
-def live_parameter_server_test(address):
-    url_parameter_server = "http://" + address + ":8384"
-
+def test_live_parameters(address):
     print("Testing live parameter server...")
     response = start_task(address, "TestTask1", queue=True, parameters={'parameters': {'skill_test': 2}})
     time.sleep(1)
-    response_set1 = call_method(address, 8383, "set_parameter", {"parameter_key": "test_parameter_1", "parameter_value": 42}, 8384)
+    response_set1 = call_method(address, 12002, "set_live_parameter", {"key": "test_parameter_1", "value": 42})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set1)
-    response_set2 = call_method(address, 8383, "set_parameter", {"parameter_key": "test_parameter_2", "parameter_value": "hello world"})
+    response_set2 = call_method(address, 12002, "set_live_parameter", {"key": "test_parameter_2", "value": "hello world"})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set2)
-    response_set3 = call_method(address, 8383, "set_parameter", {"parameter_key": "test_parameter_3", "parameter_value": [1,2,3,4,5]})
+    response_set3 = call_method(address, 12002, "set_live_parameter", {"key": "test_parameter_3", "value": [1,2,3,4,5]})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set3)
     response = wait_for_task(address, response['result']['task_uuid'])
     msg_error(response is not None, 'live_parameter_server', 'None returned', response)
-    msg_error(response is not None, 'live_parameter_server', 'None returned', response)
     msg_error("result" in response, 'live_parameter_server', 'None returned', response)
-    eval = response["result"]["eval"]
-    msg_error("test_parameter_1" in eval["results"]["t1_s2"], 'live_parameter_server', 'Test parameter not in results', response)
-    msg_error("test_parameter_2" in eval["results"]["t1_s2"], 'live_parameter_server', 'Test parameter not in results', response)
-    msg_error("test_parameter_3" in eval["results"]["t1_s2"], 'live_parameter_server', 'Test parameter not in results', response)
-    msg_error(eval["results"]["t1_s2"]["test_parameter_1"]==42, 'live_parameter_server', 'test_parameter_1 has not been put through.', response)
-    msg_error(eval["results"]["t1_s2"]["test_parameter_2"] == "hello world", 'live_parameter_server',
+    task_result = response["result"]["task_result"]
+    msg_error("test_parameter_1" in task_result["results"]["t1_s2"], 'live_parameter_server', 'Test parameter not in results', response)
+    msg_error("test_parameter_2" in task_result["results"]["t1_s2"], 'live_parameter_server', 'Test parameter not in results', response)
+    msg_error("test_parameter_3" in task_result["results"]["t1_s2"], 'live_parameter_server', 'Test parameter not in results', response)
+    msg_error(task_result["results"]["t1_s2"]["test_parameter_1"]==42, 'live_parameter_server', 'test_parameter_1 has not been put through.', response)
+    msg_error(task_result["results"]["t1_s2"]["test_parameter_2"] == "hello world", 'live_parameter_server',
               'test_parameter_2 has not been put through.', response)
-    msg_error(eval["results"]["t1_s2"]["test_parameter_3"] == [1,2,3,4,5], 'live_parameter_server',
+    msg_error(task_result["results"]["t1_s2"]["test_parameter_3"] == [1,2,3,4,5], 'live_parameter_server',
               'test_parameter_3 has not been put through.', response)
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <mutex>
 
 #include "data_structures/parameters.hpp"
 #include "data_structures/task_data.hpp"
@@ -27,7 +28,7 @@ public:
     const Parameters* read_parameters() const;
     const TaskData* get_task_data() const;
     void set_live_parameter(const std::string& key, const nlohmann::json& value);
-    std::optional<nlohmann::json> get_live_parameter(const std::string& parameter)const;
+    std::optional<nlohmann::json> get_live_parameter(const std::string& parameter);
     bool apply_skill_context(const nlohmann::json task_context, const std::string& skill_id);
 
     bool set_default_parameters();
@@ -39,6 +40,7 @@ private:
     void merge_live_context();
 
 private:
+    std::mutex m_mtx_live_context;
     std::unordered_map<std::string,Object> m_environment;
     LiveContext m_live_context;
     Parameters m_parameters;

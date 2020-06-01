@@ -78,7 +78,7 @@ void  Memory::set_live_parameter(const std::string &key, const nlohmann::json &v
     m_st_memory.set_live_parameter(key,value);
 }
 
-std::optional<nlohmann::json> Memory::get_live_parameter(const std::string &parameter) const{
+std::optional<nlohmann::json> Memory::get_live_parameter(const std::string &parameter){
     return m_st_memory.get_live_parameter(parameter);
 }
 

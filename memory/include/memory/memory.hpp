@@ -31,7 +31,7 @@ public:
     bool update_object(const std::string& name, bool teach_width, const Percept& p);
 
 public:
-    std::optional<nlohmann::json> get_live_parameter(const std::string& parameter)const;
+    std::optional<nlohmann::json> get_live_parameter(const std::string& parameter);
     Parameters* get_parameters();
     const Parameters *read_parameters() const;
     LiveContext* get_live_context();

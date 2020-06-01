@@ -118,10 +118,10 @@ void TestSkill1::evaluate(){
         get_custom_results()["test_parameter_1"]=m_memory->get_live_parameter("test_parameter_1").value();
     }
     if(m_memory->get_live_parameter("test_parameter_2").has_value()){
-        get_custom_results()["test_parameter_1"]=m_memory->get_live_parameter("test_parameter_2").value();
+        get_custom_results()["test_parameter_2"]=m_memory->get_live_parameter("test_parameter_2").value();
     }
     if(m_memory->get_live_parameter("test_parameter_3").has_value()){
-        get_custom_results()["test_parameter_1"]=m_memory->get_live_parameter("test_parameter_3").value();
+        get_custom_results()["test_parameter_3"]=m_memory->get_live_parameter("test_parameter_3").value();
     }
 }
 
