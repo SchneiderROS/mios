@@ -21,6 +21,7 @@ def system_diagnose(address):
         test_exception_handling(address)
         test_start_stop(address)
         test_start_wait(address)
+        test_primitive_sequence(address)
         test_multilayer_tasks(address)
         test_subtask_start_stop(address)
         test_task_queue(address)
