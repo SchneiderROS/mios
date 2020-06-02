@@ -12,16 +12,19 @@ PandaBody::PandaBody():m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(
 
 std::optional<std::string> PandaBody::get_robot_ip(const std::optional<std::string>& last_ip){
     std::optional<std::string> new_ip={};
+    spdlog::debug("PandaBody: get_robot_ip("+last_ip.value_or("127.0.0.1")+")");
     if(last_ip.has_value()){
         if(msrm_utils::ping(last_ip.value().c_str())==false){
             spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
         }else{
             if(!is_robot(last_ip.value())){
                 spdlog::warn("IP was set to "+last_ip.value()+" but no compatible robot seems to be connected. Searching for new connection...");
+            }else{
+                new_ip=last_ip;
             }
         }
     }
-    if(new_ip.has_value()){
+    if(!new_ip.has_value()){
         new_ip=this->find_robot();
     }
     return new_ip;
@@ -34,6 +37,7 @@ bool PandaBody::connect_to_robot(const std::optional<std::string> &ip){
     try{
         m_panda_arm = std::make_unique<franka::Robot>(ip.value());
         m_panda_model = std::make_unique<franka::Model>(m_panda_arm->loadModel());
+        m_arm_connected=true;
         return true;
     }catch(const franka::NetworkException& e){
         spdlog::debug(e.what());
@@ -56,6 +60,7 @@ bool PandaBody::connect_to_gripper(const std::optional<std::string> &ip){
     }
     try{
         m_panda_hand = std::make_unique<franka::Gripper>(ip.value());
+        m_hand_connected=true;
         return true;
     }catch(const franka::NetworkException& e){
         spdlog::debug(e.what());
@@ -108,6 +113,7 @@ bool PandaBody::pre_run_checks() const{
 
 bool PandaBody::is_robot(const std::string &ip){
     try{
+        spdlog::debug("panda_body: is_robot("+ip+")");
         std::unique_ptr<franka::Robot> robot =  std::make_unique<franka::Robot>(ip);
         return true;
     }catch(const franka::NetworkException& e){
@@ -126,6 +132,7 @@ std::optional<std::string> PandaBody::find_robot(){
     std::string robot_iface="none";
 
     std::map<std::string,std::string> ifaces = msrm_utils::get_subnets();
+    spdlog::debug("panda_body: find_robot");
     for(const auto& i : ifaces){
         if(i.first=="lo" || i.first=="docker0" || i.first=="tap0"){
             continue;
@@ -158,6 +165,7 @@ std::optional<std::string> PandaBody::find_robot(){
 bool PandaBody::control(std::function<franka::Torques (const franka::RobotState&,franka::Duration)> controller_callback){
     try{
         if(m_arm_connected){
+            spdlog::debug("PandaBody: control<Torques>");
             m_panda_arm->control(controller_callback);
             return true;
         }else{
@@ -186,6 +194,7 @@ bool PandaBody::control(std::function<franka::Torques (const franka::RobotState&
 bool PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
+            spdlog::debug("PandaBody: control<CartesianVelocities>");
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
@@ -213,6 +222,7 @@ bool PandaBody::control(std::function<franka::CartesianVelocities (const franka:
 bool PandaBody::control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
+            spdlog::debug("PandaBody: control<JointVelocities>");
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
@@ -240,6 +250,7 @@ bool PandaBody::control(std::function<franka::JointVelocities (const franka::Rob
 bool PandaBody::control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
+            spdlog::debug("PandaBody: control<CartesianPose>");
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){
@@ -267,6 +278,7 @@ bool PandaBody::control(std::function<franka::CartesianPose (const franka::Robot
 bool PandaBody::control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
+            spdlog::debug("PandaBody: control<JointPositions>");
             m_panda_arm->control(controller_callback);
             return true;
         }catch(const franka::ControlException& e){

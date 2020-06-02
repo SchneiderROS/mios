@@ -51,6 +51,7 @@ rsync -r lib $user@$IP:~/mios/
 rsync -r python $user@$IP:~/mios/
 rsync -r ml_methods $user@$IP:~/mios/
 rsync start.py $user@$IP:~/mios/
+rsync robot_install.sh $user@$IP:~/mios/
 else
 {
 if [ ! -d "${ROOT}/mios_package" ]; then

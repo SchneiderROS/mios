@@ -1,8 +1,9 @@
 #!/usr/bin/python3 -u
 import time
 
-# from python.utils.ws_client import *
-from udp_client import *
+from ws_client import *
+# from udp_client import *
+# from rpc_client import *
 
 
 class TestException(Exception):
@@ -390,7 +391,7 @@ def test_memory(address):
     url = "http://" + address + ":8383"
     print("Testing task context download...")
     for i in range(100):
-        response = call_method(address, 12002, method="download_task_context", payload={"task": "TestTask1"})
+        response = call_method(address, 12000, method="download_task_context", payload={"task": "TestTask1"})
         msg_error(response is not None, "memory_task_download", "Response is none", response)
         msg_error(response["result"]["result"] is True, "memory_task_download", "Could not load task.", response)
         msg_error(response["result"]["context"]["parameters"]["a"] == [0, 0, 0], "memory_task_download",
@@ -398,7 +399,7 @@ def test_memory(address):
 
     print("Testing skill context download...")
     for i in range(100):
-        response = call_method(address, 12002, method="download_skill_context", payload={"skill": "TestSkill1"})
+        response = call_method(address, 12000, method="download_skill_context", payload={"skill": "TestSkill1"})
         msg_error(response is not None, "memory_skill_download", "Response is none", response)
         msg_error(response["result"]["result"] is True, "memory_skill_download", "Could not load skill.", response)
         msg_error(response["result"]["context"]["success"] is False, "memory_skill_download",
@@ -406,23 +407,25 @@ def test_memory(address):
 
     print("Testing object context download...")
     for i in range(100):
-        response = call_method(address, 12002, method="download_object_context", payload={"object": "TestObject1"})
+        response = call_method(address, 12000, method="download_object_context", payload={"object": "TestObject1"})
         msg_error(response is not None, "memory_object_download", "Response is none", response)
         msg_error(response["result"]["result"] is True, "memory_object_download", "Could not load object.", response)
         msg_error(response["result"]["context"]["grasp_force"] == 1, "memory_object_download",
                   "Object description is faulty.", response)
 
-    response = call_method(address, 12002, method="set_object",
+    print("Testing object teaching...")
+
+    response = call_method(address, 12000, method="set_object",
                            payload={"object": "TestObject1", "q": [0, 1, 2, 3, 4, 5, 6]})
     msg_error(response["result"]["result"] is True, "memory_object_update", "Could not update object.", response)
-    response = call_method(address, 12002, method="download_object_context", payload={"object": "TestObject1"})
+    response = call_method(address, 12000, method="download_object_context", payload={"object": "TestObject1"})
     msg_error(response["result"]["result"] is True, "memory_object_update", "Could not load object.", response)
     msg_error(response["result"]["context"]["q"] == [0, 1, 2, 3, 4, 5, 6], "memory_object_update",
               "Object description is faulty.", response)
-    response = call_method(address, 12002, method="set_object",
+    response = call_method(address, 12000, method="set_object",
                            payload={"object": "TestObject1", "q": [0, 0, 0, 0, 0, 0, 0]})
     msg_error(response["result"]["result"] is True, "memory_object_update", "Could not update object.", response)
-    response = call_method(address, 12002, method="download_object_context", payload={"object": "TestObject1"})
+    response = call_method(address, 12000, method="download_object_context", payload={"object": "TestObject1"})
     msg_error(response["result"]["result"] is True, "memory_object_update", "Could not load object.", response)
     msg_error(response["result"]["context"]["q"] == [0, 0, 0, 0, 0, 0, 0], "memory_object_update",
               "Object description is faulty.", response)
@@ -436,9 +439,9 @@ def test_task_queue(address):
     for i in range(10):
         results.append(start_task(address, "TestTask1", {"parameters": {"queue_number": i}}, queue=True))
 
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, True)
     rtn = wait_for_task(address, results[8]['result']['task_uuid'])
     msg_error(rtn["result"]["result"] is False, "queue_exception",
@@ -453,9 +456,9 @@ def test_task_queue(address):
     for i in range(10):
         results.append(start_task(address, "TestTask1", {"parameters": {"queue_number": i}}, queue=True))
 
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address)
     for i in range(10):
         rtn = wait_for_task(address, results[i]['result']['task_uuid'])
@@ -475,9 +478,9 @@ def test_task_queue(address):
     for i in range(10):
         results.append(start_task(address, "TestTask1", {"parameters": {"queue_number": i}}, queue=True))
 
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, recover=True)
     for i in range(10):
         rtn = wait_for_task(address, results[i]['result']['task_uuid'])
@@ -499,9 +502,9 @@ def test_task_queue(address):
     for i in range(10):
         results.append(start_task(address, "TestTask1", {"parameters": {"queue_number": i}}, queue=True))
 
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, raise_exception=True, empty_queue=True)
     for i in range(10):
         rtn = wait_for_task(address, results[i]['result']['task_uuid'])
@@ -518,9 +521,9 @@ def test_task_queue(address):
     for i in range(10):
         results.append(start_task(address, "TestTask1", {"parameters": {"queue_number": i}}, queue=True))
 
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, empty_queue=True)
     for i in range(10):
         rtn = wait_for_task(address, results[i]['result']['task_uuid'])
@@ -537,9 +540,9 @@ def test_task_queue(address):
     for i in range(10):
         results.append(start_task(address, "TestTask1", {"parameters": {"queue_number": i}}, queue=True))
 
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
-    call_method(address, 12002, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
+    call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
     stop_task(address, recover=True, empty_queue=True)
     for i in range(10):
         rtn = wait_for_task(address, results[i]['result']['task_uuid'])
@@ -569,12 +572,12 @@ def test_live_parameters(address):
     print("Testing live parameter server...")
     response = start_task(address, "TestTask1", queue=True, parameters={'parameters': {'skill_test': 2}})
     time.sleep(1)
-    response_set1 = call_method(address, 12002, "set_live_parameter", {"key": "test_parameter_1", "value": 42})
+    response_set1 = call_method(address, 12000, "set_live_parameter", {"key": "test_parameter_1", "value": 42})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set1)
-    response_set2 = call_method(address, 12002, "set_live_parameter",
+    response_set2 = call_method(address, 12000, "set_live_parameter",
                                 {"key": "test_parameter_2", "value": "hello world"})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set2)
-    response_set3 = call_method(address, 12002, "set_live_parameter",
+    response_set3 = call_method(address, 12000, "set_live_parameter",
                                 {"key": "test_parameter_3", "value": [1, 2, 3, 4, 5]})
     msg_error(response is not None, 'live_parameter_server', 'None returned', response_set3)
     response = wait_for_task(address, response['result']['task_uuid'])

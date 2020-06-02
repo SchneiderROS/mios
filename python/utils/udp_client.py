@@ -1,5 +1,6 @@
 import socket
 import json
+import time
 
 
 def call_method(hostname: str, port: int, method: str, payload=None, timeout: float = -1) -> dict:
@@ -13,7 +14,7 @@ def call_method(hostname: str, port: int, method: str, payload=None, timeout: fl
         s.settimeout(timeout)
     response = {"result": {"result": False, "error": "No response"}}
     try:
-        data, address = s.recvfrom(4096)
+        data, address = s.recvfrom(8192)
         if address[1] != port:
             response = {"result": {"result": False, "error": "Sender has different address then receiver!"}}
         else:

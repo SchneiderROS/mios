@@ -347,7 +347,7 @@ bool SystemParameters::read_parameters(const nlohmann::json &parameters){
 
 nlohmann::json SystemParameters::get_default_values(){
     nlohmann::json default_values;
-    default_values["robot_ip"]="";
+    default_values["robot_ip"]="localhost";
     default_values["desk_name"]="";
     default_values["desk_pwd"]="";
     default_values["has_robot"]=false;

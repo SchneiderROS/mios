@@ -4,17 +4,13 @@ cd
 
 sudo apt-get install -y libboost1.65-all-dev
 sudo apt-get install -y build-essential cmake git libpoco-dev libeigen3-dev ssh
-sudo apt-get install -y libzstd-dev libsasl2-dev libsnappy-dev zlib1g-dev
-sudo apt-get install -y libsdl2-2.0-0 libsdl2-dev libsdl2-mixer-2.0-0 libsdl2-mixer-dev
 
-sudo apt-get install -y ipython3
-sudo apt-get install -y python3-pip
-
-sudo -H pip install -U pymongo
-sudo -H pip install -U werkzeug
-sudo -H pip install -U json-rpc
-sudo -H pip install -U websockets
-
+wget -qO - https://www.mongodb.org/static/pgp/server-4.0.asc | sudo apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+sudo apt-get update
+sudo apt-get install mongodb-org=4.0.18 mongodb-org-mongos=4.0.18 mongodb-org-server=4.0.18 mongodb-org-tools=4.0.18 mongodb-org-shell=4.0.18
+sudo systemctl enable mongodb.service
+sudo systemctl start mongodb.service
 
 n_cpu_total=$(nproc --all)
 ceil() {
@@ -45,17 +41,3 @@ sudo make install
 cd ../..
 sudo rm -r mongo-cxx-driver
 sudo ldconfig
-
-# nlohman json
-
-git clone https://github.com/nlohmann/json.git
-cd json
-git checkout v3.7.3
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc --all)
-sudo make install
-
-cd ../..
-sudo rm -r json

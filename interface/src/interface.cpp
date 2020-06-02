@@ -50,6 +50,7 @@ void CommandInterface::bind_methods(){
 }
 
 nlohmann::json CommandInterface::start_task(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: start_task");
     nlohmann::json response;
     bool result;
     std::string task_uuid;
@@ -62,6 +63,7 @@ nlohmann::json CommandInterface::start_task(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::stop_task(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: stop_task");
     nlohmann::json response;
     bool result;
     std::string error_message;
@@ -72,6 +74,7 @@ nlohmann::json CommandInterface::stop_task(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::remove_task(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: remove_task");
     nlohmann::json response;
     bool result;
     std::string error_message;
@@ -86,6 +89,7 @@ nlohmann::json CommandInterface::remove_task(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::wait_for_task(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: wait_for_task");
     nlohmann::json response;
     std::string task_uuid;
     bool result;
@@ -118,6 +122,7 @@ nlohmann::json CommandInterface::wait_for_task(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::is_busy(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: is_busy");
     nlohmann::json response;
     response["result"]=true;
     response["busy"]=m_task_engine->is_busy();
@@ -125,6 +130,7 @@ nlohmann::json CommandInterface::is_busy(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::set_grasped_object(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: set_grasped_object");
     nlohmann::json response;
     response["result"]=false;
     response["error"]="";
@@ -137,6 +143,7 @@ nlohmann::json CommandInterface::set_grasped_object(const nlohmann::json &reques
 }
 
 nlohmann::json CommandInterface::grasp_object(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: grasp_object");
     nlohmann::json response;
     response["result"]=false;
     response["error"]="";
@@ -149,6 +156,7 @@ nlohmann::json CommandInterface::grasp_object(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::grasp(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: grasp");
     nlohmann::json response;
     response["result"]=false;
     response["error"]="";
@@ -161,6 +169,7 @@ nlohmann::json CommandInterface::grasp(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::release_object(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: release_object");
     spdlog::info("Releasing object");
     nlohmann::json response;
     if(!m_core->release_object(request["speed"])){
@@ -173,6 +182,7 @@ nlohmann::json CommandInterface::release_object(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::move_gripper(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: move_gripper");
     nlohmann::json response;
     response["result"]=false;
     response["error"]="";
@@ -185,6 +195,7 @@ nlohmann::json CommandInterface::move_gripper(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::home_gripper(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: home_gripper");
     nlohmann::json response;
     response["result"]=false;
     response["error"]="";
@@ -197,6 +208,7 @@ nlohmann::json CommandInterface::home_gripper(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::teach_object(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: teach_object");
     nlohmann::json response;
     std::string object_name;
     bool teach_width=false;
@@ -218,6 +230,7 @@ nlohmann::json CommandInterface::teach_object(const nlohmann::json &request){
 }
 
 nlohmann::json CommandInterface::set_object(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: set_object");
     nlohmann::json response;
     std::string name;
     request["object"].get_to(name);
@@ -255,6 +268,7 @@ nlohmann::json CommandInterface::set_object(const nlohmann::json &request){
 //}
 
 nlohmann::json CommandInterface::download_task_context(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: download_task_context");
     nlohmann::json response, context;
     std::string task_id;
     request["task"].get_to(task_id);
@@ -265,10 +279,12 @@ nlohmann::json CommandInterface::download_task_context(const nlohmann::json &req
         response["result"]=false;
         response["error"]="Could not download task with name "+task_id+".";
     }
+    spdlog::debug("CommandInterface: download_task_context_end");
     return response;
 }
 
 nlohmann::json CommandInterface::download_skill_context(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: download_skill_context");
     nlohmann::json response, context;
     std::string skill_id;
     request["skill"].get_to(skill_id);
@@ -279,10 +295,12 @@ nlohmann::json CommandInterface::download_skill_context(const nlohmann::json &re
         response["result"]=false;
         response["error"]="Could not download skill with name "+skill_id+".";
     }
+    spdlog::debug("CommandInterface: download_skill_context");
     return response;
 }
 
 nlohmann::json CommandInterface::download_object_context(const nlohmann::json &request){
+    spdlog::debug("CommandInterface: download_object_context");
     nlohmann::json response, context;
     std::string object;
     request["object"].get_to(object);
@@ -294,6 +312,7 @@ nlohmann::json CommandInterface::download_object_context(const nlohmann::json &r
         response["result"]=false;
         response["error"]="Could not download object with name "+object+".";
     }
+    spdlog::debug("CommandInterface: download_object_context_end");
     return response;
 }
 

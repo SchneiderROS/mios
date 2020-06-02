@@ -102,6 +102,7 @@ bool MongodbClient::read_document(const std::string& name, const std::string& co
         bsoncxx::stdx::optional<bsoncxx::document::value> doc = m_collections[collection].find_one({bsoncxx::builder::stream::document{}<<"name"<<name<<bsoncxx::builder::stream::finalize});
         std::string descr_str=bsoncxx::to_json(*doc);
         descr=nlohmann::json::parse(descr_str);
+        spdlog::debug("[MONGODBCLIENT]: READ_DOCUMENT.POST_FIND");
         return true;
     }catch(const mongocxx::logic_error& e){
         spdlog::error("Reading of document with name "+name+" of type "+collection+ " has failed.");

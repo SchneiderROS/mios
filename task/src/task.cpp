@@ -16,6 +16,7 @@ Task::Task(const std::string& id, Core* core):m_core(core),m_memory(core->get_me
 }
 
 Task::~Task(){
+    spdlog::debug("Task ("+m_uuid+"): destructor");
     notify_observers();
 }
 

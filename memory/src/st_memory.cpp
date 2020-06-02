@@ -177,6 +177,7 @@ bool STMemory::update_object(const std::string &name, const nlohmann::json &desc
 }
 
 const Object* STMemory::get_object(const std::string &name) const{
+    spdlog::debug("STMemory: get_object("+name+")");
     if(m_environment.find(name)==m_environment.end()){
         return &m_environment.at("NullObject");
     }else{

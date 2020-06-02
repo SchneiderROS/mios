@@ -43,23 +43,29 @@ Core::~Core(){
 }
 
 bool Core::initialize(){
+    spdlog::debug("Core: initialize.m_memory.set_default_parameters");
     if(!m_memory.set_default_parameters()){
         return false;
     }
-
+    spdlog::debug("Core: initialize.check_if_robot");
     if(m_memory.read_parameters()->system.has_robot || m_memory.read_parameters()->system.has_gripper){
-        m_memory.get_parameters()->system.robot_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip).value_or("");
+        m_memory.get_parameters()->system.robot_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip).value_or("127.0.0.1");
     }
+    spdlog::debug("Core: initialize.check_if_robot2");
     if(m_memory.read_parameters()->system.has_robot){
+        spdlog::debug("Core: initialize.connect_to_robot");
         if(!m_panda_body.connect_to_robot(m_memory.read_parameters()->system.robot_ip)){
             return false;
         }
     }
+    spdlog::debug("Core: initialize.check_if_gripper");
     if(m_memory.read_parameters()->system.has_gripper){
+        spdlog::debug("Core: initialize.connect_to_gripper");
         if(!m_panda_body.connect_to_gripper(m_memory.read_parameters()->system.robot_ip)){
             return false;
         }
     }
+    spdlog::debug("Core: initialize.set_time");
     m_memory.get_live_context()->t_core=std::chrono::high_resolution_clock::now();
     m_is_ready=true;
     return true;
