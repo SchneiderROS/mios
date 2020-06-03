@@ -321,4 +321,8 @@ bool Actuator::is_settled(const LimitParameters &parameters) const{
     return all_zero;
 }
 
+void Actuator::set_zero(){
+
+}
+
 }

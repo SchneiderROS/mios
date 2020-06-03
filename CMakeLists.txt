@@ -53,12 +53,13 @@ set(CONTROLLER_SRC controller_pipeline/src/cart_torque_pipeline.cpp controller_p
     controller_pipeline/src/joint_velocity_pipeline.cpp controller_pipeline/src/null_pipeline.cpp)
 
 set(SOURCES_PRIMITIVES manipulation_primitive/src/primitives/mp_basic.cpp manipulation_primitive/src/primitives/mp_basic_joint.cpp manipulation_primitive/src/primitives/nullprimitive.cpp)
+set(SOURCES_STRATEGIES manipulation_primitive/src/strategies/move_to_pose.cpp)
 
 file(GLOB SOURCES_SKILLS "skill/src/skills/*.cpp")
 file(GLOB SOURCES_TASKS "task/src/tasks/*.cpp")
 #file(GLOB SOURCES_PATTERN "led_pattern/src/patterns/*.cpp")
 
-add_executable(mios main/src/mios.cpp ${SOURCES} ${MEMORY_SRC} ${UTILS_SRC} ${CONTROLLER_SRC} ${SOURCES_PRIMITIVES} ${SOURCES_SKILLS} ${SOURCES_TASKS} ${SOURCES_PATTERN})
+add_executable(mios main/src/mios.cpp ${SOURCES} ${MEMORY_SRC} ${UTILS_SRC} ${CONTROLLER_SRC} ${SOURCES_STRATEGIES} ${SOURCES_PRIMITIVES} ${SOURCES_SKILLS} ${SOURCES_TASKS} ${SOURCES_PATTERN})
 #cotire(mios)
 
 target_link_libraries(mios general ${PLUGINS} franka mongocxx bsoncxx boost_system SDL2 SDL2_mixer ssl crypto pthread

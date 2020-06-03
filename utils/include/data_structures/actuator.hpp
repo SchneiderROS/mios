@@ -16,9 +16,13 @@ public:
     void read_from_buffer();
     void limit_output(const LimitParameters &parameters);
     void limit_output_rate(const LimitParameters& parameters);
+
+public:
     bool is_valid() const;
     bool is_stopped() const;
     bool is_settled(const LimitParameters& parameters) const;
+    void set_zero();
+
 public:
 
 
