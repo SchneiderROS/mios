@@ -55,14 +55,14 @@ void TestTask1::execute_task(){
 }
 void TestTask1::evaluate_task(){
     nlohmann::json custom_results;
-    custom_results["t1_s1"]=get_result().m_skill_results["t1_s1"].results;
-    custom_results["t1_s2"]=get_result().m_skill_results["t1_s2"].results;
+    custom_results["t1_s1"]=get_result().skill_results["t1_s1"].results;
+    custom_results["t1_s2"]=get_result().skill_results["t1_s2"].results;
     custom_results["result_code"]=m_result_code;
     custom_results["queue_number"]=m_queue_number;
     custom_results["recovered"]=recovered;
     msrm_utils::write_json_array<double,3,1>(custom_results["a"],m_a);
     custom_results["b"]=m_b;
-    write_result(get_result().m_skill_results["t1_s1"].success,get_result().m_skill_results["t1_s1"].cost_suc,get_result().m_skill_results["t1_s1"].cost_err,custom_results);
+    write_result(get_result().skill_results["t1_s1"].success,get_result().skill_results["t1_s1"].cost_suc,get_result().skill_results["t1_s1"].cost_err,custom_results);
 }
 bool TestTask1::read_parameters(const nlohmann::json& params){
     spdlog::debug("Reading parameters for task "+this->get_id());

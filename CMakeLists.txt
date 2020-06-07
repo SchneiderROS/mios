@@ -33,6 +33,10 @@ if (roscpp_FOUND)
 endif()
 include_directories(${roscpp_INCLUDE_DIRS})
 
+find_package(pybind11 REQUIRED)
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/core/include
     ${CMAKE_SOURCE_DIR}/skill/include
@@ -71,7 +75,7 @@ add_executable(mios main/src/mios.cpp ${SOURCES} ${MEMORY_SRC} ${UTILS_SRC} ${CO
 set_target_properties(mios PROPERTIES UNITY_BUILD ON)
 target_precompile_headers(mios PRIVATE ${CMAKE_SOURCE_DIR}/utils/include/utils/pch.hpp)
 
-target_link_libraries(mios general ${PLUGINS} franka mongocxx bsoncxx boost_system SDL2 SDL2_mixer ssl crypto pthread ${roscpp_LIBRARIES}
+target_link_libraries(mios general ${PLUGINS} franka mongocxx bsoncxx boost_system SDL2 SDL2_mixer ssl crypto pthread ${roscpp_LIBRARIES} pybind11::embed
                             debug msrm_cpp_utils_dbg ssl crypto
                             optimized msrm_cpp_utils ssl crypto)
 

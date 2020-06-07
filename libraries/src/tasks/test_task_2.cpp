@@ -23,8 +23,8 @@ void TestTask2::execute_task(){
 }
 void TestTask2::evaluate_task(){
     nlohmann::json custom_results;
-    custom_results["t2_s1"]=get_result().m_skill_results["t2_s1"].results;
-    custom_results["t2_s2"]=get_result().m_skill_results["t2_s1"].results;
+    custom_results["t2_s1"]=get_result().skill_results["t2_s1"].results;
+    custom_results["t2_s2"]=get_result().skill_results["t2_s1"].results;
     custom_results["t2_t1"]=get_subtask_result("t2_t1").custom_results;
 
     msrm_utils::write_json_array<double,2,1>(custom_results["d"],m_d);

@@ -1,9 +1,4 @@
 #!/usr/bin/python3 -u
-from werkzeug.wrappers import Request, Response
-from werkzeug.serving import run_simple
-
-from jsonrpc import JSONRPCResponseManager, dispatcher
-
 import requests
 from http.client import HTTPSConnection
 import base64
@@ -92,46 +87,44 @@ class FrankaAPI:
         return base64.encodestring(bs.encode('utf-8')).decode('utf-8')
 
 
-@Request.application
-def start_server(request):
-    response = JSONRPCResponseManager.handle(request.data, dispatcher)
-    return Response(response.json, mimetype='application/json')
-
-
-@dispatcher.add_method
-def shutdown(ip, name, pwd):
+def shutdown(ip, user, pwd):
     try:
-        with FrankaAPI(ip, name, pwd) as api:
+        with FrankaAPI(ip, user, pwd) as api:
             api.shutdown()
+            return True
     except (socket.error):
         print('Socket error, possibly no host with IP: ', ip,', name: ', name,' and password: ', pwd)
+        return False
 
 
-@dispatcher.add_method
-def unlock_brakes(ip, name, pwd):
+def unlock_brakes(ip, user, pwd):
     try:
-        with FrankaAPI(ip, name, pwd) as api:
+        with FrankaAPI(ip, user, pwd) as api:
             api.unlock_brakes()
+            return True
     except (socket.error):
         print('Socket error, possibly no host with IP: ', ip,', name: ', name,' and password: ', pwd)
+        return False
 
 
-@dispatcher.add_method
-def lock_brakes(ip, name, pwd):
+def lock_brakes(ip, user, pwd):
     try:
-        with FrankaAPI(ip, name, pwd) as api:
+        with FrankaAPI(ip, user, pwd) as api:
             api.lock_brakes()
+            return True
     except (socket.error):
         print('Socket error, possibly no host with IP: ', ip,', name: ', name,' and password: ', pwd)
+        return False
 
 
-@dispatcher.add_method
-def pack_pose(ip, name, pwd):
+def pack_pose(ip, user, pwd):
     try:
         with FrankaAPI(ip, name, pwd) as api:
             api.pack_pose()
+            return True
     except (socket.error):
         print('Socket error, possibly no host with IP: ', ip,', name: ', name,' and password: ', pwd)
+        return False
 
 
 @dispatcher.add_method
@@ -162,4 +155,17 @@ def start_task(ip, name, pwd, task):
 
 
 if __name__ == '__main__':
-    run_simple('0.0.0.0', 9001, start_server)
+    if len(sys.argv) <= 4:
+        sys.exit("Not enough args")
+    fun = sys.argv[1]
+    p_hostname = sys.argv[2]
+    p_user = sys.argv[3]
+    p_password = sys.argv[4]
+    if fun == "lock_brakes":
+        lock_brakes(p_hostname, p_user, p_password)
+    if fun == "unlock_brakes":
+        unlock_brakes(p_hostname, p_user, p_password)
+    if fun == "shutdown":
+        shutdown(p_hostname, p_user, p_password)
+    if fun == "pack_pose":
+        pack_pose(p_hostname, p_user, p_password)

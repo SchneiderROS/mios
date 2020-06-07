@@ -80,7 +80,7 @@ struct TaskResult{
         errors.resize(0);
     }
 
-    std::unordered_map<std::string,SkillResult> m_skill_results;
+    std::unordered_map<std::string,SkillResult> skill_results;
 
     double cost_suc;
     double cost_err;

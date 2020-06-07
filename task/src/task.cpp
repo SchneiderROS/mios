@@ -84,6 +84,7 @@ bool Task::load_context(const nlohmann::json &user_context){
                 msrm_utils::overwrite_valid_json(user_context["parameters"][el.key()],m_context["parameters"][el.key()]);
             }
         }
+        initialize_context();
 
         if(user_context.find("subtasks")!=user_context.end()){
             m_context["subtasks"]=user_context["subtasks"];
@@ -128,7 +129,6 @@ bool Task::load_context(const nlohmann::json &user_context){
                         s.value()[cat.key()][p.key()]=p.value();
                     }
                 }
-
             }
         }else{
             if(m_reserved_skills.size()>0){

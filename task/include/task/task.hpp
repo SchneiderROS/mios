@@ -215,7 +215,7 @@ protected:
         m_memory->get_parameters()->create_skill_parameters<T_param>();
         spdlog::info("Executing skill "+name+".");
         bool result=m_skill_engine->execute_skill(m_context,skill);
-        m_result.m_skill_results.insert(std::make_pair(name,skill->get_result()));
+        m_result.skill_results.insert(std::make_pair(name,skill->get_result()));
         if(skill->get_result().exception){
             m_flag_stop = true;
         }

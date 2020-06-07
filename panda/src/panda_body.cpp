@@ -3,6 +3,8 @@
 #include <msrm_utils/network.hpp>
 
 #include <franka/exception.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
 
 namespace mios {
 
@@ -555,80 +557,98 @@ bool PandaBody::wait_for_desk_task(){
 bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
-    nlohmann::json response;
-    nlohmann::json request={
-        {"ip",ip.value()},
-        {"user",user},
-        {"password",password}
-    };
-    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"shutdown",request,response)){
-        return false;
-    }
-    return true;
+//    nlohmann::json response;
+//    nlohmann::json request={
+//        {"ip",ip.value()},
+//        {"user",user},
+//        {"password",password}
+//    };
+//    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"shutdown",request,response)){
+//        return false;
+//    }
+    pybind11::scoped_interpreter guard{};
+    pybind11::module desk_client = pybind11::module::import("desk_client.py");
+    pybind11::object py_result = desk_client.attr("shutdown")(ip.value(), user, password);
+    bool result = py_result.cast<bool>();
+    return result;
 }
 
 bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
-    nlohmann::json response;
-    nlohmann::json request={
-        {"ip",ip.value()},
-        {"user",user},
-        {"password",password}
-    };
-    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"unlock_brakes",request,response)){
-        return false;
-    }
+//    nlohmann::json response;
+//    nlohmann::json request={
+//        {"ip",ip.value()},
+//        {"user",user},
+//        {"password",password}
+//    };
+
+
+//    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"unlock_brakes",request,response)){
+//        return false;
+//    }
+    pybind11::scoped_interpreter guard{};
+    pybind11::module desk_client = pybind11::module::import("desk_client.py");
+    pybind11::object py_result = desk_client.attr("unlock_brakes")(ip.value(), user, password);
+    bool result = py_result.cast<bool>();
     if(!this->connect_to_robot(get_robot_ip(ip))){
         return false;
     }
     if(!this->connect_to_gripper(get_robot_ip(ip))){
         return false;
     }
-    return true;
+    return result;
 }
 
 bool PandaBody::lock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
 
     disconnect_from_gripper();
     disconnect_from_robot();
-    nlohmann::json response;
-    nlohmann::json request={
-        {"ip",ip.value()},
-        {"user",user},
-        {"password",password}
-    };
-    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"lock_brakes",request,response)){
-        return false;
-    }
+//    nlohmann::json response;
+//    nlohmann::json request={
+//        {"ip",ip.value()},
+//        {"user",user},
+//        {"password",password}
+//    };
+//    if(!msrm_utils::JsonUDPClient::call_method("localhost",9001,"lock_brakes",request,response)){
+//        return false;
+//    }
+    pybind11::scoped_interpreter guard{};
+    pybind11::module desk_client = pybind11::module::import("desk_client.py");
+    pybind11::object py_result = desk_client.attr("lock_brakes")(ip.value(), user, password);
+    bool result = py_result.cast<bool>();
     if(!this->connect_to_robot(get_robot_ip(ip))){
         return false;
     }
     if(!this->connect_to_gripper(get_robot_ip(ip))){
         return false;
     }
-    return true;
+    return result;
 }
 
 bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     disconnect_from_gripper();
     disconnect_from_robot();
-    nlohmann::json response;
-    nlohmann::json request={
-        {"ip",ip.value()},
-        {"user",user},
-        {"password",password}
-    };
-    if(!msrm_utils::JsonRPCClient::call_method("localhost",9001,"pack_pose",request,response)){
-        return false;
-    }
+//    nlohmann::json response;
+//    nlohmann::json request={
+//        {"ip",ip.value()},
+//        {"user",user},
+//        {"password",password}
+//    };
+//    if(!msrm_utils::JsonRPCClient::call_method("localhost",9001,"pack_pose",request,response)){
+//        return false;
+//    }
+    pybind11::scoped_interpreter guard{};
+    pybind11::module desk_client = pybind11::module::import("desk_client.py");
+    pybind11::object py_result = desk_client.attr("unlock_brakes")(ip.value(), user, password);
+    bool result = py_result.cast<bool>();
     if(!this->connect_to_robot(get_robot_ip(ip))){
         return false;
     }
     if(!this->connect_to_gripper(get_robot_ip(ip))){
         return false;
     }
-    return true;
+    return result;
 }
 
 bool PandaBody::grasp(double width, double speed, double force, double epsilon_inner, double epsilon_outer) const{
@@ -712,6 +732,26 @@ void PandaBody::get_default_robot_state(franka::RobotState &state) const{
 
 void PandaBody::get_default_gripper_state(franka::GripperState &state) const{
 
+}
+
+void PandaBody::call_desk(const std::string& function, const std::string &ip, const std::string &user, const std::string &password){
+    pybind11::scoped_interpreter guard{};
+    pybind11::module desk_client = pybind11::module::import("desk_client.py");
+    pybind11::object py_result = desk_client.attr(function.c_str())(ip, user, password);
+    bool result = py_result.cast<bool>();
+//    FILE* file;
+//    int argc;
+//    char * argv[5];
+
+//    argc = 5;
+//    argv[0] = "desk_client.py";
+//    argv[1] = "-f";
+//    Py_SetProgramName("desk_client");
+//    Py_Initialize();
+//    file = fopen("../python/desk/desk_client.py","r");
+//    PyRun_SimpleFile(file, "../python/desk/desk_client.py");
+//    Py_Finalize();
+//    fclose(file);
 }
 
 }

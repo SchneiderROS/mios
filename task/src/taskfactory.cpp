@@ -5,10 +5,10 @@
 #include "tasks/test_task_2.hpp"
 #include "tasks/test_task_3.hpp"
 #include "tasks/nulltask.hpp"
-//#include "tasks/learner_test.hpp"
+#include "tasks/learner_test.hpp"
+#include "tasks/move_to_joint_pose.hpp"
+#include "tasks/move_to_cart_pose.hpp"
 //#include "tasks/external.hpp"
-//#include "tasks/move_to_joint_pose.hpp"
-//#include "tasks/move_to_cart_pose.hpp"
 //#include "tasks/insert_object.hpp"
 //#include "tasks/extract_object.hpp"
 //#include "tasks/react_to_event.hpp"
@@ -38,6 +38,12 @@ TaskName TaskFactory::get_task_name(const std::string &task){
         return TaskName::TaskName_TestTask2;
     case msrm_utils::str_to_int("TestTask3"):
         return TaskName::TaskName_TestTask3;
+    case msrm_utils::str_to_int("MoveToJointPose"):
+        return TaskName::TaskName_MoveToJointPose;
+    case msrm_utils::str_to_int("MoveToCartPose"):
+        return TaskName::TaskName_MoveToCartPose;
+    case msrm_utils::str_to_int("LearnerTest"):
+        return TaskName::TaskName_LearnerTest;
     default:
         spdlog::error("Task with id " + task + " does not exist.");
         return TaskName::TaskName_NullTask;
@@ -54,6 +60,12 @@ std::shared_ptr<Task> TaskFactory::create_task(TaskName task,Core* core){
         return std::make_shared<TestTask2>(core);
     case TaskName::TaskName_TestTask3:
         return std::make_shared<TestTask3>(core);
+    case TaskName::TaskName_MoveToJointPose:
+        return std::make_shared<MoveToJointPose>(core);
+    case TaskName::TaskName_MoveToCartPose:
+        return std::make_shared<MoveToCartPose>(core);
+    case TaskName::TaskName_LearnerTest:
+        return std::make_shared<LearnerTest>(core);
     default:
         return std::make_shared<NullTask>(core);
 
