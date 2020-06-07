@@ -7,11 +7,14 @@
 #include "utils/exceptions.hpp"
 #include "skill/skill.hpp"
 #include "skills/nullskill.hpp"
+
 #include "controller_pipeline/cart_torque_pipeline.hpp"
 #include "controller_pipeline/joint_torque_pipeline.hpp"
 #include "controller_pipeline/cart_velocity_pipeline.hpp"
 #include "controller_pipeline/joint_velocity_pipeline.hpp"
 #include "controller_pipeline/null_pipeline.hpp"
+
+#include "safety_stage_1/velocity_walls.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -119,7 +122,11 @@ bool Core::execute_skill(){
     bool result=false;
     if(m_memory.read_parameters()->control.control_mode==ControlMode::mCartTorque){
         m_controller_pipeline=std::make_unique<CartTorqueControllerPipeline>();
+        m_safety_stage_1.insert(std::make_unique<VelocityWallsSafetyModule>());
         m_controller_pipeline->initialize(m_percept,&m_memory);
+        for(auto& m : m_safety_stage_1){
+            m->initialize(m_percept,&m_memory);
+        }
         result=m_panda_body.control(std::bind(&Core::cart_torque_controller_pipeline,this,std::placeholders::_1));
     }
     if(m_memory.read_parameters()->control.control_mode==ControlMode::mJointTorque){
@@ -142,6 +149,11 @@ bool Core::execute_skill(){
     }
 
     m_controller_pipeline->terminate();
+    m_controller_pipeline=std::make_unique<NullControllerPipeline>();
+    for(auto& m : m_safety_stage_1){
+        m->terminate();
+    }
+    m_safety_stage_1.clear();
     return result;
 }
 
@@ -169,6 +181,11 @@ franka::Finishable* Core::control_base_cycle(const franka::RobotState& state){
     franka::GripperState gripper_state;
     m_percept.update(m_panda_body.get_panda_model(),state,gripper_state,m_memory.read_parameters()->frames.O_R_T);
     Actuator* cmd=m_skill_engine.get_next_command(m_percept);
+    for(auto& m : m_safety_stage_1){
+        m->step(m_percept,*cmd);
+    }
+    cmd->limit_output_rate(m_memory.read_parameters()->limits);
+    cmd->limit_output(m_memory.read_parameters()->limits);
     franka::Finishable* panda_cmd=m_controller_pipeline->step(m_percept,*cmd);
     if(!m_controller_pipeline->is_valid_command(panda_cmd)){
         cmd->stop();

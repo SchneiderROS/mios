@@ -365,6 +365,44 @@ nlohmann::json SystemParameters::to_json() const{
     return parameters;
 }
 
+SafetyParameters::SafetyParameters(){
+    velocity_walls.walls.setZero();
+    velocity_walls.brake_distance=0;
+    velocity_walls.active=false;
+}
+
+bool SafetyParameters::read_parameters(const nlohmann::json &parameters){
+    if(parameters.find("velocity_walls")==parameters.end()){
+        spdlog::error("Safety parameters do not have velocity_walls subsection.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters["velocity_walls"],"walls",velocity_walls.walls)){
+        spdlog::error("Could not read velocity_walls.walls.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters["velocity_walls"],"brake_distance",velocity_walls.brake_distance)){
+        spdlog::error("Could not read velocity_walls.brake_distance.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters["velocity_walls"],"active",velocity_walls.active)){
+        spdlog::error("Could not read velocity_walls.active.");
+        return false;
+    }
+    return true;
+}
+
+nlohmann::json SafetyParameters::get_default_values(){
+    nlohmann::json default_values;
+
+    nlohmann::json velocity_walls;
+    velocity_walls["walls"]={0,0,0,0,0,0};
+    velocity_walls["brake_distance"]=0;
+    velocity_walls["active"]=false;
+    default_values["velocity_walls"]=velocity_walls;
+
+    return default_values;
+}
+
 ControlParameters::ControlParameters(){
     control_mode=ControlMode::mNoControl;
 

@@ -24,6 +24,36 @@ void Actuator::initialize(const Percept &p_0){
     K_theta=p_0.controller.K_theta;
     xi_theta=p_0.controller.xi_theta;
 
+    m_TF_T_EE_d_limiter=TF_T_EE_d;
+    m_TF_dX_d_limiter=TF_dX_d;
+    m_q_d_nullspace_limiter=q_d_nullspace;
+    m_TF_F_d_limiter=TF_F_d;
+    m_TF_F_ff_limiter=TF_F_ff;
+    m_K_x_limiter=K_x;
+    m_xi_x_limiter=xi_x;
+
+    m_q_d_limiter=q_d;
+    m_dq_d_limiter=dq_d;
+    m_tau_d_limiter=tau_d;
+    m_tau_ff_limiter=tau_ff;
+    m_K_theta_limiter=K_theta;
+    m_xi_theta_limiter=xi_theta;
+
+    m_TF_T_EE_d_buffer=TF_T_EE_d;
+    m_TF_dX_d_buffer=TF_dX_d;
+    m_q_d_nullspace_buffer=q_d_nullspace;
+    m_TF_F_d_buffer=TF_F_d;
+    m_TF_F_ff_buffer=TF_F_ff;
+    m_K_x_buffer=K_x;
+    m_xi_x_buffer=xi_x;
+
+    m_q_d_buffer=q_d;
+    m_dq_d_buffer=dq_d;
+    m_tau_d_buffer=tau_d;
+    m_tau_ff_buffer=tau_ff;
+    m_K_theta_buffer=K_theta;
+    m_xi_theta_buffer=xi_theta;
+
     m_stop=false;
 }
 
@@ -174,7 +204,6 @@ void Actuator::limit_output_rate(const LimitParameters &parameters){
         }
     }
 
-
     for(unsigned i=0;i<7;i++){
         double diff_q = q_d(i)-m_q_d_limiter(i);
         double diff_q_nullspace = q_d_nullspace(i)-m_q_d_nullspace_limiter(i);
@@ -218,6 +247,7 @@ void Actuator::limit_output_rate(const LimitParameters &parameters){
     m_tau_ff_limiter=tau_ff;
     m_K_theta_limiter=K_theta;
     m_xi_theta_limiter=xi_theta;
+
 }
 
 bool Actuator::is_valid() const{

@@ -116,12 +116,24 @@ public:
     std::string desk_user;
     std::string desk_pwd;
 
-
     bool has_robot;
     bool has_gripper;
 };
 
 enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity,mNoControl};
+
+class SafetyParameters{
+public:
+    SafetyParameters();
+    bool read_parameters(const nlohmann::json& parameters);
+    static nlohmann::json get_default_values();
+
+    struct VelocityWalls{
+        Eigen::Matrix<double,6,1> walls;
+        double brake_distance;
+        bool active;
+    }velocity_walls;
+};
 
 class ControlParameters{
 public:
@@ -229,6 +241,7 @@ class Parameters{
 public:
     Parameters();
     ControlParameters control;
+    SafetyParameters safety;
     SystemParameters system;
     LimitParameters limits;
     UserParameters user;

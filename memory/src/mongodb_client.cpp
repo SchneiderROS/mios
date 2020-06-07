@@ -257,7 +257,7 @@ bool MongodbClient::make_document_consistent(const std::string& name, std::strin
 
 bool MongodbClient::health_check() const{
     try{
-        unsigned n_doc_parameters=5;
+        unsigned n_doc_parameters=6;
         if(!m_mongodb.has_collection("parameters")){
             spdlog::error("Database has no parameters collection.");
             return false;

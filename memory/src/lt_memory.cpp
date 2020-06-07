@@ -38,6 +38,11 @@ bool LTMemory::make_database_consistent(){
     if(!m_mongodb_client.make_document_consistent("system","parameters",default_values)){
         return false;
     }
+    default_values=SafetyParameters::get_default_values();
+    default_values["name"]="safety";
+    if(!m_mongodb_client.make_document_consistent("safety","parameters",default_values)){
+        return false;
+    }
     default_values=ControlParameters::get_default_values();
     default_values["name"]="control";
     if(!m_mongodb_client.make_document_consistent("control","parameters",default_values)){
@@ -316,6 +321,9 @@ bool LTMemory::load_default_parameters(nlohmann::json &parameters){
         return false;
     }
     if(!m_mongodb_client.read_document("frames","parameters",parameters["frames"])){
+        return false;
+    }
+    if(!m_mongodb_client.read_document("safety","parameters",parameters["safety"])){
         return false;
     }
     if(!m_mongodb_client.read_document("system","parameters",parameters["system"])){
