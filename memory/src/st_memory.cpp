@@ -59,6 +59,23 @@ void STMemory::set_live_parameter(const std::string &key, const nlohmann::json &
     m_live_context.live_parameters[key]=value;
 }
 
+void STMemory::post_event(const std::string &name, const nlohmann::json &content){
+    if(m_events.find(name)==m_events.end()){
+        m_events.emplace(std::make_pair(name,Event(name,content)));
+    }else{
+        m_events.erase(m_events.find(name));
+        m_events.emplace(std::make_pair(name,Event(name,content)));
+    }
+}
+
+const Event* STMemory::get_event(const std::string &name) const{
+    if(m_events.find(name)==m_events.end()){
+        return nullptr;
+    }else{
+        return &m_events.at(name);
+    }
+}
+
 std::optional<nlohmann::json> STMemory::get_live_parameter(const std::string &parameter) {
     if(!m_mtx_live_context.try_lock()){
         return {};

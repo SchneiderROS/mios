@@ -48,6 +48,9 @@ void CommandInterface::bind_methods(){
 
     m_portal->bind_method_to_all("terminate",std::bind(&CommandInterface::terminate,this,std::placeholders::_1),{});
 
+    m_portal->bind_method_to_all("post_event",std::bind(&CommandInterface::post_event,this,std::placeholders::_1),{ArgPair("name",{}),ArgPair("content",nlohmann::json())});
+    m_portal->bind_method_to_all("get_event",std::bind(&CommandInterface::get_event,this,std::placeholders::_1),{ArgPair("name",{})});
+
     m_portal->bind_method_to_all("set_live_parameter",std::bind(&CommandInterface::set_live_parameter,this,std::placeholders::_1),{ArgPair("key",{}),ArgPair("value",{})});
 }
 
@@ -399,6 +402,22 @@ nlohmann::json CommandInterface::set_live_parameter(const nlohmann::json &reques
     m_memory->set_live_parameter(request["key"],request["value"]);
     response["error"]="";
     response["result"]=true;
+    return response;
+}
+
+nlohmann::json CommandInterface::post_event(const nlohmann::json &request){
+    nlohmann::json response;
+    std::string name;
+    request["name"].get_to(name);
+    m_memory->post_event(name,request["content"]);
+    return response;
+}
+
+nlohmann::json CommandInterface::get_event(const nlohmann::json &request){
+    nlohmann::json response;
+    std::string name;
+    request["name"].get_to(name);
+    response["content"]=m_memory->get_event(name)->get_content();
     return response;
 }
 

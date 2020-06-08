@@ -184,6 +184,7 @@ protected:
 
 
     bool reserve_skill(const std::string& name);
+    bool insert_skill(const std::string& name, const std::string& type);
     bool reserve_subtask(const std::string& name);
 
     /**

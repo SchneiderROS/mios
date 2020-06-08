@@ -1,0 +1,31 @@
+#pragma once
+
+#include "skill/skill.hpp"
+
+namespace mios{
+
+enum TelepresenceMode{tmJoystick,tmDirectJoint,tmDirectCart};
+
+class SkillParametersTelepresence : public SkillParameters{
+public:
+    bool read_parameters(const nlohmann::json &parameters) override;
+
+    bool master;
+    std::string peer_ip;
+    unsigned peer_port;
+    TelepresenceMode mode;
+};
+
+class Telepresence : public Skill{
+public:
+    Telepresence(const std::string& id, Memory *memory, const Percept& p);
+
+    std::shared_ptr<ManipulationPrimitive> get_initial_mp(const Percept &p_0) override;
+    std::optional<std::shared_ptr<ManipulationPrimitive> > graph_transition(const Percept &p) override;
+
+private:
+    bool check_local_suc_conditions(const Percept &p) override;
+
+};
+
+}

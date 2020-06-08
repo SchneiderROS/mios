@@ -21,8 +21,8 @@ private:
     nlohmann::json wait_for_task(const nlohmann::json& request);
     nlohmann::json is_busy(const nlohmann::json& request);
 
-    nlohmann::json subscribe_to_event_stream(const nlohmann::json& request);
-    nlohmann::json unsubscribe_from_event_stream(const nlohmann::json& request);
+    nlohmann::json post_event(const nlohmann::json& request);
+    nlohmann::json get_event(const nlohmann::json& request);
 
     nlohmann::json set_grasped_object(const nlohmann::json& request);
     nlohmann::json grasp_object(const nlohmann::json& request);

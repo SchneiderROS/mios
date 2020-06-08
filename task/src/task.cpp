@@ -242,6 +242,20 @@ bool Task::reserve_skill(const std::string &name){
     }
 }
 
+bool Task::insert_skill(const std::string &name, const std::string &type){
+    if(m_context.find("skills")==m_context.end()){
+        m_context["skills"]=nlohmann::json();
+    }
+    if(m_context["skills"].find(name)==m_context["skills"].end()){
+        m_context["skills"][name]=nlohmann::json();
+        m_context["skills"][name]["type"]=type;
+        return true;
+    }else{
+        spdlog::error("A skill with name " + name + " already exists, cannot insert.");
+        return false;
+    }
+}
+
 bool Task::reserve_subtask(const std::string &name){
     if(m_reserved_subtasks.find(name)==m_reserved_subtasks.end()){
         m_reserved_subtasks.insert(name);

@@ -32,6 +32,7 @@ public:
     bool update_object(const std::string& name, const nlohmann::json& description);
 
     bool update_database();
+    void post_event(const std::string& name, const nlohmann::json& content);
 
 public:
     std::optional<nlohmann::json> get_live_parameter(const std::string& parameter);
@@ -40,6 +41,7 @@ public:
     LiveContext* get_live_context();
     bool get_task_data(const std::string uuid,TaskData& data) const;
     const Object *get_object(const std::string& name) const;
+    const Event* get_event(const std::string& name);
 
 private:
 

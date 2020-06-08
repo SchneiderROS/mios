@@ -15,6 +15,9 @@ public:
 
     Eigen::Matrix<double,6,1> ROI_x;
     Eigen::Matrix<double,6,1> ROI_phi;
+
+    double stuck_t_thr;
+    double stuck_dx_thr;
 };
 
 class Insertion : public Skill{
@@ -39,6 +42,10 @@ private:
 private:
     double m_cf1_sum_force;
     double m_cf1_cnt;
+
+    double m_dx_avg;
+    unsigned m_dx_avg_last;
+    std::vector<double> m_dx_avg_mem;
 
 };
 

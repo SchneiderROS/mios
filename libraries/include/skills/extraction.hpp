@@ -11,6 +11,9 @@ struct SkillParametersExtraction : public SkillParameters{
     Eigen::Matrix<double,6,1> search_a;
     Eigen::Matrix<double,6,1> search_f;
     double F_limit;
+
+    double stuck_t_thr;
+    double stuck_dx_thr;
 };
 
 class Extraction : public Skill{
@@ -35,6 +38,10 @@ private:
 private:
     double m_cf1_sum_force;
     double m_cf1_cnt;
+
+    double m_dx_avg;
+    unsigned m_dx_avg_last;
+    std::vector<double> m_dx_avg_mem;
 };
 
 }

@@ -98,4 +98,12 @@ bool Memory::update_database(){
     return m_lt_memory.update_database();
 }
 
+void Memory::post_event(const std::string &name, const nlohmann::json &content){
+    m_st_memory.post_event(name,content);
+}
+
+const Event* Memory::get_event(const std::string &name){
+    return m_st_memory.get_event(name);
+}
+
 }
