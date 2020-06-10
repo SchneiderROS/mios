@@ -81,7 +81,7 @@ void CartTorqueControllerPipeline::initialize_cntr_aic(const Percept &p,Memory* 
     m_cntr_aic.p.L=p_cntr.cart_imp_adaptation_stage.L;
     m_cntr_aic.p.F_ff_0=p_cntr.cart_imp_adaptation_stage.F_ff_0;
     m_cntr_aic.p.K_0=p_cntr.cart_imp.K_x;
-    m_cntr_aic.p.xi=p_cntr.cart_imp.xi;
+    m_cntr_aic.p.xi=p_cntr.cart_imp.xi_x;
     m_cntr_aic.p.F_ff_max<<p_limits.cartesian_space.F_J_max(0),p_limits.cartesian_space.F_J_max(0),p_limits.cartesian_space.F_J_max(0),p_limits.cartesian_space.F_J_max(1),p_limits.cartesian_space.F_J_max(1),p_limits.cartesian_space.F_J_max(1);
     m_cntr_aic.p.dF_ff_max<<p_limits.cartesian_space.dF_J_max(0),p_limits.cartesian_space.dF_J_max(0),p_limits.cartesian_space.dF_J_max(0),p_limits.cartesian_space.dF_J_max(1),p_limits.cartesian_space.dF_J_max(1),p_limits.cartesian_space.dF_J_max(1);
     m_cntr_aic.p.K_max=p_limits.cartesian_space.K_x_max;
@@ -95,7 +95,7 @@ void CartTorqueControllerPipeline::initialize_cntr_aic(const Percept &p,Memory* 
     input_cntr_aic(p);
 
     m_cntr_aic.u.K_x=p_cntr.cart_imp.K_x;
-    m_cntr_aic.u.xi_x=p_cntr.cart_imp.xi;
+    m_cntr_aic.u.xi_x=p_cntr.cart_imp.xi_x;
 
     m_cntr_aic.initialize();
     m_conv_vel2pose.initialize();
@@ -130,7 +130,7 @@ void CartTorqueControllerPipeline::initialize_cntr_force(const Percept &p, Memor
     m_cntr_force.p.k_d=p_cntr.force_control.k_d;
     m_cntr_force.p.k_d_N=p_cntr.force_control.k_d_N;
     m_cntr_force.p.d_max=p_cntr.force_control.d_max;
-    m_cntr_force.p.phi_max=p_cntr.force_control.phi_max;
+    m_cntr_force.p.phi_max<<p_cntr.force_control.phi_max;
     m_cntr_force.p.sf_on<<p_cntr.force_control.sf_on;
 
     input_cntr_force(p);

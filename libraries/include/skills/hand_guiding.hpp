@@ -4,7 +4,7 @@
 namespace mios{
 class SkillParametersHandGuiding: public SkillParameters{
 public:
-    bool read_parameters(const nlohmann::json &parameters) override;
+    bool from_json(const nlohmann::json &parameters) override;
     std::string skill;
     Eigen::Matrix<double,6,1> fix_dim;
     Eigen::Matrix<double,6,1> dist_walls;

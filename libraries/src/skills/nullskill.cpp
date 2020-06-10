@@ -7,7 +7,7 @@ SkillParametersNullSkill::SkillParametersNullSkill():SkillParameters(){
 
 }
 
-bool SkillParametersNullSkill::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersNullSkill::from_json(const nlohmann::json &parameters){
     return false;
 }
 

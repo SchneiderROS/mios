@@ -27,12 +27,12 @@ void VirtualCubeSafetyModule::terminate(){
 
 void VirtualCubeSafetyModule::initialize_virt_cube(const Percept &p,const Memory* memory){
     const SafetyParameters& p_safety=memory->read_parameters()->safety;
-    m_cube.p.damping_distance=p_safety.virtual_cube.damping_dist;
-    m_cube.p.damping_factor=p_safety.virtual_cube.damping;
-    m_cube.p.eta=p_safety.virtual_cube.eta;
-    m_cube.p.rho_min=p_safety.virtual_cube.rho_min;
+    m_cube.p.damping_distance<<p_safety.virtual_cube.damping_dist;
+    m_cube.p.damping_factor<<p_safety.virtual_cube.damping;
+    m_cube.p.eta<<p_safety.virtual_cube.eta;
+    m_cube.p.rho_min<<p_safety.virtual_cube.rho_min;
     m_cube.p.cube_walls=p_safety.virtual_cube.walls;
-    m_cube.p.f_max=p_safety.virtual_cube.f_max;
+    m_cube.p.f_max<<p_safety.virtual_cube.f_max;
 
     input_virt_cube(p);
     m_cube.initialize();

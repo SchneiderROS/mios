@@ -33,17 +33,17 @@ bool LTMemory::initialize(){
 
 bool LTMemory::make_database_consistent(){
     nlohmann::json default_values;
-    default_values=SystemParameters::get_default_values();
+    default_values=SystemParameters().to_json();
     default_values["name"]="system";
     if(!m_mongodb_client.make_document_consistent("system","parameters",default_values)){
         return false;
     }
-    default_values=SafetyParameters::get_default_values();
+    default_values=SafetyParameters().to_json();
     default_values["name"]="safety";
     if(!m_mongodb_client.make_document_consistent("safety","parameters",default_values)){
         return false;
     }
-    default_values=ControlParameters::get_default_values();
+    default_values=ControlParameters().to_json();
     default_values["name"]="control";
     if(!m_mongodb_client.make_document_consistent("control","parameters",default_values)){
         return false;
@@ -53,7 +53,7 @@ bool LTMemory::make_database_consistent(){
     if(!m_mongodb_client.make_document_consistent("limits","parameters",default_values)){
         return false;
     }
-    default_values=FramesParameters::get_default_values();
+    default_values=FramesParameters().to_json();
     default_values["name"]="frames";
     if(!m_mongodb_client.make_document_consistent("frames","parameters",default_values)){
         return false;
@@ -373,7 +373,16 @@ bool LTMemory::update_database(){
     if(!m_mongodb_client.write_document("system","parameters",m_st_memory->read_parameters()->system.to_json(),true)){
         return false;
     }
-    if(!m_mongodb_client.write_document("system","parameters",m_st_memory->read_parameters()->user.to_json(),true)){
+    if(!m_mongodb_client.write_document("user","parameters",m_st_memory->read_parameters()->user.to_json(),true)){
+        return false;
+    }
+    if(!m_mongodb_client.write_document("frames","parameters",m_st_memory->read_parameters()->frames.to_json(),true)){
+        return false;
+    }
+    if(!m_mongodb_client.write_document("control","parameters",m_st_memory->read_parameters()->control.to_json(),true)){
+        return false;
+    }
+    if(!m_mongodb_client.write_document("safety","parameters",m_st_memory->read_parameters()->safety.to_json(),true)){
         return false;
     }
     return true;

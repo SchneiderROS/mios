@@ -5,7 +5,7 @@
 
 namespace mios{
 
-bool SkillParametersTestSkill1::read_parameters(const nlohmann::json& parameters){
+bool SkillParametersTestSkill1::from_json(const nlohmann::json& parameters){
     if(!msrm_utils::read_json_param(parameters,"run_time",run_time)){
         spdlog::debug("Could not load parameter: run_time [double]");
         return false;

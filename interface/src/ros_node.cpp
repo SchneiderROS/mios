@@ -2,16 +2,16 @@
 
 namespace mios {
 
-RosNode::RosNode(int rate):m_rate(rate){
+RosNode::RosNode():m_spinner(4){
 
 }
 
-void RosNode::run(){
-    ros::Rate rate(m_rate);
-    while(ros::ok()){
-        ros::spinOnce();
-        rate.sleep();
-    }
+void RosNode::start(){
+    m_spinner.start();
+}
+
+void RosNode::stop(){
+    m_spinner.stop();
 }
 
 }

@@ -4,7 +4,7 @@
 
 namespace mios {
 
-bool SkillParametersMoveToContact::read_parameters(const nlohmann::json &p){
+bool SkillParametersMoveToContact::from_json(const nlohmann::json &p){
     if(!msrm_utils::read_json_param<double,1,1>(p,"speed",speed)){
         spdlog::error("Parameter speed could not be loaded but is mandatory.");
         return false;

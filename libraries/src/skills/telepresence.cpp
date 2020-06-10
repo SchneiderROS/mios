@@ -2,7 +2,7 @@
 
 namespace mios{
 
-bool SkillParametersTelepresence::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
     return true;
 }
 

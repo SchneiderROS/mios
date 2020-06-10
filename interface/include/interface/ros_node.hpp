@@ -6,14 +6,15 @@ namespace mios{
 
 class RosNode{
 public:
-    RosNode(int rate);
+    RosNode();
 
-    void run();
+    void start();
+    void stop();
     ros::NodeHandle* get_node_handle();
 
 private:
     ros::NodeHandle m_node;
-    int m_rate;
+    ros::AsyncSpinner m_spinner;
 };
 
 }

@@ -85,12 +85,12 @@ public:
 
 };
 
-class FramesParameters{
+class FramesParameters : public IParameters{
 public:
     FramesParameters();
 
-    bool read_parameters(const nlohmann::json& parameters);
-    static nlohmann::json get_default_values();
+    bool from_json(const nlohmann::json& parameters);
+    nlohmann::json to_json() const;
 
     Eigen::Matrix<double,3,3> O_R_T;
     Eigen::Matrix<double,4,4> F_T_EE;
@@ -98,12 +98,11 @@ public:
     Eigen::Matrix<double,4,4> EE_T_K;
 };
 
-class SystemParameters{
+class SystemParameters : public IParameters{
 public:
     SystemParameters();
 
-    bool read_parameters(const nlohmann::json& parameters);
-    static nlohmann::json get_default_values();
+    bool from_json(const nlohmann::json& parameters);
     nlohmann::json to_json() const;
 
     std::string robot_ip;
@@ -116,11 +115,11 @@ public:
 
 enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity,mNoControl};
 
-class SafetyParameters{
+class SafetyParameters : public IParameters{
 public:
     SafetyParameters();
-    bool read_parameters(const nlohmann::json& parameters);
-    static nlohmann::json get_default_values();
+    bool from_json(const nlohmann::json& parameters);
+    nlohmann::json to_json() const;
 
     struct VelocityWalls{
         Eigen::Matrix<double,6,1> walls;
@@ -129,12 +128,12 @@ public:
     }velocity_walls;
 
     struct VirtualCube{
-        Eigen::Matrix<double,1,1> damping;
-        Eigen::Matrix<double,1,1> damping_dist;
-        Eigen::Matrix<double,1,1> eta;
-        Eigen::Matrix<double,1,1> rho_min;
+        double damping;
+        double damping_dist;
+        double eta;
+        double rho_min;
         Eigen::Matrix<double,6,1> walls;
-        Eigen::Matrix<double,1,1> f_max;
+        double f_max;
         bool active;
     }virtual_cube;
 
@@ -149,11 +148,11 @@ public:
     }virtual_joint_walls;
 };
 
-class ControlParameters{
+class ControlParameters : public IParameters{
 public:
     ControlParameters();
-    bool read_parameters(const nlohmann::json& parameters);
-    static nlohmann::json get_default_values();
+    bool from_json(const nlohmann::json& parameters);
+    nlohmann::json to_json() const;
 
     ControlMode control_mode;
 
@@ -169,7 +168,7 @@ public:
 
     struct CartImp{
         Eigen::Matrix<double,6,1> K_x;
-        Eigen::Matrix<double,6,1> xi;
+        Eigen::Matrix<double,6,1> xi_x;
     }cart_imp;
 
     struct JointImp{
@@ -183,7 +182,7 @@ public:
         Eigen::Matrix<double,6,1> k_d;
         Eigen::Matrix<double,6,1> k_d_N;
         Eigen::Matrix<double,3,1> d_max;
-        Eigen::Matrix<double,1,1> phi_max;
+        double phi_max;
         Eigen::Matrix<double,6,1> active;
         bool sf_on;
     }force_control;
@@ -191,12 +190,11 @@ public:
     struct NullSpaceControl{
         Eigen::Matrix<double,7,1> K_theta;
         Eigen::Matrix<double,7,1> xi_theta;
-        Eigen::Matrix<double,7,1> q_d;
         bool active;
     }nullspace_control;
 };
 
-class SkillParameters{
+class SkillParameters : public IParameters{
 public:
     SkillParameters();
 
@@ -207,7 +205,8 @@ public:
     bool read_global_skill_parameters(const nlohmann::json& p);
     void read_skill_objects(const nlohmann::json& p);
     static nlohmann::json get_default_values();
-    virtual bool read_parameters(const nlohmann::json& parameters) = 0;
+    virtual bool from_json(const nlohmann::json& parameters) = 0;
+    nlohmann::json to_json() const;
 
     /**
          * Mapping of skill objects to objects in the knowledge base.

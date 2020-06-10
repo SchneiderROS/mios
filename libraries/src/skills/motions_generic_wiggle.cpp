@@ -3,7 +3,7 @@
 
 namespace mios {
 
-bool SkillParametersGenericWiggleMotion::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersGenericWiggleMotion::from_json(const nlohmann::json &parameters){
     msrm_utils::read_json_param<double,6,1>(parameters,"dX_fourier_a_a",dX_fourier_a_a);
     msrm_utils::read_json_param<double,6,1>(parameters,"dX_fourier_b_a",dX_fourier_b_a);
     msrm_utils::read_json_param<double,6,1>(parameters,"dX_fourier_a_f",dX_fourier_a_f);

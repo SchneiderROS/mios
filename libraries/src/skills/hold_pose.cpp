@@ -4,7 +4,7 @@
 
 namespace mios {
 
-bool SkillParametersHoldPose::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersHoldPose::from_json(const nlohmann::json &parameters){
     if(!msrm_utils::read_json_param(parameters,"t_max",t_max)){
         spdlog::error("Missing parameter: t_max");
     }

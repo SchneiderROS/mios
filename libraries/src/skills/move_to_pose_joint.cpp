@@ -4,7 +4,7 @@
 
 namespace mios {
 
-bool SkillParametersMoveToPoseJoint::read_parameters(const nlohmann::json &p){
+bool SkillParametersMoveToPoseJoint::from_json(const nlohmann::json &p){
     if(!msrm_utils::read_json_param(p,"speed",speed)){
         spdlog::error("Parameter speed could not be loaded but is mandatory.");
         return false;

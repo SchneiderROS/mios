@@ -98,11 +98,11 @@ bool STMemory::apply_skill_context(const nlohmann::json task_context, const std:
         spdlog::error("The current task context contains no skill with id " + skill_id);
         return false;
     }
-    if(!m_parameters.control.read_parameters(task_context["skills"][skill_id]["control"])){
+    if(!m_parameters.control.from_json(task_context["skills"][skill_id]["control"])){
         spdlog::error("Could not apply control parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.frames.read_parameters(task_context["skills"][skill_id]["frames"])){
+    if(!m_parameters.frames.from_json(task_context["skills"][skill_id]["frames"])){
         spdlog::error("Could not apply frames parameters from context for skill " + skill_id);
         return false;
     }
@@ -110,7 +110,7 @@ bool STMemory::apply_skill_context(const nlohmann::json task_context, const std:
         spdlog::error("Could not apply limits parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.skill->read_parameters(task_context["skills"][skill_id]["skill"])){
+    if(!m_parameters.skill->from_json(task_context["skills"][skill_id]["skill"])){
         spdlog::error("Could not apply skill parameters from context for skill " + skill_id);
         return false;
     }
@@ -118,7 +118,7 @@ bool STMemory::apply_skill_context(const nlohmann::json task_context, const std:
         spdlog::error("Could not apply global skill parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.system.read_parameters(task_context["skills"][skill_id]["system"])){
+    if(!m_parameters.system.from_json(task_context["skills"][skill_id]["system"])){
         spdlog::error("Could not apply system parameters from context for skill " + skill_id);
         return false;
     }
@@ -134,16 +134,16 @@ bool STMemory::set_default_parameters(){
     if(!m_lt_memory->load_default_parameters(default_parameters)){
         return false;
     }
-    if(!m_parameters.control.read_parameters(default_parameters["control"])){
+    if(!m_parameters.control.from_json(default_parameters["control"])){
         return false;
     }
-    if(!m_parameters.frames.read_parameters(default_parameters["frames"])){
+    if(!m_parameters.frames.from_json(default_parameters["frames"])){
         return false;
     }
     if(!m_parameters.limits.from_json(default_parameters["limits"])){
         return false;
     }
-    if(!m_parameters.system.read_parameters(default_parameters["system"])){
+    if(!m_parameters.system.from_json(default_parameters["system"])){
         return false;
     }
     if(!m_parameters.user.from_json(default_parameters["user"])){

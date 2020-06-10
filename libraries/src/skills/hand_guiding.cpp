@@ -4,7 +4,7 @@
 
 namespace mios{
 
-bool SkillParametersHandGuiding::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersHandGuiding::from_json(const nlohmann::json &parameters){
     if(!msrm_utils::read_json_param<double,6,1>(parameters,"fix_dim",fix_dim)){
         fix_dim.setZero();
     }
@@ -26,27 +26,27 @@ std::shared_ptr<ManipulationPrimitive> HandGuiding::get_initial_mp(const Percept
     std::shared_ptr<SkillParametersHandGuiding> skill_params = get_parameters<SkillParametersHandGuiding>();
 
     m_memory->get_parameters()->safety.virtual_cube.active=true;
-    m_memory->get_parameters()->safety.virtual_cube.damping<<0.004;
-    m_memory->get_parameters()->safety.virtual_cube.damping_dist<<0.03;
-    m_memory->get_parameters()->safety.virtual_cube.eta<<0.001;
-    m_memory->get_parameters()->safety.virtual_cube.rho_min<<0.02;
+    m_memory->get_parameters()->safety.virtual_cube.damping=0.004;
+    m_memory->get_parameters()->safety.virtual_cube.damping_dist=0.03;
+    m_memory->get_parameters()->safety.virtual_cube.eta=0.001;
+    m_memory->get_parameters()->safety.virtual_cube.rho_min=0.02;
 
     for(unsigned i=0;i<skill_params->fix_dim.rows();i++){
         if(i<3){
             if(skill_params->fix_dim(i)==1){
                 m_memory->get_parameters()->control.cart_imp.K_x(i)=1500;
-                m_memory->get_parameters()->control.cart_imp.xi(i)=0.7;
+                m_memory->get_parameters()->control.cart_imp.xi_x(i)=0.7;
             }else{
                 m_memory->get_parameters()->control.cart_imp.K_x(i)=0;
-                m_memory->get_parameters()->control.cart_imp.xi(i)=0;
+                m_memory->get_parameters()->control.cart_imp.xi_x(i)=0;
             }
         }else{
             if(skill_params->fix_dim(i)==1){
                 m_memory->get_parameters()->control.cart_imp.K_x(i)=150;
-                m_memory->get_parameters()->control.cart_imp.xi(i)=1.5;
+                m_memory->get_parameters()->control.cart_imp.xi_x(i)=1.5;
             }else{
                 m_memory->get_parameters()->control.cart_imp.K_x(i)=0;
-                m_memory->get_parameters()->control.cart_imp.xi(i)=0;
+                m_memory->get_parameters()->control.cart_imp.xi_x(i)=0;
             }
         }
     }

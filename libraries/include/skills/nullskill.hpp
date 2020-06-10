@@ -7,7 +7,7 @@ namespace mios {
 class SkillParametersNullSkill : public SkillParameters{
 public:
     SkillParametersNullSkill();
-    bool read_parameters(const nlohmann::json &parameters);
+    bool from_json(const nlohmann::json &parameters);
 };
 
 class NullSkill : public Skill{

@@ -4,7 +4,7 @@
 
 namespace mios {
 
-bool SkillParametersInsertion::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersInsertion::from_json(const nlohmann::json &parameters){
     msrm_utils::read_json_param<double,2,1>(parameters,"traj_speed",traj_speed);
     msrm_utils::read_json_param(parameters,"F_limit",F_limit);
     msrm_utils::read_json_param<double,6,1>(parameters,"search_a",search_a);

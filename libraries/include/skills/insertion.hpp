@@ -6,7 +6,7 @@ namespace mios {
 
 class SkillParametersInsertion : public SkillParameters{
 public:
-    bool read_parameters(const nlohmann::json &parameters) override;
+    bool from_json(const nlohmann::json &parameters) override;
     Eigen::Matrix<double,2,1> traj_speed;
     Eigen::Matrix<double,2,1> traj_acc;
     Eigen::Matrix<double,6,1> search_a;

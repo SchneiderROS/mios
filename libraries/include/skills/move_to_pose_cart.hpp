@@ -5,7 +5,7 @@
 namespace mios {
 
 struct SkillParametersMoveToPoseCart : public SkillParameters{
-    bool read_parameters(const nlohmann::json &parameters) override;
+    bool from_json(const nlohmann::json &parameters) override;
     Eigen::Matrix<double,2,1> speed;
     Eigen::Matrix<double,2,1> acc;
     Eigen::Matrix<double,4,4> TF_T_EE_g;

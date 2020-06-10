@@ -44,12 +44,14 @@ bool SkillEngine::execute_skill(const nlohmann::json& task_context, std::shared_
         return false;
     }
     bool result=false;
+    m_core->get_ros_node()->start();
     try{
          result = m_core->execute_skill();
     }catch(const SkillException& e){
         spdlog::debug(e.what());
         result=false;
     }
+    m_core->get_ros_node()->stop();
     unload_skill();
     if(!m_core->refresh_percept({})){
         return false;

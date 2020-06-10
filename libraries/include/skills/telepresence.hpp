@@ -8,7 +8,7 @@ enum TelepresenceMode{tmJoystick,tmDirectJoint,tmDirectCart};
 
 class SkillParametersTelepresence : public SkillParameters{
 public:
-    bool read_parameters(const nlohmann::json &parameters) override;
+    bool from_json(const nlohmann::json &parameters) override;
 
     bool master;
     std::string peer_ip;

@@ -3,7 +3,7 @@
 
 namespace mios{
 
-bool SkillParametersMLTestSkill::read_parameters(const nlohmann::json &parameters){
+bool SkillParametersMLTestSkill::from_json(const nlohmann::json &parameters){
     msrm_utils::read_json_param<double,6,1>(parameters,"x",x);
     msrm_utils::read_json_param(parameters,"A",A);
     msrm_utils::read_json_param(parameters,"selector",selector);

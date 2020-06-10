@@ -4,7 +4,7 @@
 namespace mios{
 class SkillParametersTestSkill1: public SkillParameters{
 public:
-    bool read_parameters(const nlohmann::json &parameters) override;
+    bool from_json(const nlohmann::json &parameters) override;
     std::string skill;
     double run_time;
     bool success;

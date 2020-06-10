@@ -5,7 +5,7 @@
 namespace mios {
 
 struct SkillParametersMoveToContact : public SkillParameters{
-    bool read_parameters(const nlohmann::json &parameters) override;
+    bool from_json(const nlohmann::json &parameters) override;
     Eigen::Matrix<double,1,1> speed;
 };
 
