@@ -18,26 +18,21 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_LINK_DEPENDS_NO_SHARED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wreturn-type -Wno-error=deprecated-declarations")
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-#include(cotire)
+set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third_party/share/cmake;${CMAKE_SOURCE_DIR}/third_party/lib/cmake)
 
+find_package(Franka REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(libmongocxx REQUIRED)
-find_package(libbsoncxx REQUIRED)
-include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
-include_directories(${LIBBSONCXX_INCLUDE_DIRS})
-
-find_package( roscpp )
-if (roscpp_FOUND)
-endif()
-include_directories(${roscpp_INCLUDE_DIRS})
-
 find_package(pybind11 REQUIRED)
-find_package(PythonLibs REQUIRED)
-#include_directories(${PYTHON_INCLUDE_DIRS})
+find_package(roscpp REQUIRED)
+find_package(libmongocxx-static REQUIRED)
+find_package(libbsoncxx-static REQUIRED)
+#find_package(PythonLibs REQUIRED)
 
+include_directories(${roscpp_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/third_party/include)
+include_directories(${LIBMONGOCXX_STATIC_INCLUDE_DIRS})
+include_directories(${LIBBSONCXX_STATIC_INCLUDE_DIRS})
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/core/include
@@ -54,9 +49,11 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/portal/include
     ${CMAKE_SOURCE_DIR}/libraries/include)
 
+link_directories(${CMAKE_SOURCE_DIR}/third_party/lib)
+
 set(PLUGINS mogen_p2p mogen_p2p_joint cntr_aic cntr_force cntr_joint_imp cntr_joint_var_imp cntr_mux cntr_nullsp_proj
     conv_vel2pose motion_error_cart virtual_cube virtual_walls_joint)
-link_directories(${CMAKE_SOURCE_DIR}/plugins/lib)
+link_directories(${CMAKE_SOURCE_DIR}/lib/plugins)
 
 set(SOURCES core/src/core.cpp interface/src/interface.cpp manipulation_primitive/src/manipulation_primitive.cpp skill/src/skill.cpp task/src/task.cpp task/src/task_engine.cpp
     task/src/taskfactory.cpp task/src/taskobserver.cpp skill/src/skill_engine.cpp portal/src/portal.cpp panda/src/panda_body.cpp interface/src/ros_node.cpp)
@@ -79,8 +76,14 @@ add_executable(mios main/src/mios.cpp ${SOURCES} ${MEMORY_SRC} ${UTILS_SRC} ${CO
 set_target_properties(mios PROPERTIES UNITY_BUILD ON)
 target_precompile_headers(mios PRIVATE ${CMAKE_SOURCE_DIR}/utils/include/utils/pch.hpp)
 
-target_link_libraries(mios general ${PLUGINS} franka mongocxx bsoncxx boost_system stdc++fs ssl crypto pthread ${roscpp_LIBRARIES} pybind11::embed
-                            debug msrm_cpp_utils_dbg ssl crypto
-                            optimized msrm_cpp_utils ssl crypto)
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
+
+target_link_libraries(mios general ${PLUGINS} franka mongocxx-static ${LIBMONGOCXX_STATIC_LIBRARIES} stdc++fs ${roscpp_LIBRARIES} pybind11::embed
+                            debug msrm_cpp_utils_dbg httplib ssl crypto pthread boost_system
+                            optimized msrm_cpp_utils httplib ssl crypto pthread boost_system)
 
 install(TARGETS mios DESTINATION ${CMAKE_SOURCE_DIR}/bin)
