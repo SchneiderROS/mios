@@ -10,14 +10,27 @@ namespace mios {
 
 class Memory;
 
+/**
+ * @brief The StrategyData struct provides a convenient way to save strategy related data.
+ */
 struct StrategyData{
     std::shared_ptr<PrimitiveStrategy> strategy;
     Actuator cmd;
     double weight;
 };
 
+/**
+ * @brief The ManipulationPrimitive embedds multiple strategies and is itself embedded into a skill. This class takes care of coordinating its strategies and forms the
+ * connection between the low-level continuous command space and the high-level hybrid structure of the skill.
+ */
 class ManipulationPrimitive{
 public:
+    /**
+     * @brief The constructor initializes the class members with the current percept.
+     * @param[in] name The name of the primitive
+     * @param[in] p_0 The percept at time of construction.
+     * @param[in] memory A pointer to the global memory.
+     */
     ManipulationPrimitive(const std::string& name, const Percept& p_0, Memory* memory);
 
     bool get_flag_error() const;
