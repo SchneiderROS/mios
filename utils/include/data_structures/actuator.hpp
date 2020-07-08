@@ -1,15 +1,18 @@
 #pragma once
 
 #include <eigen3/Eigen/Core>
+#include <set>
 
 #include "data_structures/percept.hpp"
 #include "data_structures/parameters.hpp"
 
 namespace mios {
 
+enum CommandPattern{CommandPatternCartesianPose,CommandPatternJointPose,CommandPatternNullspacePose,CommandPatternDesiredWrench,CommandPatternDesiredTorque};
+
 class Actuator{
 public:
-    Actuator(const Percept& p_0, const ControlParameters& controller, CommandLevel command_level);
+    Actuator(const Percept& p_0, const ControlParameters& controller);
 
     void initialize(const Percept& p_0, const ControlParameters &controller, Eigen::Matrix<double,3,3> O_R_T_0);
     void blend(const Actuator& cmd, const Percept& p);
@@ -26,13 +29,13 @@ public:
     void set_zero(const Percept& p_0);
     void set_stop_factor(double stop_factor);
     bool is_new();
+    void set_command_pattern(const std::set<CommandPattern>& command_pattern);
+    std::set<CommandPattern> get_command_pattern() const;
 
 private:
     void refresh_limiter();
 
 public:
-
-
     Eigen::Matrix<double,4,4> TF_T_EE_d;
     Eigen::Matrix<double,6,1> TF_dX_d;
     Eigen::Matrix<double,7,1> q_d_nullspace;
@@ -51,8 +54,8 @@ public:
 
     double t;
 
-    const CommandLevel command_level;
 private:
+    std::set<CommandPattern> m_command_pattern;
 
     Eigen::Matrix<double,4,4> m_TF_T_EE_d_buffer;
     Eigen::Matrix<double,6,1> m_TF_dX_d_buffer;

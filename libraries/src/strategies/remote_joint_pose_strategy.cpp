@@ -5,7 +5,7 @@
 
 namespace mios {
 
-RemoteJointPoseStrategy::RemoteJointPoseStrategy():PrimitiveStrategy(false,false,true){
+RemoteJointPoseStrategy::RemoteJointPoseStrategy():PrimitiveStrategy({CommandPatternJointPose}){
 
 }
 

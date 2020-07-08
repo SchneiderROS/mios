@@ -12,6 +12,9 @@ void JointVelocityControllerPipeline::initialize(const Percept &p_0, Memory *mem
 }
 
 franka::Finishable *JointVelocityControllerPipeline::step(const Percept &p, const Actuator &cmd){
+    if(cmd.get_command_pattern().find(CommandPatternJointPose)!=cmd.get_command_pattern().end()){
+
+    }
     m_panda_cmd.dq={cmd.dq_d(0),cmd.dq_d(1),cmd.dq_d(2),cmd.dq_d(3),cmd.dq_d(4),cmd.dq_d(5),cmd.dq_d(6)};
     return &m_panda_cmd;
 }

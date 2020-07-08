@@ -5,7 +5,7 @@
 
 namespace mios {
 
-RemoteCartPoseStrategy::RemoteCartPoseStrategy():PrimitiveStrategy(true){
+RemoteCartPoseStrategy::RemoteCartPoseStrategy():PrimitiveStrategy({CommandPatternCartesianPose}){
 
 }
 

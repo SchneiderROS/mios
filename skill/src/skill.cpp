@@ -27,11 +27,11 @@ std::shared_ptr<ManipulationPrimitive> Skill::get_mp(const std::string &mp) cons
     return m_mp_graph.at(mp);
 }
 
-std::shared_ptr<ManipulationPrimitive> Skill::create_mp(const std::string &name, const Percept &p,CommandLevel command_level){
+std::shared_ptr<ManipulationPrimitive> Skill::create_mp(const std::string &name, const Percept &p){
     if(m_active_mp->get_name()==name){
         throw SkillException("Manipulation primitive with name " + name + " is already active. Implementation of manipulation graph seems faulty.");
     }
-    return std::make_shared<ManipulationPrimitive>(name,p,m_memory,command_level);
+    return std::make_shared<ManipulationPrimitive>(name,p,m_memory);
 }
 
 Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_T(const std::string &object_name) const{

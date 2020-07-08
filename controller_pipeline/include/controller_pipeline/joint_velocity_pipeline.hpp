@@ -15,6 +15,7 @@ public:
     void context_switch(const Percept &p) override;
 private:
     franka::JointVelocities m_panda_cmd;
+    Eigen::Matrix<double,7,1> m_q_d_old;
 };
 
 }

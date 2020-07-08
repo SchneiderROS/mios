@@ -3,6 +3,7 @@
 #include "data_structures/actuator.hpp"
 #include "data_structures/percept.hpp"
 #include <eigen3/Eigen/Core>
+#include <set>
 
 namespace mios {
 
@@ -12,7 +13,7 @@ namespace mios {
  */
 class PrimitiveStrategy{
 public:
-    PrimitiveStrategy(bool command_TF_T_EE_d=false,bool command_TF_F_d=false,bool command_q_d=false,bool command_q_d_nullspace=false, bool command_tau_d=false);
+    PrimitiveStrategy(const std::set<CommandPattern> &command_pattern={});
     /**
      * @brief This method is called once at the beginning of the execution of the embedding manipulation primitive. It can be used to initialize custom members.
      * @param[in] p_0 The percept at initialization.
@@ -36,18 +37,10 @@ public:
     virtual bool finished() = 0;
 
 public:
-    bool is_commanding_TF_T_EE_d() const;
-    bool is_commanding_TF_F_d() const;
-    bool is_commanding_q_d() const;
-    bool is_commanding_q_d_nullspace() const;
-    bool is_commanding_tau_d() const;
+    std::set<CommandPattern> get_command_pattern() const;
 
 private:
-    const bool m_command_TF_T_EE_d;
-    const bool m_command_TF_F_d;
-    const bool m_command_q_d;
-    const bool m_command_q_d_nullspace;
-    const bool m_command_tau_d;
+    const std::set<CommandPattern> m_command_pattern;
 };
 
 }

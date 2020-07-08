@@ -221,7 +221,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                         m_handshake_stage=2;
                     }
                 }
-                std::shared_ptr<ManipulationPrimitive> mp = create_mp("telepresence",p,CommandLevel::cmdPose);
+                std::shared_ptr<ManipulationPrimitive> mp = create_mp("telepresence",p);
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
                     mp->create_strategy<RemoteCartPoseStrategy>("telepresence",1);
                     mp->get_strategy<RemoteCartPoseStrategy>("telepresence")->connect(m_portal,"remote_twist_in",get_parameters<Params>()->port_src,256,0,10000,20);

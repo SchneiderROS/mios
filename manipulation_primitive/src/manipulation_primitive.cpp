@@ -4,8 +4,8 @@
 
 namespace mios {
 
-ManipulationPrimitive::ManipulationPrimitive(const std::string& name, const Percept &p_0, Memory *memory, CommandLevel command_level)
-    :m_name(name),m_memory(memory),m_cmd(Actuator(p_0,memory->read_parameters()->control,command_level)),m_flag_initialized(false),m_flag_terminated(false){
+ManipulationPrimitive::ManipulationPrimitive(const std::string& name, const Percept &p_0, Memory *memory)
+    :m_name(name),m_memory(memory),m_cmd(Actuator(p_0,memory->read_parameters()->control)),m_flag_initialized(false),m_flag_terminated(false){
 }
 
 Actuator* ManipulationPrimitive::initialize(const Percept &p_0){
@@ -69,45 +69,60 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
     bool q_d_set=false;
     bool tau_d_set=false;
 
-    bool pose_level=false;
-
     double weight_check=0;
 
+    std::set<CommandPattern> actuator_command_pattern;
     for(auto& s : m_strategies){
-        if(!TF_T_EE_d_set && s.second.strategy->is_commanding_TF_T_EE_d()){
-            m_cmd.TF_T_EE_d=s.second.cmd.TF_T_EE_d;
-            TF_T_EE_d_set=true;
-        }else if(TF_T_EE_d_set && s.second.strategy->is_commanding_TF_T_EE_d()){
-            spdlog::error("More than one policy is commanding TF_T_EE_d.");
-            return false;
+        std::set<CommandPattern> strategy_command_pattern = s.second.strategy->get_command_pattern();
+        if(strategy_command_pattern.find(CommandPatternCartesianPose)!=strategy_command_pattern.end()){
+            if(TF_T_EE_d_set){
+                m_cmd.TF_T_EE_d=s.second.cmd.TF_T_EE_d;
+                actuator_command_pattern.insert(CommandPatternCartesianPose);
+                TF_T_EE_d_set=true;
+            }else{
+                spdlog::error("More than one policy is commanding TF_T_EE_d.");
+                return false;
+            }
         }
-        if(!TF_F_d_set && s.second.strategy->is_commanding_TF_F_d()){
-            m_cmd.TF_F_d=s.second.cmd.TF_F_d;
-            TF_F_d_set=true;
-        }else if(TF_F_d_set && s.second.strategy->is_commanding_TF_F_d()){
-            spdlog::error("More than one policy is commanding TF_F_d_set.");
-            return false;
+        if(strategy_command_pattern.find(CommandPatternJointPose)!=strategy_command_pattern.end()){
+            if(q_d_set){
+                m_cmd.q_d=s.second.cmd.q_d;
+                actuator_command_pattern.insert(CommandPatternJointPose);
+                q_d_set=true;
+            }else{
+                spdlog::error("More than one policy is commanding q_d.");
+                return false;
+            }
         }
-        if(!q_d_set && s.second.strategy->is_commanding_q_d()){
-            m_cmd.q_d=s.second.cmd.q_d;
-            q_d_set=true;
-        }else if(q_d_set && s.second.strategy->is_commanding_q_d()){
-            spdlog::error("More than one policy is commanding q_d.");
-            return false;
+        if(strategy_command_pattern.find(CommandPatternNullspacePose)!=strategy_command_pattern.end()){
+            if(q_d_nullspace_set){
+                m_cmd.q_d_nullspace=s.second.cmd.q_d_nullspace;
+                actuator_command_pattern.insert(CommandPatternNullspacePose);
+                q_d_nullspace_set=true;
+            }else{
+                spdlog::error("More than one policy is commanding q_d_nullspace.");
+                return false;
+            }
         }
-        if(!q_d_nullspace_set && s.second.strategy->is_commanding_q_d_nullspace()){
-            m_cmd.q_d_nullspace=s.second.cmd.q_d_nullspace;
-            q_d_nullspace_set=true;
-        }else if(q_d_nullspace_set && s.second.strategy->is_commanding_q_d_nullspace()){
-            spdlog::error("More than one policy is commanding q_d_nullspace.");
-            return false;
+        if(strategy_command_pattern.find(CommandPatternDesiredWrench)!=strategy_command_pattern.end()){
+            if(TF_F_d_set){
+                m_cmd.TF_F_d=s.second.cmd.TF_F_d;
+                actuator_command_pattern.insert(CommandPatternDesiredWrench);
+                TF_F_d_set=true;
+            }else{
+                spdlog::error("More than one policy is commanding TF_F_d.");
+                return false;
+            }
         }
-        if(!tau_d_set && s.second.strategy->is_commanding_tau_d()){
-            m_cmd.tau_d=s.second.cmd.tau_d;
-            tau_d_set=true;
-        }else if(tau_d_set && s.second.strategy->is_commanding_tau_d()){
-            spdlog::error("More than one policy is commanding tau_d.");
-            return false;
+        if(strategy_command_pattern.find(CommandPatternDesiredTorque)!=strategy_command_pattern.end()){
+            if(tau_d_set){
+                m_cmd.tau_d=s.second.cmd.tau_d;
+                actuator_command_pattern.insert(CommandPatternDesiredTorque);
+                tau_d_set=true;
+            }else{
+                spdlog::error("More than one policy is commanding tau_d.");
+                return false;
+            }
         }
 
         m_cmd.TF_dX_d+=s.second.cmd.TF_dX_d*s.second.weight;
@@ -122,10 +137,7 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
 
         weight_check+=s.second.weight;
     }
-//    if(weight_check!=1){
-//        spdlog::error("Strategy command weights do not sum up to 1");
-//        return false;
-//    }
+    m_cmd.set_command_pattern(actuator_command_pattern);
     return true;
 }
 

@@ -145,7 +145,6 @@ public:
 };
 
 enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity,mNoControl};
-enum CommandLevel{cmdVelocity,cmdPose};
 
 class ControlParameters : public IParameters{
 public:
@@ -154,7 +153,6 @@ public:
     nlohmann::json to_json() const;
 
     ControlMode control_mode;
-    CommandLevel command_level;
 
     struct CartImpAdaptationStage{
         Eigen::Matrix<double,6,1> alpha;

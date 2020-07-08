@@ -4,7 +4,7 @@
 
 namespace mios {
 
-Actuator::Actuator(const Percept &p_0, const ControlParameters& controller, CommandLevel command_level):command_level(command_level){
+Actuator::Actuator(const Percept &p_0, const ControlParameters& controller){
     spdlog::debug("Actuator:Constructor");
     initialize(p_0, controller, Eigen::Matrix<double,3,3>::Identity());
 }
@@ -405,6 +405,14 @@ bool Actuator::is_new(){
     }else{
         return false;
     }
+}
+
+void Actuator::set_command_pattern(const std::set<CommandPattern> &command_pattern){
+    m_command_pattern=command_pattern;
+}
+
+std::set<CommandPattern> Actuator::get_command_pattern() const{
+    return m_command_pattern;
 }
 
 }
