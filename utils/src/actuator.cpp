@@ -10,8 +10,6 @@ Actuator::Actuator(const Percept &p_0, const ControlParameters& controller){
 }
 
 void Actuator::initialize(const Percept &p_0, const ControlParameters& controller, Eigen::Matrix<double, 3, 3> O_R_T_0){
-    O_R_T=O_R_T_0;
-
     TF_T_EE_d=p_0.proprioception.TF_T_EE;
     TF_dX_d.setZero();
     q_d_nullspace=p_0.proprioception.q;
@@ -19,6 +17,7 @@ void Actuator::initialize(const Percept &p_0, const ControlParameters& controlle
     TF_F_ff.setZero();
     K_x=controller.cart_imp.K_x;
     xi_x=controller.cart_imp.xi_x;
+    O_R_T=O_R_T_0;
 
     q_d=p_0.proprioception.q;
     dq_d.setZero();
@@ -37,7 +36,6 @@ void Actuator::initialize(const Percept &p_0, const ControlParameters& controlle
 }
 
 void Actuator::blend(const Actuator &cmd, const Percept& p){
-    O_R_T=cmd.O_R_T;
     TF_T_EE_d=p.controller.TF_T_EE_d;
     TF_dX_d=cmd.TF_dX_d;
     q_d_nullspace=cmd.q_d_nullspace;
@@ -45,6 +43,7 @@ void Actuator::blend(const Actuator &cmd, const Percept& p){
     TF_F_ff=cmd.TF_F_ff;
     K_x=cmd.K_x;
     xi_x=cmd.xi_x;
+    O_R_T=cmd.O_R_T;
 
     q_d=p.controller.q_d;
     dq_d=cmd.dq_d;
@@ -66,6 +65,7 @@ void Actuator::read_from_buffer(){
     TF_F_ff=m_TF_F_ff_buffer;
     K_x=m_K_x_buffer;
     xi_x=m_xi_x_buffer;
+    O_R_T=m_O_R_T_buffer;
 
     q_d=m_q_d_buffer;
     dq_d=m_dq_d_buffer;
@@ -83,6 +83,7 @@ void Actuator::refresh_limiter(){
     m_TF_F_ff_limiter=TF_F_ff;
     m_K_x_limiter=K_x;
     m_xi_x_limiter=xi_x;
+    m_O_R_T_limiter=O_R_T;
 
     m_q_d_limiter=q_d;
     m_dq_d_limiter=dq_d;
@@ -100,6 +101,7 @@ void Actuator::write_to_buffer(){
     m_TF_F_ff_buffer=TF_F_ff;
     m_K_x_buffer=K_x;
     m_xi_x_buffer=xi_x;
+    m_O_R_T_buffer=O_R_T;
 
     m_q_d_buffer=q_d;
     m_dq_d_buffer=dq_d;
@@ -198,13 +200,13 @@ void Actuator::limit_output(const LimitParameters &parameters){
 
 void Actuator::limit_output_rate(const LimitParameters &parameters){
     for(unsigned i=0;i<3;i++){
-        double diff_dX_t = TF_dX_d(i)-m_TF_dX_d_limiter[i];
-        double diff_dX_r = TF_dX_d(i+3)-m_TF_dX_d_limiter[i+3];
+        double diff_dX_t = TF_dX_d(i)-m_TF_dX_d_limiter(i);
+        double diff_dX_r = TF_dX_d(i+3)-m_TF_dX_d_limiter(i+3);
         double diff_dF_t = TF_F_d(i)-m_TF_F_d_limiter(i);
         double diff_dF_r = TF_F_d(i+3)-m_TF_F_d_limiter(i+3);
         double diff_dF_ff_t = TF_F_ff(i)-m_TF_F_ff_limiter(i);
         double diff_dF_ff_r = TF_F_ff(i+3)-m_TF_F_ff_limiter(i+3);
-        if(fabs(diff_dX_t)/0.001>parameters.cartesian_space.ddX_max[0]*m_stop_factor){
+        if(fabs(diff_dX_t)/0.001>parameters.cartesian_space.ddX_max(0)*m_stop_factor){
             TF_dX_d(i)=m_TF_dX_d_limiter(i)+msrm_utils::sgn(diff_dX_t)*parameters.cartesian_space.ddX_max(0)*0.001*m_stop_factor;
         }
         if(fabs(diff_dX_r)/0.001>parameters.cartesian_space.ddX_max[1]*m_stop_factor){

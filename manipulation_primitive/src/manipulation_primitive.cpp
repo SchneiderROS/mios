@@ -66,6 +66,7 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
     bool tau_d_set=false;
     bool joint_compliance_set=false;
     bool cart_compliance_set=false;
+    bool O_R_T_set=false;
 
     double weight_check=0;
 
@@ -119,6 +120,16 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
                 tau_d_set=true;
             }else{
                 spdlog::error("More than one policy is commanding tau_d.");
+                return false;
+            }
+        }
+        if(strategy_command_pattern.find(CommandPatternO_R_T)!=strategy_command_pattern.end()){
+            if(!O_R_T_set){
+                m_cmd.O_R_T=s.second.cmd.O_R_T;
+                actuator_command_pattern.insert(CommandPatternO_R_T);
+                O_R_T_set=true;
+            }else{
+                spdlog::error("More than one policy is commanding O_R_T.");
                 return false;
             }
         }

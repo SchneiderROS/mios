@@ -10,7 +10,7 @@ namespace mios {
 
 enum CommandPattern{CommandPatternCartesianPose,CommandPatternJointPose,CommandPatternNullspacePose,CommandPatternDesiredWrench,CommandPatternDesiredTorque,
                    CommandPatternCartesianCompliance,CommandPatternJointCompliance,CommandPatternCartesianTwist,CommandPatternCartesianFFWrench,
-                   CommandPatternJointVelocities,CommandPatternJointFFTorque};
+                   CommandPatternJointVelocities,CommandPatternJointFFTorque,CommandPatternO_R_T};
 
 class Actuator{
 public:

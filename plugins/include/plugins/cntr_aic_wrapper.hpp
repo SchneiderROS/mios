@@ -27,7 +27,6 @@ Eigen::Matrix<double,6,1> dF_ff_max;
 Eigen::Matrix<double,7,1> tau_max;
 Eigen::Matrix<double,7,1> dtau_max;
 Eigen::Matrix<double,4,4> EE_T_K;
-Eigen::Matrix<double,3,3> O_R_TF;
 In_P_cntr_aic(){
 alpha.setZero();
 beta.setZero();
@@ -46,7 +45,6 @@ dF_ff_max.setZero();
 tau_max.setZero();
 dtau_max.setZero();
 EE_T_K.setZero();
-O_R_TF.setZero();
 }
 };
 struct In_U_cntr_aic{
@@ -59,6 +57,7 @@ Eigen::Matrix<double,6,7> B_J_EE;
 Eigen::Matrix<double,7,1> dtheta;
 Eigen::Matrix<double,6,1> K_x;
 Eigen::Matrix<double,6,1> xi_x;
+Eigen::Matrix<double,3,3> O_R_T;
 In_U_cntr_aic(){
 TF_T_EE_d.setZero();
 TF_T_EE.setZero();
@@ -69,6 +68,7 @@ B_J_EE.setZero();
 dtheta.setZero();
 K_x.setZero();
 xi_x.setZero();
+O_R_T.setZero();
 }
 };
 struct Out_Y_cntr_aic{

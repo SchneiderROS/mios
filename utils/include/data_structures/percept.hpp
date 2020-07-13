@@ -11,7 +11,7 @@ namespace mios {
 
 class Percept{
 public:
-    void update(std::unique_ptr<franka::Model> const& model, const franka::RobotState& robot_state, const franka::GripperState &gripper_state,std::optional<Eigen::Matrix<double,3,3> > O_R_TF);
+    void update(std::unique_ptr<franka::Model> const& model, const franka::RobotState& robot_state, const franka::GripperState &gripper_state, std::optional<Eigen::Matrix<double,3,3> > O_R_T);
     void update_controller();
 
     struct Proprioception{
@@ -153,11 +153,10 @@ public:
         Eigen::Matrix<double,7,1> K_theta;
         Eigen::Matrix<double,7,1> xi_theta;
 
-
-
         Eigen::Matrix<double,4,4> TF_T_EE_d;
         Eigen::Matrix<double,6,1> TF_dX_d;
         Eigen::Matrix<double,6,1> TF_F_ff;
+        Eigen::Matrix<double,3,3> O_R_T;
 
         Eigen::Matrix<double,7,1> q_d;
         Eigen::Matrix<double,7,1> dq_d;

@@ -41,12 +41,14 @@ struct In_U_cntr_force{
 Eigen::Matrix<double,6,1> TF_F_d_K;
 Eigen::Matrix<double,6,1> TF_F_ext_K;
 Eigen::Matrix<double,6,1> DX;
-Eigen::Matrix<double,6,7> B_J_EE;
+Eigen::Matrix<double,6,7> B_J_0;
+Eigen::Matrix<double,3,3> O_R_T;
 In_U_cntr_force(){
 TF_F_d_K.setZero();
 TF_F_ext_K.setZero();
 DX.setZero();
-B_J_EE.setZero();
+B_J_0.setZero();
+O_R_T.setZero();
 }
 };
 struct Out_Y_cntr_force{

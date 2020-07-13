@@ -24,11 +24,13 @@ franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const A
     m_conv_vel2pose.u.TF_dX_d=cmd.TF_dX_d;
     m_conv_vel2pose.step();
     m_cntr_aic.u.TF_T_EE_d=m_conv_vel2pose.y.TF_T_EE_d;
+    m_cntr_aic.u.O_R_T=cmd.O_R_T;
 
     m_cntr_aic.u.K_x=cmd.K_x;
     m_cntr_aic.step();
 
     m_cntr_force.u.TF_F_d_K=cmd.TF_F_d;
+    m_cntr_force.u.O_R_T=cmd.O_R_T;
     m_cntr_force.step();
 
     m_cntr_nullsp_q.u.theta_d=cmd.q_d_nullspace;
@@ -92,7 +94,6 @@ void CartTorqueControllerPipeline::initialize_cntr_aic(const Percept &p,Memory* 
     m_cntr_aic.p.dF_ff_max<<p_limits.cartesian_space.dF_J_max(0),p_limits.cartesian_space.dF_J_max(0),p_limits.cartesian_space.dF_J_max(0),p_limits.cartesian_space.dF_J_max(1),p_limits.cartesian_space.dF_J_max(1),p_limits.cartesian_space.dF_J_max(1);
     m_cntr_aic.p.K_max=p_limits.cartesian_space.K_x_max;
     m_cntr_aic.p.dK_max=p_limits.cartesian_space.dK_x_max;
-    m_cntr_aic.p.O_R_TF=p_frames.O_R_T;
     m_cntr_aic.p.EE_T_K=p_frames.EE_T_K;
     m_cntr_aic.p.dtau_max=p_limits.joint_space.dtau_J_max;
     m_cntr_aic.p.tau_max=p_limits.joint_space.tau_J_max;
@@ -116,6 +117,7 @@ void CartTorqueControllerPipeline::input_cntr_aic(const Percept &p){
     m_cntr_aic.u.TF_F_ff<<0,0,0,0,0,0;
     m_cntr_aic.u.TF_T_EE=p.proprioception.TF_T_EE;
     m_cntr_aic.u.TF_T_EE_d=p.proprioception.TF_T_EE;
+    m_cntr_aic.u.O_R_T=p.controller.O_R_T;
 
     m_conv_vel2pose.u.TF_dX_d<<0,0,0,0,0,0;
     m_conv_vel2pose.u.TF_T_EE=p.proprioception.TF_T_EE;
@@ -145,10 +147,11 @@ void CartTorqueControllerPipeline::initialize_cntr_force(const Percept &p, Memor
 }
 
 void CartTorqueControllerPipeline::input_cntr_force(const Percept &p){
-    m_cntr_force.u.B_J_EE=p.internal_model.B_J_EE;
+    m_cntr_force.u.B_J_0=p.internal_model.B_J_O;
     m_cntr_force.u.DX<<0,0,0,0,0,0;
     m_cntr_force.u.TF_F_d_K<<0,0,0,0,0,0;
     m_cntr_force.u.TF_F_ext_K=-p.proprioception.TF_F_ext_K;
+    m_cntr_force.u.O_R_T=p.controller.O_R_T;
 }
 
 void CartTorqueControllerPipeline::initialize_cntr_mux(const Percept &p,Memory* memory){

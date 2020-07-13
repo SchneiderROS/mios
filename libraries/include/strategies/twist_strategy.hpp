@@ -12,10 +12,12 @@ public:
     void terminate(const Percept &p) override;
     bool finished() override;
 
-    void set_TF_dX_d(const Eigen::Matrix<double,6,1>& TF_dX_d);
+    void set_TF_dX_d(const Eigen::Matrix<double,6,1>& TF_dX_d, const Eigen::Matrix<double, 2, 1> &ddX_max);
 
 private:
+    Eigen::Matrix<double,2,1> m_ddX_max;
     Eigen::Matrix<double,6,1> m_TF_dX_d;
+    Eigen::Matrix<double,6,1> m_TF_dX_d_limiter;
 };
 
 }

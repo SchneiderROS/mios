@@ -40,7 +40,7 @@ std::shared_ptr<ManipulationPrimitive> Push::get_initial_mp(const Percept& p){
     mp->create_strategy<DesiredWrenchStrategy>("wrench",1);
     Eigen::Matrix<double,6,1> TF_F_d;
     TF_F_d<<skill_params->F_push,0,0,0;
-    mp->get_strategy<DesiredWrenchStrategy>("wrench")->set_TF_F_d(TF_F_d);
+    mp->get_strategy<DesiredWrenchStrategy>("wrench")->set_TF_F_d(TF_F_d,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
     return mp;
 }
 
