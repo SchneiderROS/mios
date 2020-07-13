@@ -48,7 +48,7 @@ bool Core::initialize(){
     }
     spdlog::debug("Core: initialize.check_if_robot");
     m_panda_body.set_arm(m_memory.read_parameters()->system.has_robot);
-    m_panda_body.set_hand(m_memory.read_parameters()->system.has_gripper);
+    m_panda_body.set_hand(m_memory.read_parameters()->system.gripper);
     m_memory.get_parameters()->system.robot_ip = m_panda_body.get_robot_ip(m_memory.read_parameters()->system.robot_ip).value_or("127.0.0.1");
     if(!m_memory.update_database()){
         spdlog::warn("Could not update database.");

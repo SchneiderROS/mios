@@ -8,10 +8,11 @@
 #include <franka/model.h>
 #include <franka/robot_state.h>
 #include <franka/gripper_state.h>
+#include "panda/softhand2.hpp"
+
+#include "data_structures/parameters.hpp"
 
 namespace mios {
-
-
 
 class PandaBody{
 public:
@@ -58,7 +59,7 @@ public:
     bool set_ee(std::array<double,16> F_T_EE);
 
     void set_arm(bool has_arm);
-    void set_hand(bool has_hand);
+    void set_hand(PandaHand hand);
 
 public:
     bool get_robot_state(franka::RobotState& state) const;
@@ -77,11 +78,12 @@ private:
     std::unique_ptr<franka::Robot> m_panda_arm;
     std::unique_ptr<franka::Model> m_panda_model;
     std::unique_ptr<franka::Gripper> m_panda_hand;
+    std::unique_ptr<Softhand2> m_softhand2;
     franka::RobotState m_robot_state;
     franka::GripperState m_gripper_state;
 
     bool m_has_arm;
-    bool m_has_hand;
+    PandaHand m_hand;
 
     std::atomic<bool> m_arm_connected;
     std::atomic<bool> m_hand_connected;

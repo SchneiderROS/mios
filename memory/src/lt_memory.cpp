@@ -117,10 +117,11 @@ bool LTMemory::make_default_skills_consistent(){
 
     default_values.clear();
     default_values["name"]="MoveToPoseJoint";
-    default_values["speed"]={0};
-    default_values["acc"]={0};
+    default_values["speed"]=0;
+    default_values["acc"]=0;
+    default_values["t_settle"]=0;
     default_values["q_g"]={0,0,0,0,0,0,0};
-    default_values["t_q_g_offset"]={0,0,0,0,0,0,0};
+    default_values["q_g_offset"]={0,0,0,0,0,0,0};
     if(!m_mongodb_client.make_document_consistent("MoveToPoseJoint","skills",default_values)){
         return false;
     }

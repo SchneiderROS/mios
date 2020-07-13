@@ -5,6 +5,9 @@
 namespace mios {
 
 bool SkillParametersMoveToPoseJoint::from_json(const nlohmann::json &p){
+    if(!msrm_utils::read_json_param(p,"t_settle",t_settle)){
+        t_settle=0;
+    }
     if(!msrm_utils::read_json_param(p,"speed",speed)){
         spdlog::error("Parameter speed could not be loaded but is mandatory.");
         return false;
@@ -13,7 +16,9 @@ bool SkillParametersMoveToPoseJoint::from_json(const nlohmann::json &p){
         spdlog::error("Parameter acc could not be loaded but is mandatory.");
         return false;
     }
-    msrm_utils::read_json_param<double,7,1>(p,"q_g_offset",q_g_offset);
+    if(!msrm_utils::read_json_param<double,7,1>(p,"q_g_offset",q_g_offset)){
+        q_g_offset.setZero();
+    }
 
     if(!msrm_utils::read_json_param<double,7,1>(p,"q_g",q_g)){
         spdlog::error("Parameter q_g could not be loaded but is mandatory.");
@@ -22,7 +27,8 @@ bool SkillParametersMoveToPoseJoint::from_json(const nlohmann::json &p){
     return true;
 }
 
-MoveToPoseJoint::MoveToPoseJoint(const std::string &id, Memory *memory, Portal* portal, const Percept &p):Skill("MoveToPoseJoint",{"goal_pose"},id,memory,portal,p){
+MoveToPoseJoint::MoveToPoseJoint(const std::string &id, Memory *memory, Portal* portal, const Percept &p):Skill("MoveToPoseJoint",{"goal_pose"},id,memory,portal,p),
+m_finished(false){
 }
 
 std::shared_ptr<ManipulationPrimitive> MoveToPoseJoint::get_initial_mp(const Percept &p_0){
@@ -36,16 +42,29 @@ std::shared_ptr<ManipulationPrimitive> MoveToPoseJoint::get_initial_mp(const Per
     }else{
         q_g=get_object("goal_pose")->q;
     }
-    move_s0->set_goal(q_g,skill_params->speed*m_memory->read_parameters()->user.dq_max(0),skill_params->acc*m_memory->read_parameters()->user.ddq_max(0));
+    q_g+=skill_params->q_g_offset;
+    move_s0->set_goal(q_g,skill_params->speed,skill_params->acc);
     return mp;
 }
 
 bool MoveToPoseJoint::check_local_suc_conditions(const Percept &p){
-    return get_active_mp()->get_strategy<MoveToJointPoseStrategy>("s_0")->finished();
+    if(get_active_mp()->get_strategy<MoveToJointPoseStrategy>("s_0")->finished()){
+        if(!m_finished){
+            m_finished=true;
+            m_t_finished=std::chrono::high_resolution_clock::now();
+        }
+        return true;
+    }else{
+        return false;
+    }
 }
 
 bool MoveToPoseJoint::check_local_ex_conditions(const Percept &p){
-    return true;
+    if(std::chrono::duration_cast<std::chrono::seconds>(p.time-m_t_finished).count()>=get_parameters<SkillParametersMoveToPoseJoint>()->t_settle){
+        return true;
+    }else{
+        return false;
+    }
 }
 
 void MoveToPoseJoint::evaluate(){

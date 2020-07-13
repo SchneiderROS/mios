@@ -11,7 +11,7 @@
 
 namespace mios {
 
-PandaBody::PandaBody():m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(nullptr),m_has_arm(false),m_has_hand(false),m_arm_connected(false),m_hand_connected(false){
+PandaBody::PandaBody():m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(nullptr),m_has_arm(false),m_hand(PandaHandNone),m_arm_connected(false),m_hand_connected(false){
     m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 }
 
@@ -19,12 +19,12 @@ void PandaBody::set_arm(bool has_arm){
     m_has_arm=has_arm;
 }
 
-void PandaBody::set_hand(bool has_hand){
-    m_has_hand=has_hand;
+void PandaBody::set_hand(PandaHand hand){
+    m_hand=hand;
 }
 
 std::optional<std::string> PandaBody::get_robot_ip(const std::optional<std::string>& last_ip){
-    if(!m_has_arm && !m_has_hand){
+    if(!m_has_arm && m_hand!=PandaHandDefault){
         return {};
     }
     std::optional<std::string> new_ip={};
@@ -76,27 +76,38 @@ bool PandaBody::connect_to_robot(const std::optional<std::string> &ip){
 }
 
 bool PandaBody::connect_to_gripper(const std::optional<std::string> &ip){
-    if(!m_has_hand){
+    if(m_hand==PandaHandNone){
         m_hand_connected=false;
         return true;
     }
-    if(!ip.has_value()){
-        m_hand_connected=false;
-        return false;
+    if(m_hand==PandaHandDefault){
+        if(!ip.has_value()){
+            m_hand_connected=false;
+            return false;
+        }
+        try{
+            m_panda_hand = std::make_unique<franka::Gripper>(ip.value());
+            m_hand_connected=true;
+            return true;
+        }catch(const franka::NetworkException& e){
+            spdlog::debug(e.what());
+            spdlog::error("Can not connect to gripper at IP " + ip.value());
+            return false;
+        }catch(const franka::IncompatibleVersionException& e){
+            spdlog::debug(e.what());
+            spdlog::error("Panda: Detected incompatible version on robot at IP "+ip.value());
+            return false;
+        }
     }
-    try{
-        m_panda_hand = std::make_unique<franka::Gripper>(ip.value());
-        m_hand_connected=true;
-        return true;
-    }catch(const franka::NetworkException& e){
-        spdlog::debug(e.what());
-        spdlog::error("Can not connect to gripper at IP " + ip.value());
-        return false;
-    }catch(const franka::IncompatibleVersionException& e){
-        spdlog::debug(e.what());
-        spdlog::error("Panda: Detected incompatible version on robot at IP "+ip.value());
-        return false;
+    if(m_hand==PandaHandSofthand2){
+        m_softhand2 = std::make_unique<Softhand2>();
+        if(!m_softhand2->initialize()){
+            return false;
+        }else{
+            return true;
+        }
     }
+    return false;
 }
 
 void PandaBody::disconnect_from_robot(){
@@ -107,7 +118,12 @@ void PandaBody::disconnect_from_robot(){
 
 void PandaBody::disconnect_from_gripper(){
     m_hand_connected=false;
-    m_panda_hand.release();
+    if(m_hand==PandaHandDefault){
+        m_panda_hand.release();
+    }
+    if(m_hand==PandaHandSofthand2){
+        m_softhand2.release();
+    }
 }
 
 bool PandaBody::recover(){
@@ -504,7 +520,7 @@ bool PandaBody::get_robot_state(franka::RobotState &state) const{
 }
 
 bool PandaBody::get_gripper_state(franka::GripperState &state) const{
-    if(m_hand_connected){
+    if(m_hand_connected && m_hand==PandaHandDefault){
         try{
             state=m_panda_hand->readOnce();
             return true;
@@ -690,75 +706,96 @@ bool PandaBody::grasp(double width, double speed, double force, double epsilon_i
     if(!m_hand_connected){
         return false;
     }
-    try{
-        franka::GripperState state = m_panda_hand->readOnce();
-        double max_width=state.max_width;
-        double current_width=state.width;
+    if(m_hand==PandaHandDefault){
 
-        if(width<0 || width>max_width){
-            spdlog::error("Gripper cannot reach width of "+std::to_string(width)+". Must be between 0 and "+std::to_string(max_width)+".");
-            return false;
-        }
-        if(width>=current_width){
-            spdlog::error("Grasping to a width larger than the current width is not possible.");
-            return false;
-        }
+        try{
+            franka::GripperState state = m_panda_hand->readOnce();
+            double max_width=state.max_width;
+            double current_width=state.width;
 
-        if(state.is_grasped){
-            spdlog::error("I am already grasping something.");
+            if(width<0 || width>max_width){
+                spdlog::error("Gripper cannot reach width of "+std::to_string(width)+". Must be between 0 and "+std::to_string(max_width)+".");
+                return false;
+            }
+            if(width>=current_width){
+                spdlog::error("Grasping to a width larger than the current width is not possible.");
+                return false;
+            }
+
+            if(state.is_grasped){
+                spdlog::error("I am already grasping something.");
+                return false;
+            }
+            return this->m_panda_hand->grasp(width,speed,force,epsilon_inner,epsilon_outer);
+        }catch(franka::CommandException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
             return false;
         }
-        return this->m_panda_hand->grasp(width,speed,force,epsilon_inner,epsilon_outer);
-    }catch(franka::CommandException& e){
-        spdlog::debug(e.what());
-        return false;
-    }catch(franka::NetworkException& e){
-        spdlog::debug(e.what());
-        return false;
-    }catch(franka::InvalidOperationException& e){
-        spdlog::debug(e.what());
-        return false;
     }
+    if(m_hand==PandaHandSofthand2){
+        return m_softhand2->move(width);
+    }
+    return false;
 }
 
 bool PandaBody::move_to_finger_position(double width, double speed) const{
     if(!m_hand_connected){
         return false;
     }
-    try{
-        franka::GripperState state = m_panda_hand->readOnce();
-        double max_width=state.max_width;
+    if(m_hand==PandaHandDefault){
 
-        if(width<0 || width>max_width){
-            spdlog::error("Gripper cannot reach width of "+std::to_string(width)+". Must be between 0 and "+std::to_string(max_width)+".");
+        try{
+            franka::GripperState state = m_panda_hand->readOnce();
+            double max_width=state.max_width;
+
+            if(width<0 || width>max_width){
+                spdlog::error("Gripper cannot reach width of "+std::to_string(width)+". Must be between 0 and "+std::to_string(max_width)+".");
+                return false;
+            }
+            return this->m_panda_hand->move(width,speed);
+        }catch(franka::CommandException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(franka::InvalidOperationException& e){
+            spdlog::debug(e.what());
             return false;
         }
-        return this->m_panda_hand->move(width,speed);
-    }catch(franka::CommandException& e){
-        spdlog::debug(e.what());
-        return false;
-    }catch(franka::NetworkException& e){
-        spdlog::debug(e.what());
-        return false;
-    }catch(franka::InvalidOperationException& e){
-        spdlog::debug(e.what());
-        return false;
     }
+    if(m_hand==PandaHandSofthand2){
+        return m_softhand2->move(width);
+    }
+    return false;
 }
 
 bool PandaBody::home_gripper() const{
     if(!m_hand_connected){
         return false;
     }
-    try{
-        return this->m_panda_hand->homing();
-    }catch(franka::CommandException& e){
-        spdlog::debug(e.what());
-        return false;
-    }catch(franka::NetworkException& e){
-        spdlog::debug(e.what());
-        return false;
+    if(m_hand==PandaHandDefault){
+
+        try{
+            return this->m_panda_hand->homing();
+        }catch(franka::CommandException& e){
+            spdlog::debug(e.what());
+            return false;
+        }catch(franka::NetworkException& e){
+            spdlog::debug(e.what());
+            return false;
+        }
     }
+    if(m_hand==PandaHandSofthand2){
+        return true;
+    }
+    return false;
 }
 
 void PandaBody::get_default_robot_state(franka::RobotState &state) const{

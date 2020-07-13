@@ -1,0 +1,75 @@
+#include "panda/softhand2.hpp"
+#include <spdlog/spdlog.h>
+
+
+namespace mios{
+
+Softhand2::Softhand2(const char *port_s, int device_id, int BAUD_RATE):m_port_s(port_s),m_device_id(device_id),m_baudrate(BAUD_RATE){
+
+}
+
+bool Softhand2::initialize(){
+    spdlog::debug("qb SoftHand Initialization");
+    char serial_ports[10][255];
+    int serial_ports_count = RS485listPorts(serial_ports);
+    if (serial_ports_count <= 0) {
+        spdlog::error("ERROR: no serial port found");
+        return false;
+    }
+    for (int i=0; i<serial_ports_count; i++) {
+//        spdlog::debug("Softhand: serial port "+std::to_string(int(serial_ports[i]))+" found.");
+    }
+    openRS485(&m_settings, m_port_s, m_baudrate); // use one of the values from RS485listPorts
+    if (m_settings.file_handle == INVALID_HANDLE_VALUE) {
+//        spdlog::error("fails while opening the serial resource (sets errno [" +std::to_string(int(strerror(errno)))+ "]).");
+        spdlog::error("Please add your username to group dialout to acquire the access right to serial ports");
+        spdlog::error("Example command in terminal: sudo adduser username dialout");
+        spdlog::error("Then reboot for this to take effect");
+        return false;
+    }
+    commActivate(&m_settings, m_device_id, true); //activate motor
+    usleep(10000);
+    char status;
+    int result = commGetActivate(&m_settings, m_device_id, &status);
+    spdlog::debug("Robot Hand Status: "+std::to_string(int(status)));
+    if (result != 0 || status == 0) {
+        spdlog::error("ERROR: fails while activating motor");
+        return false;
+    }
+    short int currents[2]; // only the first value is meaningful
+    short int positions[3]; // only the first value is meaningful
+    if (commGetMeasurements(&m_settings, m_device_id, positions) < 0) {
+        spdlog::error("ERROR: fails while retrieving motor position");
+        return false;
+    }
+    spdlog::debug("Softhand : motor position is " +std::to_string(positions[0]));
+    spdlog::debug("Softhand: motor current is " + std::to_string(currents[0]));
+
+    spdlog::debug("qbSoftHand Initialization Successful");
+    return true;
+}
+
+bool Softhand2::move(int position){
+    short int commands[2];
+    if ((position > 19000) || (position < 0)){
+        spdlog::error("Position command out of range (0 - 19000)");
+        return false;
+    }
+    commands[0] = position; // nearly half closure (max is 19000, min is 0)
+    commands[1] = 0; // must be always 0 (only the first value is meaningful)
+    commSetInputs(&m_settings, m_device_id, commands);
+
+    char status;
+    commActivate(&m_settings, m_device_id, false);
+    usleep(10000);
+    int result = commGetActivate(&m_settings, m_device_id, &status);
+    if (result != 0 || status != 0) {
+        spdlog::error("ERROR: fails while deactivating motor");
+        return false;
+    }
+    closeRS485(&m_settings);
+    spdlog::debug("Comm deactivated and serial port closed");
+    return true;
+}
+
+}

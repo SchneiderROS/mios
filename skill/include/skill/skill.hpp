@@ -266,6 +266,7 @@ private:
 
     std::chrono::high_resolution_clock::time_point m_time_start;
 
+private:
     SkillLifeCycle m_life_cycle;
     std::atomic<bool> m_flag_invoke_failure;
     std::atomic<bool> m_flag_invoke_success;
@@ -273,12 +274,16 @@ private:
     std::atomic<bool> m_flag_parallels_running;
     std::atomic<bool> m_flag_run_parallels;
     double m_stop_factor;
+    std::thread m_thr_parallels;
 
+private:
     const std::string m_type;
     const std::string m_id;
     const std::unordered_set<std::string> m_objects;
 
-    std::thread m_thr_parallels;
+private:
+    bool m_msg_local_success;
+    bool m_msg_global_success;
 
 };
 

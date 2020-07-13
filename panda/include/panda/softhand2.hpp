@@ -1,0 +1,23 @@
+#pragma once
+
+#include <iostream>
+#include <string.h>
+#include <unistd.h>
+#include "panda/qbmove_communications.h"
+
+namespace mios{
+
+class Softhand2{
+public:
+    Softhand2(const char *port_s = "/dev/ttyUSB0", int device_id = 1, int BAUD_RATE = B2000000);
+    bool initialize();
+    bool move(int position);
+
+private:
+    comm_settings m_settings;
+    const char* m_port_s;
+    int m_device_id;
+    int m_baudrate;
+};
+
+}

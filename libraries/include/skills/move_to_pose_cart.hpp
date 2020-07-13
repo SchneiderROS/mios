@@ -6,10 +6,11 @@ namespace mios {
 
 struct SkillParametersMoveToPoseCart : public SkillParameters{
     bool from_json(const nlohmann::json &parameters) override;
+    double t_settle;
     Eigen::Matrix<double,2,1> speed;
     Eigen::Matrix<double,2,1> acc;
-    Eigen::Matrix<double,4,4> TF_T_EE_g;
-    Eigen::Matrix<double,4,4> TF_g_offset;
+    Eigen::Matrix<double,4,4> T_T_EE_g;
+    Eigen::Matrix<double,4,4> T_T_EE_g_offset;
 };
 
 class MoveToPoseCart : public Skill{
@@ -23,6 +24,10 @@ public:
 private:
     bool check_local_suc_conditions(const Percept &p);
     bool check_local_ex_conditions(const Percept &p);
+
+private:
+    bool m_finished;
+    std::chrono::high_resolution_clock::time_point m_t_finished;
 };
 
 }

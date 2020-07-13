@@ -313,7 +313,7 @@ SystemParameters::SystemParameters(){
     desk_pwd="";
 
     has_robot=false;
-    has_gripper=false;
+    gripper=PandaHandNone;
 }
 
 bool SystemParameters::from_json(const nlohmann::json &parameters){
@@ -333,9 +333,17 @@ bool SystemParameters::from_json(const nlohmann::json &parameters){
         spdlog::error("Could not read has_robot.");
         return false;
     }
-    if(!msrm_utils::read_json_param(parameters,"has_gripper",has_gripper)){
-        spdlog::error("Could not read has_gripper.");
+    std::string gripper_tmp;
+    if(!msrm_utils::read_json_param(parameters,"gripper",gripper_tmp)){
+        spdlog::error("Could not read gripper.");
         return false;
+    }
+    if(gripper_tmp=="Default"){
+        gripper=PandaHandDefault;
+    }else if(gripper_tmp=="Softhand2"){
+        gripper=PandaHandSofthand2;
+    }else{
+        gripper=PandaHandNone;
     }
     return true;
 }
@@ -346,7 +354,17 @@ nlohmann::json SystemParameters::to_json() const{
     json_object["desk_name"]=desk_user;
     json_object["desk_pwd"]=desk_pwd;
     json_object["has_robot"]=has_robot;
-    json_object["has_gripper"]=has_gripper;
+    std::string gripper_tmp;
+    if(gripper==PandaHandNone){
+        gripper_tmp="None";
+    }
+    if(gripper==PandaHandDefault){
+        gripper_tmp="Default";
+    }
+    if(gripper==PandaHandSofthand2){
+        gripper_tmp="Softhand2";
+    }
+    json_object["gripper"]=gripper_tmp;
     return json_object;
 }
 
@@ -733,7 +751,7 @@ bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
 
 void SkillParameters::read_skill_objects(const nlohmann::json &p){
     for(const auto& o : p.items()){
-        spdlog::debug("SKILLPARAMETERS:READ_SKILL_OBJECTS: o.key: " + o.key());
+        spdlog::debug("SKILLPARAMETERS:READ_SKILL_OBJECTS: o.key: " + o.key() + ", o.value: "+o.value().dump());
         objects.insert(std::make_pair(o.key(),o.value()));
     }
 }

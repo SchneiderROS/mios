@@ -8,6 +8,8 @@
 
 namespace mios {
 
+enum PandaHand{PandaHandDefault,PandaHandSofthand2,PandaHandNone};
+
 class Object;
 
 class IParameters{
@@ -108,7 +110,7 @@ public:
     std::string desk_pwd;
 
     bool has_robot;
-    bool has_gripper;
+    PandaHand gripper;
 };
 
 class SafetyParameters : public IParameters{
