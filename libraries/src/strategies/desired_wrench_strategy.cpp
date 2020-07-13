@@ -2,11 +2,11 @@
 namespace mios{
 
 DesiredWrenchStrategy::DesiredWrenchStrategy():PrimitiveStrategy({CommandPatternDesiredWrench}){
-
+    m_TF_F_d.setZero();
 }
 
 void DesiredWrenchStrategy::initialize(const Percept& p_0){
-    m_TF_F_d.setZero();
+
 }
 
 void DesiredWrenchStrategy::get_next_command(Actuator& cmd, const Percept& p_0){

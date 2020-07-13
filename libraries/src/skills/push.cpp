@@ -50,7 +50,7 @@ void Push::evaluate(){
 
 bool Push::check_local_suc_conditions(const Percept &p){
     std::shared_ptr<SkillParametersPush> skill_params = get_parameters<SkillParametersPush>();
-    if(std::chrono::duration_cast<std::chrono::seconds>(p.time-m_memory->get_live_context()->t_skill).count()>skill_params->duration){
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_memory->get_live_context()->t_skill).count()>=skill_params->duration*1000){
         return true;
     }
     bool reached_distance=true;

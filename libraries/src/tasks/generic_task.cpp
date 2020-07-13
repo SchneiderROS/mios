@@ -9,6 +9,8 @@
 #include "skills/hold_pose.hpp"
 #include "skills/motions_generic_wiggle.hpp"
 #include "skills/telepresence.hpp"
+#include "skills/push.hpp"
+#include "skills/tip.hpp"
 
 namespace mios {
 
@@ -60,6 +62,12 @@ void GenericTask::execute_any_skill(unsigned index){
         break;
     case msrm_utils::str_to_int("Telepresence"):
         execute_skill<Telepresence,SkillParametersTelepresence>(name);
+        break;
+    case msrm_utils::str_to_int("Push"):
+        execute_skill<Push,SkillParametersPush>(name);
+        break;
+    case msrm_utils::str_to_int("Tip"):
+        execute_skill<Tip,SkillParametersTip>(name);
         break;
     default:
         throw TaskException("Skill with type " + type + " not known to GenericTask");

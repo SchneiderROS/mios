@@ -3,11 +3,10 @@
 namespace mios {
 
 FFStrategy::FFStrategy():PrimitiveStrategy({CommandPatternCartesianFFWrench}){
-
+    m_TF_F_ff.setZero();
 }
 
 void FFStrategy::initialize(const Percept &p_0){
-    m_TF_F_ff.setZero();
 }
 
 void FFStrategy::get_next_command(Actuator &cmd, const Percept &p){
