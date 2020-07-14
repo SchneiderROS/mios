@@ -24,7 +24,7 @@ public:
         /**
      * End effector pose in task frame (TF).
      */
-        Eigen::Matrix<double,4,4> TF_T_EE;
+        Eigen::Matrix<double,4,4> T_T_EE;
 
         /**
      * Link-side joint pose.

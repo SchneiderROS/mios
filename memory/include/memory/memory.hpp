@@ -43,7 +43,7 @@ public:
     const Parameters *read_parameters() const;
     LiveContext* get_live_context();
     bool get_task_data(const std::string uuid,TaskData& data) const;
-    const Object *get_object(const std::string& name) const;
+    Object *get_object(const std::string& name);
     const Event* get_event(const std::string& name);
 
 private:

@@ -10,7 +10,7 @@ Actuator::Actuator(const Percept &p_0, const ControlParameters& controller){
 }
 
 void Actuator::initialize(const Percept &p_0, const ControlParameters& controller, Eigen::Matrix<double, 3, 3> O_R_T_0){
-    TF_T_EE_d=p_0.proprioception.TF_T_EE;
+    TF_T_EE_d=p_0.proprioception.T_T_EE;
     TF_dX_d.setZero();
     q_d_nullspace=p_0.proprioception.q;
     TF_F_d.setZero();
@@ -372,7 +372,7 @@ bool Actuator::is_settled(const LimitParameters &parameters) const{
 }
 
 void Actuator::set_zero(const Percept &p_0){
-    TF_T_EE_d=p_0.proprioception.TF_T_EE;
+    TF_T_EE_d=p_0.proprioception.T_T_EE;
     TF_dX_d.setZero();
     TF_F_d.setZero();
     TF_F_ff.setZero();

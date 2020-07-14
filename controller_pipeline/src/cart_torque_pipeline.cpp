@@ -115,12 +115,12 @@ void CartTorqueControllerPipeline::input_cntr_aic(const Percept &p){
     m_cntr_aic.u.dtheta=p.proprioception.dtheta;
     m_cntr_aic.u.TF_F_ext=p.proprioception.TF_F_ext_K;
     m_cntr_aic.u.TF_F_ff<<0,0,0,0,0,0;
-    m_cntr_aic.u.TF_T_EE=p.proprioception.TF_T_EE;
-    m_cntr_aic.u.TF_T_EE_d=p.proprioception.TF_T_EE;
+    m_cntr_aic.u.TF_T_EE=p.proprioception.T_T_EE;
+    m_cntr_aic.u.TF_T_EE_d=p.proprioception.T_T_EE;
     m_cntr_aic.u.O_R_T=p.controller.O_R_T;
 
     m_conv_vel2pose.u.TF_dX_d<<0,0,0,0,0,0;
-    m_conv_vel2pose.u.TF_T_EE=p.proprioception.TF_T_EE;
+    m_conv_vel2pose.u.TF_T_EE=p.proprioception.T_T_EE;
 }
 
 void CartTorqueControllerPipeline::initialize_cntr_force(const Percept &p, Memory *memory){

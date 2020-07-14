@@ -41,7 +41,7 @@ std::shared_ptr<ManipulationPrimitive> Tip::get_initial_mp(const Percept& p){
     Eigen::Matrix<double,2,1> ddX_max;
     ddX_max<<skill_params->acceleration,0;
     mp->get_strategy<TwistStrategy>("twist")->set_TF_dX_d(TF_dX_d,ddX_max);
-    m_TF_T_EE_0=p.proprioception.TF_T_EE;
+    m_TF_T_EE_0=p.proprioception.T_T_EE;
     return mp;
 }
 

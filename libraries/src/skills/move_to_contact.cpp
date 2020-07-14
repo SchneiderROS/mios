@@ -37,7 +37,7 @@ std::shared_ptr<ManipulationPrimitive> MoveToContact::get_initial_mp(const Perce
     Eigen::Matrix<double,4,4> T_g;
     if(this->get_object("goal_pose")->name!="NullObject"){
         T_g=msrm_utils::rotate_matrix(get_object("goal_pose")->O_T_OB,m_memory->read_parameters()->frames.O_R_T.transpose());
-        Eigen::Matrix<double,3,1> goal_dir=T_g.block<3,1>(0,3)-p_0.proprioception.TF_T_EE.block<3,1>(0,3);
+        Eigen::Matrix<double,3,1> goal_dir=T_g.block<3,1>(0,3)-p_0.proprioception.T_T_EE.block<3,1>(0,3);
         goal_dir.normalize();
         T_g.block<3,1>(0,3)+=goal_dir*0.05;
     }else{

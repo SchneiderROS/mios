@@ -63,8 +63,8 @@ std::shared_ptr<ManipulationPrimitive> Extraction::create_wiggle_mp(const Percep
 }
 
 bool Extraction::check_local_suc_conditions(const Percept &p){
-    bool depth = p.proprioception.TF_T_EE(2,3)>get_object("ExtractFrom")->O_T_OB(2,3)-0.001;
-    bool lateral = (p.proprioception.TF_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()<0.002;
+    bool depth = p.proprioception.T_T_EE(2,3)>get_object("ExtractFrom")->O_T_OB(2,3)-0.001;
+    bool lateral = (p.proprioception.T_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()<0.002;
     return depth && lateral;
 }
 
@@ -78,10 +78,10 @@ bool Extraction::check_local_err_conditions(const Percept &p){
 
 void Extraction::evaluate(){
 
-        double c_err_1=m_memory->read_parameters()->skill->time_max+exp((get_result().p_1.proprioception.TF_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()*100)-1;
+        double c_err_1=m_memory->read_parameters()->skill->time_max+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()*100)-1;
         double c_suc_1=std::chrono::duration_cast<std::chrono::seconds>(get_result().p_1.time-get_result().p_0.time).count();
 
-        double c_err_2=m_memory->read_parameters()->user.F_ext_max(0)+exp((get_result().p_1.proprioception.TF_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()*100)-1;
+        double c_err_2=m_memory->read_parameters()->user.F_ext_max(0)+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()*100)-1;
         double c_suc_2=0;
         if(m_cf1_cnt==0){
             c_suc_2=get_result().cost_err;

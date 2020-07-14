@@ -310,7 +310,7 @@ void Telepresence::auxiliaries(const Percept &p){
             if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
                 for(unsigned i=0;i<4;i++){
                     for(unsigned j=0;j<4;j++){
-                        payload.emplace_back(p.proprioception.TF_T_EE(j,i));
+                        payload.emplace_back(p.proprioception.T_T_EE(j,i));
                     }
                 }
             }

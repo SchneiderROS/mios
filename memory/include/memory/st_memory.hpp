@@ -41,7 +41,7 @@ public:
     const Parameters* read_parameters() const;
     const TaskData* get_task_data() const;
     std::optional<nlohmann::json> get_live_parameter(const std::string& parameter);
-    const Object* get_object(const std::string& name) const;
+    Object *get_object(const std::string& name);
     const Event* get_event(const std::string& name) const;
 
 private:

@@ -128,6 +128,7 @@ public:
      * @throw SkillException if o is not a skill object.
      */
     const Object *get_object(const std::string& o) const;
+    Object* update_object(const std::string& o);
 
 
     /**
@@ -251,6 +252,9 @@ protected:
         return std::static_pointer_cast<T>(m_memory->read_parameters()->skill);
     }
 
+    virtual void update_internal_models(const Percept &p);
+    virtual void update_policies(const Percept& p);
+
 private:
     std::shared_ptr<ManipulationPrimitive> m_active_mp;
     SkillResult m_result;
@@ -263,7 +267,7 @@ private:
     std::unordered_map<std::string,std::shared_ptr<ManipulationPrimitive> > m_mp_graph;
     std::string m_init_mp;
 
-    std::unordered_map<std::string,const Object*> m_grounded_objects;
+    std::unordered_map<std::string,Object*> m_grounded_objects;
     const std::set<ControlMode> m_control_modes;
     std::chrono::high_resolution_clock::time_point m_time_start;
 

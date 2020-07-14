@@ -10,7 +10,7 @@ RemoteCartPoseStrategy::RemoteCartPoseStrategy():PrimitiveStrategy({CommandPatte
 }
 
 void RemoteCartPoseStrategy::initialize(const Percept &p_0){
-    m_O_T_EE_d_in[0]=msrm_utils::convert_to_array<double,4,4>(p_0.proprioception.TF_T_EE);
+    m_O_T_EE_d_in[0]=msrm_utils::convert_to_array<double,4,4>(p_0.proprioception.T_T_EE);
 }
 
 void RemoteCartPoseStrategy::get_next_command(Actuator &cmd, const Percept &p){

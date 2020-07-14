@@ -58,6 +58,13 @@ const Object* Skill::get_object(const std::string &o) const{
     return m_grounded_objects.at(o);
 }
 
+Object* Skill::update_object(const std::string &o){
+    if(m_grounded_objects.find(o)==m_grounded_objects.end()){
+        throw SkillException("Skill "+ this->get_id() +" of type "+m_type+" has no groundables with name.");
+    }
+    return m_grounded_objects.at(o);
+}
+
 bool Skill::initialize(const Percept &p){
     if(!msrm_utils::is_orthonormal(m_memory->read_parameters()->frames.O_R_T)){
         spdlog::error("O_R_T of skill "+m_id+" is invalid. Aborting execution.");
@@ -161,6 +168,8 @@ Actuator* Skill::cycle(const Percept &p){
 
     if(m_life_cycle==SkillLifeCycle::slExecution){
         auxiliaries(p);
+        update_internal_models(p);
+        update_policies(p);
         return m_active_mp->step(p);
     }
     spdlog::critical("Skill life cycle is undefined");
@@ -293,7 +302,7 @@ bool Skill::ground_objects(){
             spdlog::error("Skill " + m_id + " already has a grounded object of type " + m.first + ".");
             return false;
         }
-        const Object* o = m_memory->get_object(m.second);
+        Object* o = m_memory->get_object(m.second);
         if(o==nullptr){
             spdlog::error("No object with name "+m.second+" exists.");
             return false;
@@ -356,6 +365,14 @@ void Skill::write_costs(double cost_suc, double cost_err){
 }
 
 void Skill::evaluate(){
+
+}
+
+void Skill::update_internal_models(const Percept& p){
+
+}
+
+void Skill::update_policies(const Percept &p){
 
 }
 

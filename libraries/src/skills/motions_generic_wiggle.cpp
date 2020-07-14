@@ -30,7 +30,7 @@ std::shared_ptr<ManipulationPrimitive> GenericWiggleMotion::get_initial_mp(const
 Eigen::Matrix<double,3,3> GenericWiggleMotion::get_O_R_T_0(const Percept &p) const{
     std::shared_ptr<SkillParametersGenericWiggleMotion> c = read_parameters<SkillParametersGenericWiggleMotion>();
     if(c->use_EE){
-        return p.proprioception.TF_T_EE.block<3,3>(0,0);
+        return p.proprioception.T_T_EE.block<3,3>(0,0);
     }else{
         return Eigen::Matrix<double,3,3>::Identity();
     }

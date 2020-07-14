@@ -33,7 +33,7 @@ Eigen::Matrix<double,3,3> Push::get_O_R_T_0(const Percept &p) const{
 }
 
 std::shared_ptr<ManipulationPrimitive> Push::get_initial_mp(const Percept& p){
-    m_TF_T_EE_0=p.proprioception.TF_T_EE;
+    m_TF_T_EE_0=p.proprioception.T_T_EE;
 
     std::shared_ptr<SkillParametersPush> skill_params = get_parameters<SkillParametersPush>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("push",p);
@@ -55,7 +55,7 @@ bool Push::check_local_suc_conditions(const Percept &p){
     }
     bool reached_distance=true;
     for(unsigned i=0;i<3;i++){
-        if((p.proprioception.TF_T_EE(i,3)-m_TF_T_EE_0(i,3))*msrm_utils::sgn(skill_params->F_push(i))<skill_params->DX_max(i)){
+        if((p.proprioception.T_T_EE(i,3)-m_TF_T_EE_0(i,3))*msrm_utils::sgn(skill_params->F_push(i))<skill_params->DX_max(i)){
             reached_distance=false;
         }
     }

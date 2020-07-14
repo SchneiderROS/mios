@@ -90,7 +90,7 @@ bool Memory::update_object(const std::string &name, const nlohmann::json &descri
     return m_st_memory.update_object(name, description);
 }
 
-const Object* Memory::get_object(const std::string& name) const{
+Object* Memory::get_object(const std::string& name){
     return m_st_memory.get_object(name);
 }
 

@@ -17,18 +17,18 @@ void VelocityWallsSafetyModule::step(const Percept &p, Actuator &cmd){
     if(m_active){
         double dx_scale=0;
         for(unsigned i=0;i<3;i++){
-            double diff_lower = p.proprioception.TF_T_EE(i,3)-m_walls(2*i);
+            double diff_lower = p.proprioception.T_T_EE(i,3)-m_walls(2*i);
             dx_scale=diff_lower/m_brake_distance;
             if(dx_scale>1)dx_scale=1;
             if(dx_scale<0)dx_scale=0;
-            if(p.proprioception.TF_T_EE(i,3)<=m_walls(2*i) && p.proprioception.TF_dX_EE(i)<0){
+            if(p.proprioception.T_T_EE(i,3)<=m_walls(2*i) && p.proprioception.TF_dX_EE(i)<0){
                 cmd.TF_dX_d(i)*=dx_scale;
             }
-            double diff_upper = m_walls(2*i+1)-p.proprioception.TF_T_EE(i,3);
+            double diff_upper = m_walls(2*i+1)-p.proprioception.T_T_EE(i,3);
             dx_scale=diff_upper/m_brake_distance;
             if(dx_scale>1)dx_scale=1;
             if(dx_scale<0)dx_scale=0;
-            if(p.proprioception.TF_T_EE(i,3)>=m_walls(2*i+1) && p.proprioception.TF_dX_EE(i)>0){
+            if(p.proprioception.T_T_EE(i,3)>=m_walls(2*i+1) && p.proprioception.TF_dX_EE(i)>0){
                 cmd.TF_dX_d(i)*=dx_scale;
             }
         }

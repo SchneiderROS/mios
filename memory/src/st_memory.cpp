@@ -219,7 +219,7 @@ void STMemory::internal_update(const Percept &p){
     m_environment.at(m_live_context.grasped_object->name).O_T_OB=p.proprioception.O_T_EE*msrm_utils::invert_transformation_matrix(m_live_context.grasped_object->OB_T_gp);
 }
 
-const Object* STMemory::get_object(const std::string &name) const{
+Object* STMemory::get_object(const std::string &name){
     spdlog::debug("STMemory: get_object("+name+")");
     if(m_environment.find(name)==m_environment.end()){
         return &m_environment.at("NullObject");
