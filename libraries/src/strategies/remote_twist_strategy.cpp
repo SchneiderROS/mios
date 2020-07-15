@@ -5,7 +5,8 @@
 namespace mios {
 
 RemoteTwistStrategy::RemoteTwistStrategy():PrimitiveStrategy({CommandPatternCartesianTwist}){
-
+    m_TF_dX_d_in[0]={0,0,0,0,0,0};
+    m_static_frame=true;
 }
 
 void RemoteTwistStrategy::initialize(const Percept &p_0){
@@ -14,6 +15,9 @@ void RemoteTwistStrategy::initialize(const Percept &p_0){
 void RemoteTwistStrategy::get_next_command(Actuator &cmd, const Percept &p){
     for(unsigned i=0;i<6;i++){
         cmd.TF_dX_d(i)=m_TF_dX_d_in[0][i];
+    }
+    if(!m_static_frame){
+        cmd.TF_dX_d<<p.controller.O_R_T.transpose()*p.proprioception.O_T_EE.block<3,3>(0,0)*cmd.TF_dX_d.block<3,1>(0,0),p.controller.O_R_T.transpose()*p.proprioception.O_T_EE.block<3,3>(0,0)*cmd.TF_dX_d.block<3,1>(3,0);
     }
 }
 
@@ -31,6 +35,10 @@ bool RemoteTwistStrategy::connect(Portal *portal, const std::string name, unsign
         return false;
     }
     return m_receiver->connect();
+}
+
+void RemoteTwistStrategy::set_frame(bool static_frame){
+    m_static_frame=static_frame;
 }
 
 void RemoteTwistStrategy::read_stream(std::vector<double>& data){

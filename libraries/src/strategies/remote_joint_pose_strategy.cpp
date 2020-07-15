@@ -6,7 +6,7 @@
 namespace mios {
 
 RemoteJointPoseStrategy::RemoteJointPoseStrategy():PrimitiveStrategy({CommandPatternJointPose}){
-
+    m_q_d_in[0]={0,0,0,0,0,0,0};
 }
 
 void RemoteJointPoseStrategy::initialize(const Percept &p_0){

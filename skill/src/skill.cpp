@@ -351,8 +351,8 @@ nlohmann::json& Skill::get_custom_results(){
     return m_result.results;
 }
 
-std::set<ControlMode> Skill::get_valid_control_modes(){
-    return m_control_modes;
+const std::set<ControlMode>* Skill::get_valid_control_modes() const{
+    return &m_control_modes;
 }
 
 const std::shared_ptr<ManipulationPrimitive> Skill::get_active_mp() const{

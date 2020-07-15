@@ -27,7 +27,8 @@ bool SkillParametersMoveToPoseCart::from_json(const nlohmann::json &p){
     return true;
 }
 
-MoveToPoseCart::MoveToPoseCart(const std::string &id, Memory *memory, Portal *portal, const Percept &p):Skill("MoveToPoseJoint",{"goal_pose"},id,memory,portal,p,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
+MoveToPoseCart::MoveToPoseCart(const std::string &id, Memory *memory, Portal *portal, const Percept &p):Skill("MoveToPoseJoint",{"goal_pose"},id,memory,portal,p,{ControlMode::mCartTorque,ControlMode::mCartVelocity}),
+m_finished(false){
 }
 
 std::shared_ptr<ManipulationPrimitive> MoveToPoseCart::get_initial_mp(const Percept &p_0){
@@ -66,7 +67,7 @@ bool MoveToPoseCart::check_local_suc_conditions(const Percept &p){
 }
 
 bool MoveToPoseCart::check_local_ex_conditions(const Percept &p){
-    if(std::chrono::duration_cast<std::chrono::seconds>(p.time-m_t_finished).count()>=get_parameters<SkillParametersMoveToPoseCart>()->t_settle){
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_t_finished).count()>=get_parameters<SkillParametersMoveToPoseCart>()->t_settle*1000){
         return true;
     }else{
         return false;
@@ -74,7 +75,7 @@ bool MoveToPoseCart::check_local_ex_conditions(const Percept &p){
 }
 
 void MoveToPoseCart::evaluate(){
-    write_costs(0,std::chrono::duration_cast<std::chrono::seconds>(get_result().p_1.time-get_result().p_0.time).count());
+    write_costs(0,std::chrono::duration_cast<std::chrono::milliseconds>(get_result().p_1.time-get_result().p_0.time).count()/1000.0);
 }
 
 }

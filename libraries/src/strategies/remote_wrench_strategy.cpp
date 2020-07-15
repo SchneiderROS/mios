@@ -5,7 +5,7 @@
 namespace mios {
 
 RemoteWrenchStrategy::RemoteWrenchStrategy():PrimitiveStrategy({CommandPatternCartesianFFWrench}){
-
+    m_TF_F_ff_in[0]={0,0,0,0,0,0};
 }
 
 void RemoteWrenchStrategy::initialize(const Percept &p_0){

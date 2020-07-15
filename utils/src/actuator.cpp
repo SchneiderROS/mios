@@ -387,7 +387,7 @@ void Actuator::set_zero(const Percept &p_0){
     K_theta=p_0.controller.K_theta;
     xi_theta=p_0.controller.xi_theta;
 
-    O_R_T.setIdentity();
+//    O_R_T.setIdentity();
 }
 
 void Actuator::set_stop_factor(double stop_factor){

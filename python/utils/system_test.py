@@ -653,7 +653,7 @@ def test_generic_task(address):
     print(response)
 
 
-def start_skill(address: str, skill: str, parameters: dict, control_mode: int, command_mode: int=0):
+def start_skill(address: str, skill: str, parameters: dict, control: dict):
     response = start_task(address, "GenericTask", parameters={"parameters": {
         "skill_names": ["skill"],
         "skill_types": [skill]
@@ -661,10 +661,7 @@ def start_skill(address: str, skill: str, parameters: dict, control_mode: int, c
         "skills": {
             "skill": {
                 "skill": parameters,
-                "control": {
-                    "control_mode": control_mode,
-                    "command_mode": command_mode
-                }
+                "control": control
             }
         }})
 

@@ -61,6 +61,9 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
             spdlog::error("Missing parameter: joystick.force_thr");
             return false;
         }
+        if(!is_master && !msrm_utils::read_json_param(parameters["joystick"],"static_frame",joystick.static_frame)){
+            joystick.static_frame=true;
+        }
     }
 
     return true;
@@ -68,30 +71,7 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
 
 Telepresence::Telepresence(const std::string &name, Memory *memory, Portal *portal, const Percept &p):Skill("Telepresence",{},name,memory,portal,p,
 {ControlMode::mCartTorque,ControlMode::mJointTorque,ControlMode::mCartVelocity,ControlMode::mJointVelocity}),m_handshake_stage(0){
-    if(read_parameters<Params>()->is_master){
-        if(read_parameters<Params>()->mode==TelepresenceMode::tmJoystick){
-            m_udp_sender = portal->open_udp_outstream("remote_twist_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
-        }
-        if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){
-            m_udp_sender = portal->open_udp_outstream("remote_joint_pose_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
-        }
-        if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
-            m_udp_sender = portal->open_udp_outstream("remote_cart_pose_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
-        }
-    }else{
-        if(read_parameters<Params>()->mode==TelepresenceMode::tmJoystick){
-            m_udp_sender = portal->open_udp_outstream("remote_force_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
-        }
-        if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){
-            m_udp_sender = portal->open_udp_outstream("remote_torque_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
-        }
-        if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
-            m_udp_sender = portal->open_udp_outstream("remote_force_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
-        }
-    }
-    if(!m_udp_sender->connect()){
-        throw SkillException("Could not connect to peer");
-    }
+    m_memory->remove_event("sync_done");
 }
 
 Telepresence::~Telepresence(){
@@ -268,6 +248,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmJoystick){
                     mp->create_strategy<RemoteTwistStrategy>("telepresence",1);
                     mp->get_strategy<RemoteTwistStrategy>("telepresence")->connect(m_portal,"remote_twist_in",get_parameters<Params>()->port_src,256,0,10000,200);
+                    mp->get_strategy<RemoteTwistStrategy>("telepresence")->set_frame(read_parameters<Params>()->joystick.static_frame);
                     m_udp_sender = m_portal->open_udp_outstream("remote_force_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
                 }
                 if(m_udp_sender==nullptr){

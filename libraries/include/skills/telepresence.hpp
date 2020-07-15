@@ -19,6 +19,7 @@ public:
     struct Joystick{
         Eigen::Matrix<double,6,1> amp;
         Eigen::Matrix<double,6,1> force_thr;
+        bool static_frame;
     }joystick;
 };
 

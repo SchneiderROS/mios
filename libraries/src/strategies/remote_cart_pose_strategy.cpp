@@ -6,7 +6,7 @@
 namespace mios {
 
 RemoteCartPoseStrategy::RemoteCartPoseStrategy():PrimitiveStrategy({CommandPatternCartesianPose}){
-
+    m_O_T_EE_d_in[0]={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 }
 
 void RemoteCartPoseStrategy::initialize(const Percept &p_0){

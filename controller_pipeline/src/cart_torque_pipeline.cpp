@@ -45,7 +45,7 @@ franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const A
 
     m_cntr_mux.u.tau_J_d=tau_J_d_total;
     m_cntr_mux.step();
-    m_panda_cmd.tau_J={tau_J_d_total(0),tau_J_d_total(1),tau_J_d_total(2),tau_J_d_total(3),tau_J_d_total(4),tau_J_d_total(5),tau_J_d_total(6)};
+    m_panda_cmd.tau_J={m_cntr_mux.y.tau_J_d_checked(0),m_cntr_mux.y.tau_J_d_checked(1),m_cntr_mux.y.tau_J_d_checked(2),m_cntr_mux.y.tau_J_d_checked(3),m_cntr_mux.y.tau_J_d_checked(4),m_cntr_mux.y.tau_J_d_checked(5),m_cntr_mux.y.tau_J_d_checked(6)};
 
     return &m_panda_cmd;
 }

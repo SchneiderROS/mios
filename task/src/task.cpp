@@ -152,7 +152,13 @@ bool Task::load_context(const nlohmann::json &user_context){
                 std::string id_skill=s.key();
                 for(auto& cat : user_context["skills"][id_skill].items()){
                     for(auto& p: user_context["skills"][id_skill][cat.key()].items()){
-                        m_context["skills"][id_skill][cat.key()][p.key()]=p.value();
+                        if(p.value().is_object()){
+                            for(auto& p_sub: user_context["skills"][id_skill][cat.key()][p.key()].items()){
+                                m_context["skills"][id_skill][cat.key()][p.key()][p_sub.key()]=p_sub.value();
+                            }
+                        }else{
+                            m_context["skills"][id_skill][cat.key()][p.key()]=p.value();
+                        }
                     }
                 }
 

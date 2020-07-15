@@ -148,7 +148,7 @@ public:
     void write_custom_results(nlohmann::json results);
     nlohmann::json& get_custom_results();
 
-    std::set<ControlMode> get_valid_control_modes();
+    const std::set<ControlMode>* get_valid_control_modes() const;
 protected:
 
     const std::shared_ptr<ManipulationPrimitive> get_active_mp() const;

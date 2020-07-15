@@ -5,7 +5,7 @@
 namespace mios {
 
 RemoteTorqueStrategy::RemoteTorqueStrategy():PrimitiveStrategy({CommandPatternJointFFTorque}){
-
+    m_tau_in[0]={0,0,0,0,0,0,0};
 }
 
 void RemoteTorqueStrategy::initialize(const Percept &p_0){
