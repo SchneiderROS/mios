@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(DIRECTORY srv
   FILES
   StartTask.srv
+  StopTask.srv
+  RemoveTask.srv
+  WaitForTask.srv
 )
 
 generate_messages()

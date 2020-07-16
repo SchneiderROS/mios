@@ -35,6 +35,5 @@ ldd mios | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' ${ROOT}/dep
 cd ${ROOT}
 
 docker build -t mios -f docker/core/Dockerfile .
-docker tag mios:latest tueirsi-pc-020.local:5000/mios
 
 rm -r ${ROOT}/dependencies

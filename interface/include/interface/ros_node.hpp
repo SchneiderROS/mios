@@ -2,6 +2,9 @@
 
 #include <ros/ros.h>
 #include "mios_msg/StartTask.h"
+#include "mios_msg/StopTask.h"
+#include "mios_msg/RemoveTask.h"
+#include "mios_msg/WaitForTask.h"
 
 namespace mios{
 
@@ -21,6 +24,9 @@ public:
 private:
 
     bool start_task(mios_msg::StartTask::Request& request,mios_msg::StartTask::Response& response);
+    bool stop_task(mios_msg::StopTask::Request& request,mios_msg::StopTask::Response& response);
+    bool remove_task(mios_msg::RemoveTask::Request& request,mios_msg::RemoveTask::Response& response);
+    bool wait_for_task(mios_msg::WaitForTask::Request& request,mios_msg::WaitForTask::Response& response);
 
 private:
     ros::NodeHandle m_node;

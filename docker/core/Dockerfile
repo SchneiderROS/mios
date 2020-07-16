@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ros:melodic-ros-base
 
 COPY mios_package/ /mios/
 COPY dependencies/ /dependencies/
@@ -6,5 +6,5 @@ COPY dependencies/ /dependencies/
 EXPOSE 12000 12001 12002 8888 8889
 
 WORKDIR mios/bin
-CMD ["./_mios.sh"]
+CMD ["./mios.sh"]
 #CMD tail -f /dev/null

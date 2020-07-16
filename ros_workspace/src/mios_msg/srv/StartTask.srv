@@ -2,4 +2,6 @@ string task
 string parameters
 bool queue
 ---
-string result
+bool result
+string error_message
+string task_uuid
