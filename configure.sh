@@ -60,7 +60,7 @@ then
 git clone https://gitlab.com/eidheim/Simple-WebSocket-Server.git
 fi
 cd Simple-WebSocket-Server
-git checkout v2.0.0
+git checkout v2.0.1
 mkdir -p build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=${ROOT} ..

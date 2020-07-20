@@ -8,7 +8,6 @@
 #include <unordered_set>
 
 #include "memory/memory.hpp"
-#include "interface/parameter_server.hpp"
 #include "panda/panda_body.hpp"
 #include "controller_pipeline/controller_pipeline.hpp"
 #include "safety_stage_1/safety_module_stage_1.hpp"

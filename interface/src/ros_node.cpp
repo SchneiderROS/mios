@@ -83,4 +83,81 @@ bool RosNode::is_busy(mios_msg::IsBusy::Request &request, mios_msg::IsBusy::Resp
     return true;
 }
 
+bool RosNode::post_event(mios_msg::PostEvent::Request &request, mios_msg::PostEvent::Response &response){
+    m_memory->post_event(request.name,request.content);
+    response.result=true;
+    return true;
+}
+
+bool RosNode::get_event(mios_msg::GetEvent::Request &request, mios_msg::GetEvent::Response &response){
+    response.content=m_memory->get_event(request.name)->get_content().dump();
+    return true;
+}
+
+bool RosNode::set_grasped_object(mios_msg::SetGraspedObject::Request &request, mios_msg::SetGraspedObject::Response &response){
+    if(!m_core->set_grasped_object(request.object)){
+        response.error_message="Could not set grasped object.";
+        response.result=false;
+    }else{
+        response.error_message="";
+        response.result=true;
+    }
+    return true;
+}
+
+bool RosNode::grasp_object(mios_msg::GraspObject::Request &request, mios_msg::GraspObject::Response &response){
+    if(!m_core->grasp_object(request.object,request.speed)){
+        response.error_message="Grasping has failed.";
+        response.result=false;
+    }else{
+        response.error_message="";
+        response.result=true;
+    }
+    return true;
+}
+
+bool RosNode::grasp(mios_msg::Grasp::Request &request, mios_msg::Grasp::Response &response){
+    if(!m_core->grasp(request.width,request.speed,request.force,request.epsilon_inner,request.epsilon_outer)){
+        response.error_message="Grasping has failed.";
+        response.result=false;
+    }else{
+        response.error_message="";
+        response.result=true;
+    }
+    return true;
+}
+
+bool RosNode::release_object(mios_msg::ReleaseObject::Request &request, mios_msg::ReleaseObject::Response &response){
+    if(!m_core->release_object(request.speed)){
+        response.error_message="Releasing has failed.";
+        response.result=false;
+    }else{
+        response.error_message="";
+        response.result=true;
+    }
+    return true;
+}
+
+bool RosNode::move_gripper(mios_msg::MoveGripper::Request &request, mios_msg::MoveGripper::Response &response){
+    if(!m_core->move_gripper(request.width,request.speed)){
+        response.error_message="Could not move gripper.";
+        response.result=false;
+    }else{
+        response.error_message="";
+        response.result=true;
+    }
+    return true;
+}
+
+bool RosNode::home_gripper(mios_msg::HomeGripper::Request &request, mios_msg::HomeGripper::Response &response){
+    if(!m_core->home_gripper()){
+        response.error_message="Homing has failed.";
+        response.result=false;
+    }else{
+        response.error_message="";
+        response.result=true;
+    }
+    return true;
+}
+
 }
