@@ -2,3 +2,4 @@ string task
 ---
 bool result
 string error_message
+string context

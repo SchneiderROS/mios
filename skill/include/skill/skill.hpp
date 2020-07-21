@@ -137,6 +137,8 @@ public:
      * @param TF Determines whether the pose should be given in task frame or base frame.
      * @return Object pose.
      */
+    Eigen::Matrix<double,4,4> get_object_pose_O(const std::string& object_name) const;
+    Eigen::Matrix<double,4,4> get_object_pose_T(const std::string& object_name) const;
     Eigen::Matrix<double,4,4> get_object_grasp_pose_T(const std::string& object_name) const;
     Eigen::Matrix<double,4,4> get_object_grasp_pose_O(const std::string& object_name) const;
 

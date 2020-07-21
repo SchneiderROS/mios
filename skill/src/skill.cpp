@@ -35,11 +35,27 @@ std::shared_ptr<ManipulationPrimitive> Skill::create_mp(const std::string &name,
     return std::make_shared<ManipulationPrimitive>(name,p,m_memory);
 }
 
+Eigen::Matrix<double,4,4> Skill::get_object_pose_O(const std::string &object_name) const{
+    if(m_grounded_objects.find(object_name)==m_grounded_objects.end()){
+        throw SkillException("No object of type "+object_name+" in skill "+ get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
+    }
+    const Object* object=m_grounded_objects.at(object_name);
+    return object->O_T_OB;
+}
+
+Eigen::Matrix<double,4,4> Skill::get_object_pose_T(const std::string &object_name) const{
+    if(m_grounded_objects.find(object_name)==m_grounded_objects.end()){
+        throw SkillException("No object of type "+object_name+" in skill "+ get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
+    }
+    const Object* object=m_grounded_objects.at(object_name);
+    return msrm_utils::rotate_matrix(object->O_T_OB,m_memory->read_parameters()->frames.O_R_T.transpose());
+}
+
 Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_T(const std::string &object_name) const{
     if(m_grounded_objects.find(object_name)==m_grounded_objects.end()){
         throw SkillException("No object of type "+object_name+" in skill "+ get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
     }
-    const Object* object=m_memory->get_object(object_name);
+    const Object* object=m_grounded_objects.at(object_name);
     return msrm_utils::rotate_matrix(object->O_T_OB*object->OB_T_gp,m_memory->read_parameters()->frames.O_R_T.transpose());
 }
 
@@ -47,7 +63,7 @@ Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_O(const std::string &obje
     if(m_grounded_objects.find(object_name)==m_grounded_objects.end()){
         throw SkillException("No object of type "+object_name+" in skill "+ get_id() +" of type "+m_type+" has been assigned. Check the task description or assign it manually in the task implementation.");
     }
-    const Object* object=m_memory->get_object(object_name);
+    const Object* object=m_grounded_objects.at(object_name);
     return object->O_T_OB*object->OB_T_gp;
 }
 

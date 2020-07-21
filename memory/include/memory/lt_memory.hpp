@@ -33,7 +33,7 @@ public:
 
     void store_task_data(const std::string& uuid, const std::string& task_id, const nlohmann::json& context, const TaskResult& result);
 
-    bool load_environment(std::unordered_map<std::string,Object>& environment);
+    bool load_environment(std::map<std::string, Object> &environment);
     bool upload_environment_element(const Object &element);
 
     bool update_database();

@@ -50,7 +50,7 @@ private:
 
 private:
     std::mutex m_mtx_live_context;
-    std::unordered_map<std::string,Object> m_environment;
+    std::map<std::string,Object> m_environment;
     std::unordered_map<std::string,Event> m_events;
     LiveContext m_live_context;
     Parameters m_parameters;

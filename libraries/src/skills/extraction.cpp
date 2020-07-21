@@ -5,14 +5,38 @@
 namespace mios {
 
 bool SkillParametersExtraction::from_json(const nlohmann::json &parameters){
-    msrm_utils::read_json_param<double,2,1>(parameters,"traj_speed",traj_speed);
-    msrm_utils::read_json_param(parameters,"F_limit",F_limit);
-    msrm_utils::read_json_param<double,6,1>(parameters,"search_a",search_a);
-    msrm_utils::read_json_param<double,6,1>(parameters,"search_f",search_f);
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"traj_speed",traj_speed)){
+        spdlog::error("Parameter traj_speed could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"traj_acc",traj_acc)){
+        spdlog::error("Parameter traj_acc could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"F_limit",F_limit)){
+        spdlog::error("Parameter F_limit could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"stuck_t_thr",stuck_t_thr)){
+        spdlog::error("Parameter stuck_t_thr could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"stuck_dx_thr",stuck_dx_thr)){
+        spdlog::error("Parameter stuck_dx_thr could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"search_a",search_a)){
+        spdlog::error("Parameter search_a could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"search_f",search_f)){
+        spdlog::error("Parameter search_f could not be loaded but is mandatory.");
+        return false;
+    }
     return true;
 }
 
-Extraction::Extraction(const std::string &name, Memory *memory, Portal* portal,const Percept &p):Skill("Extraction",{"Extractable,ExtractFrom"},name,memory,portal,p,{ControlMode::mCartTorque}){
+Extraction::Extraction(const std::string &name, Memory *memory, Portal* portal,const Percept &p):Skill("Extraction",{"Extractable","ExtractFrom","ExtractTo"},name,memory,portal,p,{ControlMode::mCartTorque}){
 
 }
 
@@ -26,20 +50,20 @@ std::shared_ptr<ManipulationPrimitive> Extraction::get_initial_mp(const Percept 
 }
 
 std::optional<std::shared_ptr<ManipulationPrimitive> > Extraction::graph_transition(const Percept &p){
-    if(get_active_mp()->get_name()=="move"){
-        if(!is_stuck(p)){
-            return {};
-        }else{
-            return create_wiggle_mp(p);
-        }
-    }
-    if(get_active_mp()->get_name()=="wiggle"){
-        if(!is_stuck(p)){
-            return create_move_mp(p);
-        }else{
-            return {};
-        }
-    }
+//    if(get_active_mp()->get_name()=="move"){
+//        if(!is_stuck(p)){
+//            return {};
+//        }else{
+//            return create_wiggle_mp(p);
+//        }
+//    }
+//    if(get_active_mp()->get_name()=="wiggle"){
+//        if(!is_stuck(p)){
+//            return create_move_mp(p);
+//        }else{
+//            return {};
+//        }
+//    }
     return {};
 }
 
@@ -48,7 +72,11 @@ std::shared_ptr<ManipulationPrimitive> Extraction::create_move_mp(const Percept 
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("move",p);
     mp->create_strategy<MoveToPoseStrategy>("s_move",1);
     std::shared_ptr<MoveToPoseStrategy> s_move = mp->get_strategy<MoveToPoseStrategy>("s_move");
-    s_move->set_goal(get_object("ExtractFrom")->O_T_OB,skill_params->traj_speed,skill_params->traj_acc);
+    s_move->set_goal(get_object_pose_T("ExtractTo"),skill_params->traj_speed,skill_params->traj_acc);
+
+    Eigen::Matrix<double,2,1> t_scale;
+    t_scale<<1,1;
+    s_move->set_scale(t_scale);
     return mp;
 }
 
@@ -63,9 +91,7 @@ std::shared_ptr<ManipulationPrimitive> Extraction::create_wiggle_mp(const Percep
 }
 
 bool Extraction::check_local_suc_conditions(const Percept &p){
-    bool depth = p.proprioception.T_T_EE(2,3)>get_object("ExtractFrom")->O_T_OB(2,3)-0.001;
-    bool lateral = (p.proprioception.T_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()<0.002;
-    return depth && lateral;
+    return fabs(p.proprioception.T_T_EE.block<3,1>(0,3).norm()-get_object_pose_T("ExtractTo").block<3,1>(0,3).norm())<0.002;
 }
 
 bool Extraction::check_local_ex_conditions(const Percept &p){
@@ -78,18 +104,16 @@ bool Extraction::check_local_err_conditions(const Percept &p){
 
 void Extraction::evaluate(){
 
-        double c_err_1=m_memory->read_parameters()->skill->time_max+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()*100)-1;
+        double c_err_1=m_memory->read_parameters()->skill->time_max+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("ExtractFrom").block<3,1>(0,3)).norm()*100)-1;
         double c_suc_1=std::chrono::duration_cast<std::chrono::seconds>(get_result().p_1.time-get_result().p_0.time).count();
 
-        double c_err_2=m_memory->read_parameters()->user.F_ext_max(0)+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object("ExtractFrom")->O_T_OB.block<3,1>(0,3)).norm()*100)-1;
+        double c_err_2=m_memory->read_parameters()->user.F_ext_max(0)+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("ExtractFrom").block<3,1>(0,3)).norm()*100)-1;
         double c_suc_2=0;
         if(m_cf1_cnt==0){
             c_suc_2=get_result().cost_err;
         }else{
             c_suc_2=m_cf1_sum_force/m_cf1_cnt;
         }
-        msrm_utils::print_critical_error("COST_ERR: " + std::to_string(c_err_1));
-        msrm_utils::print_critical_error("COST_SUC: " + std::to_string(c_suc_1));
         write_costs(m_memory->read_parameters()->skill->w_cost_function[0]*c_suc_1+m_memory->read_parameters()->skill->w_cost_function[1]*c_suc_2,
                 m_memory->read_parameters()->skill->w_cost_function[0]*c_err_1+m_memory->read_parameters()->skill->w_cost_function[1]*c_err_2);
 }
