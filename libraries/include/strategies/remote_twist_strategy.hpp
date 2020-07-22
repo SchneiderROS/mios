@@ -30,6 +30,8 @@ private:
     std::deque<std::array<double,6> > m_TF_dX_d_in;
     std::shared_ptr<msrm_utils::UDPStreamReceiver> m_receiver;
     bool m_static_frame;
+    Portal* m_portal;
+    std::string m_stream_name;
 };
 
 }

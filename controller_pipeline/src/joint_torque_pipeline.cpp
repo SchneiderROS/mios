@@ -17,11 +17,13 @@ franka::Finishable *JointTorqueControllerPipeline::step(const Percept &p, const 
     input_cntr_joint_imp(p);
     input_cntr_mux(p);
 
-    if(cmd.get_command_pattern().find(CommandPatternJointPose)!=cmd.get_command_pattern().end()){
+    if(cmd.get_command_pattern()->find(CommandPatternJointPose)!=cmd.get_command_pattern()->end()){
         m_cntr_joint_imp.u.theta_d=cmd.q_d;
     }
-    m_cntr_joint_imp.u.theta_d+=m_q_d_old+cmd.dq_d*0.001;
-    m_q_d_old+=cmd.dq_d*0.001;
+    if(cmd.get_command_pattern()->find(CommandPatternJointVelocities)!=cmd.get_command_pattern()->end()){
+        m_q_d+=cmd.dq_d*0.001;
+        m_cntr_joint_imp.u.theta_d=m_q_d;
+    }
     m_cntr_joint_imp.u.K_theta=cmd.K_theta;
 
     m_cntr_joint_imp.step();
@@ -55,11 +57,11 @@ void JointTorqueControllerPipeline::terminate(){
 }
 
 void JointTorqueControllerPipeline::context_switch(const Percept &p){
-    m_q_d_old.setZero();
+    m_q_d=p.proprioception.q;
 }
 
 void JointTorqueControllerPipeline::initialize_cntr_joint_imp(const Percept &p, Memory *memory){
-    m_q_d_old.setZero();
+    m_q_d=p.proprioception.q;
     const ControlParameters& p_cntr=memory->read_parameters()->control;
 
     m_cntr_joint_imp.p.enable_ffwd_acc.setZero();

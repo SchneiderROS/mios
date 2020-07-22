@@ -4,7 +4,7 @@
 
 namespace mios {
 
-RemoteTwistStrategy::RemoteTwistStrategy():PrimitiveStrategy({CommandPatternCartesianTwist}){
+RemoteTwistStrategy::RemoteTwistStrategy():PrimitiveStrategy({CommandPatternCartesianTwist}),m_receiver(nullptr),m_portal(nullptr){
     m_TF_dX_d_in[0]={0,0,0,0,0,0};
     m_static_frame=true;
 }
@@ -22,7 +22,12 @@ void RemoteTwistStrategy::get_next_command(Actuator &cmd, const Percept &p){
 }
 
 void RemoteTwistStrategy::terminate(const Percept &p){
-    m_receiver->disconnect();
+    if(m_receiver!=nullptr){
+        m_receiver->disconnect();
+    }
+    if(m_portal!=nullptr){
+        m_portal->close_udp_instream(m_stream_name);
+    }
 }
 
 bool RemoteTwistStrategy::finished(){
@@ -30,7 +35,9 @@ bool RemoteTwistStrategy::finished(){
 }
 
 bool RemoteTwistStrategy::connect(Portal *portal, const std::string name, unsigned port, unsigned buffer_size, unsigned timeout_s, unsigned timeout_us,unsigned max_lost_packets){
-    m_receiver = portal->open_udp_instream(name,port,buffer_size,timeout_s,timeout_us,max_lost_packets,std::bind(&RemoteTwistStrategy::read_stream,this,std::placeholders::_1));
+    m_portal=portal;
+    m_stream_name=name;
+    m_receiver = m_portal->open_udp_instream(m_stream_name,port,buffer_size,timeout_s,timeout_us,max_lost_packets,std::bind(&RemoteTwistStrategy::read_stream,this,std::placeholders::_1));
     if(m_receiver==nullptr){
         return false;
     }

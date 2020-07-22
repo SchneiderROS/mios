@@ -32,7 +32,7 @@ public:
     void set_stop_factor(double stop_factor);
     bool is_new();
     void set_command_pattern(const std::set<CommandPattern>& command_pattern);
-    std::set<CommandPattern> get_command_pattern() const;
+    const std::set<CommandPattern>* get_command_pattern() const;
 
 private:
     void refresh_limiter();

@@ -29,7 +29,7 @@ bool PandaBody::initialize(){
     }
     load_gripper_configuration();
     if(!set_robot_parameters()){
-        return false;
+        spdlog::warn("Could not set robot parameters in current mode.");
     }
     return true;
 }

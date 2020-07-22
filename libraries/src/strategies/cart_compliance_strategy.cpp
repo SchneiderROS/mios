@@ -3,12 +3,11 @@
 namespace mios {
 
 CartComplianceStrategy::CartComplianceStrategy():PrimitiveStrategy({CommandPatternCartesianCompliance}){
-
+    m_K_x.setZero();
+    m_xi_x.setZero();
 }
 
 void CartComplianceStrategy::initialize(const Percept &p_0){
-    m_K_x=p_0.controller.K_x;
-    m_xi_x=p_0.controller.xi_x;
 }
 
 void CartComplianceStrategy::get_next_command(Actuator &cmd, const Percept &p){

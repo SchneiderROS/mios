@@ -136,9 +136,11 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
 
         if(strategy_command_pattern.find(CommandPatternCartesianTwist)!=strategy_command_pattern.end()){
             m_cmd.TF_dX_d+=s.second.cmd.TF_dX_d*s.second.weight;
+            actuator_command_pattern.insert(CommandPatternCartesianTwist);
         }
         if(strategy_command_pattern.find(CommandPatternCartesianFFWrench)!=strategy_command_pattern.end()){
             m_cmd.TF_F_ff+=s.second.cmd.TF_F_ff*s.second.weight;
+            actuator_command_pattern.insert(CommandPatternCartesianFFWrench);
         }
 
         if(strategy_command_pattern.find(CommandPatternCartesianCompliance)!=strategy_command_pattern.end()){
@@ -146,6 +148,7 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
                 m_cmd.K_x.setZero();
                 m_cmd.xi_x.setZero();
                 cart_compliance_set=true;
+                actuator_command_pattern.insert(CommandPatternCartesianCompliance);
             }
             m_cmd.K_x+=s.second.cmd.K_x*s.second.weight;
             m_cmd.xi_x+=s.second.cmd.xi_x*s.second.weight;
@@ -153,15 +156,18 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
 
         if(strategy_command_pattern.find(CommandPatternJointVelocities)!=strategy_command_pattern.end()){
             m_cmd.dq_d+=s.second.cmd.dq_d*s.second.weight;
+            actuator_command_pattern.insert(CommandPatternJointVelocities);
         }
         if(strategy_command_pattern.find(CommandPatternJointFFTorque)!=strategy_command_pattern.end()){
             m_cmd.tau_ff+=s.second.cmd.tau_ff*s.second.weight;
+            actuator_command_pattern.insert(CommandPatternJointFFTorque);
         }
         if(strategy_command_pattern.find(CommandPatternJointCompliance)!=strategy_command_pattern.end()){
             if(!joint_compliance_set){
                 m_cmd.K_theta.setZero();
                 m_cmd.xi_theta.setZero();
                 joint_compliance_set=true;
+                actuator_command_pattern.insert(CommandPatternJointCompliance);
             }
             m_cmd.K_theta+=s.second.cmd.K_theta*s.second.weight;
             m_cmd.xi_theta+=s.second.cmd.xi_theta*s.second.weight;

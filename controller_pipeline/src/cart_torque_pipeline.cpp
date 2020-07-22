@@ -21,12 +21,19 @@ franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const A
     input_cntr_mux(p);
     input_cntr_nullsp(p);
 
-    m_conv_vel2pose.u.TF_dX_d=cmd.TF_dX_d;
-    m_conv_vel2pose.step();
-    m_cntr_aic.u.TF_T_EE_d=m_conv_vel2pose.y.TF_T_EE_d;
+    if(cmd.get_command_pattern()->find(CommandPatternCartesianPose)!=cmd.get_command_pattern()->end()){
+        m_cntr_aic.u.TF_T_EE_d=cmd.TF_T_EE_d;
+    }
+    if(cmd.get_command_pattern()->find(CommandPatternCartesianTwist)!=cmd.get_command_pattern()->end()){
+        m_conv_vel2pose.u.TF_dX_d=cmd.TF_dX_d;
+        m_conv_vel2pose.step();
+        m_cntr_aic.u.TF_T_EE_d=m_conv_vel2pose.y.TF_T_EE_d;
+    }
     m_cntr_aic.u.O_R_T=cmd.O_R_T;
 
     m_cntr_aic.u.K_x=cmd.K_x;
+    m_cntr_aic.u.xi_x=cmd.xi_x;
+    m_cntr_aic.u.TF_F_ff=cmd.TF_F_ff;
     m_cntr_aic.step();
 
     m_cntr_force.u.TF_F_d_K=cmd.TF_F_d;
@@ -75,7 +82,10 @@ void CartTorqueControllerPipeline::terminate(){
 }
 
 void CartTorqueControllerPipeline::context_switch(const Percept &p){
-
+    m_conv_vel2pose.terminate();
+    m_conv_vel2pose.u.TF_dX_d<<0,0,0,0,0,0;
+    m_conv_vel2pose.u.TF_T_EE=m_cntr_aic.u.TF_T_EE_d;
+    m_conv_vel2pose.initialize();
 }
 
 void CartTorqueControllerPipeline::initialize_cntr_aic(const Percept &p,Memory* memory){

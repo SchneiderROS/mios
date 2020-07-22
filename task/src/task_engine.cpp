@@ -27,13 +27,13 @@ std::string TaskEngine::get_active_task_id() const{
 }
 
 void TaskEngine::life_cycle(){
+    bool exceptional_event=false;
+    bool user_stop=false;
+    bool invalid_mode=false;
+    bool guiding=false;
+    bool reflex=false;
+    bool recovery=false;
     while(m_keep_running){
-        bool exceptional_event=false;
-        bool user_stop=false;
-        bool invalid_mode=false;
-        bool guiding=false;
-        bool reflex=false;
-        bool recovery=false;
         if(m_task_life_cycle==TaskLifeCycle::PreChecks){
             if(!m_core->is_ready()){
                 spdlog::warn("Core is not ready, I will attempt to reinitialize...");
@@ -135,6 +135,7 @@ void TaskEngine::life_cycle(){
             }
             if(user_stop && mode==franka::RobotMode::kUserStopped){
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
             }
             m_mtx_task_queue.lock();
             if(m_task_queue.empty()){

@@ -413,8 +413,8 @@ void Actuator::set_command_pattern(const std::set<CommandPattern> &command_patte
     m_command_pattern=command_pattern;
 }
 
-std::set<CommandPattern> Actuator::get_command_pattern() const{
-    return m_command_pattern;
+const std::set<CommandPattern>* Actuator::get_command_pattern() const{
+    return &m_command_pattern;
 }
 
 }
