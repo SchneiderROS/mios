@@ -17,10 +17,6 @@ bool SkillParametersExtraction::from_json(const nlohmann::json &parameters){
         spdlog::error("Parameter F_limit could not be loaded but is mandatory.");
         return false;
     }
-    if(!msrm_utils::read_json_param(parameters,"stuck_t_thr",stuck_t_thr)){
-        spdlog::error("Parameter stuck_t_thr could not be loaded but is mandatory.");
-        return false;
-    }
     if(!msrm_utils::read_json_param(parameters,"stuck_dx_thr",stuck_dx_thr)){
         spdlog::error("Parameter stuck_dx_thr could not be loaded but is mandatory.");
         return false;
@@ -42,8 +38,9 @@ bool SkillParametersExtraction::from_json(const nlohmann::json &parameters){
     return true;
 }
 
-Extraction::Extraction(const std::string &name, Memory *memory, Portal* portal,const Percept &p):Skill("Extraction",{"Extractable","ExtractFrom","ExtractTo"},name,memory,portal,p,{ControlMode::mCartTorque}){
-    m_dx_avg_mem.resize(100);
+Extraction::Extraction(const std::string &name, Memory *memory, Portal* portal,const Percept &p):Skill("Extraction",{"Extractable","ExtractFrom","ExtractTo"},name,memory,portal,p,
+{ControlMode::mCartTorque}),m_is_stuck(false),m_dx_avg_last(0){
+    m_dx_avg_mem.assign(100,0);
 }
 
 
@@ -57,19 +54,19 @@ std::shared_ptr<ManipulationPrimitive> Extraction::get_initial_mp(const Percept 
 
 std::optional<std::shared_ptr<ManipulationPrimitive> > Extraction::graph_transition(const Percept &p){
     if(get_active_mp()->get_name()=="move"){
-        if(!is_stuck(p) || std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_memory->get_live_context()->t_skill).count()<2000){
+        if(!is_stuck(p)){
             return {};
         }else{
             return create_wiggle_mp(p);
         }
     }
-//    if(get_active_mp()->get_name()=="wiggle"){
-//        if(!is_stuck(p)){
-//            return create_move_mp(p);
-//        }else{
-//            return {};
-//        }
-//    }
+    if(get_active_mp()->get_name()=="wiggle"){
+        if(!is_stuck(p)){
+            return create_move_mp(p);
+        }else{
+            return {};
+        }
+    }
     return {};
 }
 
@@ -139,9 +136,6 @@ void Extraction::auxiliaries(const Percept &p){
 }
 
 bool Extraction::is_stuck(const Percept &p){
-//    if(m_dx_avg_mem.size()==0 || std::chrono::duration_cast<std::chrono::seconds>(p.time-m_memory->get_live_context()->t_skill).count()<get_parameters<SkillParametersExtraction>()->stuck_t_thr){
-//        return false;
-//    }
     m_dx_avg_mem[m_dx_avg_last++]=p.proprioception.TF_dX_EE.block<3,1>(0,0).norm();
     if(m_dx_avg_last==m_dx_avg_mem.size()){
         m_dx_avg_last=0;

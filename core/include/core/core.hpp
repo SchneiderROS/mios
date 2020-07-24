@@ -6,6 +6,7 @@
 #include <memory>
 #include <chrono>
 #include <unordered_set>
+#include <set>
 
 #include "memory/memory.hpp"
 #include "panda/panda_body.hpp"
@@ -88,8 +89,8 @@ private:
     CommandInterface m_command_interface;
     RosNode m_ros_node;
     std::unique_ptr<ControllerPipeline> m_controller_pipeline;
-    std::unordered_set<std::unique_ptr<SafetyModuleStage1> > m_safety_stage_1;
-    std::unordered_set<std::unique_ptr<SafetyModuleStage2> > m_safety_stage_2;
+    std::set<std::unique_ptr<SafetyModuleStage1> > m_safety_stage_1;
+    std::set<std::unique_ptr<SafetyModuleStage2> > m_safety_stage_2;
 
 private:
     bool m_is_ready;

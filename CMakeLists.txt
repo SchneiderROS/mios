@@ -17,7 +17,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_LINK_DEPENDS_NO_SHARED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wreturn-type -Wno-error=deprecated-declarations -Wno-error=unused-result")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type -Werror=uninitialized -Wno-error=deprecated-declarations -Wno-error=unused-result")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third_party/share/cmake;${CMAKE_SOURCE_DIR}/third_party/lib/cmake)
 

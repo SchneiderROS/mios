@@ -46,6 +46,10 @@ bool Softhand2::initialize(){
         spdlog::error("ERROR: fails while retrieving motor position");
         return false;
     }
+    if(commGetCurrents(&m_settings,m_device_id, currents)<0){
+        spdlog::error("ERROR: fails while retrieving motor currents");
+        return false;
+    }
     spdlog::debug("Softhand : motor position is " +std::to_string(positions[0]));
     spdlog::debug("Softhand: motor current is " + std::to_string(currents[0]));
 

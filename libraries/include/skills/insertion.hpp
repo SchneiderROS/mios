@@ -11,7 +11,6 @@ public:
     Eigen::Matrix<double,2,1> traj_acc;
     Eigen::Matrix<double,6,1> search_a;
     Eigen::Matrix<double,6,1> search_f;
-    double F_limit;
 
     Eigen::Matrix<double,6,1> ROI_x;
     Eigen::Matrix<double,6,1> ROI_phi;
@@ -47,6 +46,7 @@ private:
     unsigned m_dx_avg_last;
     std::vector<double> m_dx_avg_mem;
 
+    bool m_is_stuck;
 };
 
 }

@@ -5,17 +5,46 @@
 namespace mios {
 
 bool SkillParametersInsertion::from_json(const nlohmann::json &parameters){
-    msrm_utils::read_json_param<double,2,1>(parameters,"traj_speed",traj_speed);
-    msrm_utils::read_json_param(parameters,"F_limit",F_limit);
-    msrm_utils::read_json_param<double,6,1>(parameters,"search_a",search_a);
-    msrm_utils::read_json_param<double,6,1>(parameters,"search_f",search_f);
-    msrm_utils::read_json_param<double,6,1>(parameters,"ROI_x",ROI_x);
-    msrm_utils::read_json_param<double,6,1>(parameters,"ROI_phi",ROI_phi);
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"traj_speed",traj_speed)){
+        spdlog::error("Parameter traj_speed could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"traj_acc",traj_acc)){
+        spdlog::error("Parameter traj_acc could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"stuck_dx_thr",stuck_dx_thr)){
+        spdlog::error("Parameter stuck_dx_thr could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"search_a",search_a)){
+        spdlog::error("Parameter search_a could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"search_f",search_f)){
+        spdlog::error("Parameter search_f could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"ROI_x",ROI_x)){
+        spdlog::error("Parameter ROI_x could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"ROI_phi",ROI_phi)){
+        spdlog::error("Parameter ROI_phi could not be loaded but is mandatory.");
+        return false;
+    }
+
+    if(stuck_dx_thr>traj_speed(0) || stuck_dx_thr<0){
+        spdlog::error("stuck_dx_thr cannot be greater than traj_speed[0] or smaller than 0.");
+        return false;
+    }
+
     return true;
 }
 
-Insertion::Insertion(const std::string &name, Memory *memory,Portal* portal, const Percept &p):Skill("Insertion",{"Insertable","InsertInto"},name,memory,portal,p,{ControlMode::mCartTorque}){
-
+Insertion::Insertion(const std::string &name, Memory *memory,Portal* portal, const Percept &p):Skill("Insertion",{"Insertable","InsertInto"},name,memory,portal,p,
+{ControlMode::mCartTorque}),m_is_stuck(false),m_dx_avg_last(0){
+    m_dx_avg_mem.assign(100,0);
 }
 
 
@@ -24,8 +53,6 @@ Eigen::Matrix<double, 3, 3> Insertion::get_O_R_T_0(const Percept &p) const{
 }
 
 std::shared_ptr<ManipulationPrimitive> Insertion::get_initial_mp(const Percept &p_0){
-    m_dx_avg_last=0;
-    m_dx_avg_mem.resize(static_cast<int>(get_parameters<SkillParametersInsertion>()->stuck_t_thr*1000));
     return create_move_mp(p_0);
 }
 
@@ -63,6 +90,13 @@ std::shared_ptr<ManipulationPrimitive> Insertion::create_wiggle_mp(const Percept
     mp->get_strategy<FFWiggleStrategy>("wiggle_x")->set_coefficients(Eigen::Matrix<double,6,1>::Zero(),skill_params->search_a,
                                                                    Eigen::Matrix<double,6,1>::Zero(),skill_params->search_f,
                                                                    Eigen::Matrix<double,6,1>::Zero(),Eigen::Matrix<double,6,1>::Zero());
+    mp->create_strategy<MoveToPoseStrategy>("s_move",1);
+    std::shared_ptr<MoveToPoseStrategy> s_move = mp->get_strategy<MoveToPoseStrategy>("s_move");
+    s_move->set_goal(get_object_pose_T("InsertInto"),skill_params->traj_speed,skill_params->traj_acc);
+
+    Eigen::Matrix<double,2,1> t_scale;
+    t_scale<<1,1;
+    s_move->set_scale(t_scale);
     return mp;
 }
 
@@ -111,19 +145,24 @@ void Insertion::auxiliaries(const Percept &p){
 }
 
 bool Insertion::is_stuck(const Percept &p){
-    if(m_dx_avg_mem.size()==0 || std::chrono::duration_cast<std::chrono::seconds>(p.time-m_memory->get_live_context()->t_skill).count()<get_parameters<SkillParametersInsertion>()->stuck_t_thr){
-        return false;
-    }
     m_dx_avg_mem[m_dx_avg_last++]=p.proprioception.TF_dX_EE.block<3,1>(0,0).norm();
     if(m_dx_avg_last==m_dx_avg_mem.size()){
         m_dx_avg_last=0;
     }
-    m_dx_avg=std::accumulate(m_dx_avg_mem.begin(),m_dx_avg_mem.end(),0)/m_dx_avg_mem.size();
-    if(m_dx_avg<get_parameters<SkillParametersInsertion>()->stuck_dx_thr){
+    m_dx_avg=0;
+    for(unsigned i=0;i<m_dx_avg_mem.size();i++){
+        m_dx_avg+=m_dx_avg_mem[i];
+    }
+    m_dx_avg/=m_dx_avg_mem.size();
+//    m_dx_avg=std::accumulate(m_dx_avg_mem.begin(),m_dx_avg_mem.end(),0)/(double)m_dx_avg_mem.size();
+    if(!m_is_stuck && m_dx_avg<get_parameters<SkillParametersInsertion>()->stuck_dx_thr-get_parameters<SkillParametersInsertion>()->stuck_dx_thr*0.1){
+        m_is_stuck=true;
         return true;
-    }else{
+    }else if(m_is_stuck && m_dx_avg>get_parameters<SkillParametersInsertion>()->stuck_dx_thr+get_parameters<SkillParametersInsertion>()->stuck_dx_thr*0.1){
+        m_is_stuck=false;
         return false;
     }
+    return m_is_stuck;
 }
 
 }

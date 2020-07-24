@@ -87,7 +87,7 @@ bool RosNode::wait_for_task(mios_msg::WaitForTask::Request &request, mios_msg::W
     TaskResult task_result;
     std::tie(response.result,task_result,response.error_message)=m_task_engine->wait_for_task(request.task_uuid);
     nlohmann::json task_result_response;
-    if(result){
+    if(response.result){
         task_result_response["success"]=task_result.success;
         task_result_response["cost_err"]=task_result.cost_err;
         task_result_response["cost_suc"]=task_result.cost_suc;

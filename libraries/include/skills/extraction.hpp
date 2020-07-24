@@ -12,7 +12,6 @@ struct SkillParametersExtraction : public SkillParameters{
     Eigen::Matrix<double,6,1> search_f;
     double F_limit;
 
-    double stuck_t_thr;
     double stuck_dx_thr;
 };
 
