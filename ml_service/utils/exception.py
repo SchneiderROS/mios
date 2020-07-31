@@ -1,0 +1,2 @@
+class ProblemDefinitionError(Exception):
+    pass
