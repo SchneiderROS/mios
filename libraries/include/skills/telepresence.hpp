@@ -15,6 +15,8 @@ public:
     unsigned port_dst;
     unsigned port_src;
     TelepresenceMode mode;
+    bool use_zoh_deadband;
+    double deadband_k;
 
     struct Joystick{
         Eigen::Matrix<double,6,1> amp;
@@ -48,6 +50,7 @@ private:
 
     unsigned m_handshake_stage;
     std::string m_handshake_message_uuid;
+    std::vector<double> m_previous_payload;
 
 };
 

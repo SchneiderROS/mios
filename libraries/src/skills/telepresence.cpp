@@ -33,6 +33,12 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
         spdlog::error("Missing parameter: port_src");
         return false;
     }
+    if(!msrm_utils::read_json_param(parameters,"use_zoh_deadband",use_zoh_deadband)){
+        use_zoh_deadband=false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"deadband_k",deadband_k)){
+        deadband_k=0;
+    }
     std::string telepresence_mode;
     if(!msrm_utils::read_json_param(parameters,"telepresence_mode",telepresence_mode)){
         spdlog::error("Missing parameter: telepresence_mode");
@@ -358,7 +364,24 @@ void Telepresence::auxiliaries(const Percept &p){
                 }
             }
         }
-        m_udp_sender->send(payload);
+        if(read_parameters<Params>()->use_zoh_deadband){
+            std::vector<double> diff(payload.size());
+            double mag_diff=0;
+            double mag_prev=0;
+            for(unsigned i=0;i<payload.size();i++){
+                diff[i]=payload[i]-m_previous_payload[i];
+                mag_diff+=pow(diff[i],2);
+                mag_prev+=pow(m_previous_payload[i],2);
+            }
+            mag_diff=sqrt(mag_diff);
+            mag_prev=sqrt(mag_prev);
+            if(mag_diff/(mag_prev+0.00001) >= read_parameters<Params>()->deadband_k){
+                m_udp_sender->send(payload);
+                m_previous_payload=payload;
+            }
+        }else{
+            m_udp_sender->send(payload);
+        }
     }
 }
 
