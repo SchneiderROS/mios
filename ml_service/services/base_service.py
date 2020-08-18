@@ -9,12 +9,18 @@ from problem_definition.problem_definition import ProblemDefinition
 logger = logging.getLogger("ml_service")
 
 
+class ServiceConfiguration(metaclass=ABCMeta):
+    pass
+
+
 class BaseService(metaclass=ABCMeta):
     def __init__(self):
 
         self.engine = None
         self.problem_definition = None
         self.engine_thread = None
+        self.configuration = None
+        self.keep_running = False
 
     @abstractmethod
     def _initialize(self):
@@ -28,8 +34,11 @@ class BaseService(metaclass=ABCMeta):
     def _terminate(self):
         raise NotImplementedError
 
-    def initialize(self, problem_definition: ProblemDefinition, agents: set) -> (bool, str):
+    def initialize(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
+                   agents: set) -> (bool, str):
         self.problem_definition = problem_definition
+        self.configuration = configuration
+
         if self.problem_definition.is_valid() is False:
             logger.error("Problem definition is not valid.")
             return False
@@ -42,9 +51,14 @@ class BaseService(metaclass=ABCMeta):
         self.engine_thread.start()
 
     def learn_task(self) -> bool:
+        self.keep_running = True
         result = self._learn_task()
-
+        self.keep_running = False
         return result
+
+    def stop(self):
+        self.keep_running = False
+        self.engine.stop()
 
     def update_default_context(self, x) -> dict:
         logger.debug("BaseService.update_default_context(" + str(x) + ")")

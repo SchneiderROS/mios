@@ -3,8 +3,18 @@ from scipy import optimize
 import numpy as np
 from engine.engine import Trial
 from services.base_service import BaseService
+from services.base_service import ServiceConfiguration
 
 logger = logging.getLogger("ml_service")
+
+
+class BasinhoppingConfiguration(ServiceConfiguration):
+    def __init__(self):
+        self.n_iter = 100
+        self.n_iter_success = 0
+        self.T = 1.0
+        self.stepsize = 0.5
+        self.minimizer = "BFGS"
 
 
 class BasinhoppingService(BaseService):
@@ -16,14 +26,16 @@ class BasinhoppingService(BaseService):
 
     def _learn_task(self) -> bool:
         result = optimize.basinhopping(self.trial, self.problem_definition.domain.get_default_x0(),
-                                       minimizer_kwargs={"method": "BFGS"})
+                                       niter=self.configuration.n_iter, T=self.configuration.T,
+                                       sepsize=self.configuration.stepsize, minimizer_kwargs={"method": "BFGS"},
+                                       niter_success=self.configuration.n_iter_success)
         logger.info("Found global optimum of y=" + str(result.fun) + " at x=" + str(result.x))
         return True
 
     def _terminate(self):
         pass
 
-    def trial(self, x: np.array):
+    def trial(self, x: np.ndarray):
         logger.debug("BasinhoppingService.trial(" + str(x) + ")")
 
         t = Trial(self.update_default_context(x), self.problem_definition.reset_instructions)

@@ -1,6 +1,7 @@
 import logging
 import sys
 from services.basinhopping import BasinhoppingService
+from services.cmaes import *
 from problem_definition.problem_definition import ProblemDefinition
 from problem_definition.domain import Domain
 
@@ -39,6 +40,8 @@ if __name__ == '__main__':
     }
     pd = ProblemDefinition(domain, default_context, [], [], [])
 
-    learner = BasinhoppingService()
-    learner.initialize(pd, agents)
+    configuration = CMAESConfiguration()
+    configuration.n_gen = 2
+    learner = CMAESService()
+    learner.initialize(pd, configuration, agents)
     learner.learn_task()
