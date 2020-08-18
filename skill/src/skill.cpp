@@ -69,14 +69,14 @@ Eigen::Matrix<double,4,4> Skill::get_object_grasp_pose_O(const std::string &obje
 
 const Object* Skill::get_object(const std::string &o) const{
     if(m_grounded_objects.find(o)==m_grounded_objects.end()){
-        throw SkillException("Skill "+ this->get_id() +" of type "+m_type+" has no groundables with name.");
+        throw SkillException("Skill "+ this->get_id() +" of type "+m_type+" has no groundables with name " + o + ".");
     }
     return m_grounded_objects.at(o);
 }
 
 Object* Skill::update_object(const std::string &o){
     if(m_grounded_objects.find(o)==m_grounded_objects.end()){
-        throw SkillException("Skill "+ this->get_id() +" of type "+m_type+" has no groundables with name.");
+        throw SkillException("Skill "+ this->get_id() +" of type "+m_type+" has no groundables with name " + o + ".");
     }
     return m_grounded_objects.at(o);
 }
@@ -308,6 +308,12 @@ const std::string& Skill::get_id() const{
 
 bool Skill::ground_objects(){
     spdlog::debug("SKILL:GROUND_OBJECTS");
+    for(const auto& o : m_objects){
+        if(m_memory->get_parameters()->skill->objects.find(o)==m_memory->get_parameters()->skill->objects.end()){
+            spdlog::error("No object of type " + o + " has been provided.");
+            return false;
+        }
+    }
     for(const std::pair<std::string,std::string>& m : m_memory->get_parameters()->skill->objects){
         spdlog::debug("object_ungrounded: "+m.first + ", object_grounded: " + m.second);
         if(m_objects.find(m.first)==m_objects.end()){
