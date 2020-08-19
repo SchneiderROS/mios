@@ -10,6 +10,7 @@ logger = logging.getLogger("ml_service")
 
 class BasinhoppingConfiguration(ServiceConfiguration):
     def __init__(self):
+        super().__init__()
         self.n_iter = 100
         self.n_iter_success = 0
         self.T = 1.0

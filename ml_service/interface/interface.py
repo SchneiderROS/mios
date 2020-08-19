@@ -1,20 +1,32 @@
 import logging
+import sys
 
-from services.gradient_descent import GradientService
+from services.generic_optimizer import GenericOptimizerConfiguration
+from services.generic_optimizer import GenericOptimizerService
+from services.base_service import ServiceConfiguration
 from problem_definition.problem_definition import ProblemDefinition
 from problem_definition.domain import Domain
+
+
+logger = logging.getLogger("ml_service")
+
 
 class Interface:
     """Class that provides basic controlling functions for ml_service"""
 
     def __init__(self):
-        self.logger = logging.getLogger("ml_service")
-        self.G = GradientService()
+
+        logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        self.G = GenericOptimizerService()
         pass
 
-    def learn_task(self, problem_definition: ProblemDefinition, agents: set) -> bool:
+    def learn_task(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
+                   agents: set) -> bool:
         """strt to learn a task according to instructions"""
-        self.logger.debug("interface.learn_task: start learning task")
+        logger.debug("interface.learn_task: start learning task")
         
         # Problem Definition (needed here? where will it be defined?):
         #domain = Domain()
@@ -24,10 +36,10 @@ class Interface:
         #reset_instruction = list()
         #problem_definition = ProblemDefinition(domain, default_context, setup_instructions, termination_instruction, reset_instruction)
 
-        self.G.initialize(problem_definition, agents)
-        self.logger.debug("Gradient descent initialized ")
+        self.G.initialize(problem_definition, configuration, agents)
+        logger.debug("Gradient descent initialized ")
         G_learned = self.G.learn_task()
-        self.logger.debug("learning success "+str(G_learned))
+        logger.debug("learning success "+str(G_learned))
         return G_learned
 
     def stop_task(self):

@@ -18,6 +18,7 @@ logger = logging.getLogger("ml_service")
 
 class CMAESConfiguration(ServiceConfiguration):
     def __init__(self):
+        super().__init__()
         self.n_ind = 10
         self.n_gen = 10
         self.sigma_init = 0.2
