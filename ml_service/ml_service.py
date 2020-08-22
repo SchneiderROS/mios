@@ -2,6 +2,7 @@ import logging
 import sys
 from services.basinhopping import BasinhoppingService
 from services.cmaes import *
+from interface.interface import Interface
 from services.generic_optimizer import *
 from problem_definition.problem_definition import ProblemDefinition
 from problem_definition.domain import Domain
@@ -12,7 +13,7 @@ logger = logging.getLogger("ml_service")
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+#logger.addHandler(handler)
 
 
 def get_problem_definition_rastrigin():
@@ -40,7 +41,9 @@ def get_problem_definition_rastrigin():
     return pd
 
 def get_service_configuration():
-    configuration = GenericOptimizerConfiguration()
+    configuration = CMAESConfiguration()
+    configuration.n_ind = 5
+    configuration.n_gen = 5
     return configuration
 
 
@@ -58,6 +61,7 @@ def test_mios(agent: str = "localhost"):
             }
         },
         "service_configuration": {
+            "service_name": "cmaes",
             "tol": 1e-5
         },
         "agents": list(agents)
@@ -67,9 +71,19 @@ def test_mios(agent: str = "localhost"):
     print(response)
 
 
+def test_interface(agent: str = "localhost"):
+    agents = set()
+    agents.add(agent)
+
+    interface = Interface()
+    interface.start_service(get_problem_definition_rastrigin(), get_service_configuration(), agents)
+    input("Press enter to stop service.")
+    interface.stop_service()
+
+
 def test_standalone(agent: str = "localhost"):
     agents = set()
     agents.add(agent)
     learner = GenericOptimizerService()
-    learner.initialize(get_problem_definition_rastrigin(), get_service_configuration(), agent)
+    learner.initialize(get_problem_definition_rastrigin(), get_service_configuration(), agents)
     learner.learn_task()

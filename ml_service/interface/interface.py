@@ -1,8 +1,11 @@
 import logging
 import sys
+from threading import Thread
+import uuid
 
 from services.generic_optimizer import GenericOptimizerConfiguration
 from services.generic_optimizer import GenericOptimizerService
+from services.cmaes import *
 from services.base_service import ServiceConfiguration
 from problem_definition.problem_definition import ProblemDefinition
 from problem_definition.domain import Domain
@@ -20,35 +23,40 @@ class Interface:
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
-        self.G = GenericOptimizerService()
-        pass
+        self.service = None
+
+    def start_service(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
+                   agents: set) -> str:
+        problem_definition.uuid = str(uuid.uuid4())
+        if configuration.service_name == "cmaes":
+            self.service = CMAESService()
+        elif configuration.service_name == "generic":
+            self.service = GenericOptimizerService()
+        else:
+            logger.error("Service with name " + configuration.service_name + " does not exist.")
+            return "INVALID"
+
+        t = Thread(target=self.learn_task, args=(problem_definition, configuration, agents,))
+        t.start()
+        return problem_definition.uuid
 
     def learn_task(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
                    agents: set) -> bool:
         """strt to learn a task according to instructions"""
         logger.debug("interface.learn_task: start learning task")
-        
-        # Problem Definition (needed here? where will it be defined?):
-        #domain = Domain()
-        #default_context = dict()
-        #setup_instructions = list()
-        #termination_instruction = list()
-        #reset_instruction = list()
-        #problem_definition = ProblemDefinition(domain, default_context, setup_instructions, termination_instruction, reset_instruction)
 
-        self.G.initialize(problem_definition, configuration, agents)
+        self.service.initialize(problem_definition, configuration, agents)
         logger.debug("Gradient descent initialized ")
-        G_learned = self.G.learn_task()
-        logger.debug("learning success "+str(G_learned))
-        return G_learned
+        result = self.service.learn_task()
+        logger.debug("learning success "+str(result))
+        return result
 
-    def stop_task(self):
+    def stop_service(self):
         """Stop the learning process, if possible save all results and stop the robot"""
-        raise NotImplementedError
+        self.service.stop()
 
     def is_busy(self) -> bool:
-        """returns true if the learning process is ongoing"""
-        pass
+        return self.service is not None
 
     def get_status(self) -> str:
         """returns a detailed status for debugging purposes"""

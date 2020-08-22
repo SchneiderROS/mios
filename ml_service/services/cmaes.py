@@ -18,7 +18,7 @@ logger = logging.getLogger("ml_service")
 
 class CMAESConfiguration(ServiceConfiguration):
     def __init__(self):
-        super().__init__()
+        super().__init__("cmaes")
         self.n_ind = 10
         self.n_gen = 10
         self.sigma_init = 0.2
@@ -74,7 +74,7 @@ class CMAESService(BaseService):
 
         costs = []
         for uuid in trial_uuids:
-            trial = self.engine.wait_for_trial(uuid, 5)
+            trial = self.engine.wait_for_trial(uuid, 50)
             if trial.task_result.cost_suc is None:
                 trial.task_result.cost_suc = 0
             costs.append((trial.task_result.cost_suc,))

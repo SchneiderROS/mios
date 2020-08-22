@@ -5,8 +5,6 @@
 #include "portal/portal.hpp"
 #include "memory/memory.hpp"
 #include <spdlog/spdlog.h>
-#include "pybind11/pybind11.h"
-#include "pybind11/embed.h"
 
 
 namespace mios {
@@ -474,7 +472,6 @@ nlohmann::json CommandInterface::get_event(const nlohmann::json &request){
 nlohmann::json CommandInterface::learn_task(const nlohmann::json &request){
     spdlog::debug("CommandInterface::learn_task()");
     nlohmann::json response;
-    pybind11::scoped_interpreter guard{};
     bool result=true;
 
     // Problem definition checks
@@ -489,50 +486,17 @@ nlohmann::json CommandInterface::learn_task(const nlohmann::json &request){
         result=false;
     }
 
-    if(!result){
-        response["result"]=false;
+    if(request["service_configuration"].find("service_name")==request["service_configuration"].end()){
+        response["error"]="Configuration is missing a service name.";
+        result=false;
+    }
+
+    if(result){
+        response["problem_uuid"] = m_core->get_learning_module()->learn_task(request["problem_definition"],request["service_configuration"],request["agents"]);
+    }else{
         response["uuid"]="INVALID";
-        return response;
     }
-
-    try{
-        pybind11::dict limits;
-        std::cout<<request["problem_definition"]["domain"]["limits"]<<std::endl;
-        for(const auto& p : request["problem_definition"]["domain"]["limits"].items()){
-            double lb,ub;
-            p.value()[0].get_to(lb);
-            p.value()[0].get_to(ub);
-            limits[p.key().c_str()]=pybind11::make_tuple(lb,ub);
-        }
-        pybind11::dict context_mapping;
-        for(const auto& p : request["problem_definition"]["domain"]["context_mapping"].items()){
-            pybind11::list tmp_mappings;
-            for(const auto& m : p.value()){
-                tmp_mappings.append(m);
-            }
-            context_mapping[p.key().c_str()]=tmp_mappings;
-        }
-        pybind11::object domain = pybind11::module::import("problem_definition.domain").attr("Domain")(limits, context_mapping);
-
-        pybind11::dict default_context;
-        default_context["name"]="LearnerTest";
-
-        pybind11::set agents;
-        pybind11::object configuration = pybind11::module::import("services.generic_optimizer").attr("GenericOptimizerConfiguration")();
-        configuration.attr("tol")=0.1;
-        pybind11::object problem_definition = pybind11::module::import("problem_definition.problem_definition").attr("ProblemDefinition")(domain,default_context,pybind11::list(),pybind11::list(),pybind11::list());
-        for(const auto& a : request["agents"]){
-            std::string agent;
-            a.get_to(agent);
-            agents.add(agent);
-        }
-        pybind11::object ml_service = pybind11::module::import("interface.interface").attr("Interface")();
-//        pybind11::object learn_task = ml_service.attr("learn_task");
-        pybind11::object ml_result = ml_service.attr("learn_task")(problem_definition, configuration,agents);
-        response["result"] = ml_result.cast<bool>();
-    }catch(const pybind11::error_already_set& e){
-        spdlog::debug(e.what());
-    }
+    response["result"]=result;
     return response;
 }
 

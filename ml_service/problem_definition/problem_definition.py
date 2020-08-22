@@ -13,6 +13,7 @@ class ProblemDefinition:
         self.setup_instructions = setup_instructions
         self.termination_instructions = termination_instruction
         self.reset_instructions = reset_instruction
+        self.uuid = "INVALID"
 
     def is_valid(self) -> bool:
         valid = True

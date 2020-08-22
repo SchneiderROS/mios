@@ -11,6 +11,7 @@ logger = logging.getLogger("ml_service")
 
 class GenericOptimizerConfiguration(ServiceConfiguration):
     def __init__(self):
+        super().__init__("generic")
         self.method = "CG"
         self.bounds = None
         self.tol = None

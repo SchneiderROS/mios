@@ -6,7 +6,7 @@ from multiprocessing.pool import ThreadPool
 from copy import deepcopy
 import uuid
 from utils.exception import *
-from utils.udp_client import *
+from utils.ws_client import *
 
 
 logger = logging.getLogger("ml_service")
@@ -84,9 +84,10 @@ class Engine:
         logger.debug("Engine.wait_for_trial(" + trial_uuid + ", " + str(max_wait_time) + ")")
         t_0 = time.time()
         while trial_uuid not in self.completed_trials:
-            if time.time() - t_0 > max_wait_time:
+            if time.time() - t_0 > max_wait_time or self.keep_running is False:
                 logger.error("Wait time for trial has been exceeded.")
                 return Trial(dict(), [])
+            time.sleep(0.1)
 
         return self.completed_trials[trial_uuid]
 
@@ -105,25 +106,28 @@ class Engine:
                 for a in self.agents.copy():
                     if a not in self.free_agents:
                         logger.debug("Agent " + a + " not in self.free_agents")
+                        time.sleep(1)
                         continue
                     if worker_threads[a] is not None and worker_threads[a].is_alive() is True:
                         logger.debug("Thread of agent " + a + " is alive")
+                        time.sleep(1)
                         continue
 
                     logger.debug("Engine.main_loop().is_busy(" + a + ")")
-                    response = call_method(a, 12002, "is_busy")
+                    response = call_method(a, 12000, "is_busy")
                     if response is None:
                         logger.debug("is_busy on agent " + a + ": response is None")
+                        time.sleep(1)
                         continue
                     if response["result"]["busy"] is True:
                         logger.debug("is_busy on agent " + a + ": is busy")
+                        time.sleep(1)
                         continue
 
                     self.free_agents.remove(a)
                     worker_threads[a] = Thread(target=self._worker_loop, args=(a, trial,))
                     worker_threads[a].start()
                     thread_started = True
-                    break
 
             time.sleep(0.1)
 
@@ -182,7 +186,7 @@ class Engine:
                 if result is False or trial.task_result.success is False:
                     return False
             else:
-                call_method(agent, 12002, i["method"], i["parameters"])
+                call_method(agent, 12000, i["method"], i["parameters"])
 
     def _start_task(self, agent: str, task_context: dict) -> (bool, str):
         cnt_repeat = -1

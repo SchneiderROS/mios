@@ -5,12 +5,14 @@ from threading import Thread
 
 from engine.engine import Engine
 from problem_definition.problem_definition import ProblemDefinition
+from utils.exception import *
 
 logger = logging.getLogger("ml_service")
 
 
 class ServiceConfiguration(metaclass=ABCMeta):
-    pass
+    def __init__(self, service_name: str = "none"):
+        self.service_name = service_name
 
 
 class BaseService(metaclass=ABCMeta):
@@ -52,7 +54,10 @@ class BaseService(metaclass=ABCMeta):
 
     def learn_task(self) -> bool:
         self.keep_running = True
-        result = self._learn_task()
+        try:
+            result = self._learn_task()
+        except StopService:
+            result = False
         self.keep_running = False
         return result
 
