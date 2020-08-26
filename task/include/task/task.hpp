@@ -245,8 +245,14 @@ protected:
     void execute_desk_timeline(const std::string& id);
 
     void write_result(bool success, double cost_suc, double cost_err, std::optional<nlohmann::json> custom_results);
+    void write_error(const std::string& error);
+
+private:
+    Core* m_core;
 
 protected:
+    Memory* m_memory;
+    Portal* m_portal;
 
 private:
 
@@ -264,9 +270,7 @@ private:
     std::unordered_set<std::string> m_reserved_subtasks;
 
     nlohmann::json m_context;
-    Core* m_core;
-    Memory* m_memory;
-    Portal* m_portal;
+
     SkillEngine* m_skill_engine;
     std::atomic<bool> m_flag_stop;
     std::atomic<bool> m_flag_recover;

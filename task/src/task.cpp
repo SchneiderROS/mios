@@ -67,6 +67,10 @@ void Task::write_result(bool success, double cost_suc, double cost_err, std::opt
     }
 }
 
+void Task::write_error(const std::string &error){
+    m_result.errors.push_back(error);
+}
+
 bool Task::load_context(const nlohmann::json &user_context){
     try{
         spdlog::info("Loading context for task " + m_id + "...");
