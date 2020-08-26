@@ -1,0 +1,20 @@
+#pragma once
+
+#include "task/task.hpp"
+
+namespace mios{
+class ExtractObject : public Task{
+public:
+    ExtractObject(Core* core);
+    void initialize_context() override;
+    void execute() override;
+    void evaluate() override;
+    bool read_parameters(const nlohmann::json& params) override;
+private:
+
+    std::string m_extractable;
+    std::string m_extract_from;
+    std::string m_extract_to;
+
+};
+}
