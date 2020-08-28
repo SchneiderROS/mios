@@ -1,5 +1,7 @@
 import logging
+import time
 import sys
+from knowledge_processor.knowledge_processor import KnowledgeProcessor
 from services.basinhopping import BasinhoppingService
 from services.cmaes import *
 from interface.interface import Interface
@@ -75,9 +77,29 @@ def test_mios(agent: str = "localhost"):
 def test_interface(agent: str = "localhost"):
     agents = set()
     agents.add(agent)
+    problem_def = get_problem_definition_rastrigin()
+  
+    knowledge = None
 
     interface = Interface()
-    interface.start_service(get_problem_definition_rastrigin(), get_service_configuration(), agents)
+
+    #learning without knowledge
+    uuid = interface.start_service(problem_def, get_service_configuration(), agents, knowledge)
+    time.sleep(2)
+    while interface.is_busy():
+        time.sleep(2)
+        print("wainting for 1st task to finish...")
+    interface.stop_service()
+
+    #extracting knowledge
+    k = KnowledgeProcessor()
+    k.process_knowledge({"meta.uuid":uuid},"ml_results",problem_def.task_type,"test_knowledge",problem_def.task_type)
+    print("knowledge processed.")
+    time.sleep(3)
+    knowledge = k.get_knowledge({"meta.task_type":problem_def.task_type},"test_knowledge",problem_def.task_type)
+    print("knowledge:  ",knowledge)
+    #learning with knowledge
+    uuid = interface.start_service(problem_def, get_service_configuration(), agents, knowledge)
     input("Press enter to stop service.")
     interface.stop_service()
 
@@ -88,3 +110,7 @@ def test_standalone(agent: str = "localhost"):
     learner = GenericOptimizerService()
     learner.initialize(get_problem_definition_rastrigin(), get_service_configuration(), agents)
     learner.learn_task()
+
+if __name__ == "__main__":
+    test_interface()
+    
