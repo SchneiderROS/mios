@@ -33,8 +33,8 @@ class KnowledgeProcessor():
         successful_trials = successful_trials[:10]
         
         #combine ml data -> knowledge (centroid):
-        weights = [trial["total_cost"] for trial in successful_trials]
-        weights = np.array(weights)/sum(weights)
+        weights = np.log(len(successful_trials) + 0.5) - np.log(np.arange(1, len(successful_trials) + 1))
+        weights /= sum(weights)  # weights like in CMA 'superlinear'
         data = []
         for trial in successful_trials:
             trial_params = []
