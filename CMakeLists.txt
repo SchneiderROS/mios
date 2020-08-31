@@ -70,7 +70,7 @@ set(UTILS_SRC utils/src/actuator.cpp utils/src/percept.cpp utils/src/object.cpp 
 set(MEMORY_SRC memory/src/memory.cpp memory/src/lt_memory.cpp memory/src/st_memory.cpp memory/src/mongodb_client.cpp memory/src/parameters.cpp)
 set(CONTROLLER_SRC controller_pipeline/src/cart_torque_pipeline.cpp controller_pipeline/src/joint_torque_pipeline.cpp controller_pipeline/src/cart_velocity_pipeline.cpp
     controller_pipeline/src/joint_velocity_pipeline.cpp controller_pipeline/src/null_pipeline.cpp)
-set(SAFETY_SRC safety/src/velocity_walls.cpp safety/src/virtual_cube.cpp safety/src/virtual_joint_walls.cpp)
+set(SAFETY_SRC safety/src/velocity_walls.cpp safety/src/virtual_cube.cpp safety/src/virtual_joint_walls.cpp safety/src/cartesian_velocity_damping.cpp)
 
 #set(SOURCES_PRIMITIVES manipulation_primitive/src/primitives/mp_basic.cpp manipulation_primitive/src/primitives/mp_basic_joint.cpp manipulation_primitive/src/primitives/nullprimitive.cpp)
 

@@ -149,6 +149,12 @@ public:
         Eigen::Matrix<double,14,1> walls;
         bool active;
     }virtual_joint_walls;
+
+    struct CartesianVelocityDamping{
+        bool active;
+        Eigen::Matrix<double,6,1> dX_thr;
+        Eigen::Matrix<double,6,1> D_x;
+    }cartesian_velocity_damping;
 };
 
 enum ControlMode{mCartTorque,mJointTorque,mCartVelocity,mJointVelocity,mNoControl};
