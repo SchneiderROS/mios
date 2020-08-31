@@ -24,9 +24,10 @@ class Interface:
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
         self.service = None
+        self.learn_thread = None
 
     def start_service(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
-                   agents: set) -> str:
+                   agents: set, knowledge:dict = None) -> str:
         problem_definition.uuid = str(uuid.uuid4())
         if configuration.service_name == "cmaes":
             self.service = CMAESService()
@@ -36,16 +37,15 @@ class Interface:
             logger.error("Service with name " + configuration.service_name + " does not exist.")
             return "INVALID"
 
-        t = Thread(target=self.learn_task, args=(problem_definition, configuration, agents,))
-        t.start()
+        self.learn_thread = Thread(target=self.learn_task, args=(problem_definition, configuration, agents, knowledge),daemon=False)
+        self.learn_thread.start()
         return problem_definition.uuid
 
     def learn_task(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
-                   agents: set) -> bool:
+                   agents: set, knowledge:dict) -> bool:
         """strt to learn a task according to instructions"""
         logger.debug("interface.learn_task: start learning task")
-
-        self.service.initialize(problem_definition, configuration, agents)
+        self.service.initialize(problem_definition, configuration, agents, knowledge)
         logger.debug("Gradient descent initialized ")
         result = self.service.learn_task()
         logger.debug("learning success "+str(result))
@@ -56,7 +56,10 @@ class Interface:
         self.service.stop()
 
     def is_busy(self) -> bool:
-        return self.service is not None
+        if self.learn_thread is None:
+            return False
+        return self.learn_thread.is_alive()
+
 
     def get_status(self) -> str:
         """returns a detailed status for debugging purposes"""

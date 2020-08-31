@@ -38,7 +38,11 @@ class CMAESService(BaseService):
 
         self.toolbox.register("evaluate", self.trial)
         self.toolbox.register("map", self.map)
-        self.strategy = deap.cma.Strategy(centroid=self.problem_definition.domain.get_default_x0(),
+        
+        if self.centroid == None:
+            self.centroid = self.problem_definition.domain.get_default_x0()
+
+        self.strategy = deap.cma.Strategy(centroid=self.centroid,
                                           sigma=self.configuration.sigma_init, lambda_=self.configuration.n_ind)
         self.toolbox.register("generate", self.strategy.generate, deap.creator.Individual)
         self.toolbox.register("update", self.strategy.update)

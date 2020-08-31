@@ -76,20 +76,3 @@ class MongoDBClient():
         db_connection = self.client[db]
         col = db_connection[collection]
         col.drop()
-
-
-if __name__ == "__main__":
-    client = MongoDBClient("testDB_name")
-
-    docs = [{"name1": [1, 2, 3], "name2": "Udo Jürgens"}, {"name1": [1, 2, 3], "name2": "Jens Span"},
-            {"name1": "test", "name2": "not_updated"}]
-    # docs = [5,4,{"name1": [1,2,3],"name2":"Jens Span"},2]
-    id = client.write("testDB_name", "col2", docs)
-
-    doc = client.read("testDB_name", "col2", {"name1": "test"})
-    print("found doc:\n", doc)
-
-    client.update("testDB_name", "col2", {"name1": "test"}, {"name3": "new_updatated"})
-    for d in client.read("testDB_name", "col2", {}):
-        print(d)
-    client.delete_collection("testDB_name", "col2")

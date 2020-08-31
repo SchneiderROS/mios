@@ -26,6 +26,7 @@ class BaseService(metaclass=ABCMeta):
         self.engine_thread = None
         self.configuration = None
         self.keep_running = False
+        self.centroid = None
 
     @abstractmethod
     def _initialize(self):
@@ -40,9 +41,16 @@ class BaseService(metaclass=ABCMeta):
         raise NotImplementedError
 
     def initialize(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
-                   agents: set) -> (bool, str):
+                   agents: set, knowledge: dict = None) -> (bool, str):
         self.problem_definition = problem_definition
         self.configuration = configuration
+
+        if knowledge is not None:
+            self.centroid = []
+            for key in knowledge["parameters"]:
+                self.centroid.append(knowledge["parameters"][key])
+            logger.debug("using initial centroid from knowledge: " + str(self.centroid))
+            
 
         if self.problem_definition.is_valid() is False:
             logger.error("Problem definition is not valid.")
