@@ -100,14 +100,20 @@ Telepresence::~Telepresence(){
     if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
         m_portal->close_udp_outstream("remote_cart_pose_out");
         m_portal->close_udp_outstream("remote_force_out");
+        m_portal->close_udp_instream("remote_cart_pose_in");
+        m_portal->close_udp_instream("remote_wrench_in");
     }
     if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){
         m_portal->close_udp_outstream("remote_joint_pose_out");
         m_portal->close_udp_outstream("remote_torque_out");
+        m_portal->close_udp_instream("remote_joint_pose_in");
+        m_portal->close_udp_instream("remote_torque_in");
     }
     if(read_parameters<Params>()->mode==TelepresenceMode::tmJoystick){
         m_portal->close_udp_outstream("remote_twist_out");
         m_portal->close_udp_outstream("remote_force_out");
+        m_portal->close_udp_instream("remote_twist_in");
+        m_portal->close_udp_instream("remote_wrench_in");
     }
 }
 
@@ -155,7 +161,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                         mp->create_strategy<RemoteWrenchStrategy>("telepresence",1);
                         mp->get_strategy<RemoteWrenchStrategy>("telepresence")->set_damping(get_parameters<Params>()->direct_cart.alpha);
                         mp->create_strategy<CartComplianceStrategy>("compliance",1);
-                        if(!mp->get_strategy<RemoteWrenchStrategy>("telepresence")->connect(m_portal,"remote_cart_in",get_parameters<Params>()->port_src,256,0,10000,200)){
+                        if(!mp->get_strategy<RemoteWrenchStrategy>("telepresence")->connect(m_portal,"remote_wrench_in",get_parameters<Params>()->port_src,256,0,10000,200)){
                             throw SkillException("Could not open incoming udp channel.");
                         }
                         m_udp_sender = m_portal->open_udp_outstream("remote_cart_pose_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
@@ -169,7 +175,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                         mp->create_strategy<RemoteTorqueStrategy>("telepresence",1);
                         mp->get_strategy<RemoteTorqueStrategy>("telepresence")->set_damping(get_parameters<Params>()->direct_joint.alpha);
                         mp->create_strategy<JointComplianceStrategy>("compliance",1);
-                        if(!mp->get_strategy<RemoteTorqueStrategy>("telepresence")->connect(m_portal,"remote_joint_in",get_parameters<Params>()->port_src,256,0,10000,200)){
+                        if(!mp->get_strategy<RemoteTorqueStrategy>("telepresence")->connect(m_portal,"remote_torque_in",get_parameters<Params>()->port_src,256,0,10000,200)){
                             throw SkillException("Could not open incoming udp channel.");
                         }
                         m_udp_sender = m_portal->open_udp_outstream("remote_joint_pose_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
@@ -203,12 +209,15 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                 std::shared_ptr<ManipulationPrimitive> mp = create_mp("handshake",p);
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
                     m_portal->close_udp_outstream("remote_cart_pose_out");
+                    m_portal->close_udp_instream("remote_wrench_in");
                 }
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){
                     m_portal->close_udp_outstream("remote_joint_pose_out");
+                    m_portal->close_udp_instream("remote_torque_in");
                 }
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmJoystick){
                     m_portal->close_udp_outstream("remote_twist_out");
+                    m_portal->close_udp_instream("remote_wrench_in");
                 }
                 nlohmann::json response;
                 mp->create_strategy<NullStrategy>("idle",1);
@@ -264,14 +273,14 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                 std::shared_ptr<ManipulationPrimitive> mp = create_mp("telepresence",p);
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
                     mp->create_strategy<RemoteCartPoseStrategy>("telepresence",1);
-                    if(!mp->get_strategy<RemoteCartPoseStrategy>("telepresence")->connect(m_portal,"remote_twist_in",get_parameters<Params>()->port_src,256,0,10000,20)){
+                    if(!mp->get_strategy<RemoteCartPoseStrategy>("telepresence")->connect(m_portal,"remote_cart_pose_in",get_parameters<Params>()->port_src,256,0,10000,20)){
                         throw SkillException("Could not open incoming udp channel.");
                     }
                     m_udp_sender = m_portal->open_udp_outstream("remote_force_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
                 }
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){
                     mp->create_strategy<RemoteJointPoseStrategy>("telepresence",1);
-                    if(!mp->get_strategy<RemoteJointPoseStrategy>("telepresence")->connect(m_portal,"remote_twist_in",get_parameters<Params>()->port_src,256,0,10000,20)){
+                    if(!mp->get_strategy<RemoteJointPoseStrategy>("telepresence")->connect(m_portal,"remote_joint_pose_in",get_parameters<Params>()->port_src,256,0,10000,20)){
                         throw SkillException("Could not open incoming udp channel.");
                     }
                     m_udp_sender = m_portal->open_udp_outstream("remote_torque_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
@@ -300,12 +309,15 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                 std::shared_ptr<ManipulationPrimitive> mp = create_mp("handshake",p);
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectCart){
                     m_portal->close_udp_outstream("remote_force_out");
+                    m_portal->close_udp_instream("remote_cart_pose_in");
                 }
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){
                     m_portal->close_udp_outstream("remote_torque_out");
+                    m_portal->close_udp_instream("remote_joint_pose_in");
                 }
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmJoystick){
                     m_portal->close_udp_outstream("remote_force_out");
+                    m_portal->close_udp_instream("remote_twist_in");
                 }
                 nlohmann::json response;
                 mp->create_strategy<NullStrategy>("idle",1);
