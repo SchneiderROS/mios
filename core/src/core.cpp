@@ -108,12 +108,12 @@ LearningModule* Core::get_learning_module(){
     return &m_learning_module;
 }
 
-bool Core::execute_skill(){
+ControlReturnType Core::execute_skill(){
     spdlog::debug("CORE: execute_skill");
 
     if(!m_panda_body.pre_run_checks()){
         if(!m_panda_body.recover()){
-            return false;
+            return ControlReturnType::crtException;
         }
     }
 
@@ -122,7 +122,7 @@ bool Core::execute_skill(){
     m_percept.update_controller();
     m_panda_body.set_robot_parameters();
 
-    bool result=false;
+    ControlReturnType result=ControlReturnType::crtException;
     spdlog::debug("CORE: EXECUTE_SKILL.control_mode: ");
     if(m_memory.read_parameters()->control.control_mode==ControlMode::mCartTorque){
         m_controller_pipeline=std::make_unique<CartTorqueControllerPipeline>();
