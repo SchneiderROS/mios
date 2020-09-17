@@ -5,7 +5,7 @@ namespace mios{
 class SkillParametersTestSkill1: public SkillParameters{
 public:
     bool from_json(const nlohmann::json &parameters) override;
-    std::string skill;
+    std::map<std::string,std::set<std::string> > get_parameter_list() override;
     double run_time;
     bool success;
     double t_exception;
@@ -16,8 +16,10 @@ public:
 };
 class TestSkill1 : public Skill{
 public:
-    TestSkill1(const std::string& name, Memory* memory, Portal *portal, const Percept& p);
-    void evaluate();
+
+    TestSkill1(const std::string& name, Memory* memory, Portal *portal);
+
+    void write_custom_results(nlohmann::json &custom_results) override;
 
     Eigen::Matrix<double,3,3> get_O_R_T_0(const Percept &p) const override;
 private:

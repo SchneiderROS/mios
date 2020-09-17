@@ -11,13 +11,18 @@ bool SkillParametersHandGuiding::from_json(const nlohmann::json &parameters){
     if(!msrm_utils::read_json_param(parameters,"use_walls",use_walls)){
         use_walls=false;
     }
-    if(!msrm_utils::read_json_param<double,6,1>(parameters,"dist_walls",dist_walls)){
-        dist_walls<<-1000,1000,-1000,1000,-1000,1000;
+    if(use_walls && !msrm_utils::read_json_param<double,6,1>(parameters,"dist_walls",dist_walls)){
+        spdlog::error("Parameter dist_walls could not be loaded but is mandatory when walls are used.");
+        return false;
     }
     return true;
 }
 
-HandGuiding::HandGuiding(const std::string &id, Memory *memory, Portal* portal, const Percept &p):Skill("HandGuiding",{},id,memory,portal,p,{ControlMode::mCartTorque}){
+std::map<std::string, std::set<std::string> > SkillParametersHandGuiding::get_parameter_list(){
+    return {{"fix_dim",{}},{"use_walls",{}},{"dist_walls",{}}};
+}
+
+HandGuiding::HandGuiding(const std::string &id, Memory *memory, Portal* portal):Skill("HandGuiding",{},id,memory,portal,{ControlMode::mCartTorque}){
     std::shared_ptr<SkillParametersHandGuiding> skill_params = get_parameters<SkillParametersHandGuiding>();
     m_memory->get_parameters()->safety.virtual_cube.active=skill_params->use_walls;
     m_memory->get_parameters()->safety.virtual_cube.damping=0.004;

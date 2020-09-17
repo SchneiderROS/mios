@@ -1,4 +1,4 @@
-#include "skills/nullskill.hpp"
+#include "skills/null_skill.hpp"
 #include "strategies/null_strategy.hpp"
 
 namespace mios {
@@ -11,7 +11,11 @@ bool SkillParametersNullSkill::from_json(const nlohmann::json &parameters){
     return false;
 }
 
-NullSkill::NullSkill(const std::string& id, Memory *memory, Portal* portal, const Percept& p):Skill("NullSkill",{},id,memory,portal,p,{ControlMode::mNoControl}){
+std::map<std::string, std::set<std::string> > SkillParametersNullSkill::get_parameter_list(){
+    return {};
+}
+
+NullSkill::NullSkill(const std::string& id, Memory *memory, Portal* portal):Skill("NullSkill",{},id,memory,portal,{ControlMode::mNoControl}){
 
 }
 

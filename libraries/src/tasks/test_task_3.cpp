@@ -24,8 +24,7 @@ void TestTask3::execute(){
     execute_subtask("TestTask1","t3_t2");
 
 }
-void TestTask3::evaluate(){
-    nlohmann::json custom_results;
+void TestTask3::write_custom_results(nlohmann::json &custom_results){
     custom_results["t3_s1"]=get_result().skill_results["t3_s1"].results;
     custom_results["t3_s2"]=get_result().skill_results["t3_s2"].results;
     custom_results["t3_s3"]=get_result().skill_results["t3_s3"].results;
@@ -35,7 +34,6 @@ void TestTask3::evaluate(){
     custom_results["h"]=m_h;
     custom_results["i"]=m_i;
     custom_results["recovered"]=recovered;
-    write_result(false,0,0,custom_results);
 }
 bool TestTask3::read_parameters(const nlohmann::json& params){
     spdlog::debug("Reading parameters for task "+this->get_id());
@@ -73,6 +71,30 @@ bool TestTask3::read_parameters(const nlohmann::json& params){
 void TestTask3::recover_task(){
     recovered=true;
     spdlog::debug("RECOVERY OF TEST TASK 3");
+}
+
+void TestTask3::get_default_context(nlohmann::json &context){
+    context["parameters"] = nlohmann::json();
+    context["parameters"]["g"]={0,0,0,0};
+    context["parameters"]["h"]=false;
+    context["parameters"]["i"]=0;
+    context["parameters"]["j"]="";
+    context["parameters"]["stop_level"]=0;
+    context["parameters"]["success"]=false;
+
+    context["skills"]=nlohmann::json();
+    context["skills"]["t3_s1"]=nlohmann::json();
+    context["skills"]["t3_s1"]["control"]={{"control_mode",0}};
+    context["skills"]["t3_s1"]["skill"]={{"objects",{{"object","TestObject1"}}}};
+    context["skills"]["t3_s1"]["type"]="TestSkill1";
+    context["skills"]["t3_s2"]=nlohmann::json();
+    context["skills"]["t3_s2"]["control"]={{"control_mode",0}};
+    context["skills"]["t3_s2"]["skill"]={{"objects",{{"object","TestObject1"}}}};
+    context["skills"]["t3_s2"]["type"]="TestSkill1";
+    context["skills"]["t3_s3"]=nlohmann::json();
+    context["skills"]["t3_s3"]["control"]={{"control_mode",0}};
+    context["skills"]["t3_s3"]["skill"]={{"objects",{{"object","TestObject1"}}}};
+    context["skills"]["t3_s3"]["type"]="TestSkill1";
 }
 
 }

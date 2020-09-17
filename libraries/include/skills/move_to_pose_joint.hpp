@@ -6,6 +6,7 @@ namespace mios {
 
 struct SkillParametersMoveToPoseJoint : public SkillParameters{
     bool from_json(const nlohmann::json &parameters) override;
+    std::map<std::string, std::set<std::string> > get_parameter_list() override;
     double t_settle;
     double speed;
     double acc;
@@ -15,10 +16,9 @@ struct SkillParametersMoveToPoseJoint : public SkillParameters{
 
 class MoveToPoseJoint : public Skill{
 public:
-    MoveToPoseJoint(const std::string& id, Memory *memory, Portal *portal, const Percept& p);
+    MoveToPoseJoint(const std::string& id, Memory *memory, Portal *portal);
 
     std::shared_ptr<ManipulationPrimitive> get_initial_mp(const Percept &p_0) override;
-    void evaluate();
 
 private:
     bool check_local_suc_conditions(const Percept &p);

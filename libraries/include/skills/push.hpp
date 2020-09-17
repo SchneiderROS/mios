@@ -5,6 +5,7 @@ namespace mios{
 class SkillParametersPush : public SkillParameters{
 public:
     bool from_json(const nlohmann::json& parameters) override;
+    std::map<std::string, std::set<std::string> > get_parameter_list() override;
     Eigen::Matrix<double,3,1> F_push;
     Eigen::Matrix<double,3,1> DX_max;
     double duration;
@@ -12,8 +13,7 @@ public:
 
 class Push : public Skill{
 public:
-    Push(const std::string& name,Memory* memory, Portal* portal, const Percept& p);
-    void evaluate() override;
+    Push(const std::string& name, Memory* memory, Portal* portal);
     Eigen::Matrix<double,3,3> get_O_R_T_0(const Percept& p) const override;
 
 private:

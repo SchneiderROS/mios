@@ -35,14 +35,18 @@ bool SkillParametersInsertion::from_json(const nlohmann::json &parameters){
     }
 
     if(stuck_dx_thr>traj_speed(0) || stuck_dx_thr<0){
-        spdlog::error("stuck_dx_thr cannot be greater than traj_speed[0] or smaller than 0.");
-        return false;
+        spdlog::warn("stuck_dx_thr cannot be greater than traj_speed[0] or smaller than 0.");
+        stuck_dx_thr=traj_speed(0);
     }
 
     return true;
 }
 
-Insertion::Insertion(const std::string &name, Memory *memory,Portal* portal, const Percept &p):Skill("Insertion",{"Insertable","InsertInto"},name,memory,portal,p,
+std::map<std::string, std::set<std::string> > SkillParametersInsertion::get_parameter_list(){
+    return {{"traj_speed",{}},{"traj_acc",{}},{"stuck_dx_thr",{}},{"search_a",{}},{"search_f",{}},{"ROI_x",{}},{"ROI_phi",{}}};
+}
+
+Insertion::Insertion(const std::string &name, Memory *memory,Portal* portal):Skill("Insertion",{"Insertable","InsertInto"},name,memory,portal,
 {ControlMode::mCartTorque}),m_is_stuck(false),m_dx_avg_last(0){
     m_dx_avg_mem.assign(100,0);
 }
@@ -75,6 +79,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Insertion::graph_transiti
 }
 
 std::shared_ptr<ManipulationPrimitive> Insertion::create_move_mp(const Percept &p){
+    spdlog::debug("Insertion::create_move_mp");
     std::shared_ptr<SkillParametersInsertion> skill_params = get_parameters<SkillParametersInsertion>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("move",p);
     mp->create_strategy<MoveToPoseStrategy>("s_move",1);
@@ -84,6 +89,7 @@ std::shared_ptr<ManipulationPrimitive> Insertion::create_move_mp(const Percept &
 }
 
 std::shared_ptr<ManipulationPrimitive> Insertion::create_wiggle_mp(const Percept &p){
+    spdlog::debug("Insertion::create_wiggle_mp");
     std::shared_ptr<SkillParametersInsertion> skill_params = get_parameters<SkillParametersInsertion>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("wiggle",p);
     mp->create_strategy<FFWiggleStrategy>("wiggle_x",1);
@@ -121,22 +127,8 @@ bool Insertion::check_local_err_conditions(const Percept &p){
     return false;
 }
 
-void Insertion::evaluate(){
-
-        double c_err_1=m_memory->read_parameters()->skill->time_max+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("InsertInto").block<3,1>(0,3)).norm()*100)-1;
-        double c_suc_1=std::chrono::duration_cast<std::chrono::seconds>(get_result().p_1.time-get_result().p_0.time).count();
-
-        double c_err_2=m_memory->read_parameters()->user.F_ext_max(0)+exp((get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("InsertInto").block<3,1>(0,3)).norm()*100)-1;
-        double c_suc_2=0;
-        if(m_cf1_cnt==0){
-            c_suc_2=get_result().cost_err;
-        }else{
-            c_suc_2=m_cf1_sum_force/m_cf1_cnt;
-        }
-        msrm_utils::print_critical_error("COST_ERR: " + std::to_string(c_err_1));
-        msrm_utils::print_critical_error("COST_SUC: " + std::to_string(c_suc_1));
-        write_costs(m_memory->read_parameters()->skill->w_cost_function[0]*c_suc_1+m_memory->read_parameters()->skill->w_cost_function[1]*c_suc_2,
-                m_memory->read_parameters()->skill->w_cost_function[0]*c_err_1+m_memory->read_parameters()->skill->w_cost_function[1]*c_err_2);
+double Insertion::get_goal_heuristic(const Percept &p){
+    return (get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("InsertInto").block<3,1>(0,3)).norm();
 }
 
 void Insertion::auxiliaries(const Percept &p){

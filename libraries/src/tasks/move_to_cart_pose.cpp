@@ -16,7 +16,7 @@ void MoveToCartPose::execute(){
     overwrite_context("move","control","control_mode",2);
     overwrite_context("move","skill","speed",msrm_utils::from_eigen<double,2,1>(m_speed));
     overwrite_context("move","skill","acc",msrm_utils::from_eigen<double,2,1>(m_acc));
-    overwrite_context("move","skill","TF_T_EE_g",msrm_utils::from_eigen<double,4,4>(m_T_EE_g));
+    overwrite_context("move","skill","T_T_EE_g",msrm_utils::from_eigen<double,4,4>(m_T_EE_g));
     write_skill_object("move","goal_pose",m_pose.value_or("NullObject"));
     execute_skill<MoveToPoseCart,SkillParametersMoveToPoseCart>("move");
 }
@@ -41,8 +41,17 @@ bool MoveToCartPose::read_parameters(const nlohmann::json &params){
     return true;
 }
 
-void MoveToCartPose::evaluate(){
-    write_result(get_result().skill_results["move"].success,get_result().skill_results["move"].cost_suc,get_result().skill_results["move"].cost_err,get_result().skill_results["move"].results);
+void MoveToCartPose::get_default_context(nlohmann::json &context){
+    context["parameters"] = nlohmann::json();
+    context["parameters"]["pose"]=nlohmann::json();
+    context["parameters"]["T_EE_g"]=nlohmann::json();
+    context["parameters"]["speed"]={0.1,0.5};
+    context["parameters"]["acc"]={0.5,1};
+
+    context["skills"]=nlohmann::json();
+    context["skills"]["move"]=nlohmann::json();
+    context["skills"]["move"]["control"]={{"control_mode",2}};
+    context["skills"]["move"]["type"]="MoveToPoseCart";
 }
 
 }

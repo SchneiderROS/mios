@@ -12,8 +12,8 @@ public:
 
     void initialize_context() override;
     void execute() override;
-    void evaluate() override;
     bool read_parameters(const nlohmann::json &params) override;
+    void get_default_context(nlohmann::json &context) override;
 
 private:
     void execute_any_skill(unsigned index);
