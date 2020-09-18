@@ -67,7 +67,7 @@ class KnowledgeProcessor():
         self.DBclient = MongoDBClient(host, port)
         self.cluster_processor = ClusterProcessor()
 
-    def process_knowledge(self, filter: dict, data_db: str, data_col: str, knowledge_db: str, knowledge_col: str):
+    def process_knowledge(self, filter: dict, data_db: str, data_col: str, knowledge_db: str, knowledge_col: str, knowledge_tags:dict):
         '''process raw data from trials to knowledge; working from and on the database'''
         #allocate data:
         doc = self.DBclient.read(data_db, data_col, filter)
@@ -76,16 +76,26 @@ class KnowledgeProcessor():
         for d in doc:
             uuids.append(d["meta"]["uuid"])
         logger.debug("knowledge_processor: read raw data")
+        metainfo = []
         if len(doc) > 1:
             logger.info("WARNING: process knowledge for more tasks")
-            #flatten the list of lists:
-            doc = [item for sublist in doc for item in sublist]
+
+            alltrials = []
+            for d in doc:
+                metainfo.append(d["meta"])
+                # get raw ml data:
+                trials = self.get_raw_data(d)
+                for t in trials:
+                    alltrials.append(t)
+            successful_trials = alltrials
         else:
             doc = doc[0]
-
-        # get raw ml data:
-        successful_trials = self.get_raw_data(doc)
+            # get raw ml data:
+            successful_trials = self.get_raw_data(doc)
         
+        for m in metainfo:
+            if m["domain"]["vector_mapping"] != metainfo[0]["domain"]["vector_mapping"]:
+                logger.error("knowledge_processor: got trials from different domains. Cant process them together")
         #find clusters:
         clusters = self.cluster_processor.find_cluster(successful_trials)
         #use best cluster:
@@ -103,16 +113,18 @@ class KnowledgeProcessor():
 
         #set up knowledge dict
         parameter_dict = {}
-        for key_name, parameter in zip(doc["meta"]["domain"]["vector_mapping"], centroid):
+
+        for key_name, parameter in zip(metainfo[0]["domain"]["vector_mapping"], centroid):
             parameter_dict[key_name] = parameter
 
-        meta = doc["meta"]
+        meta = metainfo[0]
         meta.pop("uuid", None)
         meta.pop("t_0", None)
         meta.pop("date", None)
         meta["confidence"] = None
         meta["knowledge_source"] = uuids
-        print(uuids)
+        meta["tags"] = knowledge_tags
+
         knowledge = {"parameters":parameter_dict, 
                      "meta": meta
                      }
