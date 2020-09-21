@@ -18,6 +18,7 @@
 #include "skills/extraction.hpp"
 #include "skills/insertion.hpp"
 #include "skills/wipe.hpp"
+#include "skills/ml_test_skill.hpp"
 
 namespace mios {
 
@@ -37,6 +38,7 @@ SkillLibrary::SkillLibrary(Memory* memory, Portal* portal){
     m_skill_parameters.insert(std::make_pair("Extraction",std::make_shared<SkillParametersExtraction>()));
     m_skill_parameters.insert(std::make_pair("Insertion",std::make_shared<SkillParametersInsertion>()));
     m_skill_parameters.insert(std::make_pair("Wipe",std::make_shared<SkillParametersWipe>()));
+    m_skill_parameters.insert(std::make_pair("MLTestSkill",std::make_shared<SkillParametersMLTestSkill>()));
 }
 
 const std::map<std::string,std::shared_ptr<Skill> >* SkillLibrary::get_skills() const{
