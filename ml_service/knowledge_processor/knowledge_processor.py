@@ -67,7 +67,7 @@ class KnowledgeProcessor():
         self.DBclient = MongoDBClient(host, port)
         self.cluster_processor = ClusterProcessor()
 
-    def process_knowledge(self, filter: dict, data_db: str, data_col: str, knowledge_db: str, knowledge_col: str, knowledge_tags:dict):
+    def process_knowledge(self, filter: dict, data_db: str , data_col: str, knowledge_db: str, knowledge_col: str, knowledge_tags:dict):
         '''process raw data from trials to knowledge; working from and on the database'''
         #allocate data:
         doc = self.DBclient.read(data_db, data_col, filter)
@@ -95,15 +95,18 @@ class KnowledgeProcessor():
             doc = doc[0]
             # get raw ml data:
             successful_trials = self.get_raw_data(doc)
+            metainfo.append(doc["meta"])
 
         for m in metainfo:
             if m["domain"]["vector_mapping"] != metainfo[0]["domain"]["vector_mapping"]:
                 logger.error("knowledge_processor: got trials from different domains. Cant process them together")
         #find clusters:
-        clusters = self.cluster_processor.find_cluster(successful_trials)
+        #clusters = self.cluster_processor.find_cluster(successful_trials)
         #use best cluster:
-        successful_trials = clusters[0]
-        
+        #successful_trials = clusters[0]
+        #use top 10 trials:
+        successful_trials = successful_trials[:10]
+
         #combine ml data -> knowledge (centroid):
         weights = np.log(len(successful_trials) + 0.5) - np.log(np.arange(1, len(successful_trials) + 1))
         weights /= sum(weights)  # weights like in CMA 'superlinear'

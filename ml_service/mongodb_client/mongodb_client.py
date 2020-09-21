@@ -17,6 +17,12 @@ class MongoDBClient():
         db_connection = self.client[db]
         col = db_connection[collection]
         findings = []
+        #if search params are in list, not search for this list but indead for 
+        for key in search_param:
+            value = search_param[key]
+            if isinstance(value, list):
+                search_param[key] = {"$all": value}
+
         for f in col.find(filter=search_param):
             findings.append(f)
         return findings
