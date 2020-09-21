@@ -296,6 +296,7 @@ bool LTMemory::load_default_task_context(const std::string task_id,nlohmann::jso
 bool LTMemory::load_default_skill_context(const std::string skill_type,nlohmann::json& skill_context){
     std::map<std::string, std::set<std::string> > skill_parameters;
     if(m_skill_library->get_skill_parameters()->find(skill_type)==m_skill_library->get_skill_parameters()->end()){
+        spdlog::error("Could not find skill type " + skill_type + " in library.");
         skill_context=nlohmann::json();
         return false;
     }else{
