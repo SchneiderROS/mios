@@ -47,25 +47,25 @@ void SkillEngine::unload_skill(){
     m_active_skill=std::make_shared<NullSkill>("NullSkill",m_memory,m_core->get_portal());
 }
 
-bool SkillEngine::execute_skill(std::shared_ptr<Skill> skill){
+ControlReturnType SkillEngine::execute_skill(std::shared_ptr<Skill> skill){
     if(!load_skill( skill)){
         spdlog::error("Skill could not be loaded.");
-        return false;
+        return ControlReturnType::crtException;
     }
-    bool result=false;
+    ControlReturnType result=ControlReturnType::crtException;
     try{
         spdlog::info("Executing skill...");
         result = m_core->execute_skill();
         spdlog::info("Skill ran nominally.");
     }catch(const SkillException& e){
         spdlog::debug(e.what());
-        result=false;
+        result=ControlReturnType::crtException;
         spdlog::warn("A skill exception occured.");
     }
     spdlog::info("Unloading skill...");
     unload_skill();
     if(!m_core->refresh_percept({})){
-        return false;
+        return ControlReturnType::crtException;
     }
     spdlog::info("Terminating skill...");
     skill->terminate(*m_core->get_percept());

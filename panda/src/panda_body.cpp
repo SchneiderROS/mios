@@ -226,144 +226,144 @@ std::optional<std::string> PandaBody::find_robot(){
     return robot_address;
 }
 
-bool PandaBody::control(std::function<franka::Torques (const franka::RobotState&,franka::Duration)> controller_callback){
+ControlReturnType PandaBody::control(std::function<franka::Torques (const franka::RobotState&,franka::Duration)> controller_callback){
     try{
         if(m_arm_connected){
             spdlog::debug("PandaBody: control<Torques>");
             m_panda_arm->control(controller_callback);
-            return true;
+            return ControlReturnType::crtNominal;
         }else{
             dummy_control(controller_callback);
-            return true;
+            return ControlReturnType::crtNominal;
         }
     }catch(const franka::ControlException& e){
         spdlog::debug(e.what());
-        return false;
+        return ControlReturnType::crtCollision;
     }catch(const franka::InvalidOperationException& e){
         spdlog::debug(e.what());
-        return false;
+        return ControlReturnType::crtException;
     }catch(const franka::NetworkException& e){
         spdlog::debug(e.what());
-        return false;
+        return ControlReturnType::crtException;
     }catch(const franka::RealtimeException& e){
         spdlog::debug(e.what());
-        return false;
+        return ControlReturnType::crtException;
     }catch(const std::invalid_argument& e){
         spdlog::debug(e.what());
-        return false;
+        return ControlReturnType::crtException;
     }
 
 }
 
-bool PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
+ControlReturnType PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             spdlog::debug("PandaBody: control<CartesianVelocities>");
             m_panda_arm->control(controller_callback);
-            return true;
+            return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtCollision;
         }catch(const franka::InvalidOperationException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::NetworkException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::RealtimeException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const std::invalid_argument& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }
     }else{
         dummy_control(controller_callback);
-        return true;
+        return ControlReturnType::crtNominal;
     }
 }
 
-bool PandaBody::control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
+ControlReturnType PandaBody::control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             spdlog::debug("PandaBody: control<JointVelocities>");
             m_panda_arm->control(controller_callback);
-            return true;
+            return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtCollision;
         }catch(const franka::InvalidOperationException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::NetworkException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::RealtimeException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const std::invalid_argument& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }
     }else{
         dummy_control(controller_callback);
-        return true;
+        return ControlReturnType::crtNominal;
     }
 }
 
-bool PandaBody::control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
+ControlReturnType PandaBody::control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             spdlog::debug("PandaBody: control<CartesianPose>");
             m_panda_arm->control(controller_callback);
-            return true;
+            return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtCollision;
         }catch(const franka::InvalidOperationException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::NetworkException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::RealtimeException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const std::invalid_argument& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }
     }else{
         dummy_control(controller_callback);
-        return true;
+        return ControlReturnType::crtNominal;
     }
 }
 
-bool PandaBody::control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
+ControlReturnType PandaBody::control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
     if(m_arm_connected){
         try{
             spdlog::debug("PandaBody: control<JointPositions>");
             m_panda_arm->control(controller_callback);
-            return true;
+            return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtCollision;
         }catch(const franka::InvalidOperationException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::NetworkException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const franka::RealtimeException& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }catch(const std::invalid_argument& e){
             spdlog::debug(e.what());
-            return false;
+            return ControlReturnType::crtException;
         }
     }else{
         dummy_control(controller_callback);
-        return true;
+        return ControlReturnType::crtNominal;
     }
 }
 

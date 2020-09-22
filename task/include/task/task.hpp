@@ -16,6 +16,7 @@
 #include "utils/exceptions.hpp"
 #include "data_structures/results.hpp"
 #include "skill/skill.hpp"
+#include "utils/types.hpp"
 
 namespace mios {
 
@@ -212,14 +213,14 @@ protected:
             throw TaskException("Could not apply skill context.");
         }
         std::shared_ptr<Skill> skill = std::make_shared<T_skill>(name,m_memory,m_portal);
-        bool result=m_skill_engine->execute_skill(skill);
+        ControlReturnType result=m_skill_engine->execute_skill(skill);
         m_result.skill_results.insert(std::make_pair(name,skill->get_result()));
         if(skill->get_result().exception){
             m_flag_stop = true;
         }
-        if(!result){
+        if(result==ControlReturnType::crtException){
             m_result.skill_results[name].success=false;
-            throw TaskException("Could not execute skill " + name + ".");
+            throw TaskException("An exception occurred when executing skill " + name + ".");
         }
     }
 

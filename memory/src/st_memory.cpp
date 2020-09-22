@@ -2,8 +2,9 @@
 #include "memory/lt_memory.hpp"
 #include <spdlog/spdlog.h>
 
-#include <msrm_utils/system.hpp>
-#include <msrm_utils/math.hpp>
+#include "msrm_utils/json.hpp"
+#include "msrm_utils/system.hpp"
+#include "msrm_utils/math.hpp"
 
 namespace mios {
 
@@ -206,6 +207,47 @@ bool STMemory::update_object(const std::string &name, const nlohmann::json &desc
         m_environment.insert(std::make_pair(name,Object(name)));
     }
     m_environment.at(name).update(description);
+    if(!m_lt_memory->upload_environment_element(m_environment.at(name))){
+        return false;
+    }
+    return true;
+}
+
+bool STMemory::update_partial_object(const std::string &name, const nlohmann::json &description){
+    if(name=="NullObject"){
+        spdlog::error("Cannot overwrite NullObject");
+        return false;
+    }
+    if(m_environment.find(name)==m_environment.end()){
+        spdlog::error("No object with name " + name + " exists.");
+        return false;
+    }
+    std::optional<double> x,y,z={};
+    std::optional<Eigen::Matrix<double,3,3> > R={};
+    if(description.find("x")!=description.end()){
+        double x_tmp;
+        description["x"].get_to(x_tmp);
+        x=x_tmp;
+    }
+    if(description.find("y")!=description.end()){
+        double y_tmp;
+        description["y"].get_to(y_tmp);
+        y=y_tmp;
+    }
+    if(description.find("z")!=description.end()){
+        double z_tmp;
+        description["z"].get_to(z_tmp);
+        z=z_tmp;
+    }
+    if(description.find("R")!=description.end()){
+        Eigen::Matrix<double,3,3> R_tmp;
+        if(!msrm_utils::read_json_param<double,3,3>(description,"R",R_tmp)){
+            spdlog::error("Partial object data update: Rotation matrix is invalid.");
+            return false;
+        }
+        R=R_tmp;
+    }
+    m_environment.at(name).set_pose(x,y,z,R);
     if(!m_lt_memory->upload_environment_element(m_environment.at(name))){
         return false;
     }
