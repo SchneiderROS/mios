@@ -283,18 +283,18 @@ bool FramesParameters::from_json(const nlohmann::json &parameters){
         spdlog::error("Could not read O_R_T.");
         return false;
     }
-    if(!msrm_utils::read_json_param<double,4,4>(parameters,"F_T_EE",F_T_EE)){
-        spdlog::error("Could not read F_T_EE.");
-        return false;
-    }
-    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_TCP",EE_T_TCP)){
-        spdlog::error("Could not read EE_T_TCP.");
-        return false;
-    }
-    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_K",EE_T_K)){
-        spdlog::error("Could not read EE_T_K.");
-        return false;
-    }
+//    if(!msrm_utils::read_json_param<double,4,4>(parameters,"F_T_EE",F_T_EE)){
+//        spdlog::error("Could not read F_T_EE.");
+//        return false;
+//    }
+//    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_TCP",EE_T_TCP)){
+//        spdlog::error("Could not read EE_T_TCP.");
+//        return false;
+//    }
+//    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_K",EE_T_K)){
+//        spdlog::error("Could not read EE_T_K.");
+//        return false;
+//    }
     return true;
 }
 
