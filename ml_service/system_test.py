@@ -49,7 +49,7 @@ def test_single_task(host):
 
 
 def test_task_sequence(host):
-    pd = rastrigin()
+    pd = insert_cylinder_30()
     start_learning(host, pd, None, ["test_sequence_1"])
     k1 = get_knowledge(["test_sequence_1"], pd.task_type, ["test_sequence_1"])
     start_learning(host, pd, k1, ["test_sequence_2"])

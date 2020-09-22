@@ -104,7 +104,8 @@ def insert_cylinder_30():
         "skills": {
             "insertion": {
                 "skill": {
-                    "time_max": 5.0
+                    "time_max": 5.0,
+                    "ROI_x": [-0.03, 0.03, -0.03, 0.03, -1, 1]
                 }
             },
             "contact": {

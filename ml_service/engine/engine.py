@@ -84,8 +84,11 @@ class Engine:
         logger.debug("Engine.wait_for_trial(" + trial_uuid + ", " + str(max_wait_time) + ")")
         t_0 = time.time()
         while trial_uuid not in self.completed_trials:
-            if time.time() - t_0 > max_wait_time or self.keep_running is False:
+            if time.time() - t_0 > max_wait_time:
                 logger.error("Wait time for trial has been exceeded.")
+                return Trial(dict(), [], dict())
+            if self.keep_running is False:
+                logger.error("Service has been stopped.")
                 return Trial(dict(), [], dict())
             time.sleep(0.1)
 
@@ -151,12 +154,13 @@ class Engine:
             raise ProblemDefinitionError
 
         result = self._execute_task(agent, trial)
-        if result is False:
-            logger.warning("Could not execute task for agent " + agent + ". Trial will be re-inserted into queue.")
-            self.queued_trials.put(trial)
-        else:
-            self.queued_trials.task_done()
-            self.completed_trials[trial.trial_uuid] = trial
+        if self.keep_running is True:
+            if result is False:
+                logger.warning("Could not execute task for agent " + agent + ". Trial will be re-inserted into queue.")
+                self.queued_trials.put(trial)
+            else:
+                self.queued_trials.task_done()
+                self.completed_trials[trial.trial_uuid] = trial
 
         self._reset_task(agent, trial)
         self.free_agents.add(agent)

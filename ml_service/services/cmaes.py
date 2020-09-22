@@ -79,7 +79,12 @@ class CMAESService(BaseService):
         costs = []
         for uuid in trial_uuids:
             result = self.wait_for_result(uuid)
-            costs.append((result.final_cost,))
+            if result.final_cost is None:
+                logger.error("None was returned as cost, invoking stop.")
+                self.stop()
+                costs.append((0,))
+            else:
+                costs.append((result.final_cost,))
 
         logger.debug("CMAES costs: " + str(costs))
         return costs
