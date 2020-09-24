@@ -10,6 +10,12 @@ from services.cmaes import *
 from services.base_service import ServiceConfiguration
 from problem_definition.problem_definition import ProblemDefinition
 from problem_definition.domain import Domain
+from utils.udp_client import call_method
+from definitions import ProblemLibrary
+from definitions import ServiceConfigurationLibrary
+
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
 
 
 logger = logging.getLogger("ml_service")
@@ -21,9 +27,24 @@ class Interface:
     def __init__(self):
         self.service = None
         self.learn_thread = None
+        self.rpc_server = None
+        self.problem_library = ProblemLibrary()
+        self.service_library = ServiceConfigurationLibrary()
+
+    def start_rpc_server(self, port: int = 8000):
+        self.rpc_server = SimpleXMLRPCServer(("localhost", port), allow_none=True)
+        self.rpc_server.register_introspection_functions()
+        self.rpc_server.register_function(self.start_service_wrapper, "start_service")
+        self.rpc_server.register_function(self.is_busy, "is_busy")
+        self.rpc_server.register_function(self.wait_for_service, "wait_for_service")
+        self.rpc_server.serve_forever()
+
+    def start_service_wrapper(self, problem_definition: str, configuration: str, agents, knowledge: dict = None):
+        self.start_service(self.problem_library.get_problem_definition(problem_definition),
+                           self.service_library.get_service_configuration(configuration), set(agents), knowledge)
 
     def start_service(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
-                   agents: set, knowledge:dict = None) -> str:
+                   agents: set, knowledge: dict = None) -> str:
         problem_definition.uuid = str(uuid.uuid4())
         if configuration.service_name == "cmaes":
             self.service = CMAESService()
@@ -51,6 +72,16 @@ class Interface:
     def stop_service(self):
         """Stop the learning process, if possible save all results and stop the robot"""
         self.service.stop()
+
+    def is_ready(self, agents) -> bool:
+        if self.learn_thread is not None:
+            return False
+        for a in agents:
+            response = call_method(a, 12002, "is_busy")
+            if response["result"]["busy"] is True:
+                return False
+
+        return True
 
     def is_busy(self) -> bool:
         if self.learn_thread is None:
