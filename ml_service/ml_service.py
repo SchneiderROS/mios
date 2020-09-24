@@ -10,6 +10,7 @@ from problem_definition.problem_definition import ProblemDefinition
 from problem_definition.domain import Domain
 from utils.udp_client import call_method
 from definitions import *
+from xmlrpc.client import ServerProxy
 
 
 logger = logging.getLogger("ml_service")
@@ -70,17 +71,19 @@ def test_interface(agent: str = "localhost"):
         print("wainting for 1st task to finish...")
     interface.stop_service()
 
-    #extracting knowledge
-    k = KnowledgeProcessor()
-    k.process_knowledge({"meta.uuid":uuid},"ml_results",problem_def.task_type,"test_knowledge",problem_def.task_type)
-    print("knowledge processed.")
-    time.sleep(10)
-    knowledge = k.get_knowledge({"meta.task_type":problem_def.task_type},"test_knowledge",problem_def.task_type)
-    print("knowledge:  ",knowledge)
-    #learning with knowledge
-    uuid = interface.start_service(problem_def, get_service_configuration(), agents, knowledge)
-    input("Press enter to stop service.")
-    interface.stop_service()
+
+def test_with_rpc_server():
+    i = Interface()
+    i.start_rpc_server(8000)
+
+
+def test_with_rpc_client(agent: str = "localhost"):
+    agents = []
+    agents.append(agent)
+    problem_def = "rastrigin"
+
+    s = ServerProxy('http://localhost:8000', allow_none=True)
+    s.start_service("rastrigin", "cmaes", agents, None)
 
 
 def test_standalone(agent: str = "localhost"):
