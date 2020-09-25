@@ -35,16 +35,17 @@ class TaskScheduler:
     def solve_tasks(self):
         while self.keep_running is True and (
                 self.unassigned_tasks.empty() is False or self.assigned_tasks.empty() is False):
-            task = self.unassigned_tasks.get()  # get next task
-            self.unassigned_tasks.task_done()
+            if self.unassigned_tasks.empty() is False:
+                task = self.unassigned_tasks.get()  # get next task
+                self.unassigned_tasks.task_done()
 
-            if self.is_service_ready(task.service_url) is False:  # if task can not be started...
-                self.unassigned_tasks.put(task)  # put it back
-                continue
-            else:  # if task can be started
-                self.assigned_tasks.add(task)
-                task_thread = Thread(target=self.solve_task, args=(task,))
-                task_thread.start()
+                if self.is_service_ready(task.service_url) is False:  # if task can not be started...
+                    self.unassigned_tasks.put(task)  # put it back
+                    continue
+                else:  # if task can be started
+                    self.assigned_tasks.add(task)
+                    task_thread = Thread(target=self.solve_task, args=(task,))
+                    task_thread.start()
 
     def is_service_ready(self, service_url: str, agents: list) -> bool:
         s = ServerProxy(service_url, allow_none=True)
