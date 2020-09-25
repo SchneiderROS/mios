@@ -73,7 +73,9 @@ def test_with_rpc_server():
 def test_with_rpc_client(agent: str = "localhost"):
     agents = []
     agents.append(agent)
-    problem_def = rastrigin()
+    problem_def = insert_cylinder_30()
+
+    print(problem_def.to_dict())
 
     s = ServerProxy('http://localhost:8000', allow_none=True)
     s.start_service(problem_def.to_dict(), CMAESConfiguration().to_dict(), agents, None)

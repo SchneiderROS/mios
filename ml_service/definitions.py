@@ -38,6 +38,7 @@ def rastrigin_cost():
     c.heuristic_expressions = ["var", "var", "var"]
     c.heuristic_weights = [0, 0, 0]
     c.heuristic_skills = []
+    c.max_cost = 0
     return c
 
 
@@ -146,19 +147,19 @@ def insert_cylinder_30():
     }
     reset_instructions.append({"method": "start_task", "parameters": task_context})
     pd = ProblemDefinition("insert_object", domain, default_context, [], [], reset_instructions,
-                           insert_cylinder_30_cost, ["insertion", "cylinder_30"])
+                           insert_cylinder_30_cost(), ["insertion", "cylinder_30"])
     return pd
 
 
-def insert_cylinder_30_cost(cost, heuristic, success, weights):
-    total_cost = 0
-    if "insertion" not in cost or "insertion" not in heuristic or "contact" not in cost:
-        total_cost = 1000
-    else:
-        if success is True:
-            total_cost = cost["contact"] + cost["insertion"]
-    
-        if success is False:
-            total_cost = 10 + heuristic["insertion"]
+def insert_cylinder_30_cost():
+    c = CostFunction()
+    c.optimum_skills.append("contact")
+    c.optimum_skills.append("insertion")
+    c.optimum_weights = [1, 0, 0]
+    c.optimum_expressions = ["var", "var", "var"]
 
-    return total_cost
+    c.heuristic_expressions = ["var", "var", "var"]
+    c.heuristic_weights = [1, 0, 0]
+    c.heuristic_skills = ["insertion"]
+    c.max_cost = 10
+    return c

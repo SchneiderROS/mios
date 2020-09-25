@@ -15,6 +15,7 @@ class CostFunction:
         self.heuristic_skills = []
         self.heuristic_weights = []
         self.heuristic_expressions = []
+        self.max_cost = 0
 
     def to_dict(self):
         c = {
@@ -23,7 +24,8 @@ class CostFunction:
             "optimum_expressions": self.optimum_expressions,
             "heuristic_skills": self.heuristic_skills,
             "heuristic_weights": self.heuristic_weights,
-            "heuristic_expressions": self.heuristic_expressions
+            "heuristic_expressions": self.heuristic_expressions,
+            "max_cost": self.max_cost
         }
         return c
 
@@ -36,6 +38,7 @@ class CostFunction:
         c.heuristic_skills = cf_dict["heuristic_skills"]
         c.heuristic_weights = cf_dict["heuristic_weights"]
         c.heuristic_expressions = cf_dict["heuristic_expressions"]
+        c.max_cost = cf_dict["max_cost"]
         return c
 
 
@@ -74,8 +77,9 @@ class ProblemDefinition:
                                pd_dict["setup_instructions"], pd_dict["termination_instructions"],
                                pd_dict["reset_instructions"], CostFunction.from_dict(pd_dict["cost_function"]),
                                pd_dict["tags"])
-        pd.domain = pd_dict["domain"]
-        pd.cost_function = pd_dict["cost_function"]
+        pd.domain = Domain.from_dict(pd_dict["domain"])
+        pd.cost_function = CostFunction.from_dict(pd_dict["cost_function"])
+        return pd
 
     def is_valid(self) -> bool:
         valid = True
@@ -130,4 +134,7 @@ class ProblemDefinition:
             var = heuristic_per_weight[i]
             heuristic += self.cost_function.heuristic_weights[i] * eval(self.cost_function.heuristic_expressions[i])
 
-        return cost + heuristic
+        if result.success is True:
+            return cost
+        else:
+            return heuristic + self.cost_function.max_cost
