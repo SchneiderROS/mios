@@ -27,7 +27,7 @@ class TaskScheduler:
         self.assigned_tasks = set()
         self.services = set()
         self.keep_running = False
-        self.kb_location = "http://localhost:8000"
+        self.kb_location = "http://localhost:8001"
 
     def add_task(self, task: Task):
         self.unassigned_tasks.put(task)

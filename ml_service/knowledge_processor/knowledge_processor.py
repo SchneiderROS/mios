@@ -66,6 +66,8 @@ class KnowledgeProcessor():
     def __init__(self, host='localhost', port=27017):
         self.DBclient = MongoDBClient(host, port)
         self.cluster_processor = ClusterProcessor()
+        self.data_db = "ml_results"
+        self.knowledge_db = "knowledge"
 
     def process_knowledge(self, filter: dict, data_db: str , data_col: str, knowledge_db: str, knowledge_col: str, knowledge_tags:list):
         '''process raw data from trials to knowledge; working from and on the database'''
@@ -130,7 +132,7 @@ class KnowledgeProcessor():
             parameter_dict[key_name] = float(parameter)  # use python float because of rpc restrictions
 
         # save knoweldge_tags together tags from used data
-        knowledge_tags.append(list(tags))
+        knowledge_tags.extend(list(tags))
 
         meta = metainfo[0]
         meta.pop("uuid", None)
@@ -148,7 +150,7 @@ class KnowledgeProcessor():
         knowledge_id = self.DBclient.write(knowledge_db, knowledge_col, knowledge)
         return knowledge_id
 
-    def process_knowledge_local(self, filter: dict, data_db: str , data_col: str):
+    def process_knowledge_local(self, filter: dict, data_col: str, data_db: str) -> dict: 
         '''process raw data from trials to knowledge; dont save knowledge to database'''
         #allocate data:
         doc = self.DBclient.read(data_db, data_col, filter)
@@ -220,14 +222,15 @@ class KnowledgeProcessor():
 
         return knowledge
 
-    def get_knowledge(self, filter, knowledge_db, knowledge_col):
+    def get_local_knowledge(self, filter: dict, knowledge_col: str, knowledge_db: str = "local_knowledge"):
         docs = self.DBclient.read(knowledge_db, knowledge_col, filter)
         if len(docs) >= 1:
-            logger.debug("knowledge_processor.get_knowledge(): found knowledge " + str(docs[0]))
+            logger.debug("knowledge_processor.get_local_knowledge(): found knowledge " + str(docs[0]))
             return docs[0]
         else:
-            logger.debug("knowledge_processor.get_knowledge(): found none! -> return None")
-            return None
+            logger.debug("knowledge_processor.get_local_knowledge(): found none! -> create local knowledge from ml data")
+            knowledge = self.process_knowledge_local(filter, knowledge_col,knowledge_db)
+            return knowledge
 
 
 

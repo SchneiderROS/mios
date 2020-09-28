@@ -28,6 +28,7 @@ class MongoDBClient():
                     search_param[key] = objectid.ObjectId(search_param[key])
 
         for f in col.find(filter=search_param):
+            f["_id"] = str(f["_id"])
             findings.append(f)
         return findings
 

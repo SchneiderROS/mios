@@ -30,11 +30,13 @@ class Database():
         self.rpc_server.register_function(self.process_knowledge, "process_knowledge")
         self.rpc_server.register_function(self.process_knowledge_local, "process_knowledge_local")
         self.rpc_server.register_function(self.stop_server, "stop_server")
-        print("starting rpc server at "+str(port))
+        logger.debug("databse.start_server: starting rpc server with global database at port "+str(port))
         #self.rpc_server.serve_forever()
         self.stop = False
         while not self.stop:
             self.rpc_server.handle_request()
+        logger.debug("databse: Global database rpc server has stopped")
+        return True
 
     def store_result(self, result: dict):
         """takes whole ml data of task and saves it to database"""
@@ -74,4 +76,5 @@ class Database():
         return knowledge
 
     def stop_server(self):
+        logger.debug("database.stop_server")
         self.stop = True

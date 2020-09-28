@@ -109,3 +109,54 @@ def test_task_scheduler():
         t.add_task(task)
 
     t.solve_tasks()
+
+def test_database():
+    #take old task for demo..
+    db_client = MongoDBClient()
+    task = db_client.read("ml_results","benchmark_rastrigin",{})
+    task = task[0]
+    task_type = task["meta"]["task_type"]
+
+    #test database:
+    interface = Interface()
+    interface.start_global_database(8001)
+    import time
+    import xmlrpc.client
+    time.sleep(1)
+
+    task.pop("_id")
+    with xmlrpc.client.ServerProxy("http://localhost:8001/") as proxy:
+        i = proxy.store_result(task)
+
+    time.sleep(1)
+    with xmlrpc.client.ServerProxy("http://localhost:8001/") as proxy:
+        knowledge = proxy.process_knowledge_local({"_id":i},task_type)
+    print(knowledge)
+
+def test_knowledge_use(knowledge_mode = "local"):  
+    #create knowledge from old task:
+    k = KnowledgeProcessor()
+    k.process_knowledge({"meta.tags":["test_sequence_1","test_sequence_2","test_sequence_3"]},"ml_results","benchmark_rastrigin","local_knowledge","benchmark_rastrigin",["test_knowledge","some_tag"])
+
+    #start global database:
+    interface = Interface()
+    interface.start_global_database(8001)
+
+    import time 
+    time.sleep(1)
+
+    agents = set()
+    agent = 'localhost'
+    agents.add(agent)
+    problem_def = rastrigin()
+
+    interface = Interface()
+    knowledge_info = {
+            "mode": knowledge_mode,
+            "kb_location": "http://localhost:8001/"
+        }
+
+    uuid = interface.start_service(problem_def, get_service_configuration(), agents, knowledge_info)
+    input("Press enter to stop service.")
+    interface.stop_service()
+
