@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ARG1="$1"
 ROOT=$(dirname "$(realpath $0)")
