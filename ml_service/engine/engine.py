@@ -3,6 +3,7 @@ import datetime
 import logging
 from threading import Thread
 from queue import Queue
+from queue import Empty
 from copy import deepcopy
 import uuid
 from mongodb_client.mongodb_client import MongoDBClient
@@ -84,6 +85,7 @@ class Engine:
         logger.debug("Engine.wait_for_trial(" + trial_uuid + ", " + str(max_wait_time) + ")")
         t_0 = time.time()
         while trial_uuid not in self.completed_trials:
+            logger.debug("Engine::wait_for_trial.loop")
             if time.time() - t_0 > max_wait_time:
                 logger.error("Wait time for trial has been exceeded.")
                 return Trial(dict(), [], dict())
@@ -113,10 +115,15 @@ class Engine:
             worker_threads[a] = None
 
         while self.keep_running is True:
-            trial = self.queued_trials.get()
-            logger.debug("Engine.main_loop.for1: For trial_uuid: " + trial.trial_uuid)
+            try:
+                trial = self.queued_trials.get(False)
+            except Empty:
+                time.sleep(0.1)
+                continue
+            # logger.debug("Engine.main_loop.while1: For trial_uuid: " + trial.trial_uuid)
             thread_started = False
             while self.keep_running is True and thread_started is False:
+                # logger.debug("Engine::main_loop.while2")
                 for a in self.agents.copy():
                     if a not in self.free_agents:
                         logger.debug("Agent " + a + " not in self.free_agents")
@@ -127,7 +134,7 @@ class Engine:
                         time.sleep(1)
                         continue
 
-                    logger.debug("Engine.main_loop().is_busy(" + a + ")")
+                    # logger.debug("Engine.main_loop().is_busy(" + a + ")")
                     response = call_method(a, 12000, "is_busy")
                     if response is None:
                         logger.debug("is_busy on agent " + a + ": response is None")
@@ -148,7 +155,7 @@ class Engine:
         logger.debug("Engine::main_loop.after_loop")
         for a in self.agents:
             if worker_threads[a] is not None:
-                worker_threads[a].join(1000)
+                worker_threads[a].join(5)
         logger.debug("Engine::main_loop.last_line")
 
     def _worker_loop(self, agent: str, trial: Trial):
