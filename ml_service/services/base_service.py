@@ -114,17 +114,18 @@ class BaseService(metaclass=ABCMeta):
         self.result = result
         # update knowledge bases:
         self.knowledge_processor.process_knowledge(self.problem_definition.get_task_identity())  # process knowledge and stores it to local db
-        if self.knowledge_source["mode"] == "global":
-            ml_data = self.knowledge_processor.get_ml_results({"_id":self.database_results_id}, self.problem_definition.task_type)
-            if len(ml_data) == 1:
-                logger.debug("base_service.learn_task: store ml_results to global database at "+str(self.knowledge_source["kb_location"]))
-                with ServerProxy(self.knowledge_source["kb_location"]) as kb:
-                    try:
-                        kb.store_result(ml_data[0])
-                    except socket.timeout:
-                        logger.error("base_service: global Database is not reachable!")
-            else: 
-                logger.error("base_service.learn_task: cannot find ml_results on local database to copy them to global database")
+        if self.knowledge_source is not None:
+            if self.knowledge_source["mode"] == "global":
+                ml_data = self.knowledge_processor.get_ml_results({"_id":self.database_results_id}, self.problem_definition.task_type)
+                if len(ml_data) == 1:
+                    logger.debug("base_service.learn_task: store ml_results to global database at "+str(self.knowledge_source["kb_location"]))
+                    with ServerProxy(self.knowledge_source["kb_location"]) as kb:
+                        try:
+                            kb.store_result(ml_data[0])
+                        except socket.timeout:
+                            logger.error("base_service: global Database is not reachable!")
+                else:
+                    logger.error("base_service.learn_task: cannot find ml_results on local database to copy them to global database")
         return result
 
     def stop(self):

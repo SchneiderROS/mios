@@ -53,8 +53,10 @@ def test_mios(agent: str = "localhost"):
 def test_interface(agent: str = "localhost"):
     agents = set()
     agents.add(agent)
-    problem_def = rastrigin()
+    problem_def = insert_cylinder_30()
     interface = Interface()
+
+    call_method(agent, 12002, "set_grasped_object", {"object": "key_abus_e30"})
 
     uuid = interface.start_service(problem_def, get_service_configuration(), agents)
     input("Press enter to stop service.")
@@ -73,7 +75,7 @@ def test_with_rpc_client(agent: str = "localhost"):
 
     print(problem_def.to_dict())
 
-    s = ServerProxy('http://localhost:8000', allow_none=True)
+    s = ServerProxy("http://" + agent + ":8000", allow_none=True)
     s.start_service(problem_def.to_dict(), CMAESConfiguration().to_dict(), agents, None)
 
 

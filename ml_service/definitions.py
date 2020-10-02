@@ -104,9 +104,9 @@ def insert_cylinder_30():
     default_context = {
         "name": "InsertObject",
         "parameters": {
-            "insertable": "cylinder_30",
-            "insert_into": "hole_30",
-            "insert_approach": "hole_30_above",
+            "insertable": "key_abus_e30",
+            "insert_into": "lock_abus_e30",
+            "insert_approach": "lock_abus_e30_above",
             "offset": [0, 0, 0, 0, 0, 0]
         },
         "skills": {
@@ -138,9 +138,9 @@ def insert_cylinder_30():
             }
         },
         "parameters": {
-            "extractable": "cylinder_30",
-            "extract_from": "hole_30",
-            "extract_to": "hole_30_above"
+            "extractable": "key_abus_e30",
+            "extract_from": "lock_abus_e30",
+            "extract_to": "lock_abus_e30_above"
         }
     }
     reset_instructions.append({"method": "start_task", "parameters": task_context})
@@ -155,7 +155,6 @@ def insertion_cost():
     c.optimum_skills.append("insertion")
     c.optimum_weights[0] = 1
 
-    c.heuristic_weights[0] = 1
     c.heuristic_skills = ["insertion"]
     c.max_cost[0] = 10
     return c

@@ -116,6 +116,9 @@ class KnowledgeProcessor():
         #find clusters:
         clusters = self.cluster_processor.find_cluster(successful_trials)
         #use best cluster:
+        if len(clusters) == 0:
+            return False
+
         successful_trials = clusters[0]
         #use top 10 trials:
         #sort for cost

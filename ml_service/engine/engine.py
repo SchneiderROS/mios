@@ -145,9 +145,11 @@ class Engine:
 
             time.sleep(0.1)
 
+        logger.debug("Engine::main_loop.after_loop")
         for a in self.agents:
             if worker_threads[a] is not None:
                 worker_threads[a].join(1000)
+        logger.debug("Engine::main_loop.last_line")
 
     def _worker_loop(self, agent: str, trial: Trial):
         logger.debug("Engine._worker_loop(" + agent + ", " + trial.trial_uuid + ")")

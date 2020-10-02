@@ -3,7 +3,6 @@ from engine.task_result import TaskResult
 from utils.exception import CostFunctionError
 import logging
 
-
 logger = logging.getLogger("ml_service")
 
 
@@ -16,6 +15,7 @@ class CostFunction:
     4 - total effort
     5 - custom
     """
+
     def __init__(self):
         self.optimum_skills = []
         self.optimum_weights = [0] * 5
@@ -48,7 +48,8 @@ class CostFunction:
 
 
 class ProblemDefinition:
-    def __init__(self, task_type: str, domain: Domain, default_context: dict, setup_instructions: list, termination_instruction: list,
+    def __init__(self, task_type: str, domain: Domain, default_context: dict, setup_instructions: list,
+                 termination_instruction: list,
                  reset_instruction: list, cost_function: CostFunction, tags=None):
         if tags is None:
             tags = []
@@ -63,7 +64,7 @@ class ProblemDefinition:
         self.tags = tags
 
     def get_task_identity(self) -> dict:
-        return {"task_type":self.task_type,"optimum_weights":self.cost_function.optimum_weights,"tags":self.tags}
+        return {"task_type": self.task_type, "optimum_weights": self.cost_function.optimum_weights, "tags": self.tags}
 
     def to_dict(self) -> dict:
         problem_definition = {
@@ -134,12 +135,16 @@ class ProblemDefinition:
 
         cost = 0
         for i in range(len(cost_per_weight)):
-            var = cost_per_weight[i]
-            cost += self.cost_function.optimum_weights[i] * (eval(self.cost_function.optimum_expressions[i]) / self.cost_function.max_cost[i])
+            if self.cost_function.optimum_weights[i] > 0:
+                var = cost_per_weight[i]
+                cost += self.cost_function.optimum_weights[i] * (
+                            eval(self.cost_function.optimum_expressions[i]) / self.cost_function.max_cost[i])
 
-            if eval(self.cost_function.optimum_expressions[i]) > self.cost_function.max_cost[i]:
-                logger.debug("Exceeded maximum cost!")
-                result.success = False
+                if eval(self.cost_function.optimum_expressions[i]) > self.cost_function.max_cost[i]:
+                    logger.debug("Exceeded maximum cost! Cost is " + str(
+                        eval(self.cost_function.optimum_expressions[i])) + ", maximum cost is " + str(
+                        self.cost_function.max_cost[i]))
+                    result.success = False
 
         heuristic = 0
         for s in self.cost_function.heuristic_skills:
