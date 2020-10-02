@@ -48,13 +48,13 @@ class TaskScheduler:
                 if self.is_service_ready(task.service_url, task.agents) is False:  # if task can not be started...
                     logger.debug("Could not assign task.")
                     self.unassigned_tasks.put(task)  # put it back
-                    time.sleep(1)
+                    time.sleep(0.1)
                     continue
                 else:  # if task can be started
                     self.assigned_tasks.add(task)
                     task_thread = Thread(target=self.solve_task, args=(task,))
                     task_thread.start()
-            time.sleep(1)
+            time.sleep(0.1)
             logger.debug("TaskScheduler::solve_tasks.after_pause")
 
     def is_service_ready(self, service_url: str, agents: list) -> bool:
