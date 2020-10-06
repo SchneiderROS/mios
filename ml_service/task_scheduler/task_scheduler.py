@@ -17,7 +17,7 @@ class Task:
         self.service_configuration = service_configuration
         self.agents = agents
         self.service_url = service_url
-        self.knowledge_mode = "none"
+        self.knowledge_mode = knowledge_mode
 
 
 class TaskScheduler:
@@ -69,7 +69,7 @@ class TaskScheduler:
             return False
 
     def solve_task(self, task: Task):
-        logger.debug("TaskScheduler::solve_task.starting")
+        logger.debug("TaskScheduler::solve_task.starting at" +str(task.service_url)+" with task mode "+str(task.knowledge_mode))
         s = ServerProxy(task.service_url, allow_none=True)
         knowledge_info = {
             "mode": task.knowledge_mode,

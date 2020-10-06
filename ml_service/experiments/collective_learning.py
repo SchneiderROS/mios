@@ -18,6 +18,7 @@ def insert_cylinder_10():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "cylinder_10"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "hole_10"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "hole_10_above"
+    pd.tags = ["cylinder_10"]
     return pd
 
 
@@ -30,6 +31,7 @@ def insert_cylinder_20():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "cylinder_20"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "hole_20"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "hole_20_above"
+    pd.tags = ["cylinder_20"]
     return pd
 
 
@@ -42,6 +44,7 @@ def insert_cylinder_40():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "cylinder_40"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "hole_40"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "hole_40_above"
+    pd.tags = ["cylinder_40"]
     return pd
 
 def insert_cylinder_50():
@@ -53,6 +56,7 @@ def insert_cylinder_50():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "cylinder_50"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "hole_50"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "hole_50_above"
+    pd.tags = ["cylinder_50"]
     return pd
 
 
@@ -65,6 +69,7 @@ def insert_cylinder_60():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "cylinder_60"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "hole_60"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "hole_60_above"
+    pd.tags = ["cylinder_60"]
     return pd
 
 
@@ -77,6 +82,7 @@ def insert_key_abus():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "key_abus_e30"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "lock_abus_e30"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "lock_abus_e30_above"
+    pd.tags = ["key_abus_e30"]
     return pd
 
 
@@ -89,6 +95,7 @@ def insert_plug_usb_c():
     pd.reset_instructions[0]["parameters"]["parameters"]["extractable"] = "plug_usb_c"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_from"] = "slot_usb_c"
     pd.reset_instructions[0]["parameters"]["parameters"]["extract_to"] = "slot_usb_c_above"
+    pd.tags = ["plug_usb_c"]
     return pd
 
 
@@ -109,24 +116,29 @@ def test_collective_learning():
     config = CMAESConfiguration()
     c = TestCreationPipeline()
 
-    config.n_gen = 3
-    config.n_ind = 2
+    config.n_gen = 6
+    config.n_ind = 10
+
+    knowledge_mode = "global"
+    n_tasks = 10
 
     call_method("collective-panda-001.local", 12002, "set_grasped_object", {"object": "cylinder_40"})
+    call_method("collective-panda-002.local", 12002, "set_grasped_object", {"object": "key_abus_e30"})
     call_method("collective-panda-007.local", 12002, "set_grasped_object", {"object": "cylinder_10"})
     call_method("collective-panda-008.local", 12002, "set_grasped_object", {"object": "cylinder_60"})
+    call_method("collective-panda-009.local", 12002, "set_grasped_object", {"object": "plug_usb_c"})
 
     c = TestCreationPipeline()
-    c.create_tasks_from_template(insert_cylinder_10(), config, 10, "http://collective-panda-007.local:8000",
-                                 ["collective-panda-007.local"], "local")
-    c.create_tasks_from_template(insert_cylinder_40(), config, 10, "http://collective-panda-001.local:8000",
-                                 ["collective-panda-001.local"], "local")
-    c.create_tasks_from_template(insert_cylinder_60(), config, 10, "http://collective-panda-008.local:8000",
-                                 ["collective-panda-008.local"], "local")
-    #c.create_tasks_from_template(insert_key_abus(), config, 10, "collective-panda-002.local",
-    #                             ["collective-panda-002.local"], "local")
-    #c.create_tasks_from_template(insert_plug_usb_c(), config, 10, "collective-panda-003.local",
-    #                             ["collective-panda-003.local"], "local")
+    c.create_tasks_from_template(insert_cylinder_10(), config, n_tasks, "http://collective-panda-007.local:8000",
+                                 ["collective-panda-007.local"], knowledge_mode)
+    c.create_tasks_from_template(insert_cylinder_40(), config, n_tasks, "http://collective-panda-001.local:8000",
+                                 ["collective-panda-001.local"], knowledge_mode)
+    c.create_tasks_from_template(insert_cylinder_60(), config, n_tasks, "http://collective-panda-008.local:8000",
+                                 ["collective-panda-008.local"], knowledge_mode)
+    c.create_tasks_from_template(insert_key_abus(), config, n_tasks, "http://collective-panda-002.local:8000",
+                                 ["collective-panda-002.local"], knowledge_mode)
+    c.create_tasks_from_template(insert_plug_usb_c(), config, n_tasks, "http://collective-panda-009.local:8000",
+                                 ["collective-panda-009.local"], knowledge_mode)
 
     t = TaskScheduler()
     for task in c.tasks:
