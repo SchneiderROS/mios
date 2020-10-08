@@ -2,6 +2,7 @@ from problem_definition.domain import Domain
 from engine.task_result import TaskResult
 from utils.exception import CostFunctionError
 import logging
+from typing import Tuple
 
 logger = logging.getLogger("ml_service")
 
@@ -23,6 +24,8 @@ class CostFunction:
         self.heuristic_skills = []
         self.heuristic_expressions = "var"
         self.max_cost = [1] * 5
+        self.min_cost = [0] * 5
+        self.finish_thr = 0
 
     def to_dict(self):
         c = {
@@ -31,7 +34,9 @@ class CostFunction:
             "optimum_expressions": self.optimum_expressions,
             "heuristic_skills": self.heuristic_skills,
             "heuristic_expressions": self.heuristic_expressions,
-            "max_cost": self.max_cost
+            "max_cost": self.max_cost,
+            "min_cost": self.min_cost,
+            "finish_thr": self.finish_thr
         }
         return c
 
@@ -116,7 +121,7 @@ class ProblemDefinition:
 
         return valid
 
-    def calculate_cost(self, result: TaskResult) -> float:
+    def calculate_cost(self, result: TaskResult) -> Tuple[float, bool]:
         if len(self.cost_function.optimum_expressions) != 5:
             raise CostFunctionError
         if len(self.cost_function.optimum_weights) != 5:
@@ -134,6 +139,7 @@ class ProblemDefinition:
             cost_per_weight[4] += result.cost[s]["custom"]
 
         cost = 0
+        min_cost = 0
         for i in range(len(cost_per_weight)):
             if self.cost_function.optimum_weights[i] > 0:
                 var = cost_per_weight[i]
@@ -146,12 +152,22 @@ class ProblemDefinition:
                         self.cost_function.max_cost[i]))
                     result.success = False
 
+                var = self.cost_function.min_cost[i]
+                min_cost += self.cost_function.optimum_weights[i] * (
+                        eval(self.cost_function.optimum_expressions[i]) / self.cost_function.max_cost[i])
+
         heuristic = 0
         for s in self.cost_function.heuristic_skills:
             var = result.heuristic[s]
             heuristic += eval(self.cost_function.heuristic_expressions)
 
+        if cost > 1 and result.success is True:
+            print("####################################################################################")
+            print(self.cost_function.max_cost)
+            print(self.cost_function.optimum_weights)
+            print(cost_per_weight)
+
         if result.success is True:
-            return cost
+            return cost, cost < min_cost
         else:
-            return heuristic + 1
+            return heuristic + 1, False

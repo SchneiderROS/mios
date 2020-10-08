@@ -8,6 +8,7 @@ class TaskResult:
     def __init__(self):
         self.final_cost = None
         self.cost = dict()
+        self.optimal = False
         self.heuristic = dict()
         self.success = None
         self.errors = []

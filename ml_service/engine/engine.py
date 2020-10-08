@@ -17,7 +17,7 @@ logger = logging.getLogger("ml_service")
 
 
 class Trial:
-    def __init__(self, task_context: dict, reset_instructions: list, theta: dict):
+    def __init__(self, task_context: dict, reset_instructions: list, theta: dict, log: bool = True):
         self.task_context = task_context
         self.reset_instructions = reset_instructions
         self.theta = theta
@@ -31,6 +31,7 @@ class Trial:
         self.trial_uuid = "INVALID"
 
         self.trial_number = 0
+        self.log = log
 
     def is_valid(self):
         if "name" not in self.task_context:
@@ -52,11 +53,13 @@ class Engine:
         self.database_results_id = None
 
         self.problem_definition = None
+        self.meta_data = dict()
 
         self.keep_running = False
         self.max_trial_repeats = 3
 
         self.cnt_trial = 0
+        self.cnt_optimal = 0
 
     def initialize(self, problem_definition: ProblemDefinition):
         return self.initialize_results(problem_definition)
@@ -85,26 +88,29 @@ class Engine:
         logger.debug("Engine.wait_for_trial(" + trial_uuid + ", " + str(max_wait_time) + ")")
         t_0 = time.time()
         while trial_uuid not in self.completed_trials:
-            logger.debug("Engine::wait_for_trial.loop")
+            # logger.debug("Engine::wait_for_trial.loop")
             if time.time() - t_0 > max_wait_time:
                 logger.error("Wait time for trial has been exceeded.")
-                return Trial(dict(), [], dict())
+                return Trial(dict(), [], dict(), False)
             if self.keep_running is False:
                 logger.error("Service has been stopped.")
-                return Trial(dict(), [], dict())
+                return Trial(dict(), [], dict(), False)
             time.sleep(0.1)
 
         return self.completed_trials[trial_uuid]
 
     def initialize_results(self, problem_definition: ProblemDefinition):
         self.problem_definition = problem_definition
-        meta_data = problem_definition.to_dict()
-        meta_data["t_0"] = time.time()
-        meta_data["date"] = str(datetime.datetime.now())
+        self.meta_data = problem_definition.to_dict()
+        self.meta_data["t_0"] = time.time()
+        self.meta_data["date"] = str(datetime.datetime.now())
         self.database_results_collection = self.database_client.client.ml_results[problem_definition.task_type]
         self.database_results_id = self.database_results_collection.insert_one(
-            {"meta": meta_data}).inserted_id
+            {"meta": self.meta_data}).inserted_id
         return self.database_results_id
+
+    def is_learned(self) -> bool:
+        return self.cnt_optimal > self.problem_definition.cost_function.finish_thr
 
     def main_loop(self):
         logger.debug("Engine.main_loop()")
@@ -124,6 +130,10 @@ class Engine:
             thread_started = False
             while self.keep_running is True and thread_started is False:
                 # logger.debug("Engine::main_loop.while2")
+                if self.is_learned() is True:
+                    logger.debug("Engine::main_loop.is_learned")
+                    self.keep_running = False
+                    continue
                 for a in self.agents.copy():
                     if a not in self.free_agents:
                         logger.debug("Agent " + a + " not in self.free_agents")
@@ -153,6 +163,7 @@ class Engine:
             time.sleep(0.1)
 
         logger.debug("Engine::main_loop.after_loop")
+        self.write_final_results()
         for a in self.agents:
             if worker_threads[a] is not None:
                 worker_threads[a].join(5)
@@ -171,6 +182,9 @@ class Engine:
             else:
                 self.queued_trials.task_done()
                 self.completed_trials[trial.trial_uuid] = trial
+                if trial.task_result.optimal is True:
+                    logger.debug("Engine::_worker_loop.is_optimal")
+                    self.cnt_optimal += 1
 
         self._reset_task(agent, trial)
         self.free_agents.add(agent)
@@ -207,8 +221,9 @@ class Engine:
             trial.t_delta = trial.t_1 - trial.t_0
             trial.trial_number = self.cnt_trial
             self.cnt_trial += 1
-            trial.task_result.final_cost = self.problem_definition.calculate_cost(trial.task_result)
-            self.write_task_result(trial)
+            trial.task_result.final_cost, trial.task_result.optimal = self.problem_definition.calculate_cost(trial.task_result)
+            if trial.log is True:
+                self.write_task_result(trial)
             break
         return cnt_repeat < self.max_trial_repeats and self.keep_running is True
 
@@ -301,6 +316,14 @@ class Engine:
             return False, task_result
 
         return True, task_result
+
+    def write_final_results(self):
+        data = {
+            "time": time.time() - self.meta_data["t_0"],
+            "n_trials": self.cnt_trial - 1
+        }
+        self.database_results_collection.update_one({"_id": self.database_results_id},
+                                                    {"$set": {"final_results": data}}, upsert=False)
 
     def write_task_result(self, trial: Trial):
         data = {
