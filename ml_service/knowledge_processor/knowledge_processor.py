@@ -302,11 +302,11 @@ class KnowledgeProcessor():
 
     def get_raw_data(self, d):
         successful_trials = []
-        for key, trial in d.items():
-            if key == "meta" or key == "_id":
-                continue
-            if(trial["success"]==True):
-                successful_trials.append(trial)
+        for nr in range(len(d)):
+            key = "n"+str(nr)
+            if d.get(key,False):  # if trial number available
+                if(d[key]["success"]==True):  # if trial was successfull
+                    successful_trials.append(d[key])
         return successful_trials
 
     def dict_to_list(self, d):
