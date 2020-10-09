@@ -49,6 +49,7 @@ class CostFunction:
         c.heuristic_skills = cf_dict["heuristic_skills"]
         c.heuristic_expressions = cf_dict["heuristic_expressions"]
         c.max_cost = cf_dict["max_cost"]
+        c.max_cost = cf_dict["min_cost"]
         return c
 
 
