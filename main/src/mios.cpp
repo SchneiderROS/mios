@@ -10,23 +10,48 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "pybind11/pybind11.h"
+#include <boost/program_options.hpp>
 #include "core/core.hpp"
-
-#include <msrm_utils/network.hpp>
+#include "msrm_utils/network.hpp"
 
 void exit_handler(int s);
 
 
 int main(int argc, char** argv){
 
+    unsigned database_port=27017;
     spdlog::level::level_enum info_level;
-    info_level=spdlog::level::info;
-    if(argc==2){
-        if(strcmp(argv[1],"debug")==0){
-            info_level=spdlog::level::debug;
-        }
+
+    try
+    {
+      boost::program_options::options_description desc{"Options"};
+      desc.add_options()
+        ("help,h", "Help screen")
+        ("output", boost::program_options::value<std::string>()->default_value("info"), "Output level, possible options: [trace, debug, info]")
+        ("database_port", boost::program_options::value<unsigned>()->default_value(27017), "Port of mongodb database");
+
+      boost::program_options::variables_map vm;
+      store(parse_command_line(argc, argv, desc), vm);
+      notify(vm);
+
+      if(vm["output"].as<std::string>()=="trace"){
+          info_level=spdlog::level::trace;
+      }else if(vm["output"].as<std::string>()=="debug"){
+          info_level=spdlog::level::debug;
+      }else if(vm["output"].as<std::string>()=="info"){
+          info_level=spdlog::level::info;
+      }else{
+          info_level=spdlog::level::info;
+      }
+
+      database_port=vm["database_port"].as<unsigned>();
     }
-    info_level=spdlog::level::debug;
+    catch (const boost::program_options::error &ex)
+    {
+      std::cerr << ex.what() << '\n';
+      return -1;
+    }
+
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console_sink->set_level(info_level);
     console_sink->set_pattern("[mios] [%^%l%$] %v");
@@ -60,7 +85,7 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "mios", ros::init_options::NoSigintHandler);
 
     pybind11::scoped_interpreter guard{};
-    mios::Core core;
+    mios::Core core(database_port);
     spdlog::info("Initializing MIOS core...");
     if(!core.initialize()){
         spdlog::error("MIOS core could not be initialized, shutting down...");
