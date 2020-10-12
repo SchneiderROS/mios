@@ -40,6 +40,12 @@ def start_multi_joint_mode(ip_master: str, ip_slaves: list):
                      "telepresence_mode": "DirectJoint", "multicast": True,
                      "direct_joint": {"alpha": [0, 0, 0, 0, 0, 0]}}, {"control_mode": 1})
 
+    input("Press key to stop.")
+    for ip in ip_slaves:
+        stop_task(ip)
+
+    stop_task(ip_master)
+
 
 def start_skill(address: str, skill: str, parameters: dict, control: dict):
     response = start_task(address, "GenericTask", parameters={"parameters": {
