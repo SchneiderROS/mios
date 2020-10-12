@@ -19,15 +19,25 @@ bool SkillParametersMoveToPoseCart::from_json(const nlohmann::json &p){
     if(!msrm_utils::read_json_param<double,4,4>(p,"T_T_EE_g_offset",T_T_EE_g_offset)){
         T_T_EE_g_offset.setIdentity();
     }
+    bool object_set=false;
+    if(!p["objects"].is_null()){
+        if(p["objects"].find("goal_pose")!=p["objects"].end()){
+            object_set=true;
+        }
+    }
 
-    if(!msrm_utils::read_json_param<double,4,4>(p,"T_T_EE_g",T_T_EE_g)){
+    if(!msrm_utils::read_json_param<double,4,4>(p,"T_T_EE_g",T_T_EE_g) && !object_set){
         spdlog::error("Parameter T_T_EE_g could not be loaded but is mandatory.");
         return false;
     }
     return true;
 }
 
-MoveToPoseCart::MoveToPoseCart(const std::string &id, Memory *memory, Portal *portal, const Percept &p):Skill("MoveToPoseCart",{"goal_pose"},id,memory,portal,p,{ControlMode::mCartTorque,ControlMode::mCartVelocity}),
+std::map<std::string, std::set<std::string> > SkillParametersMoveToPoseCart::get_parameter_list(){
+    return {{"t_settle",{}},{"speed",{}},{"acc",{}},{"T_T_EE_g_offset",{}},{"T_T_EE_g",{}}};
+}
+
+MoveToPoseCart::MoveToPoseCart(const std::string &id, Memory *memory, Portal *portal):Skill("MoveToPoseCart",{"goal_pose"},id,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}),
 m_finished(false){
 }
 
@@ -72,10 +82,6 @@ bool MoveToPoseCart::check_local_ex_conditions(const Percept &p){
     }else{
         return false;
     }
-}
-
-void MoveToPoseCart::evaluate(){
-    write_costs(0,std::chrono::duration_cast<std::chrono::milliseconds>(get_result().p_1.time-get_result().p_0.time).count()/1000.0);
 }
 
 }

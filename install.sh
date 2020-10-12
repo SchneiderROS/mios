@@ -5,12 +5,17 @@ user="panda"
 ROOT=$(dirname "$(realpath $0)")
 cd ${ROOT}
 
+### make ros components ###
+cd ${ROOT}/ros_workspace
+catkin_make
+
 ### make ###
+cd ${ROOT}
 mkdir -p ${ROOT}/build/release
 
 cd ${ROOT}/build/release
 cmake ../..
-make -j$(nproc --all) install
+make -j$(($(nproc --all)-1)) install
 
 ### collect shared libraries ###
 cp ${ROOT}/third_party/lib/libfranka* ${ROOT}/lib/
@@ -22,6 +27,7 @@ then
 rsync -r bin $user@$IP:~/mios/
 rsync -r lib $user@$IP:~/mios/
 rsync -r python $user@$IP:~/mios/
+rsync -r ml_service $user@$IP:~/mios/
 else
 {
 if [ ! -d "${ROOT}/mios_package" ]; then
@@ -33,4 +39,5 @@ fi
 rsync -ar --relative bin mios_package/
 rsync -ar --relative lib mios_package/
 rsync -ar --relative python mios_package/
+rsync -ar --relative ml_service mios_package/
 fi

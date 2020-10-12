@@ -27,7 +27,7 @@ bool MoveToJointPose::read_parameters(const nlohmann::json &params){
     if(!msrm_utils::read_json_param<double,7,1>(params,"q_g",m_q_g)){
         m_q_g.setZero();
     }
-    if(!m_q_g.isZero() && !m_pose.has_value()){
+    if(m_q_g.isZero() && !m_pose.has_value()){
         spdlog::error("MoveToJointPose task requires either a location that exists in memory or an explicit joint pose.");
         return false;
     }
@@ -42,8 +42,17 @@ bool MoveToJointPose::read_parameters(const nlohmann::json &params){
     return true;
 }
 
-void MoveToJointPose::evaluate(){
-    write_result(get_result().skill_results["move"].success,get_result().skill_results["move"].cost_suc,get_result().skill_results["move"].cost_err,get_result().skill_results["move"].results);
+void MoveToJointPose::get_default_context(nlohmann::json &context){
+    context["parameters"] = nlohmann::json();
+    context["parameters"]["pose"]=nlohmann::json();
+    context["parameters"]["q_g"]=nlohmann::json();
+    context["parameters"]["speed"]=0.5;
+    context["parameters"]["acc"]=0.7;
+
+    context["skills"]=nlohmann::json();
+    context["skills"]["move"]=nlohmann::json();
+    context["skills"]["move"]["control"]={{"control_mode",3}};
+    context["skills"]["move"]["type"]="MoveToPoseJoint";
 }
 
 }

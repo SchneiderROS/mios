@@ -20,7 +20,11 @@ bool SkillParametersPush::from_json(const nlohmann::json& parameters){
     return true;
 }
 
-Push::Push(const std::string& name, Memory* memory, Portal *portal, const Percept& p):Skill("Push",{"pushable"},name,memory,portal,p,{ControlMode::mCartTorque}){
+std::map<std::string, std::set<std::string> > SkillParametersPush::get_parameter_list(){
+    return {{"F_push",{}},{"DX_max",{}},{"duration",{}}};
+}
+
+Push::Push(const std::string& name, Memory* memory, Portal *portal):Skill("Push",{"pushable"},name,memory,portal,{ControlMode::mCartTorque}){
 
 }
 
@@ -42,10 +46,6 @@ std::shared_ptr<ManipulationPrimitive> Push::get_initial_mp(const Percept& p){
     TF_F_d<<skill_params->F_push,0,0,0;
     mp->get_strategy<DesiredWrenchStrategy>("wrench")->set_TF_F_d(TF_F_d,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
     return mp;
-}
-
-void Push::evaluate(){
-
 }
 
 bool Push::check_local_suc_conditions(const Percept &p){

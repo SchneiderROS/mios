@@ -7,7 +7,7 @@
 #include "skills/move_to_contact.hpp"
 #include "skills/hand_guiding.hpp"
 #include "skills/hold_pose.hpp"
-#include "skills/motions_generic_wiggle.hpp"
+#include "skills/generic_wiggle_motion.hpp"
 #include "skills/telepresence.hpp"
 #include "skills/push.hpp"
 #include "skills/shove.hpp"
@@ -36,10 +36,6 @@ void GenericTask::execute(){
     for(unsigned i=0;i<m_skills.size();i++){
         execute_any_skill(i);
     }
-}
-
-void GenericTask::evaluate(){
-
 }
 
 void GenericTask::execute_any_skill(unsigned index){
@@ -127,6 +123,12 @@ bool GenericTask::read_parameters(const nlohmann::json &params){
         m_skills.emplace_back(std::make_pair(names[i],types[i]));
     }
     return true;
+}
+
+void GenericTask::get_default_context(nlohmann::json &context){
+    context["parameters"] = nlohmann::json();
+    context["parameters"]["skill_names"]=nlohmann::json();
+    context["parameters"]["skill_types"]=nlohmann::json();
 }
 
 }

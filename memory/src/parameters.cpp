@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <msrm_utils/json.hpp>
 #include <nlohmann/json.hpp>
-#include "skills/nullskill.hpp"
+#include "skills/null_skill.hpp"
 
 namespace mios {
 
@@ -283,18 +283,18 @@ bool FramesParameters::from_json(const nlohmann::json &parameters){
         spdlog::error("Could not read O_R_T.");
         return false;
     }
-    if(!msrm_utils::read_json_param<double,4,4>(parameters,"F_T_EE",F_T_EE)){
-        spdlog::error("Could not read F_T_EE.");
-        return false;
-    }
-    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_TCP",EE_T_TCP)){
-        spdlog::error("Could not read EE_T_TCP.");
-        return false;
-    }
-    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_K",EE_T_K)){
-        spdlog::error("Could not read EE_T_K.");
-        return false;
-    }
+//    if(!msrm_utils::read_json_param<double,4,4>(parameters,"F_T_EE",F_T_EE)){
+//        spdlog::error("Could not read F_T_EE.");
+//        return false;
+//    }
+//    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_TCP",EE_T_TCP)){
+//        spdlog::error("Could not read EE_T_TCP.");
+//        return false;
+//    }
+//    if(!msrm_utils::read_json_param<double,4,4>(parameters,"EE_T_K",EE_T_K)){
+//        spdlog::error("Could not read EE_T_K.");
+//        return false;
+//    }
     return true;
 }
 
@@ -388,6 +388,10 @@ SafetyParameters::SafetyParameters(){
     virtual_joint_walls.damping.setZero();
     virtual_joint_walls.rho_min.setZero();
     virtual_joint_walls.damping_dist.setZero();
+
+    cartesian_velocity_damping.active=false;
+    cartesian_velocity_damping.dX_thr.setZero();
+    cartesian_velocity_damping.D_x.setZero();
 }
 
 bool SafetyParameters::from_json(const nlohmann::json &parameters){
@@ -473,6 +477,19 @@ bool SafetyParameters::from_json(const nlohmann::json &parameters){
         spdlog::error("Could not read virtual_joint_walls.active.");
         return false;
     }
+
+    if(!msrm_utils::read_json_param(parameters["cartesian_velocity_damping"],"active",cartesian_velocity_damping.active)){
+        spdlog::error("Could not read cartesian_velocity_damping.active.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters["cartesian_velocity_damping"],"dX_thr",cartesian_velocity_damping.dX_thr)){
+        spdlog::error("Could not read cartesian_velocity_damping.dX_thr.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters["cartesian_velocity_damping"],"D_x",cartesian_velocity_damping.D_x)){
+        spdlog::error("Could not read cartesian_velocity_damping.D_x.");
+        return false;
+    }
     return true;
 }
 
@@ -482,11 +499,11 @@ nlohmann::json SafetyParameters::to_json() const{
     nlohmann::json json_velocity_walls;
     nlohmann::json json_virtual_cube;
     nlohmann::json json_virtual_joint_walls;
+    nlohmann::json json_cartesian_velocity_damping;
 
     json_velocity_walls["walls"]=msrm_utils::from_eigen<double,6,1>(velocity_walls.walls);
     json_velocity_walls["brake_distance"]=velocity_walls.brake_distance;
     json_velocity_walls["active"]=velocity_walls.active;
-
 
     json_virtual_cube["damping"]=virtual_cube.damping;
     json_virtual_cube["damping_dist"]=virtual_cube.damping_dist;
@@ -504,9 +521,14 @@ nlohmann::json SafetyParameters::to_json() const{
     json_virtual_joint_walls["tau_max"]=msrm_utils::from_eigen<double,7,1>(virtual_joint_walls.tau_max);
     json_virtual_joint_walls["active"]=virtual_joint_walls.active;
 
+    json_cartesian_velocity_damping["active"]=cartesian_velocity_damping.active;
+    json_cartesian_velocity_damping["dX_thr"]=msrm_utils::from_eigen<double,6,1>(cartesian_velocity_damping.dX_thr);
+    json_cartesian_velocity_damping["D_x"]=msrm_utils::from_eigen<double,6,1>(cartesian_velocity_damping.D_x);
+
     json_object["velocity_walls"]=json_velocity_walls;
     json_object["virtual_cube"]=json_virtual_cube;
     json_object["virtual_joint_walls"]=json_virtual_joint_walls;
+    json_object["cartesian_velocity_damping"]=json_cartesian_velocity_damping;
 
     return json_object;
 }
@@ -725,18 +747,12 @@ nlohmann::json ControlParameters::to_json() const{
 
 SkillParameters::SkillParameters(){
     time_max=0;
-    w_cost_function.resize(1);
-    w_cost_function[0]=1;
     parallels_frequency=1;
 }
 
 bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
     if(!msrm_utils::read_json_param(p,"time_max",time_max)){
         spdlog::error("Could not read time_max.");
-        return false;
-    }
-    if(!msrm_utils::read_json_param(p,"w_cost_function",w_cost_function)){
-        spdlog::error("Could not read cost_function.");
         return false;
     }
     if(!msrm_utils::read_json_param(p,"parallels_frequency",parallels_frequency)){
@@ -759,7 +775,6 @@ void SkillParameters::read_skill_objects(const nlohmann::json &p){
 nlohmann::json SkillParameters::get_default_values(){
     nlohmann::json default_values;
     default_values["time_max"]=0;;
-    default_values["w_cost_function"]={1};
     default_values["parallels_frequency"]=1;
     default_values["objects"]={};
     return default_values;
@@ -768,7 +783,6 @@ nlohmann::json SkillParameters::get_default_values(){
 nlohmann::json SkillParameters::to_json() const{
     nlohmann::json json_object;
     json_object["time_max"]=time_max;
-    json_object["w_cost_function"]=w_cost_function;
     json_object["parallels_frequency"]=parallels_frequency;
     json_object["objects"]={};
     return json_object;

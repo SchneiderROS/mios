@@ -5,11 +5,10 @@
 
 #include "data_structures/percept.hpp"
 #include "skill/skill.hpp"
+#include "utils/types.hpp"
 
 namespace mios {
 class Core;
-class Memory;
-class Percept;
 class Actuator;
 
 class SkillEngine{
@@ -17,7 +16,7 @@ public:
     SkillEngine(Core* core);
 
     bool apply_skill_context(const nlohmann::json& task_context, const std::string& skill_name);
-    bool execute_skill(std::shared_ptr<Skill> skill);
+    ControlReturnType execute_skill(std::shared_ptr<Skill> skill);
     void stop_skill();
     Actuator* get_next_command(const Percept& percept);
 

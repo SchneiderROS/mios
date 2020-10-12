@@ -9,12 +9,15 @@ enum TelepresenceMode{tmJoystick,tmDirectJoint,tmDirectCart};
 class SkillParametersTelepresence : public SkillParameters{
 public:
     bool from_json(const nlohmann::json &parameters) override;
+    std::map<std::string, std::set<std::string> > get_parameter_list() override;
 
     bool is_master;
     std::string ip_dst;
     unsigned port_dst;
     unsigned port_src;
     TelepresenceMode mode;
+    bool use_zoh_deadband;
+    double deadband_k;
 
     struct Joystick{
         Eigen::Matrix<double,6,1> amp;
@@ -33,7 +36,7 @@ public:
 
 class Telepresence : public Skill{
 public:
-    Telepresence(const std::string& id, Memory *memory, Portal* portal, const Percept& p);
+    Telepresence(const std::string& id, Memory *memory, Portal* portal);
     ~Telepresence();
 
     std::shared_ptr<ManipulationPrimitive> get_initial_mp(const Percept &p_0) override;
@@ -48,6 +51,11 @@ private:
 
     unsigned m_handshake_stage;
     std::string m_handshake_message_uuid;
+    std::vector<double> m_previous_payload;
+
+private:
+    Eigen::Matrix<double,4,4> m_O_T_EE_master;
+    Eigen::Matrix<double,7,1> m_q_master;
 
 };
 

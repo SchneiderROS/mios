@@ -6,7 +6,6 @@
 #include <msrm_utils/system.hpp>
 #include "utils/exceptions.hpp"
 #include "skill/skill.hpp"
-#include "skills/nullskill.hpp"
 
 #include "controller_pipeline/cart_torque_pipeline.hpp"
 #include "controller_pipeline/joint_torque_pipeline.hpp"
@@ -17,6 +16,7 @@
 #include "safety_stage_1/velocity_walls.hpp"
 #include "safety_stage_2/virtual_cube.hpp"
 #include "safety_stage_2/virtual_joint_walls.hpp"
+#include "safety_stage_2/cartesian_velocity_damping.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -28,8 +28,8 @@
 
 namespace mios {
 
-Core::Core():m_skill_engine(SkillEngine(this)),m_panda_body(PandaBody(&m_memory)),m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_task_engine(TaskEngine(this)),
-    m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)),m_ros_node(this,&m_task_engine,&m_portal,&m_memory),
+Core::Core():m_skill_engine(SkillEngine(this)),m_panda_body(PandaBody(&m_memory)),m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_skill_library(&m_memory,&m_portal),
+    m_task_engine(TaskEngine(this)),m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)),m_ros_node(this,&m_task_engine,&m_portal,&m_memory),
     m_controller_pipeline(std::make_unique<NullControllerPipeline>()),m_is_ready(false){
 }
 
@@ -39,7 +39,7 @@ Core::~Core(){
 
 bool Core::initialize(){
     spdlog::info("Initializing memory...");
-    if(!m_memory.initialize()){
+    if(!m_memory.initialize(&m_skill_library)){
         spdlog::error("Could not initialize memory.");
         return false;
     }
@@ -104,12 +104,16 @@ RosNode* Core::get_ros_node(){
     return &m_ros_node;
 }
 
-bool Core::execute_skill(){
+LearningModule* Core::get_learning_module(){
+    return &m_learning_module;
+}
+
+ControlReturnType Core::execute_skill(){
     spdlog::debug("CORE: execute_skill");
 
     if(!m_panda_body.pre_run_checks()){
         if(!m_panda_body.recover()){
-            return false;
+            return ControlReturnType::crtException;
         }
     }
 
@@ -118,13 +122,14 @@ bool Core::execute_skill(){
     m_percept.update_controller();
     m_panda_body.set_robot_parameters();
 
-    bool result=false;
+    ControlReturnType result=ControlReturnType::crtException;
     spdlog::debug("CORE: EXECUTE_SKILL.control_mode: ");
     if(m_memory.read_parameters()->control.control_mode==ControlMode::mCartTorque){
         m_controller_pipeline=std::make_unique<CartTorqueControllerPipeline>();
         m_safety_stage_1.insert(std::make_unique<VelocityWallsSafetyModule>());
         m_safety_stage_2.insert(std::make_unique<VirtualCubeSafetyModule>());
         m_safety_stage_2.insert(std::make_unique<VirtualJointWallsSafetyModule>());
+        m_safety_stage_2.insert(std::make_unique<CartesianVelocityDampingSafetyModule>());
         m_controller_pipeline->initialize(m_percept,&m_memory);
         for(auto& m : m_safety_stage_1){
             m->initialize(m_percept,&m_memory);

@@ -1,6 +1,6 @@
 #include "skills/move_to_contact.hpp"
 #include "strategies/move_to_pose.hpp"
-#include <msrm_utils/math.hpp>
+#include "msrm_utils/math.hpp"
 
 namespace mios {
 
@@ -12,7 +12,11 @@ bool SkillParametersMoveToContact::from_json(const nlohmann::json &p){
     return true;
 }
 
-MoveToContact::MoveToContact(const std::string &id, Memory *memory, Portal* portal, const Percept &p):Skill("MoveToContact",{"goal_pose"},id,memory,portal,p,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
+std::map<std::string, std::set<std::string> > SkillParametersMoveToContact::get_parameter_list(){
+    return {{"speed",{}}};
+}
+
+MoveToContact::MoveToContact(const std::string &id, Memory *memory, Portal* portal):Skill("MoveToContact",{"goal_pose"},id,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
 }
 
 //Eigen::Matrix<double,3,3> MoveToContact::get_O_R_T_0(const Percept &p) const{
@@ -35,8 +39,10 @@ std::shared_ptr<ManipulationPrimitive> MoveToContact::get_initial_mp(const Perce
     mp->create_strategy<MoveToPoseStrategy>("s_0",1);
 
     Eigen::Matrix<double,4,4> T_g;
+
     if(this->get_object("goal_pose")->name!="NullObject"){
         T_g=msrm_utils::rotate_matrix(get_object("goal_pose")->O_T_OB,m_memory->read_parameters()->frames.O_R_T.transpose());
+        T_g.block<3,3>(0,0)=p_0.proprioception.T_T_EE.block<3,3>(0,0);
         Eigen::Matrix<double,3,1> goal_dir=T_g.block<3,1>(0,3)-p_0.proprioception.T_T_EE.block<3,1>(0,3);
         goal_dir.normalize();
         T_g.block<3,1>(0,3)+=goal_dir*0.05;
@@ -45,7 +51,7 @@ std::shared_ptr<ManipulationPrimitive> MoveToContact::get_initial_mp(const Perce
     }
     Eigen::Matrix<double,2,1> speed;
     Eigen::Matrix<double,2,1> acc;
-    speed<<skill_params->speed*m_memory->read_parameters()->user.dX_default(0),0.5*m_memory->read_parameters()->user.dX_default(1);
+    speed<<skill_params->speed,m_memory->read_parameters()->user.dX_default(1);
     acc<<m_memory->read_parameters()->user.ddX_default(0),m_memory->read_parameters()->user.ddX_default(1);
     mp->get_strategy<MoveToPoseStrategy>("s_0")->set_goal(T_g,speed,acc);
     Eigen::Matrix<double,2,1> t_scale;
@@ -69,10 +75,6 @@ bool MoveToContact::check_local_ex_conditions(const Percept &p){
 
 bool MoveToContact::check_local_err_conditions(const Percept &p){
     return get_active_mp()->get_strategy<MoveToPoseStrategy>("s_0")->finished();
-}
-
-void MoveToContact::evaluate(){
-    write_costs(0,std::chrono::duration_cast<std::chrono::seconds>(get_result().p_1.time-get_result().p_0.time).count());
 }
 
 }

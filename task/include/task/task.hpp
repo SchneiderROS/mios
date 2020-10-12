@@ -16,10 +16,10 @@
 #include "utils/exceptions.hpp"
 #include "data_structures/results.hpp"
 #include "skill/skill.hpp"
+#include "utils/types.hpp"
 
 namespace mios {
 
-class Memory;
 class Core;
 
 
@@ -69,12 +69,6 @@ public:
     virtual void initialize_context() = 0;
 
     /**
-     * Implements the evaluation routine. The user has to define how the members of the evaluation struct are set. This function is called at the end of a nominal task execution.
-     * @return Return the current evaluation struct (will change to void in future updates).
-     */
-    virtual void evaluate() = 0;
-
-    /**
      * Starts the recovery routine of the task. This function is called at the end of a task execution if it has terminated before the nominal end.
      */
     void start_recovery();
@@ -121,9 +115,12 @@ public:
     void notify_observers();
     void subscribe(std::shared_ptr<TaskObserver> observer);
 
+    void write_result();
+
 protected:
 
     // helper functions
+    virtual void get_default_context(nlohmann::json& context) = 0;
 
     /**
      * Sets the internal state to the specified value.
@@ -210,23 +207,20 @@ protected:
         if(m_flag_stop){
             return;
         }
-        Percept p;
-        if(!get_percept(p,{})){
-            throw TaskException("Could not refresh perception.");
-        }
 
         m_memory->get_parameters()->create_skill_parameters<T_param>();
         if(!m_skill_engine->apply_skill_context(m_context,name)){
             throw TaskException("Could not apply skill context.");
         }
-        std::shared_ptr<Skill> skill = std::make_shared<T_skill>(name,m_memory,m_portal,p);
-        bool result=m_skill_engine->execute_skill(skill);
+        std::shared_ptr<Skill> skill = std::make_shared<T_skill>(name,m_memory,m_portal);
+        ControlReturnType result=m_skill_engine->execute_skill(skill);
         m_result.skill_results.insert(std::make_pair(name,skill->get_result()));
         if(skill->get_result().exception){
             m_flag_stop = true;
         }
-        if(!result){
-            throw TaskException("Could not execute skill " + name + ".");
+        if(result==ControlReturnType::crtException){
+            m_result.skill_results[name].success=false;
+            throw TaskException("An exception occurred when executing skill " + name + ".");
         }
     }
 
@@ -244,9 +238,16 @@ protected:
      */
     void execute_desk_timeline(const std::string& id);
 
-    void write_result(bool success, double cost_suc, double cost_err, std::optional<nlohmann::json> custom_results);
+    void write_error(const std::string& error);
+
+    virtual void write_custom_results(nlohmann::json& custom_results);
+
+private:
+    Core* m_core;
 
 protected:
+    Memory* m_memory;
+    Portal* m_portal;
 
 private:
 
@@ -264,9 +265,7 @@ private:
     std::unordered_set<std::string> m_reserved_subtasks;
 
     nlohmann::json m_context;
-    Core* m_core;
-    Memory* m_memory;
-    Portal* m_portal;
+
     SkillEngine* m_skill_engine;
     std::atomic<bool> m_flag_stop;
     std::atomic<bool> m_flag_recover;

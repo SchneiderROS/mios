@@ -15,7 +15,7 @@ public:
     void operator=(Memory const&) = delete;
     bool is_ok() const;
 
-    bool initialize();
+    bool initialize(SkillLibrary* skill_library);
     bool load_default_parameters(nlohmann::json& parameters);
     bool set_default_parameters();
     bool apply_skill_context(const nlohmann::json& context, const std::string skill_id);
@@ -30,6 +30,7 @@ public:
 
     bool update_object(const std::string& name, bool teach_width, const Percept& p);
     bool update_object(const std::string& name, const nlohmann::json& description);
+    bool update_partial_object(const std::string& name, const nlohmann::json& description);
 
     void internal_update(const Percept& p);
 

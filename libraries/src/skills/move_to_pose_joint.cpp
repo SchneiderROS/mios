@@ -19,15 +19,25 @@ bool SkillParametersMoveToPoseJoint::from_json(const nlohmann::json &p){
     if(!msrm_utils::read_json_param<double,7,1>(p,"q_g_offset",q_g_offset)){
         q_g_offset.setZero();
     }
+    bool object_set=false;
+    if(!p["objects"].is_null()){
+        if(p["objects"].find("goal_pose")!=p["objects"].end()){
+            object_set=true;
+        }
+    }
 
-    if(!msrm_utils::read_json_param<double,7,1>(p,"q_g",q_g)){
+    if(!msrm_utils::read_json_param<double,7,1>(p,"q_g",q_g) && !object_set){
         spdlog::error("Parameter q_g could not be loaded but is mandatory.");
         return false;
     }
     return true;
 }
 
-MoveToPoseJoint::MoveToPoseJoint(const std::string &id, Memory *memory, Portal* portal, const Percept &p):Skill("MoveToPoseJoint",{"goal_pose"},id,memory,portal,p,{ControlMode::mJointTorque,ControlMode::mJointVelocity}),
+std::map<std::string, std::set<std::string> > SkillParametersMoveToPoseJoint::get_parameter_list(){
+    return {{"t_settle",{}},{"speed",{}},{"acc",{}},{"q_g_offset",{}},{"q_g",{}}};
+}
+
+MoveToPoseJoint::MoveToPoseJoint(const std::string &id, Memory *memory, Portal* portal):Skill("MoveToPoseJoint",{"goal_pose"},id,memory,portal,{ControlMode::mJointTorque,ControlMode::mJointVelocity}),
 m_finished(false){
 }
 
@@ -65,10 +75,6 @@ bool MoveToPoseJoint::check_local_ex_conditions(const Percept &p){
     }else{
         return false;
     }
-}
-
-void MoveToPoseJoint::evaluate(){
-    write_costs(0,std::chrono::duration_cast<std::chrono::seconds>(get_result().p_1.time-get_result().p_0.time).count());
 }
 
 }

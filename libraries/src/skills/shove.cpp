@@ -24,7 +24,12 @@ bool SkillParametersShove::from_json(const nlohmann::json& parameters){
     }
     return true;
 }
-Shove::Shove(const std::string& name, Memory* memory, Portal* portal, const Percept& p):Skill("Shove",{"shovable","location"},name,memory,portal,p,{ControlMode::mCartTorque,ControlMode::mCartVelocity}),
+
+std::map<std::string, std::set<std::string> > SkillParametersShove::get_parameter_list(){
+    return {{"O_T_OB_g",{}},{"speed",{}},{"acceleration",{}},{"t_contactless",{}},{"delta_x",{}}};
+}
+
+Shove::Shove(const std::string& name, Memory* memory, Portal* portal):Skill("Shove",{"shovable","location"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}),
 m_in_contact(false){
 
 }
@@ -70,8 +75,6 @@ void Shove::update_policies(const Percept &p){
 void Shove::update_internal_models(const Percept &p){
     update_object("shovable")->O_T_OB=p.proprioception.O_T_EE;
 }
-
-void Shove::evaluate(){}
 
 bool Shove::check_local_pre_conditions(const Percept &p){
     Eigen::Matrix<double,4,4> O_T_OB = get_object("shovable")->O_T_OB;

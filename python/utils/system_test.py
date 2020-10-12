@@ -119,10 +119,6 @@ def test_start_stop(hostname):
               "Has recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "start_stop_exception",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception",
-              "Wrong success costs", rtn)
 
     print('Testing exceptional stop with recovery...')
     rtn = start_task(address, "TestTask1", queue=True)
@@ -142,10 +138,6 @@ def test_start_stop(hostname):
               "Has recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "start_stop_exception_recovery",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception_recovery",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_exception_recovery",
-              "Wrong success costs", rtn)
 
     print('Testing stop without recovery...')
     rtn = start_task(address, "TestTask1", queue=True)
@@ -165,10 +157,6 @@ def test_start_stop(hostname):
               "Recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "start_stop_unsuccessful",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful",
-              "Wrong success costs", rtn)
 
     print('Testing stop with recovery...')
     rtn = start_task(address, "TestTask1", queue=True)
@@ -189,10 +177,6 @@ def test_start_stop(hostname):
               "Not recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "start_stop_unsuccessful_recovery",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful_recovery",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_unsuccessful_recovery",
-              "Wrong success costs", rtn)
 
 
 def test_start_wait(hostname):
@@ -210,10 +194,6 @@ def test_start_wait(hostname):
               rtn)
     msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_success_recovery",
               "Not recovered", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
-              "Wrong success costs", rtn)
 
     print('Testing execution with unsuccessful stop...')
     rtn = start_task(address, "TestTask1", {"parameters": {"success": False}}, queue=True)
@@ -226,10 +206,6 @@ def test_start_wait(hostname):
               rtn)
     msg_error(rtn["result"]["task_result"]["results"]["recovered"] is False, "start_stop_success_recovery",
               "Not recovered", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "start_stop_success_recovery",
-              "Wrong success costs", rtn)
 
 
 def test_primitive_sequence(address):
@@ -320,10 +296,6 @@ def test_subtask_start_stop(address):
               "Has recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "start_stop_exception_recovery",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_exception",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_exception",
-              "Wrong success costs", rtn)
 
     print('Testing exceptional stop with recovery...')
     # input('Press Enter to continue...')
@@ -342,10 +314,6 @@ def test_subtask_start_stop(address):
               "Has recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "subtask_start_stop_success_exception",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_success_exception",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_success_exception",
-              "Wrong success costs", rtn)
 
     print('Testing stop without recovery...')
     # input('Press Enter to continue...')
@@ -363,10 +331,6 @@ def test_subtask_start_stop(address):
               "Has recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "subtask_start_stop_fail",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_fail",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_fail",
-              "Wrong success costs", rtn)
 
     print('Testing stop with recovery...')
     # input('Press Enter to continue...')
@@ -384,28 +348,25 @@ def test_subtask_start_stop(address):
               "Has not recovered", rtn)
     msg_error(rtn["result"]["task_result"]["external_stop"] is True, "subtask_start_stop_fail_recovery",
               "No external stop", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_fail_recovery",
-              "Wrong error costs", rtn)
-    msg_error(rtn["result"]["task_result"]["cost_suc"] == 0, "subtask_start_stop_fail_recovery",
-              "Wrong success costs", rtn)
 
 
 def test_memory(address):
     url = "http://" + address + ":8383"
-    print("Testing task context download...")
-    for i in range(100):
-        response = call_method(address, 12000, method="download_task_context", payload={"task": "TestTask1"})
-        msg_error(response is not None, "memory_task_download", "Response is none", response)
-        msg_error(response["result"]["result"] is True, "memory_task_download", "Could not load task.", response)
-        msg_error(response["result"]["context"]["parameters"]["a"] == [0, 0, 0], "memory_task_download",
-                  "Task description is faulty.", response)
+    # print("Testing task context download...")
+    # for i in range(100):
+    #     response = call_method(address, 12000, method="download_task_context", payload={"task": "TestTask1"})
+    #     print(response)
+    #     msg_error(response is not None, "memory_task_download", "Response is none", response)
+    #     msg_error(response["result"]["result"] is True, "memory_task_download", "Could not load task.", response)
+    #     msg_error(response["result"]["context"]["parameters"]["a"] == [0, 0, 0], "memory_task_download",
+    #               "Task description is faulty.", response)
 
     print("Testing skill context download...")
     for i in range(100):
         response = call_method(address, 12000, method="download_skill_context", payload={"skill": "TestSkill1"})
         msg_error(response is not None, "memory_skill_download", "Response is none", response)
         msg_error(response["result"]["result"] is True, "memory_skill_download", "Could not load skill.", response)
-        msg_error(response["result"]["context"]["success"] is False, "memory_skill_download",
+        msg_error(response["result"]["context"]["success"] is None, "memory_skill_download",
                   "Skill description is faulty.", response)
 
     print("Testing object context download...")

@@ -11,6 +11,7 @@
 #include "panda/softhand2.hpp"
 
 #include "data_structures/parameters.hpp"
+#include "utils/types.hpp"
 #include "memory/memory.hpp"
 
 namespace mios {
@@ -41,11 +42,11 @@ public:
     bool home_gripper() const;
 
 public:
-    bool control(std::function<franka::Torques(const franka::RobotState &, franka::Duration)> controller_callback);
-    bool control(std::function<franka::CartesianVelocities(const franka::RobotState&, franka::Duration)> controller_callback);
-    bool control(std::function<franka::JointVelocities(const franka::RobotState&, franka::Duration)> controller_callback);
-    bool control(std::function<franka::CartesianPose(const franka::RobotState&, franka::Duration)> controller_callback);
-    bool control(std::function<franka::JointPositions(const franka::RobotState&, franka::Duration)> controller_callback);
+    ControlReturnType control(std::function<franka::Torques(const franka::RobotState &, franka::Duration)> controller_callback);
+    ControlReturnType control(std::function<franka::CartesianVelocities(const franka::RobotState&, franka::Duration)> controller_callback);
+    ControlReturnType control(std::function<franka::JointVelocities(const franka::RobotState&, franka::Duration)> controller_callback);
+    ControlReturnType control(std::function<franka::CartesianPose(const franka::RobotState&, franka::Duration)> controller_callback);
+    ControlReturnType control(std::function<franka::JointPositions(const franka::RobotState&, franka::Duration)> controller_callback);
 
     void dummy_control(std::function<franka::Torques(const franka::RobotState& state,franka::Duration)> controller_callback);
     void dummy_control(std::function<franka::CartesianVelocities(const franka::RobotState& state,franka::Duration)> controller_callback);

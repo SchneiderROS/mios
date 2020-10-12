@@ -3,6 +3,7 @@
 #include "task/taskfactory.hpp"
 #include <spdlog/spdlog.h>
 #include <msrm_utils/json.hpp>
+#include "skill/skill_library.hpp"
 
 
 namespace mios {
@@ -20,6 +21,10 @@ bool LTMemory::is_ok() const{
 
 void LTMemory::link_to_st_memory(STMemory *st_memory){
     m_st_memory=st_memory;
+}
+
+void LTMemory::link_to_skill_library(SkillLibrary *skill_library){
+    m_skill_library=skill_library;
 }
 
 bool LTMemory::initialize(){
@@ -62,66 +67,14 @@ bool LTMemory::make_database_consistent(){
     if(!m_mongodb_client.make_document_consistent("user","parameters",default_values)){
         return false;
     }
-    if(!make_default_skills_consistent()){
-        return false;
-    }
-    if(!make_default_tasks_consistent()){
-        return false;
-    }
+//    if(!make_default_tasks_consistent()){
+//        return false;
+//    }
     if(!make_default_environment_consistent()){
         return false;
     }
     if(!m_mongodb_client.health_check()){
         spdlog::error("Could not check database health.");
-        return false;
-    }
-    return true;
-}
-
-bool LTMemory::make_default_skills_consistent(){
-    nlohmann::json default_values;
-    default_values["name"]="TestSkill1";
-    default_values["skill"]="";
-    default_values["run_time"]=0;
-    default_values["success"]=false;
-    default_values["t_exception"]=0;
-    default_values["cost_suc"]=0;
-    default_values["cost_err"]=0;
-    default_values["exception"]="none";
-    default_values["mp_sequence"]={};
-    if(!m_mongodb_client.make_document_consistent("TestSkill1","skills",default_values)){
-        return false;
-    }
-
-    default_values.clear();
-    default_values["name"]="HoldPose";
-    default_values["t_max"]=0;
-    if(!m_mongodb_client.make_document_consistent("HoldPose","skills",default_values)){
-        return false;
-    }
-
-    default_values.clear();
-    default_values["name"]="GenericWiggleMotion";
-    default_values["dX_fourier_a_a"]={0,0,0,0,0,0};
-    default_values["dX_fourier_b_a"]={0,0,0,0,0,0};
-    default_values["dX_fourier_a_f"]={0,0,0,0,0,0};
-    default_values["dX_fourier_b_f"]={0,0,0,0,0,0};
-    default_values["dX_fourier_a_phi"]={0,0,0,0,0,0};
-    default_values["dX_fourier_b_phi"]={0,0,0,0,0,0};
-    default_values["use_EE"]=true;
-    default_values["tap_to_finish"]=false;
-    if(!m_mongodb_client.make_document_consistent("GenericWiggleMotion","skills",default_values)){
-        return false;
-    }
-
-    default_values.clear();
-    default_values["name"]="MoveToPoseJoint";
-    default_values["speed"]=0;
-    default_values["acc"]=0;
-    default_values["t_settle"]=0;
-    default_values["q_g"]={0,0,0,0,0,0,0};
-    default_values["q_g_offset"]={0,0,0,0,0,0,0};
-    if(!m_mongodb_client.make_document_consistent("MoveToPoseJoint","skills",default_values)){
         return false;
     }
     return true;
@@ -341,12 +294,27 @@ bool LTMemory::load_default_task_context(const std::string task_id,nlohmann::jso
 }
 
 bool LTMemory::load_default_skill_context(const std::string skill_type,nlohmann::json& skill_context){
-    bool result = m_mongodb_client.read_document(skill_type,"skills",skill_context);
+    std::map<std::string, std::set<std::string> > skill_parameters;
+    if(m_skill_library->get_skill_parameters()->find(skill_type)==m_skill_library->get_skill_parameters()->end()){
+        spdlog::error("Could not find skill type " + skill_type + " in library.");
+        skill_context=nlohmann::json();
+        return false;
+    }else{
+        skill_parameters=m_skill_library->get_skill_parameters()->at(skill_type)->get_parameter_list();
+    }
+    for(const auto& param : skill_parameters){
+        skill_context[param.first]=nlohmann::json();
+        if(param.second.size()>0){
+            for(const auto& sub_param: param.second){
+                skill_context[param.first][sub_param]=nlohmann::json();
+            }
+        }
+    }
     nlohmann::json parameters = SkillParameters::get_default_values();
     for(const auto& param : parameters.items()){
         skill_context[param.key()]=param.value();
     }
-    return result;
+    return true;
 }
 
 void LTMemory::store_task_data(const std::string &uuid, const std::string &task_id, const nlohmann::json &context, const TaskResult &result){
@@ -374,18 +342,18 @@ bool LTMemory::update_database(){
     if(!m_mongodb_client.write_document("system","parameters",m_st_memory->read_parameters()->system.to_json(),true)){
         return false;
     }
-    if(!m_mongodb_client.write_document("user","parameters",m_st_memory->read_parameters()->user.to_json(),true)){
-        return false;
-    }
-    if(!m_mongodb_client.write_document("frames","parameters",m_st_memory->read_parameters()->frames.to_json(),true)){
-        return false;
-    }
-    if(!m_mongodb_client.write_document("control","parameters",m_st_memory->read_parameters()->control.to_json(),true)){
-        return false;
-    }
-    if(!m_mongodb_client.write_document("safety","parameters",m_st_memory->read_parameters()->safety.to_json(),true)){
-        return false;
-    }
+//    if(!m_mongodb_client.write_document("user","parameters",m_st_memory->read_parameters()->user.to_json(),true)){
+//        return false;
+//    }
+//    if(!m_mongodb_client.write_document("frames","parameters",m_st_memory->read_parameters()->frames.to_json(),true)){
+//        return false;
+//    }
+//    if(!m_mongodb_client.write_document("control","parameters",m_st_memory->read_parameters()->control.to_json(),true)){
+//        return false;
+//    }
+//    if(!m_mongodb_client.write_document("safety","parameters",m_st_memory->read_parameters()->safety.to_json(),true)){
+//        return false;
+//    }
     for(const auto& env : *m_st_memory->get_environment()){
         spdlog::debug("Updating object: " + env.first);
         if(!m_mongodb_client.write_document(env.first,"environment",env.second.to_json(),true)){

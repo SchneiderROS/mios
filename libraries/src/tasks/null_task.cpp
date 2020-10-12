@@ -1,4 +1,4 @@
-#include "tasks/nulltask.hpp"
+#include "tasks/null_task.hpp"
 
 namespace mios {
 
@@ -14,7 +14,7 @@ void NullTask::execute(){
 
 }
 
-void NullTask::evaluate(){
+void NullTask::get_default_context(nlohmann::json &context){
 
 }
 

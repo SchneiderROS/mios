@@ -7,14 +7,38 @@
 
 namespace mios {
 
+struct SkillCost{
+    SkillCost(){
+        time=0;
+        contact_forces=0;
+        custom=0;
+        effort_avg=0;
+        effort_total=0;
+    }
+    nlohmann::json to_json() const{
+        nlohmann::json cost;
+        cost["time"]=time;
+        cost["contact_forces"]=contact_forces;
+        cost["effort_avg"]=effort_avg;
+        cost["effort_total"]=effort_total;
+        cost["custom"]=custom;
+        return cost;
+    }
+    double time;
+    double contact_forces;
+    double effort_avg;
+    double effort_total;
+    double custom;
+};
+
 struct SkillResult{
 public:
     SkillResult(){
-        this->cost_suc=0;
-        this->cost_err=0;
-        this->success=false;
-        this->last_errors.resize(0);
-        this->results=nlohmann::json();
+        cost=SkillCost();
+        heuristic=0;
+        success=false;
+        last_errors.resize(0);
+        results=nlohmann::json();
         exception=false;
     }
     /**
@@ -36,12 +60,12 @@ public:
     /**
      * Cost of skill execution in case of success.
      */
-    double cost_suc;
+    SkillCost cost;
 
     /**
      * Cost of skill execution in case of failure.
      */
-    double cost_err;
+    double heuristic;
 
     /**
      * Additional inquality constraints. The key is the constraint's identifier, the value the constraint in implicit form.
@@ -70,8 +94,6 @@ struct TaskResult{
      * @param nominal
      */
     TaskResult(){
-        cost_suc=0;
-        cost_err=0;
         success=false;
         external_stop=false;
         exception=false;
@@ -82,8 +104,6 @@ struct TaskResult{
 
     std::unordered_map<std::string,SkillResult> skill_results;
 
-    double cost_suc;
-    double cost_err;
     bool success;
     bool external_stop;
     bool exception;

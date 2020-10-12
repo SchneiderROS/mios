@@ -4,13 +4,24 @@
 namespace mios{
 
 bool SkillParametersMLTestSkill::from_json(const nlohmann::json &parameters){
-    msrm_utils::read_json_param<double,6,1>(parameters,"x",x);
-    msrm_utils::read_json_param(parameters,"A",A);
-    msrm_utils::read_json_param(parameters,"selector",selector);
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"x",x)){
+        spdlog::error("Missing parameter: x");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"A",A)){
+        A=10;
+    }
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"weights",weights)){
+        weights<<1,0;
+    }
     return true;
 }
 
-MLTestSkill::MLTestSkill(const std::string& id, Memory *memory,Portal* portal, const Percept& p):Skill("MLTestSkill",{},id,memory,portal,p,{ControlMode::mNoControl}){
+std::map<std::string, std::set<std::string> > SkillParametersMLTestSkill::get_parameter_list(){
+    return {{"x",{}},{"A",{}},{"weights",{}}};
+}
+
+MLTestSkill::MLTestSkill(const std::string& id, Memory *memory,Portal* portal):Skill("MLTestSkill",{},id,memory,portal,{ControlMode::mJointVelocity}){
 
 }
 
@@ -24,19 +35,20 @@ std::shared_ptr<ManipulationPrimitive> MLTestSkill::get_initial_mp(const Percept
 bool MLTestSkill::check_local_suc_conditions(const Percept& p){
     return true;
 }
-void MLTestSkill::evaluate(){
+double MLTestSkill::get_custom_cost(const Percept &p){
     std::shared_ptr<SkillParametersMLTestSkill> params = get_parameters<SkillParametersMLTestSkill>();
     double y1=0;
     double y2=0;
     for(unsigned i=0;i<params->x.rows();i++){
-        y1+=pow(params->x(i),2)+params->A*cos(2*M_PI*params->x(i));
+        y1+=pow(params->x(i),2)-params->A*cos(2*M_PI*params->x(i));
     }
     y1+=params->A*params->x.rows();
     for(unsigned i=0;i<params->x.rows();i++){
         y2+=pow(params->x(i),2);
     }
-    double y=params->w_cost_function[0]*y1+params->w_cost_function[1]*y2;
-    write_costs(y,y);
+    double y=params->weights(0)*y1+params->weights(1)*y2;
+    spdlog::info("MLTestSkill: Costs are " + std::to_string(y));
+    return y;
 }
 
 }

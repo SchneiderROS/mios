@@ -20,8 +20,9 @@ bool Memory::is_ok() const{
     return true;
 }
 
-bool Memory::initialize(){
+bool Memory::initialize(SkillLibrary *skill_library){
     spdlog::info("Initializing long-term memory...");
+    m_lt_memory.link_to_skill_library(skill_library);
     if(!m_lt_memory.initialize()){
         spdlog::error("Could not initialize long-term memory.");
         return false;
@@ -100,6 +101,10 @@ bool Memory::update_object(const std::string &name, bool teach_width,const Perce
 
 bool Memory::update_object(const std::string &name, const nlohmann::json &description){
     return m_st_memory.update_object(name, description);
+}
+
+bool Memory::update_partial_object(const std::string &name, const nlohmann::json &description){
+    return m_st_memory.update_partial_object(name,description);
 }
 
 Object* Memory::get_object(const std::string& name){
