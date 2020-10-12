@@ -12,7 +12,9 @@ public:
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
 
     bool is_master;
+    bool multicast;
     std::string ip_dst;
+    std::vector<std::string> multicast_group;
     unsigned port_dst;
     unsigned port_src;
     TelepresenceMode mode;

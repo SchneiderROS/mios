@@ -15,7 +15,8 @@ mkdir -p ${ROOT}/build/release
 
 cd ${ROOT}/build/release
 cmake ../..
-make -j$(($(nproc --all)-1)) install
+#make -j$(($(nproc --all)-1)) install
+make install
 
 ### collect shared libraries ###
 cp ${ROOT}/third_party/lib/libfranka* ${ROOT}/lib/

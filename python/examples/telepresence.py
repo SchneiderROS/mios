@@ -29,6 +29,16 @@ def start_cartesian_mode(ip_master, ip_slave):
                                            "telepresence_mode": "DirectCart",
                                            "direct_cart": {"alpha": [0, 0, 0, 0, 0, 0]}}, {"control_mode": 0})
 
+def start_multi_joint_mode(ip_master: str, ip_slaves: list):
+    start_skill(ip_master, "Telepresence", {"is_master": True, "ip_dst": ip_slave, "port_dst": 8888, "port_src": 8888,
+                                            "telepresence_mode": "DirectJoint", "multicast": True, "multicast_group": ip_slaves,
+                                            "direct_joint": {"alpha": [0, 0, 0, 0, 0, 0]}}, {"control_mode": 0})
+    for s in ip_slaves:
+        start_skill(ip_slave, "Telepresence",
+                    {"is_master": False, "ip_dst": ip_master, "port_dst": 8888, "port_src": 8888,
+                     "telepresence_mode": "DirectJoint", "multicast": True,
+                     "direct_joint": {"alpha": [0, 0, 0, 0, 0, 0]}}, {"control_mode": 0})
+
 
 def start_skill(address: str, skill: str, parameters: dict, control: dict):
     response = start_task(address, "GenericTask", parameters={"parameters": {

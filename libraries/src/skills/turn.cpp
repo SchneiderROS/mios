@@ -14,7 +14,12 @@ bool SkillParametersTurn::from_json(const nlohmann::json& parameters){
     }
     return true;
 }
-Turn::Turn(const std::string& id, Memory* memory, Portal* portal, const Percept& p):Skill("Turn",{"turnable"},id,memory,portal,p,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
+
+std::map<std::string, std::set<std::string> > SkillParametersTurn::get_parameter_list(){
+    return {{"phi",{}},{"dphi",{}}};
+}
+
+Turn::Turn(const std::string& id, Memory* memory, Portal* portal, const Percept& p):Skill("Turn",{"turnable"},id,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
 
 }
 
@@ -47,5 +52,4 @@ bool Turn::check_local_suc_conditions(const Percept &p){
     return false;
 }
 
-void Turn::evaluate(){}
 }

@@ -87,12 +87,12 @@ std::shared_ptr<msrm_utils::UDPStreamSender> Portal::open_udp_outstream(const st
     return m_outstreams[name];
 }
 
-std::shared_ptr<msrm_utils::UDPStreamReceiver> Portal::open_udp_instream(const std::string &name, unsigned port, unsigned buffer_size,unsigned timeout_s,unsigned timeout_us,unsigned max_lost_packet,std::function<void(std::vector<double>&)> callback){
+std::shared_ptr<msrm_utils::UDPStreamReceiver> Portal::open_udp_instream(const std::string &name, unsigned port, unsigned buffer_size, unsigned timeout_s, unsigned timeout_us, unsigned max_lost_packet, std::function<void(std::vector<double>&)> callback, bool multicast){
     if(m_instreams.find(name)!=m_instreams.end()){
         spdlog::error("A UDP channel with name " + name + " already exists.");
         return nullptr;
     }
-    m_instreams.insert(std::make_pair(name,std::make_shared<msrm_utils::UDPStreamReceiver>(port,buffer_size,timeout_s,timeout_us,max_lost_packet,callback)));
+    m_instreams.insert(std::make_pair(name,std::make_shared<msrm_utils::UDPStreamReceiver>(port,buffer_size,timeout_s,timeout_us,max_lost_packet,callback,multicast)));
     return m_instreams[name];
 }
 
