@@ -26,7 +26,7 @@ class Domain:
         return d
 
     def get_default_x0(self):
-        return np.ones(len(self.limits)) * 0.5
+        return np.ones(len(self.limits)) * 0.0
 
     def normalize(self, x: np.ndarray) -> np.ndarray:
         x_norm = np.zeros((len(x),))
