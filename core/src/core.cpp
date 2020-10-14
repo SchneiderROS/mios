@@ -28,9 +28,10 @@
 
 namespace mios {
 
-Core::Core(unsigned database_port):m_memory(database_port),m_skill_engine(SkillEngine(this)),m_panda_body(PandaBody(&m_memory)),m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_skill_library(&m_memory,&m_portal),
+Core::Core(unsigned database_port, unsigned robot_configuration):m_memory(database_port),m_skill_engine(SkillEngine(this)),m_panda_body(PandaBody(&m_memory)),
+    m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_skill_library(&m_memory,&m_portal),
     m_task_engine(TaskEngine(this)),m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)),m_ros_node(this,&m_task_engine,&m_portal,&m_memory),
-    m_controller_pipeline(std::make_unique<NullControllerPipeline>()),m_is_ready(false){
+    m_controller_pipeline(std::make_unique<NullControllerPipeline>()),m_is_ready(false),m_robot_configuration(robot_configuration){
 }
 
 Core::~Core(){
@@ -39,7 +40,7 @@ Core::~Core(){
 
 bool Core::initialize(){
     spdlog::info("Initializing memory...");
-    if(!m_memory.initialize(&m_skill_library)){
+    if(!m_memory.initialize(&m_skill_library,m_robot_configuration)){
         spdlog::error("Could not initialize memory.");
         return false;
     }

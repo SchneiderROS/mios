@@ -32,7 +32,7 @@ class Skill;
 
 class Core{
 public:
-    Core(unsigned database_port);
+    Core(unsigned database_port, unsigned robot_configuration);
     ~Core();
 
     bool initialize();
@@ -99,6 +99,7 @@ private:
 
 private:
     bool m_is_ready;
+    unsigned m_robot_configuration;
 };
 
 }
