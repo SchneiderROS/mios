@@ -117,6 +117,15 @@ class KnowledgeManager():
         task_filter.pop("optimum_weights")
         doc = self.collect_data(task_filter, knowledge_db)
 
+        if not doc:  # if no predictions can be made: use similar knowledge
+            logger.error("KnowledgeManager: Cant find knowledge for predictions ("+str(task_filter)+" on "+str(knowledge_db)+")")
+            logger.debug("KnowledgeManager: Using similar Knowledge")
+            if knowledge_db.find("global") == -1:
+                data_db = "ml_results"
+            else:
+                data_db = "global_ml_results"
+            return self.get_local_knowledge(task_identity, knowledge_db, data_db)
+
         # check if knowledge fits together:
         vector_mapping = doc[0]["parameters"].keys()
         for d in doc:
