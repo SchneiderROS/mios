@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import copy
 import time
+import random
 from mongodb_client.mongodb_client import MongoDBClient
 from knowledge_processor.knowledge_processor_v2 import KnowledgeProcessor
 from knowledge_processor.kg_linear_regression import KGLinearRegressor
@@ -17,6 +18,7 @@ class KnowledgeManager():
         self.DBclient = MongoDBClient(host, port)
         self.data_db = "ml_results"
         self.knowledge_db = "local_knowledge"
+        self.validation_per = 0.2
 
     def collect_data(self, task_identity, data_db:str = "ml_results") -> list:
         if data_db.find("knowledge") == -1:  #  if collecting raw data (no knowledge)
@@ -102,7 +104,7 @@ class KnowledgeManager():
 
         return knowledge
 
-    def get_training_data(self,docs):
+    def get_learning_data(self,docs):
         training_data_x = []
         training_data_y = []
         for doc in docs:
@@ -135,9 +137,25 @@ class KnowledgeManager():
             if vector_mapping != d["parameters"].keys():
                 logger.error("KnowledgeManager.predict_knowledge: found knowledge doesnt fit together: different vector mappings!")
                 return False
+        # divide into training-data and validation-data
+        validation_size = int(len(doc)*self.validation_per)
+        validation_set = []
+        for i in range(0,validation_size):
+            random_pic = random.randint(0,len(doc)-1)
+            validation_set.append(doc.pop(random_pic))
+        
         # train
-        training_data = self.get_training_data(doc)
+        training_data = self.get_learning_data(doc)
         predictor.fit_data(training_data[0], training_data[1])
+        #validate
+        validation_data = self.get_learning_data(validation_set)
+        distances = []
+        std_validation_data = np.std(validation_data[1],axis=0)
+        std_validation_data = np.array([1 if n == 0 else n for n in std_validation_data])  # remove zeros from standard deviation
+        for i in range(0,validation_size):
+            prediction = predictor.predict_data(validation_data[0][i])
+            distances.append(np.linalg.norm(prediction-validation_data[1][i]))
+        error_in_context = np.mean(distances/std_validation_data)  # devide throu the standard deviation to set the error into context
         # predict
         predict_x = np.array(task_identity["optimum_weights"])
         prediction = predictor.predict_data(predict_x)[0]
@@ -148,6 +166,7 @@ class KnowledgeManager():
             parameter_dict[key_name] = float(parameter)  # use python float because of rpc restrictions
         meta = dict()
         meta["expected_cost"] = False
+        meta["prediction_error"] = error_in_context
         meta["optimum_weights"] = task_identity["optimum_weights"]
         meta["task_type"] = task_identity["task_type"]
         meta["tags"] = task_identity["tags"]
