@@ -18,6 +18,7 @@ class KnowledgeManager():
         self.DBclient = MongoDBClient(host, port)
         self.data_db = "ml_results"
         self.knowledge_db = "local_knowledge"
+        self.predictor = None
         self.validation_per = 0.2
 
     def collect_data(self, task_identity, data_db:str = "ml_results") -> list:
@@ -113,6 +114,9 @@ class KnowledgeManager():
                 continue
             training_data_x.append(np.array(doc["meta"]["optimum_weights"]))
             training_data_y.append(np.array(self.dict_to_list(doc["parameters"])))
+        if len(training_data_x) < 1 or len(training_data_y) < 1:
+            logger.error("KnowledgeManager.predict_knowledge: Training or Validation data is too small (smaller than 1)")  
+            return False  
         return np.array(training_data_x), np.array(training_data_y)
 
     def get_predictor(self):
