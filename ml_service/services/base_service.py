@@ -142,7 +142,8 @@ class BaseService(metaclass=ABCMeta):
 
     def stop(self):
         self.keep_running = False
-        self.engine.stop()
+        if self.engine is not None:
+            self.engine.stop()
 
     def push_trial(self, x) -> str:
         for i in range(len(x)):
