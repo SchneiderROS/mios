@@ -115,7 +115,7 @@ class KnowledgeManager():
             training_data_y.append(np.array(self.dict_to_list(doc["parameters"])))
         return np.array(training_data_x), np.array(training_data_y)
 
-    def predict_knowledge(self, predictor: KnowledgeGeneralizerBase, task_identity:dict, knowledge_db: str = "local_knowledge"):
+    def predict_knowledge(self, task_identity:dict, knowledge_db: str = "local_knowledge", predictor: KnowledgeGeneralizerBase = KGRandomForest()):
         '''trains and uses model to predict knolwedge'''
         #search for all tasks of same tasktype
         task_filter = copy.deepcopy(task_identity)
@@ -139,6 +139,8 @@ class KnowledgeManager():
                 return False
         # divide into training-data and validation-data
         validation_size = int(len(doc)*self.validation_per)
+        if validation_size < 1 and len(doc) > 1:
+            validation_size = 1
         validation_set = []
         for i in range(0,validation_size):
             random_pic = random.randint(0,len(doc)-1)
@@ -148,14 +150,17 @@ class KnowledgeManager():
         training_data = self.get_learning_data(doc)
         predictor.fit_data(training_data[0], training_data[1])
         #validate
-        validation_data = self.get_learning_data(validation_set)
-        distances = []
-        std_validation_data = np.std(validation_data[1],axis=0)
-        std_validation_data = np.array([1 if n == 0 else n for n in std_validation_data])  # remove zeros from standard deviation
-        for i in range(0,validation_size):
-            prediction = predictor.predict_data(validation_data[0][i])
-            distances.append(np.linalg.norm(prediction-validation_data[1][i]))
-        error_in_context = np.mean(distances/std_validation_data)  # devide throu the standard deviation to set the error into context
+        if len(validation_set) > 0:
+            validation_data = self.get_learning_data(validation_set)
+            distances = []
+            std_validation_data = np.std(validation_data[1],axis=0)
+            std_validation_data = np.array([1 if n == 0 else n for n in std_validation_data])  # remove zeros from standard deviation
+            for i in range(0,validation_size):
+                prediction = predictor.predict_data(validation_data[0][i])
+                distances.append(np.linalg.norm(prediction-validation_data[1][i]))
+            error_in_context = np.mean(distances/std_validation_data)  # devide throu the standard deviation to set the error into context
+        else:
+            error_in_context = False
         # predict
         predict_x = np.array(task_identity["optimum_weights"])
         prediction = predictor.predict_data(predict_x)[0]
