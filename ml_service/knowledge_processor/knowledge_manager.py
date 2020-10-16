@@ -41,8 +41,6 @@ class KnowledgeManager():
             return False
         return doc
 
-
-
     def store_knowledge(self, knowledge, knowledge_db = "local_knowledge") -> str:
         knowledge_filter = {"meta.tags": knowledge["meta"]["tags"], \
                             "meta.task_type": knowledge["meta"]["task_type"], \
@@ -117,7 +115,13 @@ class KnowledgeManager():
             training_data_y.append(np.array(self.dict_to_list(doc["parameters"])))
         return np.array(training_data_x), np.array(training_data_y)
 
-    def predict_knowledge(self, task_identity:dict, knowledge_db: str = "local_knowledge", predictor: KnowledgeGeneralizerBase = KGRandomForest()):
+    def get_predictor(self):
+        if self.predictor is not None:
+            return self.get_predictor
+        else:
+            return KGRandomForest()
+
+    def predict_knowledge(self, task_identity:dict, knowledge_db: str = "local_knowledge", predictor: KnowledgeGeneralizerBase = None):
         '''trains and uses model to predict knolwedge'''
         #search for all tasks of same tasktype
         task_filter = copy.deepcopy(task_identity)
@@ -147,6 +151,10 @@ class KnowledgeManager():
             if vector_mapping != d["parameters"].keys():
                 logger.error("KnowledgeManager.predict_knowledge: found knowledge doesnt fit together: different vector mappings!")
                 return False
+        #get best predictor:
+        if predictor is None:
+            predictor = self.get_predictor()
+        
         # divide into training-data and validation-data
         validation_size = int(len(doc)*self.validation_per)
         if validation_size < 1 and len(doc) > 1:
@@ -161,12 +169,12 @@ class KnowledgeManager():
         validation_data = self.get_learning_data(validation_set)
 
         # stadardize learning data
-        std_deviation_data_y = np.std(validation_data[1]+training_data[1],axis=0)
+        std_deviation_data_y = np.std(np.append(validation_data[1],training_data[1],axis=0),axis=0)
         std_deviation_data_y = np.array([1 if n == 0 else n for n in std_deviation_data_y])  # remove zeros from standard deviation
-        std_deviation_data_x = np.std(validation_data[0]+training_data[0],axis=0)
+        std_deviation_data_x = np.std(np.append(validation_data[0],training_data[0],axis=0),axis=0)
         std_deviation_data_x = np.array([1 if n == 0 else n for n in std_deviation_data_x])  # remove zeros from standard deviation
-        mean_data_y = np.mean(validation_data[1]+training_data[1],axis=0)
-        mean_data_x = np.mean(validation_data[0]+training_data[0],axis=0)
+        mean_data_y = np.mean(np.append(validation_data[1],training_data[1],axis=0),axis=0)
+        mean_data_x = np.mean(np.append(validation_data[0],training_data[0],axis=0),axis=0)
         training_data_y_normalized = (training_data[1] - mean_data_y) / std_deviation_data_y
         validation_data_y_normalized = (validation_data[1] - mean_data_y) / std_deviation_data_y
         training_data_x_normalized = (training_data[0] - mean_data_x) / std_deviation_data_x
