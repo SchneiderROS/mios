@@ -135,7 +135,7 @@ class KnowledgeManager():
         '''trains and uses model to predict knolwedge'''
         # search for all tasks of same tasktype
         task_filter = copy.deepcopy(task_identity)
-        # task_filter.pop("optimum_weights")
+        task_filter.pop("optimum_weights")
         doc = self.collect_data(task_filter, knowledge_db)
         if not doc:
             logger.error("KnowledgeManager: Cant find knowledge for predictions (" + str(task_filter) + " on " + str(

@@ -182,5 +182,5 @@ def test_generalizer():
     for name, regr in regressors.items():
         print("--------------------------------------")
         print("Regressor: " + name)
-        prediction = manager.predict_knowledge(task_identity, "global", regr)
+        prediction = manager.predict_knowledge(task_identity, "global_knowledge", regr)
         print("error: " + str(prediction["meta"]["prediction_error"]))

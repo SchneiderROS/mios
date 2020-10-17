@@ -21,7 +21,7 @@ class MongoDBClient():
         #if search params are in list, search for all the contend (not the list itself...)
         for key in search_param:
             value = search_param[key]
-            if key == "tags" or "meta.tags":
+            if key == "tags" or key == "meta.tags":
                 if isinstance(value, list):
                     search_param[key] = {"$all": value}
             if not value:  # check if key exists if no value is given
