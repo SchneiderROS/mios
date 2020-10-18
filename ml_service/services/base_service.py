@@ -87,7 +87,8 @@ class BaseService(metaclass=ABCMeta):
                         self.centroid.append(self.knowledge["parameters"][key])   
                     logger.debug("base_service.initialize(): Use local knowledge "+str(self.centroid))
             elif knowledge_source["mode"] == 'global':
-                logger.debug("base_service.initialize(): get global knowlege")
+                logger.debug("base_service::initialize(): get global knowlege")
+                logger.debug("base_service::initialize(): contacting database at http://" + knowledge_source["kb_location"] + ":8001")
                 with ServerProxy("http://" + knowledge_source["kb_location"] + ":8001") as kb:
                     try:
                         self.knowledge = kb.get_knowledge(self.problem_definition.get_task_identity())

@@ -55,7 +55,7 @@ def test_interface(agent: str = "localhost"):
     agents = set()
     agents.add(agent)
     problem_def = rastrigin()
-    problem_def.tags = ["rastrigin_8", "collective_learning_benchmark_009"]
+    problem_def.tags = ["rastrigin_8", "collective_learning_benchmark_001"]
     interface = Interface()
 
     # call_method(agent, 12002, "set_grasped_object", {"object": "key_abus_e30"})
