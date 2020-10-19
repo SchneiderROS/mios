@@ -26,7 +26,8 @@ def rastrigin():
         "skills": {
             "ml_test": {
                 "skill": {
-                    "A": 10
+                    "A": 10,
+                    "x_0": [1, 1, 1, 1, 1, 1]
                 }
             }
         }
@@ -44,6 +45,8 @@ def rastrigin_cost():
     c.min_cost[0] = 5
     c.max_cost[1] = 100
     c.min_cost[1] = 5
+    c.max_cost[2] = 100
+    c.min_cost[2] = 5
     c.finish_thr = 3
     return c
 

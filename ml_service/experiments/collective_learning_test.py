@@ -26,7 +26,7 @@ class TestCreationPipeline(CreationPipeline):
         for i in range(n_tasks):
             t = Task(copy.deepcopy(template), service_configuration, agents, service_url, knowledge_mode)
             t.problem_definition.cost_function.optimum_weights[0] = float(i + 1) / float(n_tasks)
-            t.problem_definition.cost_function.optimum_weights[1] = 1 - \
+            t.problem_definition.cost_function.optimum_weights[2] = 1 - \
                                                                     t.problem_definition.cost_function.optimum_weights[
                                                                         0]
             self.tasks.append(t)
