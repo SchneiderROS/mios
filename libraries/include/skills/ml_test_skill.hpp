@@ -9,6 +9,7 @@ public:
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
     Eigen::Matrix<double,6,1> x;
     double A;
+    Eigen::Matrix<double,6,1> x_0;
 };
 
 class MLTestSkill : public Skill{

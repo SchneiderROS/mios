@@ -11,11 +11,14 @@ bool SkillParametersMLTestSkill::from_json(const nlohmann::json &parameters){
     if(!msrm_utils::read_json_param(parameters,"A",A)){
         A=10;
     }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"x_0",x_0)){
+        x_0.setZero();
+    }
     return true;
 }
 
 std::map<std::string, std::set<std::string> > SkillParametersMLTestSkill::get_parameter_list(){
-    return {{"x",{}},{"A",{}}};
+    return {{"x",{}},{"A",{}},{"x_0",{}}};
 }
 
 MLTestSkill::MLTestSkill(const std::string& id, Memory *memory,Portal* portal):Skill("MLTestSkill",{},id,memory,portal,{ControlMode::mJointVelocity}){
@@ -37,6 +40,7 @@ SkillCost MLTestSkill::measure_cost(const Percept &p){
     std::shared_ptr<SkillParametersMLTestSkill> params = get_parameters<SkillParametersMLTestSkill>();
     double y1=0;
     double y2=0;
+    double y3=0;
     // Rastrigin benchmark function
     for(unsigned i=0;i<params->x.rows();i++){
         y1+=pow(params->x(i),2)-params->A*cos(2*M_PI*params->x(i));
@@ -46,9 +50,14 @@ SkillCost MLTestSkill::measure_cost(const Percept &p){
     for(unsigned i=0;i<params->x.rows();i++){
         y2+=pow(params->x(i),2);
     }
+
+    for(unsigned i=0;i<params->x.rows();i++){
+        y3+=pow(params->x(i)-params->x_0(i),2);
+    }
     SkillCost cost;
     cost.time=y1;
     cost.contact_forces=y2;
+    cost.effort_avg=y3;
     return cost;
 }
 
