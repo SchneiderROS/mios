@@ -12,7 +12,7 @@ class KnowledgeProcessorBase(metaclass=ABCMeta):
         self.task_identity = task_identity
 
     @abstractmethod
-    def process_knowledge(self, task_identity: dict, data_db:str = "ml_results", knowledge_db:str = "local_knowledge", knowledge_tags:list = []) -> list:
+    def process_knowledge(self, successful_trials) -> list:
         '''process raw data from trials to knowledge; working from and on the database -> returns centroid as list and expected cost as float'''
         raise NotImplementedError
     

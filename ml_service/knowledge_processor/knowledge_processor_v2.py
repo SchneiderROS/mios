@@ -14,7 +14,7 @@ class KnowledgeProcessor(KnowledgeProcessorBase):
     def __init__(self, vector_mapping, task_identity):
         super().__init__(vector_mapping, task_identity)
 
-    def process_knowledge(self, successful_trials) -> str("_id"):
+    def process_knowledge(self, successful_trials) -> list:
         '''process raw data from trials to knowledge; working from and on the database'''
         clusters = self.find_cluster(successful_trials)
         #use best cluster:
