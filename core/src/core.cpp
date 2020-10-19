@@ -324,7 +324,7 @@ bool Core::set_grasped_object(const std::string &name){
     return m_panda_body.set_robot_parameters();
 }
 
-bool Core::release_object(double speed){
+bool Core::release_object(std::optional<double> width, double speed){
     const Object* object=m_memory.get_live_context()->grasped_object;
     if(object->name=="NullObject" && !is_grasping()){
         spdlog::error("I am not grasping anything.");
@@ -342,7 +342,7 @@ bool Core::release_object(double speed){
         spdlog::warn("Could not update datebase.");
     }
     object=m_memory.get_object("NullObject");
-    if(m_panda_body.move_to_finger_position(m_percept.internal_model.max_finger_width,speed)){
+    if(m_panda_body.move_to_finger_position(width.value_or(m_percept.internal_model.max_finger_width),speed)){
         m_memory.get_live_context()->grasped_object=object;
         m_memory.internal_update(m_percept);
         m_memory.get_parameters()->user.load_m=object->mass;
