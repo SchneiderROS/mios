@@ -23,9 +23,10 @@ class TestCreationPipeline(CreationPipeline):
         super().__init__()
 
     def create_tasks_from_template(self, template: ProblemDefinition, service_configuration: ServiceConfiguration, n_tasks, service_url, agents, knowledge_mode: str):
-        for i in range(n_tasks):
+        for i in range(n_tasks + 1):
             t = Task(copy.deepcopy(template), service_configuration, agents, service_url, knowledge_mode)
-            t.problem_definition.cost_function.optimum_weights[0] = float(i + 1) / float(n_tasks)
+            t.problem_definition.cost_function.optimum_weights[0] = 0
+            t.problem_definition.cost_function.optimum_weights[1] = float(i) / float(n_tasks)
             t.problem_definition.cost_function.optimum_weights[2] = 1 - \
                                                                     t.problem_definition.cost_function.optimum_weights[
                                                                         0]
@@ -37,7 +38,7 @@ class TestCreationPipeline(CreationPipeline):
 class CollectiveLearningBase(Experiment):
     def initialize(self, knowledge_mode: str):
         config = CMAESConfiguration()
-        config.n_gen = 10
+        config.n_gen = 100
         config.n_ind = 10
 
         self.agents = ["collective-panda-007.local", "collective-panda-001.local", "collective-panda-008.local",
@@ -50,7 +51,7 @@ class CollectiveLearningBase(Experiment):
                                      ["collective-panda-007"], knowledge_mode)
         c.create_tasks_from_template(rastrigin_a(0.4), config, n_tasks, "collective-panda-001.local",
                                      ["collective-panda-001"], knowledge_mode)
-        c.create_tasks_from_template(rastrigin_a(0.6), config, n_tasks, "collective-panda-008.local",
+        c.create_tasks_from_template(rastrigin_a(0.6), config, n_tasks, "collectxive-panda-008.local",
                                      ["collective-panda-008"], knowledge_mode)
         c.create_tasks_from_template(rastrigin_a(0.8), config, n_tasks, "collective-panda-002.local",
                                      ["collective-panda-002"], knowledge_mode)
