@@ -38,6 +38,7 @@ class TestCreationPipeline(CreationPipeline):
 class CollectiveLearningBase(Experiment):
     def initialize(self, knowledge_mode: str):
         config = CMAESConfiguration()
+        config.exploration_mode = True
         config.n_gen = 100
         config.n_ind = 10
 

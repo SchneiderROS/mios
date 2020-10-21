@@ -23,7 +23,7 @@ class CMAESConfiguration(ServiceConfiguration):
         self.n_gen = 10
         self.sigma_init = 0.2
 
-    def to_dict(self):
+    def _to_dict(self):
         config = {
             "n_ind": self.n_ind,
             "n_gen": self.n_gen,
@@ -31,7 +31,7 @@ class CMAESConfiguration(ServiceConfiguration):
         }
         return config
 
-    def from_dict(self, config_dict):
+    def _from_dict(self, config_dict):
         self.n_ind = config_dict["n_ind"]
         self.n_gen = config_dict["n_gen"]
         self.sigma_init = config_dict["sigma_init"]

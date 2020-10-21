@@ -14,19 +14,32 @@ from knowledge_processor.knowledge_manager import KnowledgeManager
 from mongodb_client.mongodb_client import MongoDBClient
 from utils.exception import *
 
+
 logger = logging.getLogger("ml_service")
 
 
 class ServiceConfiguration(metaclass=ABCMeta):
-    def __init__(self, service_name: str = "none"):
+    def __init__(self, service_name: str):
         self.service_name = service_name
+        self.exploration_mode = False
+
+    def to_dict(self) -> dict:
+        config_dict = self._to_dict()
+        config_dict["service_name"] = self.service_name
+        config_dict["exploration_mode"] = self.exploration_mode
+        return config_dict
+
+    def from_dict(self, config_dict):
+        self._from_dict(config_dict)
+        self.service_name = config_dict["service_name"]
+        self.exploration_mode = config_dict["exploration_mode"]
 
     @abstractmethod
-    def to_dict(self):
+    def _to_dict(self) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def from_dict(self, config_dict):
+    def _from_dict(self, config_dict: dict):
         raise NotImplementedError
 
 
@@ -106,7 +119,7 @@ class BaseService(metaclass=ABCMeta):
                     logger.debug("base_service.initialize(): Use global knowledge "+str(self.centroid))
 
         self.engine = Engine(agents)
-        self.database_results_id = self.engine.initialize(self.problem_definition)
+        self.database_results_id = self.engine.initialize(self.problem_definition, configuration.exploration_mode)
 
         self._initialize()
 

@@ -70,7 +70,9 @@ class Engine:
 
         self.lock_data = Lock()
 
-    def initialize(self, problem_definition: ProblemDefinition):
+        self.exploration_mode = False
+
+    def initialize(self, problem_definition: ProblemDefinition, exploration_mode: bool = False):
         self.x = np.empty((0, len(problem_definition.domain.limits)))
         return self.initialize_results(problem_definition)
 
@@ -125,6 +127,8 @@ class Engine:
     def is_learned(self) -> bool:
         if self.stop_condition is None:
             return self.cnt_optimal > self.problem_definition.cost_function.finish_thr
+        elif self.exploration_mode is True:
+            return False
         else:
             return self.stop_condition()
 
