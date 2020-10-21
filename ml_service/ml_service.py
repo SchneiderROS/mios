@@ -77,11 +77,15 @@ def test_with_rpc_client(agent: str = "localhost"):
     agents = []
     agents.append(agent)
     problem_def = rastrigin()
+    problem_def.tags = ["rastrigin_8", "collective_learning_benchmark_001"]
 
-    print(problem_def.to_dict())
+    # call_method(agent, 12002, "set_grasped_object", {"object": "key_abus_e30"})
+    config = get_service_configuration()
+    config.n_gen = 100
+    config.exploration_mode = True
 
     s = ServerProxy("http://" + agent + ":8000", allow_none=True)
-    s.start_service(problem_def.to_dict(), CMAESConfiguration().to_dict(), agents, None)
+    s.start_service(problem_def.to_dict(), config.to_dict(), agents, {"mode": "global", "kb_location": "collective-panda-002.local"})
 
 
 def test_standalone(agent: str = "localhost"):

@@ -76,7 +76,7 @@ class TaskScheduler:
             "kb_location": self.kb_location
         }
         try:
-            s.start_service(task.problem_definition, task.service_configuration, task.agents, knowledge_info)
+            s.start_service(task.problem_definition.to_dict(), task.service_configuration.to_dict(), task.agents, knowledge_info)
             if s.wait_for_service() is False:
                 self.unassigned_tasks.put(task)  # put task back into queue
             logger.debug("TaskScheduler::solve_task.finished")
