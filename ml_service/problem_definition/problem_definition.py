@@ -21,6 +21,7 @@ class CostFunction:
     """
 
     def __init__(self):
+        self.geometry_factor = None
         self.optimum_skills = []
         self.optimum_weights = [0] * 5
         self.optimum_expressions = ["var"] * 5
@@ -31,19 +32,21 @@ class CostFunction:
         self.cost_grid_weights = np.array([[]])
         self.cost_grid_val = np.array([[]])
 
-    def add_to_cost_grid(self, cost_weights: np.ndarray, cost):
+    def add_to_cost_grid(self, geometry_factor:float, cost_weights: np.ndarray, cost):
         contains = False
+        task_identity = np.append(np.array([geometry_factor]), cost_weights)
         for i in range(len(self.cost_grid_weights)):
-            if np.array_equal(self.cost_grid_weights[i], cost_weights):
+            if np.array_equal(self.cost_grid_weights[i], task_identity):
                 self.cost_grid_val[i] = cost
                 contains = True
                 break
         if contains is False:
-            self.cost_grid_weights = np.append(self.cost_grid_weights, cost_weights.reshape(1, -1))
+            self.cost_grid_weights = np.append(self.cost_grid_weights, task_identity.reshape(1, -1))
             self.cost_grid_val = np.append(self.cost_grid_val, np.array([cost]).reshape(1, -1))
 
     def to_dict(self):
         c = {
+            "geometry_factor": self.geometry_factor,
             "optimum_skills": self.optimum_skills,
             "optimum_weights": self.optimum_weights,
             "optimum_expressions": self.optimum_expressions,
@@ -59,6 +62,7 @@ class CostFunction:
     @staticmethod
     def from_dict(cf_dict: dict):
         c = CostFunction()
+        c.geometry_factor = cf_dict["geometry_factor"]
         c.optimum_skills = cf_dict["optimum_skills"]
         c.optimum_weights = cf_dict["optimum_weights"]
         c.optimum_expressions = cf_dict["optimum_expressions"]
@@ -90,7 +94,8 @@ class ProblemDefinition:
 
     def calc_optimum_thr(self):
         self.optimum_thr = griddata(self.cost_function.cost_grid_weights, self.cost_function.cost_grid_val,
-                 self.cost_function.optimum_weights, method="nearest")
+                 np.append(np.array([self.cost_function.geometry_factor]), self.cost_function.optimum_weights),
+                                    method="nearest")
         print(self.cost_function.cost_grid_weights)
 
         print("THR: " + str(self.optimum_thr))

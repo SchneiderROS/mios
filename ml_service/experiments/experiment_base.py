@@ -8,6 +8,7 @@ from utils.cluster_control import *
 from utils.database import *
 from plotting.data_acquisition import get_multiple_experiment_data
 from plotting.data_processor import DataProcessor
+import numpy as np
 
 
 logger = logging.getLogger("ml_service")
@@ -34,11 +35,16 @@ class Experiment(metaclass=ABCMeta):
         if use_cost_grid is not None:
             cost_grid = self.get_cost_grid(use_cost_grid)
 
+        print(cost_grid)
+        exit(-1)
+
         for t in self.creation_pipeline.tasks:
             t.problem_definition.tags.extend(self.tags)
             if use_cost_grid is not None:
-                for p in cost_grid:
-                    t.problem_definition.cost_function.add_to_cost_grid(p)
+                t.problem_definition.cost_function.cost_grid_weights = np.array([[]])
+                t.problem_definition.cost_function.cost_grid_val = np.array([[]])
+                for i in range(len(cost_grid)):
+                    t.problem_definition.cost_function.add_to_cost_grid(cost_grid[i,:-1], cost_grid[i, -1])
             self.task_scheduler.add_task(t)
 
         delete_local_results(self.agents, self.task_type, self.tags)
@@ -49,7 +55,7 @@ class Experiment(metaclass=ABCMeta):
         thr = Thread(target=self.task_scheduler.solve_tasks)
         thr.start()
 
-    def get_cost_grid(self, tag) -> list:
+    def get_cost_grid(self, tag) -> np.ndarray:
         results = get_multiple_experiment_data(self.task_scheduler.kb_location, self.task_type, "global",  {"meta.tags": {"$all": [tag] }})
         processor = DataProcessor()
         return processor.get_optima_by_cost_function(results)
