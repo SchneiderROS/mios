@@ -15,6 +15,7 @@ def rastrigin_a(a: float):
     pd = rastrigin()
     pd.default_context["skills"]["ml_test"]["skill"]["x_0"] = [a, a, a, a, a, a]
     pd.tags = ["rastrigin_" + str(int(a))]
+    pd.cost_function.geometry_factor = a
     return pd
 
 

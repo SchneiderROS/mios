@@ -194,10 +194,12 @@ def test_generalizer():
         print("error: " + str(prediction["meta"]["prediction_error"]))
 
 
+from plotting.data_acquisition import get_multiple_experiment_data
+from plotting.data_processor import DataProcessor
+
+
 def test_cost_function():
-    pd = rastrigin()
-    pd.cost_function.optimum_weights = [0, 0.5, 0.5, 0, 0]
-    print(pd.cost_function.min_cost_weights)
-    pd_dict = pd.to_dict()
-    pd = ProblemDefinition.from_dict(pd_dict)
-    print(pd.cost_function.min_cost_weights)
+    results = get_multiple_experiment_data("collective-panda-002.local", "benchmark_rastrigin", "global",
+                                           {"meta.tags": {"$all": ["collective_learning_benchmark_004"]}})
+    processor = DataProcessor()
+    print(processor.get_optima_by_cost_function(results))

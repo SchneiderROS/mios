@@ -47,9 +47,10 @@ def rastrigin_cost():
     c.max_cost[1] = 1000
     c.max_cost[2] = 1000
     c.finish_thr = 3
-    c.cost_grid_weights = np.array([[0, 1, 0, 0, 0],
-                                   [0, 0.5, 0.5, 0, 0],
-                                  [0, 0, 1, 0, 0]])
+    c.geometry_factor = 1
+    c.cost_grid_weights = np.array([[0, 0, 1, 0, 0, 0],
+                                   [0, 0, 0.5, 0.5, 0, 0],
+                                  [0, 0, 0, 1, 0, 0]])
     c.cost_grid_val = np.array([[5],
                                [10],
                                [5]])
