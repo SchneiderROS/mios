@@ -22,9 +22,9 @@ from plotting.data_processor import DataProcessor
 from plotting.plotter import Plotter
 
 logger = logging.getLogger("ml_service")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
+handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
@@ -58,9 +58,9 @@ def test_interface(agent: str = "localhost"):
     problem_def.tags = ["rastrigin_8", "collective_learning_benchmark_001"]
 
     results = get_multiple_experiment_data("collective-panda-002.local", "benchmark_rastrigin", "global",
-                                           {"meta.tags": {"$all": ["collective_learning_benchmark_004"]}})
+                                           {"meta.tags": {"$all": ["collective_learning_benchmark_screen_001"]}})
     processor = DataProcessor()
-    grid = processor.get_optima_by_task_identity(results, 0.3)
+    grid = processor.get_optima_by_task_identity(results, 0.01)
     problem_def.cost_function.cost_grid_weights = grid[0, :-1]
     problem_def.cost_function.cost_grid_val = grid[0, -1]
     problem_def.cost_function.cost_grid_weights = problem_def.cost_function.cost_grid_weights.reshape(1, -1)
@@ -68,8 +68,9 @@ def test_interface(agent: str = "localhost"):
     for i in range(1, grid.shape[0]):
         problem_def.cost_function.add_to_cost_grid(grid[i, 0], grid[i, 1:-1], grid[i, -1])
 
+    task_identity = np.append(np.array([problem_def.cost_function.geometry_factor]), problem_def.cost_function.optimum_weights)
     for i in range(problem_def.cost_function.cost_grid_weights.shape[0]):
-        if np.array_equal(problem_def.cost_function.cost_grid_weights[i], np.append(np.array(problem_def.cost_function.geometry_factor), problem_def.cost_function.optimum_weights)):
+        if np.allclose(problem_def.cost_function.cost_grid_weights[i], task_identity):
             print("Expected optimum is: " + str(problem_def.cost_function.cost_grid_val[i]))
 
     interface = Interface()
@@ -77,9 +78,9 @@ def test_interface(agent: str = "localhost"):
     # call_method(agent, 12002, "set_grasped_object", {"object": "key_abus_e30"})
     config = get_service_configuration()
     config.n_gen = 100
-    config.exploration_mode = False
+    config.exploration_mode = True
 
-    uuid = interface.start_service(problem_def, config, agents, {"mode": "global", "kb_location": "collective-panda-002.local"})
+    uuid = interface.start_service(problem_def, config, agents, {"mode": "none", "kb_location": "collective-panda-002.local"})
     input("Press enter to stop service.")
     interface.stop_service()
 

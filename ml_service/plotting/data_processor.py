@@ -39,6 +39,7 @@ class DataProcessor:
             max_cost = cost_grid_max[0] * arr[i, 1] + cost_grid_max[1] * arr[i, 2] + cost_grid_max[2] * arr[i, 3] + \
                        cost_grid_max[3] * arr[i, 4] + cost_grid_max[4] * arr[i, 5]
             cost = self.get_monotonically_decreasing_cost(results[i].get_cost_per_trial())
+            max_cost = 1
             arr[i, -1] = (max_cost - cost[-1]) * percentage + cost[-1]
         return arr
 
