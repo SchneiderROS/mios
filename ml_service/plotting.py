@@ -4,6 +4,13 @@ from plotting.data_processor import DataProcessor
 from plotting.plotter import Plotter
 
 
+def single_experiment(host: str, task_type: str, uuid: str):
+    p = DataProcessor()
+    plot = Plotter()
+    result = get_experiment_data(host, task_type, uuid=uuid)
+    plot.plot_cost_over_trials(p.get_monotonically_decreasing_cost(result.get_cost_per_trial()))
+
+
 def agent_learning(tags, hosts = ["collective-panda-002.local"]):
     filter = {"meta.tags": tags}
     knowledge_mode = "global"
@@ -22,6 +29,7 @@ def agent_learning(tags, hosts = ["collective-panda-002.local"]):
         agent_times_cum = p.get_cumulative_time(agent_results)
         plot.plot_learning_over_task(agent_times_cum, agent)
 
+
 def global_learning(tags, hosts = ["collective-panda-002.local"]):
     filter = {"meta.tags": tags}
     knowledge_mode = "global"
@@ -37,7 +45,3 @@ def global_learning(tags, hosts = ["collective-panda-002.local"]):
     results = p.sort_over_time(results)
     all_times = p.get_cumulative_time(results)
     plot.plot_learning_over_task(all_times, "global")
-
-
-if __name__ == "__main__":
-    global_learning("collective_learning_benchmark_005")
