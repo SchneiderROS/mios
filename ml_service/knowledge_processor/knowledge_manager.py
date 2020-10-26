@@ -181,10 +181,6 @@ class KnowledgeManager():
             logger.debug("KnowledgeManager: Using similar Knowledge")
             return self.get_local_knowledge(task_identity, knowledge_db, data_db)
 
-
-        return self.get_local_knowledge(task_identity, knowledge_db, data_db)
-
-
         # get best predictor:
         if predictor is None:
             predictor = self.get_predictor()
