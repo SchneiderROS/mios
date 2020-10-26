@@ -11,12 +11,13 @@ logger = logging.getLogger("ml_service")
 
 
 class Task:
-    def __init__(self, problem_definition: ProblemDefinition, service_configuration: ServiceConfiguration, agents: list, service_url, knowledge_mode: str):
+    def __init__(self, problem_definition: ProblemDefinition, service_configuration: ServiceConfiguration, agents: list, service_url, knowledge_mode: str, knowledge_type: str):
         self.problem_definition = problem_definition
         self.service_configuration = service_configuration
         self.agents = agents
         self.service_url = service_url
         self.knowledge_mode = knowledge_mode
+        self.knowledge_type = knowledge_type
 
 
 class TaskScheduler:
@@ -73,8 +74,8 @@ class TaskScheduler:
         s = ServerProxy("http://" + task.service_url + ":8000", allow_none=True)
         knowledge_info = {
             "mode": task.knowledge_mode,
-            "kb_location": self.kb_location,
-            "always_upload": True
+            "type": task.knowledge_type,
+            "kb_location": self.kb_location
         }
         try:
             s.start_service(task.problem_definition.to_dict(), task.service_configuration.to_dict(), task.agents, knowledge_info)

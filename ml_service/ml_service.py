@@ -98,7 +98,7 @@ def test_interface(agent: str = "localhost"):
     config.n_ind = 10
     config.exploration_mode = True
 
-    uuid = interface.start_service(problem_def, config, agents, {"mode": "none", "kb_location": "collective-panda-002.local"})
+    uuid = interface.start_service(problem_def, config, agents, {"mode": "none", "kb_location": "collective-panda-002.local", "type": "similar"})
     input("Press enter to stop service.")
     interface.stop_service()
 
@@ -120,7 +120,7 @@ def test_with_rpc_client(agent: str = "localhost"):
     config.exploration_mode = True
 
     s = ServerProxy("http://" + agent + ":8000", allow_none=True)
-    s.start_service(problem_def.to_dict(), config.to_dict(), agents, {"mode": "global", "kb_location": "collective-panda-002.local"})
+    s.start_service(problem_def.to_dict(), config.to_dict(), agents, {"mode": "global", "type": "similar", "kb_location": "collective-panda-002.local"})
 
 
 def test_standalone(agent: str = "localhost"):
@@ -168,7 +168,8 @@ def test_knowledge_use(knowledge_mode="global"):
 
     knowledge_info = {
         "mode": knowledge_mode,
-        "kb_location": "http://localhost:8001/"
+        "kb_location": "http://localhost:8001/",
+        "type": "similar"
     }
 
     uuid = interface.start_service(problem_def, get_service_configuration(), agents, knowledge_info)

@@ -25,11 +25,11 @@ class Experiment(metaclass=ABCMeta):
     def insert_creation_pipeline(self, pipeline: CreationPipeline):
         self.creation_pipeline = pipeline
 
-    def start(self, tags: [], knowledge_mode: str, global_database: str, use_cost_grid: str = None,
+    def start(self, tags: [], knowledge_mode: str, knowledge_type: str, global_database: str, use_cost_grid: str = None,
               optima_percentage: float = 0.01):
         self.tags = tags
         self.task_scheduler.kb_location = global_database
-        self.initialize(knowledge_mode)
+        self.initialize(knowledge_mode, knowledge_type)
         if self.creation_pipeline is None:
             logger.error("No creation pipeline was provided.")
 
@@ -66,5 +66,5 @@ class Experiment(metaclass=ABCMeta):
         stop_ml_services(self.task_scheduler.services)
 
     @abstractmethod
-    def initialize(self, knowledge_mode):
+    def initialize(self, knowledge_mode, knowledge_type):
         raise NotImplementedError
