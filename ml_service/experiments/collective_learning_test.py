@@ -24,9 +24,9 @@ class TestCreationPipeline(CreationPipeline):
     def __init__(self):
         super().__init__()
 
-    def create_tasks_from_template(self, template: ProblemDefinition, service_configuration: ServiceConfiguration, n_tasks, service_url, agents, knowledge_mode: str):
+    def create_tasks_from_template(self, template: ProblemDefinition, service_configuration: ServiceConfiguration, n_tasks, service_url, agents, knowledge_mode: str, knowledge_type: str = "similar"):
         for i in range(n_tasks):
-            t = Task(copy.deepcopy(template), service_configuration, agents, service_url, knowledge_mode)
+            t = Task(copy.deepcopy(template), service_configuration, agents, service_url, knowledge_mode, knowledge_type)
             t.problem_definition.cost_function.optimum_weights[0] = 0
             t.problem_definition.cost_function.optimum_weights[1] = float(i) / float(n_tasks)
             t.problem_definition.cost_function.optimum_weights[2] = 1 - \
@@ -38,7 +38,7 @@ class TestCreationPipeline(CreationPipeline):
 
 
 class CollectiveLearningBase(Experiment):
-    def initialize(self, knowledge_mode: str):
+    def initialize(self, knowledge_mode: str, knowledge_type: str = "similar"):
         config = CMAESConfiguration()
         config.exploration_mode = False
 
@@ -52,14 +52,14 @@ class CollectiveLearningBase(Experiment):
         c = TestCreationPipeline()
         n_tasks = 10
         c.create_tasks_from_template(rastrigin_a(1), config, n_tasks, "collective-panda-007.local",
-                                     ["collective-panda-007"], knowledge_mode)
+                                     ["collective-panda-007"], knowledge_mode, knowledge_type)
         c.create_tasks_from_template(rastrigin_a(2), config, n_tasks, "collective-panda-001.local",
-                                     ["collective-panda-001"], knowledge_mode)
+                                     ["collective-panda-001"], knowledge_mode, knowledge_type)
         c.create_tasks_from_template(rastrigin_a(3), config, n_tasks, "collective-panda-008.local",
-                                     ["collective-panda-008"], knowledge_mode)
+                                     ["collective-panda-008"], knowledge_mode, knowledge_type)
         c.create_tasks_from_template(rastrigin_a(4), config, n_tasks, "collective-panda-002.local",
-                                     ["collective-panda-002"], knowledge_mode)
+                                     ["collective-panda-002"], knowledge_mode, knowledge_type)
         c.create_tasks_from_template(rastrigin_a(5), config, n_tasks, "collective-panda-009.local",
-                                     ["collective-panda-009"], knowledge_mode)
+                                     ["collective-panda-009"], knowledge_mode, knowledge_type)
 
         self.insert_creation_pipeline(c)

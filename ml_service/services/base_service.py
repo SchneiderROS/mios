@@ -93,11 +93,17 @@ class BaseService(metaclass=ABCMeta):
             return False
 
         if knowledge_source is not None:
+            knowledge_type = knowledge_source.get("type","similar")
             if knowledge_source["mode"] == 'none':
                 self.centroid = None
             elif knowledge_source["mode"] == 'local':
                 logger.debug("base_service.initialize(): get local knowlege")
-                self.knowledge = self.knowledge_manager.predict_knowledge(self.problem_definition.get_task_identity())
+                if knowledge_type == "similar":
+                    self.knowledge = self.knowledge_manager.get_local_knowledge(self.problem_definition.get_task_identity())
+                elif knowledge_type == "predicted":
+                    self.knowledge = self.knowledge_manager.predict_knowledge(self.problem_definition.get_task_identity())
+                else:
+                    self.knowledge = False
                 if self.knowledge:
                     self.centroid = []
                     for key in self.knowledge["parameters"]:
@@ -108,7 +114,12 @@ class BaseService(metaclass=ABCMeta):
                 logger.debug("base_service::initialize(): contacting database at http://" + knowledge_source["kb_location"] + ":8001")
                 with ServerProxy("http://" + knowledge_source["kb_location"] + ":8001") as kb:
                     try:
-                        self.knowledge = kb.get_knowledge(self.problem_definition.get_task_identity())
+                        if knowledge_type == "similar":
+                            self.knowledge = kb.get_similar_knowledge(self.problem_definition.get_task_identity())
+                        elif knowledge_type == "predicted":
+                            self.knowledge = kb.get_predicted_knowledge(self.problem_definition.get_task_identity())
+                        else:
+                            self.knowledge = False
                     except socket.timeout:
                         logger.error("base_service: global Database is not reachable!")
                     except ConnectionRefusedError:

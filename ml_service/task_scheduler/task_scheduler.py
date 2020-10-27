@@ -11,12 +11,13 @@ logger = logging.getLogger("ml_service")
 
 
 class Task:
-    def __init__(self, problem_definition: ProblemDefinition, service_configuration: ServiceConfiguration, agents: list, service_url, knowledge_mode: str):
+    def __init__(self, problem_definition: ProblemDefinition, service_configuration: ServiceConfiguration, agents: list, service_url, knowledge_mode: str, knowledge_type: str):
         self.problem_definition = problem_definition
         self.service_configuration = service_configuration
         self.agents = agents
         self.service_url = service_url
         self.knowledge_mode = knowledge_mode
+        self.knowledge_type = knowledge_type
 
 
 class TaskScheduler:
@@ -27,6 +28,7 @@ class TaskScheduler:
         self.services = set()
         self.keep_running = False
         self.kb_location = "localhost"
+        self.done_tasks = 0
 
     def stop(self):
         self.keep_running = False
@@ -38,6 +40,8 @@ class TaskScheduler:
     def solve_tasks(self):
         logger.debug("TaskScheduler::solve_tasks.1")
         self.keep_running = True
+        self.done_tasks = 0
+        t_message = time.time()
         while self.keep_running is True:
             logger.debug("TaskScheduler::solve_tasks.loop")
             if self.unassigned_tasks.empty() is False:
@@ -56,6 +60,9 @@ class TaskScheduler:
                     task_thread.start()
             time.sleep(0.1)
             logger.debug("TaskScheduler::solve_tasks.after_pause")
+            if time.time() - t_message > 10:
+                logger.info("Number of finished tasks: " + str(self.done_tasks))
+                t_message = time.time()
 
     def is_service_ready(self, service_url: str, agents: list) -> bool:
         logger.debug("TaskScheduler::is_service_ready(" + service_url + ", " + str(agents) + ")")
@@ -73,13 +80,14 @@ class TaskScheduler:
         s = ServerProxy("http://" + task.service_url + ":8000", allow_none=True)
         knowledge_info = {
             "mode": task.knowledge_mode,
-            "kb_location": self.kb_location,
-            "always_upload": True
+            "type": task.knowledge_type,
+            "kb_location": self.kb_location
         }
         try:
             s.start_service(task.problem_definition.to_dict(), task.service_configuration.to_dict(), task.agents, knowledge_info)
             if s.wait_for_service() is False:
                 self.unassigned_tasks.put(task)  # put task back into queue
             logger.debug("TaskScheduler::solve_task.finished")
+            self.done_tasks += 1
         except ConnectionRefusedError:
             pass

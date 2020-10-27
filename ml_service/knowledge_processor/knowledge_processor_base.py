@@ -27,6 +27,7 @@ class KnowledgeProcessorBase(metaclass=ABCMeta):
         meta = dict()
         meta["expected_cost"] = expected_cost
         meta["optimum_weights"] = self.task_identity["optimum_weights"]
+        meta["geometry_factor"] = self.task_identity["geometry_factor"]
         meta["task_type"] = self.task_identity["task_type"]
         meta["tags"] = self.task_identity["tags"]
         meta["time"] = time.ctime()

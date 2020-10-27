@@ -13,5 +13,5 @@ class CreationPipeline(metaclass=ABCMeta):
         self.tasks = []
 
     @abstractmethod
-    def create_tasks_from_template(self, template: ProblemDefinition, service_configuration: ServiceConfiguration, n_tasks, service_url, agents, knowledge_mode: str):
+    def create_tasks_from_template(self, template: ProblemDefinition, service_configuration: ServiceConfiguration, n_tasks, service_url, agents, knowledge_mode: str, knowledge_type: str):
         raise NotImplementedError

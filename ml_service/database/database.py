@@ -31,7 +31,8 @@ class Database():
         self.rpc_server = DatabaseServer(("0.0.0.0", self.port), allow_none=True, logRequests=False)
         self.rpc_server.register_introspection_functions()
         self.rpc_server.register_function(self.store_result, "store_result")
-        self.rpc_server.register_function(self.get_knowledge, "get_knowledge")
+        self.rpc_server.register_function(self.get_similar_knowledge, "get_similar_knowledge")
+        self.rpc_server.register_function(self.get_predicted_knowledge, "get_predicted_knowledge")
         self.rpc_server.register_function(self.process_knowledge, "process_knowledge")
         self.rpc_server.register_function(self.stop_server, "stop_server")
         logger.debug("databse.start_server: starting rpc server with global database at port "+str(self.port))
@@ -58,11 +59,17 @@ class Database():
         self.process_knowledge(task_identity)
         return task_id
 
-    def get_knowledge(self, task_identity: dict):
+    def get_predicted_knowledge(self, task_identity: dict):
         """return knowledge from single task found on database"""
         # use knowledge processor to look up/generate global knowledge:
         #knowledge = self.knowledge_manager.get_local_knowledge(task_identity,knowledge_db=self.task_knowledge_db_name,data_db=self.results_db_name)
         knowledge = self.knowledge_manager.predict_knowledge(task_identity,self.task_knowledge_db_name)
+        return knowledge
+
+    def get_similar_knowledge(self, task_identity: dict):
+        """return knowledge from single task found on database"""
+        # use knowledge processor to look up/generate global knowledge:
+        knowledge = self.knowledge_manager.get_local_knowledge(task_identity,knowledge_db=self.task_knowledge_db_name,data_db=self.results_db_name)
         return knowledge
 
     def process_knowledge(self, task_identity: dict):
