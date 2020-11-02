@@ -1,6 +1,7 @@
 from xmlrpc.client import ServerProxy
 
 from definitions.insertion_definitions import *
+from utils.database import backup_result
 from problem_definition.problem_definition import ProblemDefinition
 from services.base_service import ServiceConfiguration
 
@@ -19,5 +20,6 @@ def start_experiment(agent: str, pd: ProblemDefinition, service: ServiceConfigur
             problem_def.tags.remove("n" + str(i))
         problem_def.tags.append("n" + str(i+1))
         s = ServerProxy("http://" + agent + ":8000", allow_none=True)
-        s.start_service(problem_def.to_dict(), service.to_dict(), agents, None)
+        uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, None)
         s.wait_for_service()
+        # backup_result(agent, "collective-control-001.local", problem_def.task_type, uuid)

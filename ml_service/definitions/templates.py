@@ -64,10 +64,33 @@ def insertion(insertable: str, insert_into: str, approach: str) -> ProblemDefini
     }
 
     x_0 = {
+        "speed_t": 0.2,
+        "speed_r": 0.2,
+        "acc_t": 0.2,
+        "acc_r": 0.2,
+        "wiggle_a_x": 0.2,
+        "wiggle_a_y": 0.2,
+        "wiggle_a_z": 0.2,
+        "wiggle_a_phi": 0.2,
+        "wiggle_a_chi": 0.2,
+        "wiggle_a_psi": 0.2,
+        "wiggle_f_x": 0.2,
+        "wiggle_f_y": 0.2,
+        "wiggle_f_z": 0.2,
+        "wiggle_f_phi": 0.2,
+        "wiggle_f_chi": 0.2,
+        "wiggle_f_psi": 0.2,
+        "stuck_dx_thr": 0.2,
         "offset_x": 0.5,
         "offset_y": 0.5,
         "offset_phi": 0.5,
-        "offset_chi": 0.5
+        "offset_chi": 0.5,
+        "K_x": 0.2,
+        "K_y": 0.2,
+        "K_z": 0.2,
+        "K_phi": 0.2,
+        "K_chi": 0.2,
+        "K_psi": 0.2
     }
 
     domain = Domain(limits, context_mapping, x_0)
@@ -101,8 +124,8 @@ def insertion(insertable: str, insert_into: str, approach: str) -> ProblemDefini
                 "skill": {
                     "traj_speed": [0.075, 0.5],
                     "traj_acc": [0.5, 1],
-                    "search_a": [5, 5, 0, 3, 3, 1],
-                    "search_f": [1, 0.75, 0, 1, 0.75, 0.5],
+                    "search_a": [10, 10, 0, 5, 5, 1],
+                    "search_f": [2, 1.5, 0, 1, 0.75, 0.5],
                     "stuck_dx_thr": 0.01
                 }
             }
