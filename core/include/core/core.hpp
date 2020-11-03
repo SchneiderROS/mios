@@ -40,6 +40,7 @@ public:
     void terminate();
 
     ControlReturnType execute_skill();
+    void post_execution();
     void terminate_control_cycle();
 
     bool refresh_percept(std::optional<Eigen::Matrix<double, 3, 3> > O_R_TF);

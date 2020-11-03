@@ -124,7 +124,6 @@ ControlReturnType Core::execute_skill(){
     m_panda_body.set_robot_parameters();
 
     ControlReturnType result=ControlReturnType::crtException;
-    spdlog::debug("CORE: EXECUTE_SKILL.control_mode: ");
     if(m_memory.read_parameters()->control.control_mode==ControlMode::mCartTorque){
         m_controller_pipeline=std::make_unique<CartTorqueControllerPipeline>();
         m_safety_stage_1.insert(std::make_unique<VelocityWallsSafetyModule>());
@@ -168,6 +167,11 @@ ControlReturnType Core::execute_skill(){
         spdlog::error("No control mode has been selected.");
     }
 
+    post_execution();
+    return result;
+}
+
+void Core::post_execution(){
     m_controller_pipeline->terminate();
     m_controller_pipeline=std::make_unique<NullControllerPipeline>();
     for(auto& m : m_safety_stage_1){
@@ -181,7 +185,6 @@ ControlReturnType Core::execute_skill(){
     if(!m_memory.update_database()){
         spdlog::warn("Could not update datebase.");
     }
-    return result;
 }
 
 franka::Finishable* Core::control_base_cycle(const franka::RobotState& state){
