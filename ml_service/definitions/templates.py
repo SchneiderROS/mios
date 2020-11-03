@@ -106,7 +106,9 @@ def insertion(insertable: str, insert_into: str, approach: str) -> ProblemDefini
             "insertion": {
                 "skill": {
                     "time_max": 5.0,
-                    "ROI_x": [-0.03, 0.03, -0.03, 0.03, -1, 1]
+                    "ROI_x": [-0.03, 0.03, -0.03, 0.03, -1, 1],
+                    "search_f": [0, 0, 0, 0, 0, 0],
+                    "search_a": [0, 0, 0, 0, 0, 0]
                 }
             },
             "contact": {

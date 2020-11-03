@@ -331,7 +331,7 @@ class Engine:
             return False, task_uuid
 
         if "task_uuid" not in response["result"] or response["result"]["task_uuid"] == "INVALID":
-            print("Response from agent " + agent + " did not contain a valid task uuid.")
+            logger.error("Response from agent " + agent + " did not contain a valid task uuid.")
             time.sleep(1)
             return False, task_uuid
 
