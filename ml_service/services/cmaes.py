@@ -59,8 +59,10 @@ class CMAESService(BaseService):
         if self.confidence:
             sigma_init = self.confidence
 
-        # if self.centroid == None:
-        self.centroid = self.problem_definition.domain.get_default_x0()
+        if self.centroid is None:
+            self.centroid = self.problem_definition.domain.get_default_x0()
+
+        print("CMAES: " + str(self.centroid))
         self.strategy = deap.cma.Strategy(centroid=self.centroid,
                                           sigma=sigma_init, _lambda=self.configuration.n_ind)
         # else:
