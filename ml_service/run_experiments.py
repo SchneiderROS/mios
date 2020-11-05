@@ -223,3 +223,14 @@ def transfer_learning_hatch_key(from_host: str = None, from_db: str = None, task
         }
         tags = ["transfer_learning", "from_" + from_tag]
     start_experiment("collective-panda-002", pd, service_config, 10, tags=tags, knowledge=knowledge)
+
+
+tasks = ["cylinder_10", "cylinder_20", "cylinder_30", "cylinder_40", "cylinder_50", "cylinder_60", "key_abus_e30",
+         "key_pad", "key_old", "key_hatch"]
+
+
+def transfer_learning_cylinder_10_t():
+    for t in tasks:
+        if t == "cylinder_10":
+            continue
+        transfer_learning_10("collective-control-001", "results_tl_base", "insert_object", t)
