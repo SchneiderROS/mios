@@ -20,7 +20,6 @@ def get_experiment_data(host: str, task_type: str, results_db: str = "ml_results
         raise DataNotFoundError
 
     if len(docs) == 0:
-
         raise DataNotFoundError
     if len(docs) > 1:
         raise DataNotFoundError

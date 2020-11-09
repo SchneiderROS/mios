@@ -4,6 +4,7 @@ from definitions.insertion_definitions import *
 from utils.database import backup_result
 from problem_definition.problem_definition import ProblemDefinition
 from services.base_service import ServiceConfiguration
+from mongodb_client.mongodb_client import MongoDBClient
 
 
 def start_experiment(agent: str, pd: ProblemDefinition, service: ServiceConfiguration, n_eval: int = 1,
@@ -14,11 +15,18 @@ def start_experiment(agent: str, pd: ProblemDefinition, service: ServiceConfigur
     agents = [agent]
     problem_def = pd
     problem_def.tags.extend(tags)
+    client = MongoDBClient(agent)
 
     for i in range(n_eval):
         if "n" + str(i) in problem_def.tags:
             problem_def.tags.remove("n" + str(i))
         problem_def.tags.append("n" + str(i+1))
+        if len(client.read("ml_results", problem_def.task_type, {"meta.tags": {"$all": problem_def.tags}})) != 0:
+            print("Continue at n" + str(i+1))
+            continue
+        else:
+            print("Do n" + str(i + 1))
+            continue
         s = ServerProxy("http://" + agent + ":8000", allow_none=True)
         if knowledge is not None:
             if "n" + str(i) in knowledge["kb_tags"]:
