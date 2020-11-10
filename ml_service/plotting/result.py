@@ -1,5 +1,6 @@
 import copy
 from typing import Tuple
+import numpy as np
 
 
 class Result:
@@ -19,10 +20,18 @@ class Result:
             self.total_time = 0
         self.starting_time = data_tmp["meta"]["t_0"]
 
-    def get_cost_per_trial(self) -> list:
+    def get_cost_per_trial(self, episode_length: int = 1) -> list:
+        cost_raw = []
         cost = []
+        if len(self.trials) % episode_length != 0:
+            print("Number of trials and episode length do not fit.")
+            return []
+        n_episodes = len(self.trials) / episode_length
         for t in self.trials:
-            cost.append(t["cost"])
+            cost_raw.append(t["cost"])
+        for i in range(int(n_episodes)):
+            cost.append(np.min(np.asarray(cost_raw[i * episode_length : i * episode_length + episode_length])))
+
         return cost
 
     def get_parameters(self) -> set:

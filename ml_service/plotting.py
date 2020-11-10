@@ -75,12 +75,12 @@ def plot_transfer_learning(db: str):
                 if i == j:
                     print("Processing plot " + str(i * 10 + j +1), end="\r")
                     tags = ["transfer_learning", tasks[i]]
-                    results = get_multiple_experiment_data("collective-control-001.local", "insert_object", results_db=db,
+                    results = get_multiple_experiment_data("collective-control-001.local", "insert_object", results_db="results_tl_base",
                                                            filter={"meta.tags": {"$all": tags}})
                     cost = p.get_average_cost(results, True)
                     axes[i, j].plot(cost)
                 else:
-                    tags = ["transfer_learning", tasks[i], "from_" + tasks[j]]
+                    tags = ["transfer_learning", tasks[j], "from_" + tasks[i]]
                     results = get_multiple_experiment_data("collective-control-001.local", "insert_object",
                                                            results_db=db,
                                                            filter={"meta.tags": {"$all": tags}})
@@ -105,6 +105,37 @@ def plot_transfer_learning(db: str):
     plt.tick_params(labelcolor="none", bottom=False, left=False)
     plt.xlabel("Trial [1]")
     plt.ylabel("Normed execution time [s/10]")
+    plt.show()
+
+
+def plot_transfer_learning_2(task: str):
+    tasks = ["cylinder_10", "cylinder_20", "cylinder_30", "cylinder_40", "cylinder_50", "cylinder_60"]
+    p = DataProcessor()
+    plot = Plotter()
+    tags = ["transfer_learning", task]
+    results = get_multiple_experiment_data("collective-control-001.local", "insert_object", results_db="results_tl_base",
+                                           filter={"meta.tags": {"$all": tags}})
+    cost = p.get_average_cost(results, True, 13)
+    plot.plot_cost_over_trials(cost)
+    legend = [task]
+    for i in range(len(tasks)):
+        try:
+            tags = ["transfer_learning", task, "from_" + tasks[i]]
+            results = get_multiple_experiment_data("collective-control-001.local", "insert_object",
+                                                   results_db="ml_results",
+                                                   filter={"meta.tags": {"$all": tags}})
+            cost = p.get_average_cost(results, True, 13)
+            plt.plot(cost)
+            legend.append(tasks[i])
+        except (DataNotFoundError, DataError):
+            print("No data found for experiment (" + str(i) + ")")
+
+
+    plt.ylabel("Normed execution time [s/10]")
+    plt.xlabel("Episodes [1]")
+    plt.grid()
+    plt.legend(legend)
+    plt.title("Knowledge transfer for task " + task)
     plt.show()
 
 
