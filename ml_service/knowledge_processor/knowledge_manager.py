@@ -169,7 +169,7 @@ class KnowledgeManager:
 
     def get_predictor(self):
         if self.predictor is not None:
-            return self.get_predictor
+            return self.predictor
         else:
             return KGRandomForest()
 
