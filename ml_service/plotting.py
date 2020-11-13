@@ -116,6 +116,7 @@ def plot_transfer_learning_2(task: str):
     results = get_multiple_experiment_data("collective-control-001.local", "insert_object", results_db="results_tl_base",
                                            filter={"meta.tags": {"$all": tags}})
     cost = p.get_average_cost(results, True, 13)
+    cost = np.insert(cost, 0, 1)
     plot.plot_cost_over_trials(cost)
     legend = [task]
     for i in range(len(tasks)):
@@ -125,6 +126,7 @@ def plot_transfer_learning_2(task: str):
                                                    results_db="ml_results",
                                                    filter={"meta.tags": {"$all": tags}})
             cost = p.get_average_cost(results, True, 13)
+            cost = np.insert(cost, 0, 1)
             plt.plot(cost)
             legend.append(tasks[i])
         except (DataNotFoundError, DataError):
@@ -136,6 +138,8 @@ def plot_transfer_learning_2(task: str):
     plt.grid()
     plt.legend(legend)
     plt.title("Knowledge transfer for task " + task)
+    plt.xlim([0, 10])
+    plt.ylim([0, 1])
     plt.show()
 
 
@@ -148,6 +152,27 @@ def count_transfer_learning(host: str, db: str, task_type: str):
             docs = client.read(db, task_type, {"meta.tags": {"$all": ["transfer_learning", t1, "from_" + t2]}})
             if len(docs) != 10:
                 print("Experiment with tags [" + t1 + ", " + t2 + "] has " + str(len(docs)) + " documents.")
+
+
+def transfer_learning_benchmark():
+    p = DataProcessor()
+    plot = Plotter()
+    tags = ["transfer_learning", "shift_0"]
+    results = get_multiple_experiment_data("collective-panda-001.local", "benchmark_rastrigin",
+                                           results_db="ml_results",
+                                           filter={"meta.tags": {"$all": tags}})
+    cost = p.get_average_cost(results, True, 6)
+    cost = np.insert(cost, 0, 1)
+    plt.plot(cost)
+
+    tags = ["transfer_learning", "shift_1", "from_shift_0"]
+    results = get_multiple_experiment_data("collective-panda-001.local", "benchmark_rastrigin",
+                                           results_db="ml_results",
+                                           filter={"meta.tags": {"$all": tags}})
+    cost = p.get_average_cost(results, True, 6)
+    cost = np.insert(cost, 0, 1)
+    plt.plot(cost)
+    plt.show()
 
 
 def global_learning(tags, hosts = ["collective-panda-002.local"]):
