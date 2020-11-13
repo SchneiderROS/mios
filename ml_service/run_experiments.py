@@ -387,7 +387,7 @@ def transfer_learning_test_20(from_host: str = None, from_db: str = None, task: 
 
 def transfer_learning_test_40(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-001.local", 12002, "set_grasped_object", {"object": "cylinder_40"})
-    pd = insert_cylinder_light(20)
+    pd = insert_cylinder_light(40)
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
