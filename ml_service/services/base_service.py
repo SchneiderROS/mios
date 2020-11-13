@@ -222,8 +222,6 @@ class BaseService(metaclass=ABCMeta):
                 self.set_nested_parameter(updated_context, mapping_categories,
                                           x[self.problem_definition.domain.vector_mapping.index(p)])
 
-        print(updated_context)
-        exit(-1)
         return updated_context
 
     def set_nested_parameter(self, dic, keys, value):
