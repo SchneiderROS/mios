@@ -216,7 +216,9 @@ def insertion_light(insertable: str, insert_into: str, approach: str) -> Problem
                     "search_a": [0, 0, 0, 0, 0, 0]
                 },
                 "control": {
-                    "K_x": [0, 0, 0, 0, 0, 0]
+                    "cart_imp": {
+                        "K_x": [0, 0, 0, 0, 0, 0]
+                    }
                 }
             },
             "contact": {
