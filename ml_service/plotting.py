@@ -207,7 +207,7 @@ def global_learning(tags, hosts = ["collective-panda-002.local"]):
     plot = Plotter()
     results = []
     for host in hosts:
-        results.extend(get_multiple_experiment_data(host, task_type, knowledge_mode, filter=filter))
+        results.extend(get_multiple_experiment_data(host, task_type, "global_ml_results", filter=filter))
 
     results = p.sort_over_time(results)
     all_times = p.get_cumulative_time(results)
