@@ -267,7 +267,7 @@ class KnowledgeManager:
 
             if error_in_context < best_error:
                 best_predictor = copy.deepcopy(predictor)
-                best_error = error_in_context
+                best_error = float(error_in_context)
         predictor = best_predictor
 
         # predict
@@ -294,7 +294,9 @@ class KnowledgeManager:
             parameter_dict[key_name] = float(parameter)  # use python float because of rpc restrictions
         meta = dict()
         meta["expected_cost"] = float(expected_cost[0])
-        meta["prediction_error"] = error_in_context
+        meta["prediction_error"] = best_error
+        # confidence gives no good results when predicting
+        #meta["confidence"] = float(best_error / np.sqrt(len(training_data_x_normalized)))  # divided by root of n_parameters because max error is root(n_parameters)
         meta["optimum_weights"] = task_identity["optimum_weights"]
         meta["geometry_factor"] = task_identity["geometry_factor"]
         meta["task_type"] = task_identity["task_type"]
@@ -375,7 +377,9 @@ class KnowledgeManager:
             # get raw ml data:
             successful_trials = self.get_raw_data(doc)
             metainfo.append(doc["meta"])
-            confidence = doc["final_results"].get("confidence")
+            cofindence = None
+            if "final_results" in doc:
+                confidence = doc["final_results"].get("confidence")
 
         for m in metainfo:
             if m["domain"]["vector_mapping"] != metainfo[0]["domain"]["vector_mapping"]:

@@ -178,7 +178,6 @@ class BaseService(metaclass=ABCMeta):
                         logger.error("base_service: global Database is not reachable!")
 
         self.DBclient.update("ml_results", self.problem_definition.task_type, {"_id": self.database_results_id}, ml_data[0])
-        # update knowledge bases:
         return result
 
     def stop(self):

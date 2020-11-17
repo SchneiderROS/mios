@@ -57,7 +57,7 @@ class Database():
                          "tags":result["meta"]["tags"],
                          "optimum_weights":result["meta"]["cost_function"]["optimum_weights"],
                          "geometry_factor": result["meta"]["cost_function"]["geometry_factor"]}
-        self.process_knowledge(task_identity)
+
         return task_id
 
     def get_predicted_knowledge(self, task_identity: dict):
