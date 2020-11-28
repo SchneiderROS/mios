@@ -9,7 +9,7 @@ struct SkillParametersMoveTrajectory : public SkillParameters{
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
     std::string file;
     bool plane;
-    double F_ff;
+    Eigen::Matrix<double,6,1> F_ff;
 };
 
 class MoveTrajectory : public Skill{

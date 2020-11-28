@@ -11,7 +11,7 @@ def record_trajectory(robot: str, duration: int, trajectory_name: str):
 
 
 def play_trajectory(robot: str, file: str):
-    start_skill(robot, "MoveTrajectory", {"file": file, "plane": False, "F_ff": 5}, {"control_mode": 0})
+    start_skill(robot, "MoveTrajectory", {"file": file, "plane": False, "F_ff": [0, 0, 5, 0, 0, 0]}, {"control_mode": 0})
 
 
 def start_skill(address: str, skill: str, parameters: dict, control: dict):

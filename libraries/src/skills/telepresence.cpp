@@ -333,9 +333,13 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                         throw SkillException("Could not open incoming udp channel.");
                     }
                     m_udp_sender = m_portal->open_udp_outstream("remote_force_out",read_parameters<Params>()->ip_dst,read_parameters<Params>()->port_dst);
+                    mp->create_strategy<FFStrategy>("feed_forward",1);
+                    Eigen::Matrix<double,6,1> TF_F_ff;
+                    TF_F_ff<<0,0,read_parameters<Params>()->direct_cart.F_ff,0,0,0;
+                    mp->get_strategy<FFStrategy>("feed_forward")->set_TF_F_ff(TF_F_ff,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
+                    mp->get_strategy<FFStrategy>("feed_forward")->set_frame(true);
                     if(read_parameters<Params>()->direct_cart.plane){
                         mp->create_strategy<CartComplianceStrategy>("compliance",1);
-                        mp->create_strategy<FFStrategy>("feed_forward",1);
                         Eigen::Matrix<double,6,1> K_x_0;
                         Eigen::Matrix<double,6,1> xi_x_0;
                         K_x_0=m_memory->read_parameters()->control.cart_imp.K_x;
@@ -343,11 +347,6 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
                         K_x_0(2)=0;
                         xi_x_0(2)=0;
                         mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(K_x_0,xi_x_0);
-                        Eigen::Matrix<double,6,1> TF_F_ff;
-                        TF_F_ff<<0,0,read_parameters<Params>()->direct_cart.F_ff,0,0,0;
-                        std::cout<<"F: "<<TF_F_ff<<std::endl;
-                        mp->get_strategy<FFStrategy>("feed_forward")->set_TF_F_ff(TF_F_ff,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
-                        mp->get_strategy<FFStrategy>("feed_forward")->set_frame(true);
                     }
                 }
                 if(read_parameters<Params>()->mode==TelepresenceMode::tmDirectJoint){

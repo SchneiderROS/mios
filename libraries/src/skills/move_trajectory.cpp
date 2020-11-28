@@ -15,8 +15,8 @@ bool SkillParametersMoveTrajectory::from_json(const nlohmann::json &p){
     if(!msrm_utils::read_json_param(p,"plane",plane)){
         plane=false;
     }
-    if(!msrm_utils::read_json_param(p,"F_ff",F_ff)){
-        plane=false;
+    if(!msrm_utils::read_json_param<double,6,1>(p,"F_ff",F_ff)){
+        F_ff.setZero();
     }
     return true;
 }
@@ -42,7 +42,6 @@ std::shared_ptr<ManipulationPrimitive> MoveTrajectory::get_initial_mp(const Perc
     std::array<double,16> T;
     ss >> T[0] >> T[1] >> T[2] >> T[3] >> T[4] >> T[5] >> T[6] >> T[7] >> T[8] >> T[9] >> T[10] >> T[11] >> T[12] >> T[13] >> T[14] >> T[15];
     Eigen::Matrix<double,4,4> T_g=Eigen::Matrix<double,4,4>(T.data());
-    std::cout<<"T: "<<T_g<<std::endl;
 
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("move_init",p_0);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
@@ -68,9 +67,11 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > MoveTrajectory::graph_tra
             std::shared_ptr<ManipulationPrimitive> mp = create_mp("move",p);
             mp->create_strategy<ReadFromFileStrategy>("move",1);
             mp->get_strategy<ReadFromFileStrategy>("move")->set_data(m_data);
+            mp->create_strategy<FFStrategy>("feed_forward",1);
+            mp->get_strategy<FFStrategy>("feed_forward")->set_TF_F_ff(skill_params->F_ff,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
+            mp->get_strategy<FFStrategy>("feed_forward")->set_frame(true);
             if(skill_params->plane){
                 mp->create_strategy<CartComplianceStrategy>("compliance",1);
-                mp->create_strategy<FFStrategy>("feed_forward",1);
                 Eigen::Matrix<double,6,1> K_x_0;
                 Eigen::Matrix<double,6,1> xi_x_0;
                 K_x_0=m_memory->read_parameters()->control.cart_imp.K_x;
@@ -78,10 +79,6 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > MoveTrajectory::graph_tra
                 K_x_0(2)=0;
                 xi_x_0(2)=0;
                 mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(K_x_0,xi_x_0);
-                Eigen::Matrix<double,6,1> TF_F_ff;
-                TF_F_ff<<0,0,skill_params->F_ff,0,0,0;
-                mp->get_strategy<FFStrategy>("feed_forward")->set_TF_F_ff(TF_F_ff,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
-                mp->get_strategy<FFStrategy>("feed_forward")->set_frame(true);
             }
             return mp;
         }
