@@ -2,6 +2,7 @@ from utils.experiment_wizard import start_experiment
 from definitions.insertion_definitions import insert_cylinder
 from definitions.insertion_definitions import insert_cylinder_light
 from definitions.insertion_definitions import insert_key
+from definitions.insertion_definitions import insert_key_light
 from definitions.benchmark_definitions import mios_ml_benchmark
 from services.cmaes import CMAESConfiguration
 from utils.udp_client import call_method
@@ -214,7 +215,7 @@ def transfer_learning_60(from_host: str = None, from_db: str = None, task: str =
 
 def transfer_learning_abus_e30(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-002.local", 12002, "set_grasped_object", {"object": "key_abus_e30"})
-    pd = insert_key("abus_e30")
+    pd = insert_key_light("abus_e30")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
@@ -235,7 +236,7 @@ def transfer_learning_abus_e30(from_host: str = None, from_db: str = None, task:
 
 def transfer_learning_pad_lock(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-009.local", 12002, "set_grasped_object", {"object": "key_pad"})
-    pd = insert_key("pad")
+    pd = insert_key_light("pad")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
@@ -256,7 +257,7 @@ def transfer_learning_pad_lock(from_host: str = None, from_db: str = None, task:
 
 def transfer_learning_old_key(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-009.local", 12002, "set_grasped_object", {"object": "key_old"})
-    pd = insert_key("old")
+    pd = insert_key_light("old")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
@@ -277,7 +278,7 @@ def transfer_learning_old_key(from_host: str = None, from_db: str = None, task: 
 
 def transfer_learning_hatch_key(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-002.local", 12002, "set_grasped_object", {"object": "key_hatch"})
-    pd = insert_key("hatch")
+    pd = insert_key_light("hatch")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10

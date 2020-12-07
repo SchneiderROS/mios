@@ -39,12 +39,11 @@ class TestCreationPipeline(CreationPipeline):
 
 class CollectiveLearningBase(Experiment):
     def initialize(self, knowledge_mode: str, knowledge_type: str = "prediction"):
-        #config = CMAESConfiguration()
-        #config.exploration_mode = False
-        #config.n_gen = 30
-        #config.n_ind = 10
+        config = CMAESConfiguration()
+        config.exploration_mode = False
+        config.n_gen = 30
+        config.n_ind = 10
 
-        config = SVMConfiguration()
         config.n_trials = 200
         config.exploration_mode = False
 

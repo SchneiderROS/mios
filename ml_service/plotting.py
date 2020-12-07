@@ -51,7 +51,7 @@ def agent_learning(tags, hosts = ["collective-panda-002.local"]):
 
     results = []
     for host in hosts:
-        results.extend(get_multiple_experiment_data(host, task_type, knowledge_mode, filter=filter))
+        results.extend(get_multiple_experiment_data(host, task_type, "global_ml_results", filter=filter))
 
     results = p.sort_over_time(results)
     agent_results = p.get_agent_results(results)  # seperate results for every agent
@@ -160,6 +160,7 @@ def plot_transfer_learning_3():
 
     speedup_matrix = np.zeros((len(tasks), len(tasks)))
     le_ratio_matrix = np.zeros((len(tasks), len(tasks)))
+    kl_matrix = np.zeros((len(tasks), len(tasks)))
 
     p = DataProcessor()
     fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0})
@@ -188,7 +189,7 @@ def plot_transfer_learning_3():
                     base_cost = p.get_average_cost_over_time(results, 1500, True)
                     base_cost = base_cost[0:1500]
                 base_cost = np.insert(base_cost, 0, 1)
-                axes[i, j].plot(base_cost)
+                axes[i, j].plot(base_cost, linestyle="dashed", zorder=2, linewidth=4)
                 legend = [tasks[i * n_rows + j]]
             except (DataNotFoundError, DataError):
                 print("Base cost for task " + tasks[i] + " not found.")
@@ -221,9 +222,10 @@ def plot_transfer_learning_3():
                     le_base = np.sum(base_cost) - baseline
                     le_transfer = np.sum(cost) - baseline
                     le_ratio_matrix[i * n_rows + j][t] = le_transfer / le_base
+                    kl_matrix[i * n_rows + j][t] = calculate_kl_divence(base_cost, cost)
 
                     speedup_matrix[i * n_rows + j][t] = calculate_speedup(base_cost, cost)
-                    axes[i, j].plot(cost)
+                    axes[i, j].plot(cost, zorder=1)
 
                     legend.append("from_" + tasks[t])
                 except (DataNotFoundError, DataError):
@@ -278,6 +280,7 @@ def plot_transfer_learning_3():
     print(es_matrix)
     print(speedup_matrix)
     print(le_ratio_matrix)
+    print(kl_matrix)
 
     header = np.array(["t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9"])
 
@@ -329,6 +332,14 @@ def calculate_speedup(base_cost: list, cost: list):
         speedup_sum += index_thr_base_cost / index_thr_transfer_cost
 
     return speedup_sum / len(confidences)
+
+
+def calculate_kl_divence(base_cost: list, cost: list):
+    kl = 0
+    for i in range(len(base_cost)):
+        kl += base_cost[i] * np.log(base_cost[i] / cost[i])
+
+    return kl
 
 
 def count_transfer_learning(host: str, db: str, task_type: str):
