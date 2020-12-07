@@ -3,8 +3,8 @@ from problem_definition.problem_definition import ProblemDefinition
 from services.base_service import ServiceConfiguration
 from task_scheduler.creation_pipeline import CreationPipeline
 from services.cmaes import CMAESConfiguration
-from definitions.insertion_definitions import insert_key_light
-from definitions.insertion_definitions import insert_cylinder_light
+from definitions.insertion_definitions import insert_key
+from definitions.insertion_definitions import insert_cylinder
 from utils.udp_client import call_method
 from experiments.experiment_base import Experiment
 import copy
@@ -42,16 +42,16 @@ class CollectiveLearningBase(Experiment):
         call_method("collective-panda-009.local", 12002, "set_grasped_object", {"object": "key_pad"})
 
         c = TestCreationPipeline()
-        n_tasks = 20
-        c.create_tasks_from_template(insert_cylinder_light(10), config, n_tasks, "collective-panda-007.local",
+        n_tasks = 10
+        c.create_tasks_from_template(insert_cylinder(10), config, n_tasks, "collective-panda-007.local",
                                      ["collective-panda-007"], knowledge_mode, knowledge_type)
-        c.create_tasks_from_template(insert_cylinder_light(40), config, n_tasks, "collective-panda-001.local",
+        c.create_tasks_from_template(insert_cylinder(40), config, n_tasks, "collective-panda-001.local",
                                      ["collective-panda-001"], knowledge_mode, knowledge_type)
-        c.create_tasks_from_template(insert_cylinder_light(60), config, n_tasks, "collective-panda-008.local",
+        c.create_tasks_from_template(insert_cylinder(60), config, n_tasks, "collective-panda-008.local",
                                      ["collective-panda-008"], knowledge_mode, knowledge_type)
-        c.create_tasks_from_template(insert_key_light("hatch"), config, n_tasks, "collective-panda-002.local",
+        c.create_tasks_from_template(insert_key("hatch"), config, n_tasks, "collective-panda-002.local",
                                      ["collective-panda-002"], knowledge_mode, knowledge_type)
-        c.create_tasks_from_template(insert_key_light("pad"), config, n_tasks, "collective-panda-009.local",
+        c.create_tasks_from_template(insert_key("pad"), config, n_tasks, "collective-panda-009.local",
                                      ["collective-panda-009"], knowledge_mode, knowledge_type)
 
         self.insert_creation_pipeline(c)

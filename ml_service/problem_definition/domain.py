@@ -19,6 +19,8 @@ class Domain:
         for p in self.limits.keys():
             self.vector_mapping.append(p)
 
+        print(self.vector_mapping)
+
     def to_dict(self) -> dict:
         domain = {
             "limits": self.limits,

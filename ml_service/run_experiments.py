@@ -236,7 +236,7 @@ def transfer_learning_abus_e30(from_host: str = None, from_db: str = None, task:
 
 def transfer_learning_pad_lock(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-009.local", 12002, "set_grasped_object", {"object": "key_pad"})
-    pd = insert_key_light("pad")
+    pd = insert_key("pad")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
@@ -257,7 +257,7 @@ def transfer_learning_pad_lock(from_host: str = None, from_db: str = None, task:
 
 def transfer_learning_old_key(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-009.local", 12002, "set_grasped_object", {"object": "key_old"})
-    pd = insert_key_light("old")
+    pd = insert_key("old")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
@@ -278,7 +278,7 @@ def transfer_learning_old_key(from_host: str = None, from_db: str = None, task: 
 
 def transfer_learning_hatch_key(from_host: str = None, from_db: str = None, task: str = None, from_tag: str = None):
     call_method("collective-panda-002.local", 12002, "set_grasped_object", {"object": "key_hatch"})
-    pd = insert_key_light("hatch")
+    pd = insert_key("hatch")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 10
