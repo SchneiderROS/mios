@@ -131,6 +131,9 @@ class BaseService(metaclass=ABCMeta):
 
             if self.knowledge:
                 self.centroid = []
+                if len(self.knowledge["parameters"] != len(self.problem_definition.domain.limits)):
+                    logger.error("Domain sizes do not match!")
+                    return False
                 for key in self.knowledge["parameters"]:
                     self.centroid.append(self.knowledge["parameters"][key])
                 logger.debug("base_service.initialize(): Use global knowledge "+str(self.centroid))
