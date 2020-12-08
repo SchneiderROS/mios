@@ -541,6 +541,13 @@ def optima_distances(filter, host, results_db):
         print(task," mean_distance: ",np.mean(optima_matrix))
         plot.plot_table(optima_matrix, task)
 
+
+def print_cost_grid():
+    results = get_multiple_experiment_data("collective-panda-002.local", "insert_object", "global_ml_results",
+                                           {"meta.tags": {"$all": ["collective_learning_insertion_screen_001"]}})
+    processor = DataProcessor()
+    print(processor.get_optima_by_task_identity(results, 0.05))
+
 #if __name__ == "__main__":
     #global_learning(["collective_learning_benchmark_007"],["collective-panda-002.local"])
     #knowledge_quality(["collective_learning_benchmark_007"],["collective-panda-002.local"])
