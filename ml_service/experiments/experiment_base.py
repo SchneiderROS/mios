@@ -27,7 +27,6 @@ class Experiment(metaclass=ABCMeta):
 
     def start(self, tags: [], knowledge_mode: str, knowledge_type: str, global_database: str, use_cost_grid: str = None,
               optima_percentage: float = 0.01):
-        self.tags = tags
         for tag in tags:
             self.tags.append("knowledge_pool: "+tag)
         self.task_scheduler.kb_location = global_database
@@ -53,6 +52,7 @@ class Experiment(metaclass=ABCMeta):
         delete_local_knowledge(self.agents, "local_knowledge", self.task_type, self.tags)
         delete_global_results(global_database, "global_ml_results", self.task_type, self.tags)
         delete_global_knowledge(global_database, "global_knowledge", self.task_type, self.tags)
+        exit(-1)
         thr = Thread(target=self.task_scheduler.solve_tasks)
         thr.start()
 
