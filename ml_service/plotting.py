@@ -1,3 +1,4 @@
+from math import isclose
 import numpy as np
 from plotting.data_acquisition import *
 from plotting.data_processor import DataProcessor
@@ -549,18 +550,28 @@ def print_cost_grid():
     processor = DataProcessor()
     raw_data = processor.get_optima_by_task_identity(results, 0.05)
 
-    x = raw_data[:, 0]
-    y = raw_data[:, 1]
     z = raw_data[:, -1]
 
-    x = [0.005, 0.01, 0.04, 0.06]
+    x = np.array([0.1, 0.3, 0.5, 0.8, 1])
+    y = np.linspace(0, 1, 11)
+    z = np.zeros((len(x), len(y)))
+
+    for i in range(len(x)):
+        for j in range(len(y)):
+            for k in range(len(raw_data)):
+                if isclose(x[i], raw_data[k, 0]) and isclose(y[j], raw_data[k, 1]):
+                    z[i, j] = raw_data[k, -1]
 
     x, y = np.meshgrid(x, y)
-    print(x[0])
+    print(x)
+    print(y)
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(x, y, z)
+    ax.plot_surface(x, y, np.transpose(z))
+    plt.xlabel("geometry")
+    plt.ylabel("cost")
+    plt.show()
 
 
 
