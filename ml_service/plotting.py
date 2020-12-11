@@ -4,6 +4,7 @@ from plotting.data_processor import DataProcessor
 from plotting.data_processor import DataError
 from plotting.plotter import Plotter
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 plot = Plotter()
 
@@ -546,7 +547,22 @@ def print_cost_grid():
     results = get_multiple_experiment_data("collective-panda-002.local", "insert_object", "global_ml_results",
                                            {"meta.tags": {"$all": ["collective_learning_insertion_screen_001"]}})
     processor = DataProcessor()
-    print(processor.get_optima_by_task_identity(results, 0.05))
+    raw_data = processor.get_optima_by_task_identity(results, 0.05)
+
+    x = raw_data[:, 0]
+    y = raw_data[:, 1]
+    z = raw_data[:, -1]
+
+    x = [0.005, 0.01, 0.04, 0.06]
+
+    x, y = np.meshgrid(x, y)
+    print(x[0])
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(x, y, z)
+
+
 
 #if __name__ == "__main__":
     #global_learning(["collective_learning_benchmark_007"],["collective-panda-002.local"])
