@@ -38,6 +38,7 @@ class Experiment(metaclass=ABCMeta):
 
         for t in self.creation_pipeline.tasks:
             t.problem_definition.tags.extend(self.tags)
+            t.knowledge_tags = self.tags
             if use_cost_grid is not None:
                 t.problem_definition.cost_function.cost_grid_weights = cost_grid[0, :-1]
                 t.problem_definition.cost_function.cost_grid_val = cost_grid[0, -1]

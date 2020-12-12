@@ -18,6 +18,7 @@ class Task:
         self.service_url = service_url
         self.knowledge_mode = knowledge_mode
         self.knowledge_type = knowledge_type
+        self.knowledge_tags = dict()
 
 
 class TaskScheduler:
@@ -81,7 +82,8 @@ class TaskScheduler:
         knowledge_info = {
             "mode": task.knowledge_mode,
             "type": task.knowledge_type,
-            "kb_location": self.kb_location
+            "kb_location": self.kb_location,
+            "kb_tags": task.knowledge_tags
         }
         try:
             s.start_service(task.problem_definition.to_dict(), task.service_configuration.to_dict(), task.agents, knowledge_info)
