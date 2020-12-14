@@ -384,12 +384,17 @@ def plot_ler_matrix():
         colors = []
         for j in range(len(ler_matrix_tasks[cnt_row])):
             colors.append(bar_colors[int(ler_matrix_tasks[cnt_row, j])])
-        if i == 0:
-            axes[i].bar(np.arange(9), ler_matrix_sorted[cnt_row], color=colors, label=tasks)
-            plt.legend()
-        axes[i].bar(np.arange(9), ler_matrix_sorted[cnt_row], color=colors)
+        
+        for n in range(len(tasks)):
+            if i == 0:#len(axes)-1:
+                axes[i].bar(n, ler_matrix_sorted[cnt_row,n], color=colors[n], label=tasks[int(ler_matrix_tasks[cnt_row, n])])
+                handles, labels = axes[i].get_legend_handles_labels()
+                _,labels, handles = zip(*sorted(zip(ler_matrix_tasks[cnt_row],labels, handles), key=lambda t: t[0]))
+                axes[i].legend(handles, labels, loc="upper right",title="knowledge source")
+            axes[i].bar(n, ler_matrix_sorted[cnt_row,n], color=colors[n])
         axes[i].set_ylim(0, np.ceil(np.max(ler_matrix_sorted[cnt_row])))
         axes[i].grid()
+        axes[i].set_title(tasks[cnt_row])
         cnt_row += 1
 
     plt.show()
@@ -419,7 +424,9 @@ def plot_es_matrix():
 
     x, y = np.meshgrid(x, y)
 
-    ax.plot_trisurf(x, y, es_matrx)
+    ax.plot_trisurf(x.flatten(), y.flatten(), es_matrx.flatten())
+
+    ax.set_zlabel('epmirical similarity')
 
     plt.show()
 
