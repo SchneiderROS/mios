@@ -161,7 +161,7 @@ cd ${ROOT}
 if [ ! -d "libfranka" ]
 then
 git clone --recurse-submodules https://github.com/frankaemika/libfranka.git
-checkout 0.8.0
+checkout 0.7.1
 git submodule update
 fi
 cd libfranka
