@@ -160,7 +160,9 @@ class Engine:
 
         while self.keep_running is True:
             try:
+                logger.debug("Engine::main_loop.get_trial")
                 trial = self.queued_trials.get(False)
+                logger.debug("Engine::main_loop.new_trial: " + trial.trial_uuid)
             except Empty:
                 time.sleep(0.1)
                 continue
@@ -197,6 +199,7 @@ class Engine:
                     worker_threads[a] = Thread(target=self._worker_loop, args=(a, trial,))
                     worker_threads[a].start()
                     thread_started = True
+                    break
 
             time.sleep(0.1)
 

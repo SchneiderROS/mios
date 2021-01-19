@@ -436,8 +436,8 @@ def collective_learning_raw():
 
 
 def collective_learning_benchmark():
-    agents = ["collective-panda-001.local", "collective-panda-002.local", "collective-panda-007.local",
-              "collective-panda-008.local", "collective-panda-009.local"]
+    agents = ["collective-panda-001", "collective-panda-002", "collective-panda-007", "collective-panda-008",
+              "collective-panda-009"]
 
     pd = mios_ml_benchmark(0)
     service_config = CMAESConfiguration()
@@ -446,4 +446,4 @@ def collective_learning_benchmark():
     service_config.n_gen = 10
     knowledge = None
     tags = ["collective_learning_benchmark"]
-    start_experiment("collective-panda-001.local", agents, pd, service_config, 10, tags=tags, knowledge=knowledge)
+    start_experiment("collective-panda-001.local", agents, pd, service_config, 1, tags=tags, knowledge=knowledge)
