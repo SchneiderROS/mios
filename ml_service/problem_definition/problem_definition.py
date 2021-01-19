@@ -159,9 +159,9 @@ class ProblemDefinition:
         return valid
 
     def calculate_cost(self, result: TaskResult) -> Tuple[float, bool]:
-        if len(self.cost_function.optimum_expressions) != 5:
+        if len(self.cost_function.optimum_expressions) != 6:
             raise CostFunctionError
-        if len(self.cost_function.optimum_weights) != 5:
+        if len(self.cost_function.optimum_weights) != 6:
             raise CostFunctionError
         if sum(self.cost_function.optimum_weights) != 1:
             raise CostFunctionError

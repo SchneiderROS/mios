@@ -3,6 +3,7 @@ from definitions.insertion_definitions import insert_cylinder
 from definitions.insertion_definitions import insert_cylinder_light
 from definitions.insertion_definitions import insert_key
 from definitions.insertion_definitions import insert_key_light
+from definitions.insertion_definitions import insert_generic
 from definitions.benchmark_definitions import mios_ml_benchmark
 from services.cmaes import CMAESConfiguration
 from utils.udp_client import call_method
@@ -416,8 +417,19 @@ def pinakothek(use_prior: bool = False):
 
 
 def collective_learning_raw():
-    for i in range(10):
-        e = CollectiveLearningBase()
-        print("Running experiment " + str(i + 1))
-        e.start(["collective_learning_insertion_raw", "n" + str(i + 1)], "none", "similar", "collective-panda-002",
-                "collective_learning_insertion_screen_001", 1.25, blocking=True)
+    call_method("collective-panda-001", 12002, "set_grasped_object", {"object": "cylinder_40"})
+    call_method("collective-panda-002", 12002, "set_grasped_object", {"object": "key_hatch"})
+    call_method("collective-panda-007", 12002, "set_grasped_object", {"object": "cylinder_10"})
+    call_method("collective-panda-008", 12002, "set_grasped_object", {"object": "cylinder_60"})
+    call_method("collective-panda-009", 12002, "set_grasped_object", {"object": "key_pad"})
+    agents = ["collective-panda-001", "collective-panda-002", "collective-panda-007", "collective-panda-008",
+              "collective-panda-009"]
+
+    pd = insert_generic()
+    service_config = CMAESConfiguration()
+    service_config.exploration_mode = True
+    service_config.n_ind = 10
+    service_config.n_gen = 10
+    knowledge = None
+    tags = ["collective_learning_multi_agent"]
+    start_experiment("collective-panda-001", agents, pd, service_config, 10, tags=tags, knowledge=knowledge)

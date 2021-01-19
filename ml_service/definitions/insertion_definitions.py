@@ -40,3 +40,14 @@ def insert_key_light(key_type: str, geometry_factor: float):
     pd.domain.limits["offset_x"] = (-0.002, 0.002)
     pd.domain.limits["offset_y"] = (-0.002, 0.002)
     return pd
+
+
+def insert_generic():
+    insertable = "generic_insertable"
+    insert_into = "generic_container"
+    approach = "generic_approach"
+    pd = insertion(insertable, insert_into, approach)
+    pd.cost_function.geometry_factor = 0
+    pd.domain.limits["offset_x"] = (-0.002, 0.002)
+    pd.domain.limits["offset_y"] = (-0.002, 0.002)
+    return pd

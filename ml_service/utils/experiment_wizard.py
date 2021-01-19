@@ -7,15 +7,15 @@ from services.base_service import ServiceConfiguration
 from mongodb_client.mongodb_client import MongoDBClient
 
 
-def start_experiment(agent: str, pd: ProblemDefinition, service: ServiceConfiguration, n_eval: int = 1,
+def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service: ServiceConfiguration, n_eval: int = 1,
                      tags: list = None, knowledge: dict = None):
     if tags is None:
         tags = []
 
-    agents = [agent]
+    agents = agents
     problem_def = pd
     problem_def.tags.extend(tags)
-    client = MongoDBClient(agent)
+    client = MongoDBClient(learner)
 
     for i in range(n_eval):
         if "n" + str(i) in problem_def.tags:
@@ -24,7 +24,7 @@ def start_experiment(agent: str, pd: ProblemDefinition, service: ServiceConfigur
         if len(client.read("ml_results", problem_def.task_type, {"meta.tags": {"$all": problem_def.tags}})) != 0:
             print("Continue at n" + str(i+1))
             continue
-        s = ServerProxy("http://" + agent + ":8000", allow_none=True)
+        s = ServerProxy("http://" + learner + ":8000", allow_none=True)
         if knowledge is not None:
             if "n" + str(i) in knowledge["kb_tags"]:
                 knowledge["kb_tags"].remove("n" + str(i))
