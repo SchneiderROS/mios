@@ -432,7 +432,7 @@ def collective_learning_raw():
     service_config.n_gen = 10
     knowledge = None
     tags = ["collective_learning_multi_agent"]
-    start_experiment("collective-panda-001", agents, pd, service_config, 10, tags=tags, knowledge=knowledge)
+    start_experiment("collective-panda-001", agents, pd, service_config, 1, tags=tags, knowledge=knowledge)
 
 
 def collective_learning_benchmark():

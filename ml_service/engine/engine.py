@@ -239,11 +239,13 @@ class Engine:
             cnt_repeat += 1
             result, task_uuid = self._start_task(agent, trial.task_context)
             if result is False:
+                logger.error("Result was False after start_task")
                 return False
 
             trial.t_0 = time.time()
             result, trial.task_result = self._wait_for_task(agent, task_uuid)
             if result is False:
+                logger.error("Result was False after wait_for_task")
                 return False
             if "TaskError" in trial.task_result.errors:
                 logger.error("Received an task error, service will terminate.")
