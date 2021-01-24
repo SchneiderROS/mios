@@ -22,12 +22,15 @@ def learn_2():
         "parameters":{
             "insertable": "key_abus_e30",
             "insert_into": "lock_abus_e30",
-            "approach": "lock_abus_e30_above"
+            "insert_approach": "lock_abus_e30_above"
         },
         "skills": {
             "insertion": {
                 "control": {
-                    "K": [200, 200, 10, 10, 10, 10]
+                    "K": [200, 200, 0, 10, 10, 10]
+                },
+                "skill": {
+                    "traj_speed": [0.005, 0.2]
                 }
             }
         }
@@ -50,15 +53,16 @@ def learn_2():
         "parameters":{
             "insertable": "key_abus_e30",
             "insert_into": "lock_abus_e30",
-            "approach": "lock_abus_e30_above"
+            "insert_approach": "lock_abus_e30_above",
+            "offset": [0.003, -0.002, 0, -5, -5, 0]
         },
         "skills": {
             "insertion": {
                 "control": {
-                    "K": [200, 200, 10, 10, 10, 10]
+                    "K": [50, 50, 10, 10, 10, 10]
                 },
                 "skill": {
-                    "offset": [0.003, -0.002, 0, -5, -5, 0]
+                    "traj_speed": [0.02, 0.2]
                 }
             }
         }
@@ -81,15 +85,16 @@ def learn_2():
         "parameters":{
             "insertable": "key_abus_e30",
             "insert_into": "lock_abus_e30",
-            "approach": "lock_abus_e30_above"
+            "insert_approach": "lock_abus_e30_above",
+            "offset": [0.001, -0.002, 0, 5, -10, 0]
         },
         "skills": {
             "insertion": {
                 "control": {
-                    "K": [200, 200, 10, 10, 10, 10]
+                    "K": [200, 200, 10, 10, 10, 10],
                 },
                 "skill": {
-                    "offset": [0.001, -0.002, 0, 5, -10, 0]
+
                 }
             }
         }
@@ -112,7 +117,8 @@ def learn_2():
         "parameters":{
             "insertable": "key_abus_e30",
             "insert_into": "lock_abus_e30",
-            "approach": "lock_abus_e30_above"
+            "insert_approach": "lock_abus_e30_above",
+            "offset": [0.00, 0.002, 0, 5, 0, 0]
         },
         "skills": {
             "insertion": {
@@ -120,7 +126,7 @@ def learn_2():
                     "K": [200, 200, 10, 10, 10, 10]
                 },
                 "skill": {
-                    "offset": [0.00, 0.002, 0, 5, 0, 0]
+
                 }
             }
         }
@@ -148,7 +154,8 @@ def trial_successful():
         "parameters":{
             "insertable": "key_abus_e30",
             "insert_into": "lock_abus_e30",
-            "approach": "lock_abus_e30_above"
+            "insert_approach": "lock_abus_e30_above",
+            "offset": [0, 0, 0, 0, 5, 0]
         },
         "skills": {
             "insertion": {
@@ -156,7 +163,7 @@ def trial_successful():
                     "K": [1000, 1000, 1000, 100, 100, 100]
                 },
                 "skill": {
-                    "offset": [0, 0, 0, 0, 5, 0]
+
                 }
             }
         }
