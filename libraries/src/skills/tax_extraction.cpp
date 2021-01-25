@@ -38,7 +38,7 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxExtraction::get_
     return {{"traj_speed",{}},{"traj_acc",{}},{"stuck_dx_thr",{}},{"search_a",{}},{"search_f",{}}};
 }
 
-TaxExtraction::TaxExtraction(const std::string &name, Memory *memory, Portal* portal):Skill("Extraction",{"Extractable","Container","ExtractTo"},name,memory,portal,
+TaxExtraction::TaxExtraction(const std::string &name, Memory *memory, Portal* portal):Skill("TaxExtraction",{"Extractable","Container","ExtractTo"},name,memory,portal,
 {ControlMode::mCartTorque}),m_is_stuck(false),m_dx_avg_last(0){
     m_dx_avg_mem.assign(100,0);
 }

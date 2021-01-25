@@ -45,13 +45,13 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxPush::get_parame
     return {{"F_push",{}},{"duration",{}},{"distance",{}},{"approach_speed",{}},{"approach_acc",{}},{"ROI_x",{}},{"ROI_phi",{}}};
 }
 
-TaxPush::TaxPush(const std::string& name, Memory* memory, Portal *portal):Skill("Push",{"pushable"},name,memory,portal,{ControlMode::mCartTorque}){
+TaxPush::TaxPush(const std::string& name, Memory* memory, Portal *portal):Skill("TaxPush",{"Surface", "Approach"},name,memory,portal,{ControlMode::mCartTorque}){
 
 }
 
 Eigen::Matrix<double,3,3> TaxPush::get_O_R_T_0(const Percept &p) const{
-    if(get_object("pushable")->name!="NullObject"){
-        return get_object("pushable")->O_T_OB.block<3,3>(0,0);
+    if(get_object("Surface")->name!="NullObject"){
+        return get_object("Surface")->O_T_OB.block<3,3>(0,0);
     }else{
         throw SkillException("No valid object has been grounded.");
     }
@@ -94,7 +94,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPush::create_contact_mp(const Percept 
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("contact",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
-    move->set_goal(get_object_pose_T("Container"),skill_params->approach_speed,skill_params->approach_acc);
+    move->set_goal(get_object_pose_T("Surface"),skill_params->approach_speed,skill_params->approach_acc);
     return mp;
 }
 
@@ -109,7 +109,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPush::create_push_mp(const Percept &p)
 }
 
 bool TaxPush::check_local_pre_conditions(const Percept &p){
-    Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Container");
+    Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Surface");
     std::shared_ptr<SkillParametersTaxPush> skill_params = get_parameters<SkillParametersTaxPush>();
     for(unsigned i=0;i<3;i++){
         if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2+1)){
@@ -134,8 +134,8 @@ bool TaxPush::check_local_suc_conditions(const Percept &p){
 bool TaxPush::check_local_err_conditions(const Percept &p){
     const Eigen::Matrix<double,6,1>& ROI_x=get_parameters<SkillParametersTaxPush>()->ROI_x;
     const Eigen::Matrix<double,6,1>& ROI_phi=get_parameters<SkillParametersTaxPush>()->ROI_phi;
-    double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Container").block<3,1>(0,2)));
-    Eigen::Matrix<double,3,1> dist = p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Container").block<3,1>(0,3);
+    double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Surface").block<3,1>(0,2)));
+    Eigen::Matrix<double,3,1> dist = p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Surface").block<3,1>(0,3);
     if(dist(0) < ROI_x(0) || dist(0) > ROI_x(1) || dist(1) < ROI_x(2) || dist(1) > ROI_x(3) || dist(2) < ROI_x(4) || dist(2) > ROI_x(5)){
         return true;
     }

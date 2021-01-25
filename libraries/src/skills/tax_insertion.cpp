@@ -55,7 +55,7 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxInsertion::get_p
     return {{"approach_speed",{}},{"approach_acc",{}},{"insertion_speed",{}},{"insertion_acc",{}},{"stuck_dx_thr",{}},{"search_a",{}},{"search_f",{}},{"ROI_x",{}},{"ROI_phi",{}}};
 }
 
-TaxInsertion::TaxInsertion(const std::string &name, Memory *memory,Portal* portal):Skill("Insertion",{"Insertable","Container","Approach"},name,memory,portal,
+TaxInsertion::TaxInsertion(const std::string &name, Memory *memory,Portal* portal):Skill("TaxInsertion",{"Insertable","Container","Approach"},name,memory,portal,
 {ControlMode::mCartTorque}),m_is_stuck(false),m_dx_avg_last(0){
     m_dx_avg_mem.assign(100,0);
 }
