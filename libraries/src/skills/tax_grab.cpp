@@ -1,6 +1,7 @@
 #include "skills/tax_grab.hpp"
 #include "strategies/twist_strategy.hpp"
 #include "strategies/move_to_pose.hpp"
+#include "strategies/gripper_strategy.hpp"
 
 namespace mios{
 
@@ -59,13 +60,20 @@ std::shared_ptr<ManipulationPrimitive> TaxGrab::get_initial_mp(const Percept& p)
 std::optional<std::shared_ptr<ManipulationPrimitive> > TaxGrab::graph_transition(const Percept &p){
     if(get_active_mp()->get_name()=="approach"){
         if(get_active_mp()->get_strategy_interface("move")->finished()){
-            return create_push_mp(p);
+            return create_pre_grasp_mp(p);
         }else{
             return {};
         }
     }
-    if(get_active_mp()->get_name()=="tip"){
-        if(get_active_mp()->get_strategy_interface("tip")->finished() && p.proprioception.TF_F_ext_K(2)>get_parameters<SkillParametersTaxGrab>()->f_contact){
+    if(get_active_mp()->get_name()=="pre_grasp"){
+        if(get_active_mp()->get_strategy_interface("move")->finished()){
+            return create_grasp_mp(p);
+        }else{
+            return {};
+        }
+    }
+    if(get_active_mp()->get_name()=="grasp"){
+        if(get_active_mp()->get_strategy_interface("grasp")->finished()){
             return create_retract_mp(p);
         }else{
             return {};
@@ -93,7 +101,12 @@ std::shared_ptr<ManipulationPrimitive> TaxGrab::create_pre_grasp_mp(const Percep
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxGrab::create_grasp_mp(const Percept &p){
-
+    std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
+    std::shared_ptr<ManipulationPrimitive> mp = create_mp("grasp",p);
+    mp->create_strategy<GripperStrategy>("grasp",1);
+    std::shared_ptr<GripperStrategy> grasp = mp->get_strategy<GripperStrategy>("grasp");
+    grasp->grasp(skill_params->grasp_width,skill_params->grasp_speed,skill_params->grasp_force,get_object("Grabbable")->name);
+    return mp;
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxGrab::create_retract_mp(const Percept &p){

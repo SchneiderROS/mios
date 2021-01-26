@@ -48,7 +48,7 @@ public:
     // Gripper
     bool grasp_object(const std::string& name, double speed=1);
     bool release_object(std::optional<double> width, double speed=1);
-    bool grasp(double width, double speed, double force, double epsilon_inner, double epsilon_outer);
+    bool grasp(double width, double speed, double force, double epsilon_inner, double epsilon_outer, std::string object_name="NullObject");
     bool move_gripper(double width,double speed);
     bool is_grasping();
     bool home_gripper();
@@ -103,6 +103,9 @@ private:
 private:
     bool m_is_ready;
     unsigned m_robot_configuration;
+
+private:
+    unsigned m_hand_grace_period;
 };
 
 }

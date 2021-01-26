@@ -9,6 +9,8 @@
 
 namespace mios {
 
+enum HandActivityState{hsIdle,hsBusy,hsFinished};
+
 class Percept{
 public:
     Percept();
@@ -137,7 +139,7 @@ public:
         Eigen::Matrix<double,6,7> B_J_O;
 
         double max_finger_width;
-        bool hand_is_active;
+        HandActivityState hand_activity_state;
 
     }internal_model;
 
