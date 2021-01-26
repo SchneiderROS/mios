@@ -97,7 +97,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPressButton::create_push_mp(const Perc
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("push",p);
     mp->create_strategy<MoveToPoseStrategy>("push",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("push");
-    move->set_goal(get_object_pose_T("Button"),skill_params->approach_speed,skill_params->approach_acc);
+    move->set_goal(get_object_pose_T("Button"),skill_params->press_speed,skill_params->press_acc);
     return mp;
 }
 
@@ -112,12 +112,12 @@ std::shared_ptr<ManipulationPrimitive> TaxPressButton::create_retract_mp(const P
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("retract",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
-    move->set_goal(get_object_pose_T("Approach"),skill_params->approach_speed,skill_params->approach_acc);
+    move->set_goal(get_object_pose_T("Approach"),skill_params->press_speed,skill_params->press_acc);
     return mp;
 }
 
 bool TaxPressButton::check_local_pre_conditions(const Percept &p){
-    Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Container");
+    Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Button");
     std::shared_ptr<SkillParametersTaxPressButton> skill_params = get_parameters<SkillParametersTaxPressButton>();
     for(unsigned i=0;i<3;i++){
         if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2+1)){
