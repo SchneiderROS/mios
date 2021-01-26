@@ -1,0 +1,146 @@
+#include "skills/tax_grab.hpp"
+#include "strategies/twist_strategy.hpp"
+#include "strategies/move_to_pose.hpp"
+
+namespace mios{
+
+bool SkillParametersTaxGrab::from_json(const nlohmann::json& parameters){
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"speed",speed)){
+        spdlog::error("Parameter speed could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"acc",acc)){
+        spdlog::error("Parameter acc could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"grasp_width",grasp_width)){
+        spdlog::error("Parameter grasp_width could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"grasp_speed",grasp_speed)){
+        spdlog::error("Parameter grasp_speed could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(parameters,"grasp_force",grasp_force)){
+        spdlog::error("Parameter grasp_force could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"ROI_x",ROI_x)){
+        spdlog::error("Parameter ROI_x could not be loaded but is mandatory.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(parameters,"ROI_phi",ROI_phi)){
+        spdlog::error("Parameter ROI_phi could not be loaded but is mandatory.");
+        return false;
+    }
+    return true;
+}
+
+std::map<std::string, std::set<std::string> > SkillParametersTaxGrab::get_parameter_list(){
+    return {{"speed",{}},{"acc",{}},{"grasp_width",{}},{"grasp_speed",{}},{"ROI_x",{}},{"ROI_phi",{}}};
+}
+
+TaxGrab::TaxGrab(const std::string& name, Memory* memory, Portal* portal):Skill("TaxGrab",{"Grabbable", "Approach", "Retract"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
+
+}
+
+Eigen::Matrix<double,3,3> TaxGrab::get_O_R_T_0(const Percept &p) const{
+    if(get_object("Grabbable")->name!="NullObject"){
+        return get_object("Grabbable")->O_T_OB.block<3,3>(0,0);
+    }else{
+        throw SkillException("No valid object has been grounded.");
+    }
+}
+
+std::shared_ptr<ManipulationPrimitive> TaxGrab::get_initial_mp(const Percept& p){
+    return create_approach_mp(p);
+}
+
+std::optional<std::shared_ptr<ManipulationPrimitive> > TaxGrab::graph_transition(const Percept &p){
+    if(get_active_mp()->get_name()=="approach"){
+        if(get_active_mp()->get_strategy_interface("move")->finished()){
+            return create_push_mp(p);
+        }else{
+            return {};
+        }
+    }
+    if(get_active_mp()->get_name()=="tip"){
+        if(get_active_mp()->get_strategy_interface("tip")->finished() && p.proprioception.TF_F_ext_K(2)>get_parameters<SkillParametersTaxGrab>()->f_contact){
+            return create_retract_mp(p);
+        }else{
+            return {};
+        }
+    }
+    return {};
+}
+
+std::shared_ptr<ManipulationPrimitive> TaxGrab::create_approach_mp(const Percept &p){
+    std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
+    std::shared_ptr<ManipulationPrimitive> mp = create_mp("approach",p);
+    mp->create_strategy<MoveToPoseStrategy>("move",1);
+    std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
+    move->set_goal(get_object_pose_T("Approach"),skill_params->speed,skill_params->acc);
+    return mp;
+}
+
+std::shared_ptr<ManipulationPrimitive> TaxGrab::create_pre_grasp_mp(const Percept &p){
+    std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
+    std::shared_ptr<ManipulationPrimitive> mp = create_mp("pre_grasp",p);
+    mp->create_strategy<MoveToPoseStrategy>("move",1);
+    std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
+    move->set_goal(get_object_pose_T("Grabbable"),skill_params->speed,skill_params->acc);
+    return mp;
+}
+
+std::shared_ptr<ManipulationPrimitive> TaxGrab::create_grasp_mp(const Percept &p){
+
+}
+
+std::shared_ptr<ManipulationPrimitive> TaxGrab::create_retract_mp(const Percept &p){
+    std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
+    std::shared_ptr<ManipulationPrimitive> mp = create_mp("retract",p);
+    mp->create_strategy<MoveToPoseStrategy>("move",1);
+    std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
+    move->set_goal(get_object_pose_T("Retract"),skill_params->speed,skill_params->acc);
+    return mp;
+}
+
+bool TaxGrab::check_local_pre_conditions(const Percept &p){
+    Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Grabbable");
+    std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
+    for(unsigned i=0;i<3;i++){
+        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2+1)){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool TaxGrab::check_local_suc_conditions(const Percept &p){
+    std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
+    if(p.proprioception.TF_F_ext_K(2)>skill_params->f_contact){
+        return true;
+    }
+    return false;
+}
+
+bool TaxGrab::check_local_ex_conditions(const Percept &p){
+    if(get_active_mp()->get_name()=="retract"){
+        return get_active_mp()->get_strategy_interface("move")->finished() && m_memory->get_live_context()->grasped_object->name==get_object("Grabbable")->name;
+    }
+    return false;
+}
+
+
+bool TaxGrab::check_local_err_conditions(const Percept &p){
+    const Eigen::Matrix<double,6,1>& ROI_x=get_parameters<SkillParametersTaxGrab>()->ROI_x;
+    const Eigen::Matrix<double,6,1>& ROI_phi=get_parameters<SkillParametersTaxGrab>()->ROI_phi;
+    double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Grabbable").block<3,1>(0,2)));
+    Eigen::Matrix<double,3,1> dist = p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Grabbable").block<3,1>(0,3);
+    if(dist(0) < ROI_x(0) || dist(0) > ROI_x(1) || dist(1) < ROI_x(2) || dist(1) > ROI_x(3) || dist(2) < ROI_x(4) || dist(2) > ROI_x(5)){
+        return true;
+    }
+    return false;
+}
+
+}
