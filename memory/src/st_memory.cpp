@@ -263,8 +263,8 @@ void STMemory::internal_update(const Percept &p){
     m_environment.at("EndEffector").O_T_OB=p.proprioception.O_T_EE;
     m_environment.at("EndEffector").q=p.proprioception.q;
 
-    m_environment.at(m_live_context.grasped_object->name).O_T_OB=p.proprioception.O_T_EE*msrm_utils::invert_transformation_matrix(m_live_context.grasped_object->OB_T_gp);
-    m_environment.at(m_live_context.grasped_object->name).q=p.proprioception.q;
+//    m_environment.at(m_live_context.grasped_object->name).O_T_OB=p.proprioception.O_T_EE*msrm_utils::invert_transformation_matrix(m_live_context.grasped_object->OB_T_gp);
+//    m_environment.at(m_live_context.grasped_object->name).q=p.proprioception.q;
 }
 
 Object* STMemory::get_object(const std::string &name){

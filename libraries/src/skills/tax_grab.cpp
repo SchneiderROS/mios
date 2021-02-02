@@ -122,7 +122,7 @@ bool TaxGrab::check_local_pre_conditions(const Percept &p){
     Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Grabbable");
     std::shared_ptr<SkillParametersTaxGrab> skill_params = get_parameters<SkillParametersTaxGrab>();
     for(unsigned i=0;i<3;i++){
-        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2+1)){
+        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)>T_container(3,i)+skill_params->ROI_x(i*2+1)){
             return false;
         }
     }

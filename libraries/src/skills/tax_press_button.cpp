@@ -1,6 +1,7 @@
 #include "skills/tax_press_button.hpp"
 #include "strategies/desired_wrench_strategy.hpp"
 #include "strategies/move_to_pose.hpp"
+#include "strategies/null_strategy.hpp"
 #include <msrm_utils/math.hpp>
 
 namespace mios{
@@ -104,6 +105,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPressButton::create_push_mp(const Perc
 std::shared_ptr<ManipulationPrimitive> TaxPressButton::create_hold_mp(const Percept &p){
     std::shared_ptr<SkillParametersTaxPressButton> skill_params = get_parameters<SkillParametersTaxPressButton>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("hold",p);
+    mp->create_strategy<NullStrategy>("hold",1);
     return mp;
 }
 
@@ -120,7 +122,7 @@ bool TaxPressButton::check_local_pre_conditions(const Percept &p){
     Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Button");
     std::shared_ptr<SkillParametersTaxPressButton> skill_params = get_parameters<SkillParametersTaxPressButton>();
     for(unsigned i=0;i<3;i++){
-        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2+1)){
+        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)>T_container(3,i)+skill_params->ROI_x(i*2+1)){
             return false;
         }
     }
@@ -128,10 +130,9 @@ bool TaxPressButton::check_local_pre_conditions(const Percept &p){
 }
 
 bool TaxPressButton::check_local_suc_conditions(const Percept &p){
-    std::shared_ptr<SkillParametersTaxPressButton> skill_params = get_parameters<SkillParametersTaxPressButton>();
-        if((p.proprioception.O_T_EE.block<3,1>(0,3)-get_object_pose_T("Approach").block<3,1>(0,3)).norm()<0.005 && get_active_mp()->get_name()=="retract"){
-            return true;
-        }
+    if(get_active_mp()->get_name()=="retract" && get_active_mp()->get_strategy_interface("move")->finished()){
+        return true;
+    }
     return false;
 }
 

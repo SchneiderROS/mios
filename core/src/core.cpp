@@ -189,14 +189,16 @@ void Core::post_execution(){
 
 void Core::handle_gripper(Actuator* cmd){
     if(m_percept.internal_model.hand_activity_state==HandActivityState::hsIdle && cmd->get_gripper_request()!=GripperRequest::None){
-        cmd->accecpt_gripper_request();
         m_percept.internal_model.hand_activity_state=HandActivityState::hsBusy;
         if(cmd->get_gripper_request()==GripperRequest::Grasp){
-            std::thread(&Core::grasp,this,cmd->gripper_width,cmd->gripper_speed,cmd->gripper_force,0.1,0.1,cmd->gripper_object);
+            std::thread gripper(&Core::grasp,this,cmd->gripper_width,cmd->gripper_speed,cmd->gripper_force,0.1,0.1,cmd->gripper_object);
+            gripper.detach();
         }
         if(cmd->get_gripper_request()==GripperRequest::Move){
-            std::thread(&Core::move_gripper,this,cmd->gripper_width,cmd->gripper_speed);
+            std::thread gripper(&Core::move_gripper,this,cmd->gripper_width,cmd->gripper_speed);
+            gripper.detach();
         }
+        cmd->accecpt_gripper_request();
     }
     if(m_percept.internal_model.hand_activity_state==HandActivityState::hsFinished){
         if(m_hand_grace_period==0){

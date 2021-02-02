@@ -27,8 +27,7 @@ bool SkillParametersTaxMove::from_json(const nlohmann::json &p){
     }
 
     if(!msrm_utils::read_json_param<double,4,4>(p,"T_T_EE_g",T_T_EE_g) && !object_set){
-        spdlog::error("Parameter T_T_EE_g could not be loaded but is mandatory.");
-        return false;
+        T_T_EE_g.setIdentity();
     }
     return true;
 }

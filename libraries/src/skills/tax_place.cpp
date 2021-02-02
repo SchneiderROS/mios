@@ -2,6 +2,7 @@
 #include "strategies/twist_strategy.hpp"
 #include "strategies/move_to_pose.hpp"
 #include "strategies/gripper_strategy.hpp"
+#include "msrm_utils/math.hpp"
 
 namespace mios{
 
@@ -22,10 +23,6 @@ bool SkillParametersTaxPlace::from_json(const nlohmann::json& parameters){
         spdlog::error("Parameter release_speed could not be loaded but is mandatory.");
         return false;
     }
-    if(!msrm_utils::read_json_param(parameters,"f_contact",f_contact)){
-        spdlog::error("Parameter f_contact could not be loaded but is mandatory.");
-        return false;
-    }
     if(!msrm_utils::read_json_param<double,6,1>(parameters,"ROI_x",ROI_x)){
         spdlog::error("Parameter ROI_x could not be loaded but is mandatory.");
         return false;
@@ -38,7 +35,7 @@ bool SkillParametersTaxPlace::from_json(const nlohmann::json& parameters){
 }
 
 std::map<std::string, std::set<std::string> > SkillParametersTaxPlace::get_parameter_list(){
-    return {{"speed",{}},{"acc",{}},{"release_width",{}},{"release_speed",{}},{"f_contact",{}},{"ROI_x",{}},{"ROI_phi",{}}};
+    return {{"speed",{}},{"acc",{}},{"release_width",{}},{"release_speed",{}},{"ROI_x",{}},{"ROI_phi",{}}};
 }
 
 TaxPlace::TaxPlace(const std::string& name, Memory* memory, Portal* portal):Skill("TaxPlace",{"Placeable","Surface", "Approach", "Retract"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
@@ -66,7 +63,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > TaxPlace::graph_transitio
         }
     }
     if(get_active_mp()->get_name()=="pre_release"){
-        if(p.proprioception.TF_F_ext_K(2)>m_memory->read_parameters()->user.F_ext_contact(2)){
+        if(p.proprioception.TF_F_ext_K(2)>m_memory->read_parameters()->user.F_ext_contact(0)){
             return create_release_mp(p);
         }else{
             return {};
@@ -93,14 +90,22 @@ std::shared_ptr<ManipulationPrimitive> TaxPlace::create_approach_mp(const Percep
 
 std::shared_ptr<ManipulationPrimitive> TaxPlace::create_pre_release_mp(const Percept &p){
     std::shared_ptr<SkillParametersTaxPlace> skill_params = get_parameters<SkillParametersTaxPlace>();
-    std::shared_ptr<ManipulationPrimitive> mp = create_mp("pre_grasp",p);
+    std::shared_ptr<ManipulationPrimitive> mp = create_mp("pre_release",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
-    move->set_goal(get_object_pose_T("Surface"),skill_params->speed,skill_params->acc);
+
+    Eigen::Matrix<double,4,4> T_g=get_object_pose_T("Surface");
+    T_g.block<3,3>(0,0)=p.proprioception.T_T_EE.block<3,3>(0,0);
+    Eigen::Matrix<double,3,1> goal_dir=T_g.block<3,1>(0,3)-p.proprioception.T_T_EE.block<3,1>(0,3);
+    goal_dir.normalize();
+    T_g.block<3,1>(0,3)+=goal_dir*0.1;
+
+    move->set_goal(T_g,skill_params->speed,skill_params->acc);
     return mp;
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxPlace::create_release_mp(const Percept &p){
+    std::cout<<"RELEASE"<<std::endl;
     std::shared_ptr<SkillParametersTaxPlace> skill_params = get_parameters<SkillParametersTaxPlace>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("release",p);
     mp->create_strategy<GripperStrategy>("release",1);
@@ -110,6 +115,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPlace::create_release_mp(const Percept
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxPlace::create_retract_mp(const Percept &p){
+    std::cout<<"RETRACT"<<std::endl;
     std::shared_ptr<SkillParametersTaxPlace> skill_params = get_parameters<SkillParametersTaxPlace>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("retract",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
@@ -122,7 +128,7 @@ bool TaxPlace::check_local_pre_conditions(const Percept &p){
     Eigen::Matrix<double,4,4> T_container = get_object_pose_T("Surface");
     std::shared_ptr<SkillParametersTaxPlace> skill_params = get_parameters<SkillParametersTaxPlace>();
     for(unsigned i=0;i<3;i++){
-        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2+1)){
+        if(p.proprioception.T_T_EE(3,i)<T_container(3,i)+skill_params->ROI_x(i*2) || p.proprioception.T_T_EE(3,i)>T_container(3,i)+skill_params->ROI_x(i*2+1)){
             return false;
         }
     }

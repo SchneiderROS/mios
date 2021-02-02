@@ -38,6 +38,8 @@ void Actuator::initialize(const Percept &p_0, const ControlParameters& controlle
     gripper_speed=0;
     gripper_force=0;
     gripper_object="NullObject";
+
+    gripper_request=GripperRequest::None;
 }
 
 void Actuator::blend(const Actuator &cmd, const Percept& p){
@@ -464,21 +466,21 @@ void Actuator::grasp(double width, double speed, double force, std::string objec
     gripper_speed=speed;
     gripper_force=force;
     gripper_object=object;
-    m_gripper_request=GripperRequest::Grasp;
+    gripper_request=GripperRequest::Grasp;
 }
 
 void Actuator::move_fingers(double width, double speed){
     gripper_width=width;
     gripper_speed=speed;
-    m_gripper_request=GripperRequest::Move;
+    gripper_request=GripperRequest::Move;
 }
 
 void Actuator::accecpt_gripper_request(){
-    m_gripper_request=GripperRequest::None;
+    gripper_request=GripperRequest::None;
 }
 
 GripperRequest Actuator::get_gripper_request(){
-    return m_gripper_request;
+    return gripper_request;
 }
 
 }

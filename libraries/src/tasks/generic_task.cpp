@@ -21,6 +21,11 @@
 
 #include "skills/tax_insertion.hpp"
 #include "skills/tax_extraction.hpp"
+#include "skills/tax_move.hpp"
+#include "skills/tax_grab.hpp"
+#include "skills/tax_place.hpp"
+#include "skills/tax_press_button.hpp"
+#include "skills/tax_turn.hpp"
 
 namespace mios {
 
@@ -101,6 +106,21 @@ void GenericTask::execute_any_skill(unsigned index){
         break;
     case msrm_utils::str_to_int("TaxExtraction"):
         execute_skill<TaxExtraction,SkillParametersTaxExtraction>(name);
+        break;
+    case msrm_utils::str_to_int("TaxMove"):
+        execute_skill<TaxMove,SkillParametersTaxMove>(name);
+        break;
+    case msrm_utils::str_to_int("TaxGrab"):
+        execute_skill<TaxGrab,SkillParametersTaxGrab>(name);
+        break;
+    case msrm_utils::str_to_int("TaxPlace"):
+        execute_skill<TaxPlace,SkillParametersTaxPlace>(name);
+        break;
+    case msrm_utils::str_to_int("TaxPressButton"):
+        execute_skill<TaxPressButton,SkillParametersTaxPressButton>(name);
+        break;
+    case msrm_utils::str_to_int("TaxTurn"):
+        execute_skill<TaxTurn,SkillParametersTaxTurn>(name);
         break;
     default:
         throw TaskException("Skill with type " + type + " not known to GenericTask");

@@ -2,8 +2,11 @@
 
 namespace mios {
 
-void GripperStrategy::initialize(const Percept &p_0){
+GripperStrategy::GripperStrategy():PrimitiveStrategy({CommandPatternGripper}){
     m_request=GripperRequest::None;
+}
+
+void GripperStrategy::initialize(const Percept &p_0){
     m_gripper_finished=false;
 }
 

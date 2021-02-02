@@ -10,7 +10,7 @@ namespace mios {
 
 enum CommandPattern{CommandPatternCartesianPose,CommandPatternJointPose,CommandPatternNullspacePose,CommandPatternDesiredWrench,CommandPatternDesiredTorque,
                    CommandPatternCartesianCompliance,CommandPatternJointCompliance,CommandPatternCartesianTwist,CommandPatternCartesianFFWrench,
-                   CommandPatternJointVelocities,CommandPatternJointFFTorque,CommandPatternO_R_T};
+                   CommandPatternJointVelocities,CommandPatternJointFFTorque,CommandPatternO_R_T,CommandPatternGripper};
 
 enum GripperRequest{None,Grasp,Move};
 
@@ -65,6 +65,7 @@ public:
     double gripper_speed;
     double gripper_force;
     std::string gripper_object;
+    GripperRequest gripper_request;
 
     double t;
 
@@ -107,8 +108,6 @@ private:
     double m_stop_factor;
 
     bool m_new_command;
-
-    GripperRequest m_gripper_request;
 
 };
 
