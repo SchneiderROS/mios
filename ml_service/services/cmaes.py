@@ -107,15 +107,16 @@ class CMAESService(BaseService):
     def map(self, f, x_set: np.ndarray):
         # logger.debug("CMAESService.trial(" + str(x_set) + ")")
 
-        trial_uuids = []
+        trial_uuids = dict()
 
         for x in x_set:
-            trial_uuids.append(self.push_trial(x))
+            uuid = self.push_trial(x)
+            trial_uuids[uuid] = x
 
         costs = []
         self.success_ratio = 0
         kb = ServerProxy("http://" + self.knowledge_source["kb_location"] + ":8001")
-        for uuid in trial_uuids:
+        for uuid in trial_uuids.keys():
             result = self.wait_for_result(uuid)
             if result.final_cost is None:
                 logger.error("None was returned as cost for trial " + uuid + ", invoking stop.")
@@ -124,8 +125,11 @@ class CMAESService(BaseService):
             else:
                 self.success_ratio += result.success
                 costs.append((result.final_cost,))
-            kb.push_trial(self.host_name, self.engine.completed_trials[uuid].theta, result.final_cost)
-        self.success_ratio /= float(len(trial_uuids))
+            theta = []
+            for i in range(len(trial_uuids[uuid])):
+                theta.append(float(trial_uuids[uuid][i]))
+            kb.push_trial(self.host_name, theta, float(result.final_cost), self.configuration.n_ind)
+        self.success_ratio /= float(len(trial_uuids.keys()))
 
         logger.debug("CMAES costs: " + str(costs))
         return costs
@@ -147,13 +151,14 @@ class CMAESService(BaseService):
             while True:
                 new_population = kb.request_trials(self.configuration.n_immigrant)
                 if new_population is False:
+                    print("Not enought yet")
                     time.sleep(1)
                     continue
                 else:
                     break
             for i in new_population:
                 self.population.append(deap.creator.Individual(i[0]))
-                fitnesses.append(i[1])
+                fitnesses.append((i[1],))
 
             for ind, fit in zip(self.population, fitnesses):
                 ind.fitness.values = fit

@@ -452,15 +452,15 @@ def collective_learning_benchmark():
 
 
 def collective_learning_benchmark_2():
-    agents = ["collective-panda-001", "collective-panda-002", "collective-panda-007", "collective-panda-008",
-              "collective-panda-009"]
+    agents = ["collective-panda-007.local", "collective-panda-008.local",
+              "collective-panda-009.local"]
 
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
     service_config.n_ind = 30
     service_config.n_gen = 10
     service_config.n_immigrant = 20
-    knowledge = {"mode": "none", "kb_location": agents[0]}
+    knowledge = {"mode": "none", "kb_location": agents[0], "kb_tags": ["collective_learning_benchmark_2"]}
     threads = []
     i = 0
     pd = mios_ml_benchmark(i)
@@ -470,7 +470,6 @@ def collective_learning_benchmark_2():
         pd = mios_ml_benchmark(i)
         i += 1
         tags = ["collective_learning_benchmark_2", a]
-        start_experiment(a, [a], pd, service_config, 1, tags=tags, knowledge=knowledge, keep_record=False)
         threads.append(Thread(target=start_experiment, args=(a, [a], pd, service_config, 1, tags, knowledge, False,)))
         threads[-1].start()
 
