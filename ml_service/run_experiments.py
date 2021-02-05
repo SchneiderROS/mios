@@ -498,11 +498,9 @@ def collective_learning_experiment_2():
     service_config.exploration_mode = True
     service_config.n_ind = 10
     service_config.n_gen = 10
-    tag = "collective_learning_experiment_2_multi"
+    tag = "collective_learning_experiment_multi"
     knowledge = None
-    i = 0
-    pd = mios_ml_benchmark(i)
+    pd = insert_generic()
     delete_local_results(agents, "ml_results", pd.task_type, [tag])
-    tag = "collective_learning_benchmark_multi"
     tags = [tag]
     start_experiment(agents[0], agents, pd, service_config, 10, tags=tags, knowledge=knowledge)
