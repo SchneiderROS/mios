@@ -482,3 +482,27 @@ def collective_learning_benchmark_2():
         if a == agents[0]:
             continue
         backup_results(a, agents[0], pd.task_type, [tag], "ml_results")
+
+
+def collective_learning_experiment_2():
+    agents = ["collective-panda-007", "collective-panda-008",
+              "collective-panda-009", "collective-panda-001", "collective-panda-002"]
+
+    call_method("collective-panda-001", 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method("collective-panda-002", 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method("collective-panda-007", 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method("collective-panda-008", 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method("collective-panda-009", 12002, "set_grasped_object", {"object": "generic_insertable"})
+
+    service_config = CMAESConfiguration()
+    service_config.exploration_mode = True
+    service_config.n_ind = 10
+    service_config.n_gen = 10
+    tag = "collective_learning_experiment_2_multi"
+    knowledge = None
+    i = 0
+    pd = mios_ml_benchmark(i)
+    delete_local_results(agents, "ml_results", pd.task_type, [tag])
+    tag = "collective_learning_benchmark_multi"
+    tags = [tag]
+    start_experiment(agents[0], agents, pd, service_config, 10, tags=tags, knowledge=knowledge)
