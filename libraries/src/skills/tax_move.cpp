@@ -21,7 +21,7 @@ bool SkillParametersTaxMove::from_json(const nlohmann::json &p){
     }
     bool object_set=false;
     if(!p["objects"].is_null()){
-        if(p["objects"].find("goal_pose")!=p["objects"].end()){
+        if(p["objects"].find("GoalPose")!=p["objects"].end()){
             object_set=true;
         }
     }
@@ -47,6 +47,7 @@ std::shared_ptr<ManipulationPrimitive> TaxMove::get_initial_mp(const Percept &p_
     Eigen::Matrix<double,4,4> T_g;
     if(this->get_object("GoalPose")->name=="NullObject"){
         T_g=skill_params->T_T_EE_g;
+        spdlog::warn("No GoalPose was set, moving to O_T_OB");
     }else{
         T_g=get_object("GoalPose")->O_T_OB;
     }
@@ -65,7 +66,13 @@ bool TaxMove::check_local_suc_conditions(const Percept &p){
             m_finished=true;
             m_t_finished=std::chrono::high_resolution_clock::now();
         }
-        return true;
+
+        if((p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("GoalPose").block<3,1>(0,3)).norm()<m_memory->read_parameters()->user.env_X(0)
+           && acos(((get_object_pose_T("GoalPose").block<3,3>(0,0).transpose()*p.proprioception.T_T_EE.block<3,3>(0,0)).trace()-1)/2) < m_memory->read_parameters()->user.env_X(1)){
+            return true;
+        }else{
+            return false;
+        }
     }else{
         return false;
     }
@@ -77,6 +84,11 @@ bool TaxMove::check_local_ex_conditions(const Percept &p){
     }else{
         return false;
     }
+}
+
+double TaxMove::get_goal_heuristic(const Percept &p){
+    return (get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("GoalPose").block<3,1>(0,3)).norm() +
+            acos(((get_object_pose_T("GoalPose").block<3,3>(0,0).transpose()*p.proprioception.T_T_EE.block<3,3>(0,0)).trace()-1)/2) < m_memory->read_parameters()->user.env_X(1);
 }
 
 }

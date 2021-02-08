@@ -82,6 +82,8 @@ public:
     Eigen::Matrix<double,3,1> load_com;
     Eigen::Matrix<double,3,3> load_I;
 
+    Eigen::Matrix<double,2,1> env_X;
+
     bool safe_mode;
 
 };

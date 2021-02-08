@@ -5,6 +5,7 @@ from definitions.insertion_definitions import insert_key
 from definitions.insertion_definitions import insert_key_light
 from definitions.insertion_definitions import insert_generic
 from definitions.benchmark_definitions import mios_ml_benchmark
+from definitions.templates import move
 from services.cmaes import CMAESConfiguration
 from utils.udp_client import call_method
 from utils.database import delete_local_results
@@ -504,3 +505,13 @@ def collective_learning_experiment_2():
     delete_local_results(agents, "ml_results", pd.task_type, [tag])
     tags = [tag]
     start_experiment(agents[0], agents, pd, service_config, 10, tags=tags, knowledge=knowledge)
+
+
+def tax_learn_move(robot: str, agents: list, n_iter: int = 1):
+    pd = move("iros_loc_2", "iros_loc_1", 5)
+    service_config = CMAESConfiguration()
+    service_config.exploration_mode = True
+    service_config.n_ind = 9
+    service_config.n_gen = 10
+    tags = ["iros2021", "move"]
+    start_experiment(robot, agents, pd, service_config, n_iter, tags=tags, keep_record=False)

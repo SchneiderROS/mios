@@ -24,6 +24,8 @@ private:
     bool check_local_suc_conditions(const Percept &p) override;
     bool check_local_ex_conditions(const Percept &p) override;
 
+    double get_goal_heuristic(const Percept &p) override;
+
 private:
     bool m_finished;
     std::chrono::high_resolution_clock::time_point m_t_finished;

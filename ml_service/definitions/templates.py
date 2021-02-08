@@ -369,30 +369,30 @@ def insertion_cost() -> CostFunction:
     return c
 
 
-def move(goal_pose: str, init_pose: str):
+def move(goal_pose: str, init_pose: str, max_time: float):
     limits = {
-        "speed_t": (0, 0.2),
-        "speed_r": (0, 0.5),
-        "acc_t": (0, 0.5),
-        "acc_r": (0, 1),
+        "speed_t": (0, 0.4),
+        "speed_r": (0, 1),
+        "acc_t": (0, 1),
+        "acc_r": (0, 2),
         "K_x": (0, 2000),
-        "K_y": (0, 2000),
-        "K_z": (0, 2000),
+        # "K_y": (0, 2000),
+        # "K_z": (0, 2000),
         "K_phi": (0, 200),
-        "K_chi": (0, 200),
-        "K_psi": (0, 200)
+        # "K_chi": (0, 200),
+        # "K_psi": (0, 200)
     }
     context_mapping = {
         "speed_t": ["skills.move.skill.speed-1"],
         "speed_r": ["skills.move.skill.speed-2"],
         "acc_t": ["skills.move.skill.acc-1"],
         "acc_r": ["skills.move.skill.acc-2"],
-        "K_x": ["skills.move.control.cart_imp.K_x-1"],
-        "K_y": ["skills.move.control.cart_imp.K_x-2"],
-        "K_z": ["skills.move.control.cart_imp.K_x-3"],
-        "K_phi": ["skills.move.control.cart_imp.K_x-4"],
-        "K_chi": ["skills.move.control.cart_imp.K_x-5"],
-        "K_psi": ["skills.move.control.cart_imp.K_x-6"]
+        "K_x": ["skills.move.control.cart_imp.K_x-1", "skills.move.control.cart_imp.K_x-2", "skills.move.control.cart_imp.K_x-3"],
+        # "K_y": ["skills.move.control.cart_imp.K_x-2"],
+        # "K_z": ["skills.move.control.cart_imp.K_x-3"],
+        "K_phi": ["skills.move.control.cart_imp.K_x-4", "skills.move.control.cart_imp.K_x-5", "skills.move.control.cart_imp.K_x-6"],
+        # "K_chi": ["skills.move.control.cart_imp.K_x-5"],
+        # "K_psi": ["skills.move.control.cart_imp.K_x-6"]
     }
 
     x_0 = {
@@ -401,64 +401,84 @@ def move(goal_pose: str, init_pose: str):
         "acc_t": 0.2,
         "acc_r": 0.2,
         "K_x": 0.2,
-        "K_y": 0.2,
-        "K_z": 0.2,
+        # "K_y": 0.2,
+        # "K_z": 0.2,
         "K_phi": 0.2,
-        "K_chi": 0.2,
-        "K_psi": 0.2
+        # "K_chi": 0.2,
+        # "K_psi": 0.2
     }
     domain = Domain(limits, context_mapping, x_0)
     default_context = {
-        "name": "TaxMove",
+        "name": "GenericTask",
         "parameters": {
-            "GoalPosition": goal_pose
+            "skill_types": ["TaxMove"],
+            "skill_names": ["move"]
         },
         "skills": {
             "move": {
                 "skill": {
-                    "time_max": 5.0
+                    "time_max": max_time,
+                    "objects": {
+                        "GoalPose": goal_pose
+                    }
                 },
                 "control": {
+                    "control_mode": 0,
                     "cart_imp": {
                         "K_x": [0, 0, 0, 0, 0, 0]
                     }
+                },
+                "user": {
+                    "env_X": [0.005, 0.00175]
                 }
             }
         }
     }
     reset_instructions = []
+    setup_instructions = []
     task_context = {
-        "name": "TaxMove",
+        "name": "GenericTask",
+        "parameters": {
+            "skill_types": ["MoveToPoseJoint"],
+            "skill_names": ["move"]
+        },
         "skills": {
             "move": {
                 "skill": {
-                    "speed": [0.075, 0.5],
-                    "acc": [0.5, 1]
+                    "speed": 0.5,
+                    "acc": 1,
+                    "q_g": [0, 0, 0, 0, 0, 0, 0],
+                    "objects": {
+                        "goal_pose": init_pose
+                    }
+                },
+                "control": {
+                    "control_mode": 3
+                },
+                "user": {
+                    "env_X": [0.005, 0.01]
                 }
             }
-        },
-        "parameters": {
-            "GoalPose": init_pose
         }
     }
+    setup_instructions.append({"method": "start_task", "parameters": task_context})
     reset_instructions.append({"method": "start_task", "parameters": task_context})
-    pd = ProblemDefinition("move", domain, default_context, [], [], reset_instructions,
-                           move_cost(), ["move"])
+    pd = ProblemDefinition("move", domain, default_context, setup_instructions, [], reset_instructions,
+                           move_cost(max_time), ["move"])
     return pd
 
 
-def move_cost() -> CostFunction:
+def move_cost(max_time: float) -> CostFunction:
     c = CostFunction()
     c.optimum_skills.append("move")
     c.optimum_weights[0] = 1
-    c.heuristic_expressions = "np.exp(var*100)"
+    c.heuristic_expressions = "var"
 
     c.heuristic_skills = ["move"]
-    c.max_cost[0] = 5
+    c.max_cost[0] = max_time
     c.max_cost[1] = 50
     c.max_cost[2] = 160
     c.finish_thr = 5
-    c.geometry_factor = 0.002
     return c
 
 

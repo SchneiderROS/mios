@@ -194,6 +194,8 @@ UserParameters::UserParameters(){
     load_com.setZero();
     load_I.setZero();
 
+    env_X<<0.005,0.0175;
+
     safe_mode=true;
 }
 
@@ -244,6 +246,11 @@ bool UserParameters::from_json(const nlohmann::json &parameters){
         return false;
     }
 
+    if(!msrm_utils::read_json_param<double,2,1>(parameters,"env_X",env_X)){
+        spdlog::error("Could not read env_X.");
+        return false;
+    }
+
     if(!msrm_utils::read_json_param(parameters,"safe_mode",safe_mode)){
         spdlog::error("Could not read safe_mode.");
         return false;
@@ -266,6 +273,8 @@ nlohmann::json UserParameters::to_json() const{
     json_object["load_m"]=load_m;
     json_object["load_com"]=msrm_utils::from_eigen<double,3,1>(load_com);
     json_object["load_I"]=msrm_utils::from_eigen<double,3,3>(load_I);
+
+    json_object["env_X"]=msrm_utils::from_eigen<double,2,1>(env_X);
 
     json_object["safe_mode"]=safe_mode;
     return json_object;
