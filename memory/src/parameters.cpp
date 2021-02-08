@@ -855,6 +855,10 @@ nlohmann::json SkillParameters::get_default_values(){
     default_values["time_max"]=0;;
     default_values["parallels_frequency"]=1000;
     default_values["objects"]={};
+    default_values["condition_level_pre"]="Model";
+    default_values["condition_level_success"]="Model";
+    default_values["condition_level_error"]="Model";
+    default_values["condition_level_exit"]="Model";
     return default_values;
 }
 
@@ -863,6 +867,47 @@ nlohmann::json SkillParameters::to_json() const{
     json_object["time_max"]=time_max;
     json_object["parallels_frequency"]=parallels_frequency;
     json_object["objects"]={};
+
+    if(condition_level_pre==SkillConditionLevel::sclModel){
+        json_object["condition_level_pre"]="Model";
+    }
+    if(condition_level_pre==SkillConditionLevel::sclSpecification){
+        json_object["condition_level_pre"]="Specification";
+    }
+    if(condition_level_pre==SkillConditionLevel::sclExternal){
+        json_object["condition_level_pre"]="External";
+    }
+
+    if(condition_level_success==SkillConditionLevel::sclModel){
+        json_object["condition_level_success"]="Model";
+    }
+    if(condition_level_success==SkillConditionLevel::sclSpecification){
+        json_object["condition_level_success"]="Specification";
+    }
+    if(condition_level_success==SkillConditionLevel::sclExternal){
+        json_object["condition_level_success"]="External";
+    }
+
+    if(condition_level_error==SkillConditionLevel::sclModel){
+        json_object["condition_level_error"]="Model";
+    }
+    if(condition_level_error==SkillConditionLevel::sclSpecification){
+        json_object["condition_level_error"]="Specification";
+    }
+    if(condition_level_error==SkillConditionLevel::sclExternal){
+        json_object["condition_level_error"]="External";
+    }
+
+    if(condition_level_exit==SkillConditionLevel::sclModel){
+        json_object["condition_level_exit"]="Model";
+    }
+    if(condition_level_exit==SkillConditionLevel::sclSpecification){
+        json_object["condition_level_exit"]="Specification";
+    }
+    if(condition_level_exit==SkillConditionLevel::sclExternal){
+        json_object["condition_level_exit"]="External";
+    }
+
     return json_object;
 }
 
