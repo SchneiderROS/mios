@@ -555,7 +555,6 @@ def tax_learn_extraction(robot: str, agents: list, n_iter: int = 1):
 
 
 def tax_learn_press_button(robot: str, agents: list, n_iter: int = 1):
-    call_method(robot, 12002, "set_grasped_object", {"object": "iros_key"})
     pd = press_button("iros_button_approach", "iros_button", "iros_button_init")
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True

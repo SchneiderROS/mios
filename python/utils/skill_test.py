@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 from ws_client import *
+from xmlrpc.client import ServerProxy
 
 
 class Task:
@@ -138,6 +139,40 @@ def tax_test_insertion(robot):
     }
     t = Task(robot)
     t.add_skill("insertion", "TaxInsertion", insertion_context)
+    t.start()
+
+
+def tax_test_button_press(robot):
+    button_press_context = {
+        "skill": {
+            "objects": {
+                "Button": "iros_button",
+                "Approach": "iros_button_approach"
+            },
+            "approach_speed": [0.3, 0.5],
+            "approach_acc": [0.5, 1.0],
+            "press_speed": [0.05, 0.5],
+            "press_acc": [0.5, 1.0],
+            "duration": 1,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0],
+            "condition_level_success": "External",
+            "condition_level_error": "External"
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.01, 0.02]
+        }
+    }
+    s = ServerProxy("http://localhost:8000", allow_none=True)
+    s.subscribe_to_event("button_press", "collective-panda-010.local", "12000")
+    t = Task(robot)
+    t.add_skill("button_press", "TaxPressButton", button_press_context)
     t.start()
 
 

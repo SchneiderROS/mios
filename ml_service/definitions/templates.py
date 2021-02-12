@@ -704,7 +704,7 @@ def place_cost() -> CostFunction:
 
 def press_button(approach_pose: str, button: str, init_pose: str):
     limits = {
-        "apporach_speed_t": (0, 0.2),
+        "approach_speed_t": (0, 0.2),
         "approach_speed_r": (0, 0.5),
         "approach_acc_t": (0, 0.5),
         "approach_acc_r": (0, 1),
@@ -720,18 +720,18 @@ def press_button(approach_pose: str, button: str, init_pose: str):
         # "K_psi": (0, 200)
     }
     context_mapping = {
-        "approach_speed_t": ["skills.move.skill.speed-1"],
-        "approach_speed_r": ["skills.move.skill.speed-2"],
-        "approach_acc_t": ["skills.move.skill.acc-1"],
-        "approach_acc_r": ["skills.move.skill.acc-2"],
-        "press_speed_t": ["skills.move.skill.speed-1"],
-        "press_speed_r": ["skills.move.skill.speed-2"],
-        "press_acc_t": ["skills.move.skill.acc-1"],
-        "press_acc_r": ["skills.move.skill.acc-2"],
-        "K_x": ["skills.move.control.cart_imp.K_x-1", "skills.move.control.cart_imp.K_x-2", "skills.move.control.cart_imp.K_x-3"],
+        "approach_speed_t": ["skills.press_button.skill.approach_speed-1"],
+        "approach_speed_r": ["skills.press_button.skill.approach_speed-2"],
+        "approach_acc_t": ["skills.press_button.skill.approach_acc-1"],
+        "approach_acc_r": ["skills.press_button.skill.approach_acc-2"],
+        "press_speed_t": ["skills.press_button.skill.press_speed-1"],
+        "press_speed_r": ["skills.press_button.skill.press_speed-2"],
+        "press_acc_t": ["skills.press_button.skill.press_acc-1"],
+        "press_acc_r": ["skills.press_button.skill.press_acc-2"],
+        "K_x": ["skills.press_button.control.cart_imp.K_x-1", "skills.press_button.control.cart_imp.K_x-2", "skills.press_button.control.cart_imp.K_x-3"],
         # "K_y": ["skills.move.control.cart_imp.K_x-2"],
         # "K_z": ["skills.move.control.cart_imp.K_x-3"],
-        "K_phi": ["skills.move.control.cart_imp.K_x-4", "skills.move.control.cart_imp.K_x-5", "skills.move.control.cart_imp.K_x-6"],
+        "K_phi": ["skills.press_button.control.cart_imp.K_x-4", "skills.press_button.control.cart_imp.K_x-5", "skills.press_button.control.cart_imp.K_x-6"],
         # "K_chi": ["skills.move.control.cart_imp.K_x-5"],
         # "K_psi": ["skills.move.control.cart_imp.K_x-6"]
     }
@@ -748,7 +748,7 @@ def press_button(approach_pose: str, button: str, init_pose: str):
         "K_x": 0.2,
         # "K_y": 0.2,
         # "K_z": 0.2,
-        "K_phi": 0.2,
+        "K_phi": 0.2
         # "K_chi": 0.2,
         # "K_psi": 0.2
     }
@@ -766,7 +766,10 @@ def press_button(approach_pose: str, button: str, init_pose: str):
                     "objects": {
                         "Approach": approach_pose,
                         "Button": button
-                    }
+                    },
+                    "ROI_x": [-0.03, 0.03, -0.03, 0.03, -1, 1],
+                    "ROI_phi": [-0.03, 0.03, -0.03, 0.03, -1, 1],
+                    "duration": 0.1
                 },
                 "control": {
                     "control_mode": 0,
@@ -813,7 +816,7 @@ def press_button_cost() -> CostFunction:
     c = CostFunction()
     c.optimum_skills.append("press_button")
     c.optimum_weights[0] = 1
-    c.heuristic_expressions = "100"
+    c.heuristic_expressions = "var"
 
     c.heuristic_skills = ["press_button"]
     c.max_cost[0] = 5
