@@ -863,16 +863,17 @@ def plot_stuff_1():
     plt.show()
 
 
-def plot_iros_learning(host="collective-panda-010.local"):
+def plot_iros_learning(host="collective-control-001.local"):
     p = DataProcessor()
-    skills = ["turn", "turn", "turn", "turn", "turn", "turn"]
+    skills = ["move", "turn", "press_button", "extraction", "turn", "turn"]
     time = [1000, 1000, 1000, 1000, 1000, 1000]
 
     fig, axes = plt.subplots(1, len(skills), sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
     for i in range(len(skills)):
+        print("Fetching data for skill:" + skills[i])
         tags = [skills[i]]
-        results = get_multiple_experiment_data(host, skills[i], results_db="ml_results", filter={"meta.tags": {"$all": tags}})
+        results = get_multiple_experiment_data(host, skills[i], results_db="iros2021", filter={"meta.tags": {"$all": tags}})
         cost = p.get_average_cost_over_time(results, time[i], True)
         axes[i].plot(cost)
         axes[i].set_ylim(0, 1)

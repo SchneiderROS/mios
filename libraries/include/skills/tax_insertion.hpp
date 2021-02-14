@@ -15,6 +15,7 @@ public:
     Eigen::Matrix<double,6,1> search_a;
     Eigen::Matrix<double,6,1> search_f;
     Eigen::Matrix<double,6,1> DeltaX;
+    double f_max_push;
 
     Eigen::Matrix<double,6,1> ROI_x;
     Eigen::Matrix<double,6,1> ROI_phi;
@@ -36,7 +37,7 @@ private:
     bool is_stuck(const Percept& p);
     std::shared_ptr<ManipulationPrimitive> create_approach_mp(const Percept& p);
     std::shared_ptr<ManipulationPrimitive> create_contact_mp(const Percept& p);
-    std::shared_ptr<ManipulationPrimitive> create_move_mp(const Percept& p);
+    std::shared_ptr<ManipulationPrimitive> create_insert_mp(const Percept& p);
     std::shared_ptr<ManipulationPrimitive> create_wiggle_mp(const Percept& p);
 
     bool check_local_pre_conditions(const Percept &p) override;
@@ -44,7 +45,11 @@ private:
     bool check_local_ex_conditions(const Percept &p) override;
     bool check_local_err_conditions(const Percept &p) override;
 
+    void update_policies(const Percept &p) override;
+
 private:
+
+    Eigen::Matrix<double,6,1> m_insert_dir;
 
     double m_dx_avg;
     unsigned m_dx_avg_last;

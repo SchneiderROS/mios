@@ -36,6 +36,8 @@ private:
 
     double get_goal_heuristic(const Percept &p) override;
 
+    std::chrono::high_resolution_clock::time_point m_t_sim;
+
 private:
     Eigen::Matrix<double,4,4> m_TF_T_EE_0;
 };

@@ -2,6 +2,7 @@
 #include "strategies/twist_strategy.hpp"
 #include "strategies/move_to_pose.hpp"
 #include "strategies/gripper_strategy.hpp"
+#include "strategies/null_strategy.hpp"
 #include "msrm_utils/math.hpp"
 
 namespace mios{
@@ -70,7 +71,8 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > TaxPlace::graph_transitio
         }
     }
     if(get_active_mp()->get_name()=="release"){
-        if(get_active_mp()->get_strategy_interface("release")->finished()){
+        if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-m_t_sim).count()>0.7){
+//        if(get_active_mp()->get_strategy_interface("release")->finished()){
             return create_retract_mp(p);
         }else{
             return {};
@@ -105,17 +107,21 @@ std::shared_ptr<ManipulationPrimitive> TaxPlace::create_pre_release_mp(const Per
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxPlace::create_release_mp(const Percept &p){
-    std::cout<<"RELEASE"<<std::endl;
+
+
     std::shared_ptr<SkillParametersTaxPlace> skill_params = get_parameters<SkillParametersTaxPlace>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("release",p);
-    mp->create_strategy<GripperStrategy>("release",1);
-    std::shared_ptr<GripperStrategy> release = mp->get_strategy<GripperStrategy>("release");
-    release->move(skill_params->release_width,skill_params->release_speed);
+    mp->create_strategy<NullStrategy>("sim_release",1);
+    m_t_sim=std::chrono::high_resolution_clock::now();
+
+
+//    mp->create_strategy<GripperStrategy>("release",1);
+//    std::shared_ptr<GripperStrategy> release = mp->get_strategy<GripperStrategy>("release");
+//    release->move(skill_params->release_width,skill_params->release_speed);
     return mp;
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxPlace::create_retract_mp(const Percept &p){
-    std::cout<<"RETRACT"<<std::endl;
     std::shared_ptr<SkillParametersTaxPlace> skill_params = get_parameters<SkillParametersTaxPlace>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("retract",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
@@ -172,7 +178,8 @@ bool TaxPlace::check_local_err_conditions(const Percept &p){
 }
 
 double TaxPlace::get_goal_heuristic(const Percept &p){
-    bool h = m_memory->get_live_context()->grasped_object->name==get_object("Placeable")->name;
+//    bool h = m_memory->get_live_context()->grasped_object->name==get_object("Placeable")->name;
+    bool h = get_result().success;
     return (get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Retract").block<3,1>(0,3)).norm() +
             acos(((get_object_pose_T("Retract").block<3,3>(0,0).transpose()*p.proprioception.T_T_EE.block<3,3>(0,0)).trace()-1)/2) +
             h * 1;

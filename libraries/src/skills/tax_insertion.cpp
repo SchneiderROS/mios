@@ -23,6 +23,10 @@ bool SkillParametersTaxInsertion::from_json(const nlohmann::json &parameters){
         spdlog::error("Parameter insertion_acc could not be loaded but is mandatory.");
         return false;
     }
+    if(!msrm_utils::read_json_param(parameters,"f_max_push",f_max_push)){
+        spdlog::error("Parameter f_max_push could not be loaded but is mandatory.");
+        return false;
+    }
     if(!msrm_utils::read_json_param(parameters,"stuck_dx_thr",stuck_dx_thr)){
         stuck_dx_thr=0.005;
     }
@@ -81,7 +85,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > TaxInsertion::graph_trans
     if(get_active_mp()->get_name()=="contact"){
         if(p.proprioception.TF_F_ext_K(2)>m_memory->read_parameters()->user.F_ext_contact(0)){
             std::cout<<p.proprioception.TF_F_ext_K<<std::endl;
-            return create_move_mp(p);
+            return create_insert_mp(p);
         }else{
             return {};
         }
@@ -95,7 +99,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > TaxInsertion::graph_trans
     }
     if(get_active_mp()->get_name()=="wiggle"){
         if(!is_stuck(p)){
-            return create_move_mp(p);
+            return create_insert_mp(p);
         }else{
             return {};
         }
@@ -130,13 +134,21 @@ std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_contact_mp(const Per
     return mp;
 }
 
-std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_move_mp(const Percept &p){
+std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_insert_mp(const Percept &p){
     spdlog::debug("Insertion::create_move_mp");
     std::shared_ptr<SkillParametersTaxInsertion> skill_params = get_parameters<SkillParametersTaxInsertion>();
-    std::shared_ptr<ManipulationPrimitive> mp = create_mp("move",p);
-    mp->create_strategy<MoveToPoseStrategy>("s_move",1);
-    std::shared_ptr<MoveToPoseStrategy> s_move = mp->get_strategy<MoveToPoseStrategy>("s_move");
-    s_move->set_goal(get_object_pose_T("Container"),skill_params->insertion_speed,skill_params->insertion_acc);
+    std::shared_ptr<ManipulationPrimitive> mp = create_mp("insert",p);
+    mp->create_strategy<MoveToPoseStrategy>("orientation",1);
+    std::shared_ptr<MoveToPoseStrategy> orientation = mp->get_strategy<MoveToPoseStrategy>("orientation");
+    Eigen::Matrix<double,4,4> T_g=get_object_pose_T("Container");
+    T_g.block<3,1>(0,3)=p.proprioception.T_T_EE.block<3,1>(0,3);
+    orientation->set_goal(T_g,skill_params->insertion_speed,skill_params->insertion_acc);
+
+    mp->create_strategy<TwistStrategy>("position",1);
+    m_insert_dir<<get_object_pose_T("Container").block<3,1>(0,3)-p.proprioception.T_T_EE.block<3,1>(0,3),0,0,0;
+    m_insert_dir/=m_insert_dir.norm();
+    mp->get_strategy<TwistStrategy>("position")->set_TF_dX_d(m_insert_dir*skill_params->insertion_speed(0),skill_params->insertion_acc);
+
     return mp;
 }
 
@@ -148,14 +160,33 @@ std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_wiggle_mp(const Perc
     mp->get_strategy<FFWiggleStrategy>("wiggle_x")->set_coefficients(Eigen::Matrix<double,6,1>::Zero(),skill_params->search_a,
                                                                    Eigen::Matrix<double,6,1>::Zero(),skill_params->search_f,
                                                                    Eigen::Matrix<double,6,1>::Zero(),Eigen::Matrix<double,6,1>::Zero());
-    mp->create_strategy<MoveToPoseStrategy>("s_move",1);
-    std::shared_ptr<MoveToPoseStrategy> s_move = mp->get_strategy<MoveToPoseStrategy>("s_move");
-    s_move->set_goal(get_object_pose_T("Container"),skill_params->insertion_speed,skill_params->insertion_acc);
+    mp->create_strategy<MoveToPoseStrategy>("orientation",1);
+    std::shared_ptr<MoveToPoseStrategy> orientation = mp->get_strategy<MoveToPoseStrategy>("orientation");
+    Eigen::Matrix<double,4,4> T_g=get_object_pose_T("Container");
+    T_g.block<3,1>(0,3)=p.proprioception.T_T_EE.block<3,1>(0,3);
+    orientation->set_goal(T_g,skill_params->insertion_speed,skill_params->insertion_acc);
 
-    Eigen::Matrix<double,2,1> t_scale;
-    t_scale<<1,1;
-    s_move->set_scale(t_scale);
+    mp->create_strategy<TwistStrategy>("position",1);
+    m_insert_dir<<get_object_pose_T("Container").block<3,1>(0,3)-p.proprioception.T_T_EE.block<3,1>(0,3),0,0,0;
+    m_insert_dir/=m_insert_dir.norm();
+    mp->get_strategy<TwistStrategy>("position")->set_TF_dX_d(m_insert_dir*skill_params->insertion_speed(0),skill_params->insertion_acc);
     return mp;
+}
+
+void TaxInsertion::update_policies(const Percept &p){
+    std::shared_ptr<SkillParametersTaxInsertion> skill_params = get_parameters<SkillParametersTaxInsertion>();
+    if(get_active_mp()->get_name()=="insert" || get_active_mp()->get_name()=="wiggle"){
+        double force_factor=1;
+        if(p.proprioception.TF_F_ext_K(2)<skill_params->f_max_push-1){
+            force_factor=1;
+        }else if(p.proprioception.TF_F_ext_K(2)>skill_params->f_max_push+1){
+            force_factor=-1;
+        }else{
+            force_factor=-p.proprioception.TF_F_ext_K(2)+skill_params->f_max_push;
+        }
+        get_active_mp()->get_strategy<TwistStrategy>("position")->set_TF_dX_d(m_insert_dir*skill_params->insertion_speed(0)*force_factor,skill_params->insertion_acc);
+    }
+
 }
 
 bool TaxInsertion::check_local_pre_conditions(const Percept &p){
