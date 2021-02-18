@@ -868,7 +868,7 @@ def plot_iros_learning(host="collective-control-001.local"):
     p = DataProcessor()
     skills = ["move", "turn", "press_button", "extraction", "insert_object", "place"]
     tags2 = ["move", "turn", "press_button", "extraction", "insertion", "place"]
-    time = [1000, 1000, 2000, 1000, 2500, 2000]
+    time = [1500, 1500, 2000, 1000, 2500, 2000]
 
     fig, axes = plt.subplots(1, len(skills), sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
