@@ -821,19 +821,19 @@ def color_matrix(name = "es_matrix.csv"):
 
 def plot_collective_benchmark():
     host = "collective-panda-002.local"
-    tags = ["collective_learning_benchmark_single_2"]
+    tags = ["collective_learning_benchmark_single_3"]
     p = DataProcessor()
 
     results = get_multiple_experiment_data(host, "benchmark_rastrigin", results_db="ml_results", filter={"meta.tags": {"$all": tags}})
     # cost = p.get_average_cost_over_time(results, 1500, True)
-    cost = p.get_average_cost(results, True, 1)
+    cost = p.get_average_cost(results, True, 2)
     plt.plot(cost)
 
-    tags = ["collective_learning_benchmark_single_3"]
+    tags = ["collective_learning_benchmark_share_3"]
     results = get_multiple_experiment_data(host, "benchmark_rastrigin", results_db="ml_results",
                                            filter={"meta.tags": {"$all": tags}})
     # cost = p.get_average_cost_over_time(results, 1500, True)
-    cost = p.get_average_cost(results, True, 1)
+    cost = p.get_average_cost(results, True, 2)
     plt.plot(cost)
 
     plt.ylim([0,1])

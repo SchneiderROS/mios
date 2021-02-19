@@ -62,8 +62,10 @@ def tax_test_grab(robot="collective-panda-008.local"):
                 "Approach": "iros_key_grab_approach",
                 "Grabbable": "iros_key"
             },
-            "speed": [0.5, 0.5],
-            "acc": [2, 1.0],
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "grab_speed": [0.5, 1],
+            "grab_acc": [1, 4],
             "grasp_width": 0.03,
             "grasp_speed": 100,
             "grasp_force": 30,
@@ -94,8 +96,10 @@ def tax_test_place(robot="collective-panda-008.local"):
                 "Placeable": "iros_key",
                 "Surface": "iros_key_storage"
             },
-            "speed": [0.1, 0.5],
-            "acc": [0.5, 1.0],
+            "approach_speed": [0.1, 0.5],
+            "approach_acc": [0.5, 1.0],
+            "place_speed": [0.15, 1],
+            "place_acc": [1, 4.0],
             "release_width": 0.06,
             "release_speed": 100,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
@@ -105,7 +109,7 @@ def tax_test_place(robot="collective-panda-008.local"):
             "control_mode": 0
         },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.015, 0.02]
         }
     }
     t = Task(robot)

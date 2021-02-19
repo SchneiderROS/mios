@@ -13,6 +13,7 @@ from definitions.templates import extraction
 from definitions.templates import place
 from definitions.templates import grab
 from services.cmaes import CMAESConfiguration
+from services.svm import SVMConfiguration
 from utils.udp_client import call_method
 from utils.database import delete_local_results
 from utils.database import delete_local_knowledge
@@ -25,10 +26,12 @@ from xmlrpc.client import ServerProxy
 
 def simple_benchmark(robot: str, agents: list, n_iter: int = 1, tags: list = []):
     pd = mios_ml_benchmark(0)
-    service_config = CMAESConfiguration()
-    service_config.exploration_mode = True
-    service_config.n_ind = 2
-    service_config.n_gen = 10
+    service_config = SVMConfiguration()
+    service_config.n_trials = 50
+    service_config.batch_width = 5
+    #service_config.exploration_mode = True
+    #service_config.n_ind = 2
+    #service_config.n_gen = 10
     start_experiment(robot, agents, pd, service_config, n_iter, tags=tags, keep_record=False)
 
 
@@ -467,10 +470,10 @@ def collective_learning_benchmark_2():
 
     service_config = CMAESConfiguration()
     service_config.exploration_mode = True
-    service_config.n_ind = 10
+    service_config.n_ind = 6
     service_config.n_gen = 10
-    service_config.n_immigrant = 5
-    tag = "collective_learning_benchmark_share"
+    service_config.n_immigrant = 4
+    tag = "collective_learning_benchmark_share_3"
     knowledge = {"mode": "none", "kb_location": agents[0], "kb_tags": [tag]}
     threads = []
     i = 0

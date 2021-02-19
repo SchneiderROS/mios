@@ -42,11 +42,10 @@ class Result:
                     continue
             else:
                 cost_raw.append(t["cost"])
-        print(cost_raw)
-        #for i in range(int(n_episodes)):
-        #    cost.append(np.min(np.asarray(cost_raw[i * episode_length : i * episode_length + episode_length])))
+        for i in range(int(n_episodes)):
+            cost.append(np.min(np.asarray(cost_raw[i * episode_length : i * episode_length + episode_length])))
 
-        return cost_raw
+        return cost
 
     def get_parameters(self) -> set:
         theta = self.trials[0]["theta"]

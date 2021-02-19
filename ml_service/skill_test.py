@@ -110,6 +110,7 @@ def tax_test_place(robot="collective-panda-008.local"):
             "env_X": [0.01, 0.02]
         }
     }
+    place_context = load_results("collective-control-001.local", "iros2021", "turn", "f15ea299-7057-4953-80a3-c90c1d1b2919" , 149)
     t = Task(robot)
     t.add_skill("place", "TaxPlace", place_context)
     t.start()
