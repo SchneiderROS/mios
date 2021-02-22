@@ -22,6 +22,7 @@ public:
     Actuator* get_next_command(const Percept& percept);
     bool add_skill(std::shared_ptr<Skill> skill);
     void clear_skill_queue();
+    void clear_results();
     ControlReturnType execute_skill_queue();
     bool blend_skill_stage_1();
     bool blend_skill_stage_2();

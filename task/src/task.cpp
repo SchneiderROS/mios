@@ -311,6 +311,7 @@ void Task::execute_skill_queue(){
     for(std::pair<std::string,SkillResult> r : m_skill_engine->get_results()){
         m_result.skill_results[r.first] = r.second;
     }
+    m_skill_engine->clear_results();
 
     if(result==ControlReturnType::crtException){
 //        m_result.skill_results[name].success=false;

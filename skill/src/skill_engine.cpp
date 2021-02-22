@@ -82,6 +82,10 @@ void SkillEngine::clear_skill_queue(){
     m_skill_queue.clear();
 }
 
+void SkillEngine::clear_results(){
+    m_results.clear();
+}
+
 ControlReturnType SkillEngine::execute_skill_queue(){
     m_queue=true;
     m_it_skill_queue=m_skill_queue.begin();
@@ -116,6 +120,7 @@ ControlReturnType SkillEngine::execute_skill_queue(){
     }
     spdlog::info("Unloading skill...");
     m_active_skill->terminate(*m_core->get_percept());
+    m_results.insert(std::pair<std::string,SkillResult>(m_active_skill->get_id(),m_active_skill->get_result()));
     unload_skill();
     if(!m_core->refresh_percept({})){
         clear_skill_queue();

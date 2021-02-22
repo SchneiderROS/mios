@@ -38,6 +38,7 @@ class Task:
     def wait(self):
         result = wait_for_task(self.robot, self.task_uuid)
         print("Task execution took " + str(time.time() - self.t_0) + " s.")
+        print(self.task_uuid)
         return result
 
 
@@ -443,6 +444,9 @@ def iros_task():
             "cart_imp": {
                 "K_x": [500, 500, 2000, 200, 200, 200]
             }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
         }
     }
     turn_context = {
@@ -497,6 +501,9 @@ def iros_task():
             "cart_imp": {
                 "K_x": [2000, 2000, 2000, 200,200, 200]
             }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
         }
     }
     move3_context = {
@@ -537,7 +544,7 @@ def iros_task():
             "control_mode": 0
         },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.015, 0.04]
         }
     }
     move4_context = {
@@ -555,6 +562,9 @@ def iros_task():
             "cart_imp": {
                 "K_x": [2000, 2000, 2000, 200, 200, 200]
             }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
         }
     }
     button_press_context = {
@@ -578,7 +588,7 @@ def iros_task():
             }
          },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.01, 0.04]
         }
     }
     move5_context = {
@@ -626,7 +636,7 @@ def iros_task():
 
 def iros_task_loop():
     cost_avg = dict()
-    for i in range(1):
+    for i in range(10):
         cost = iros_task()
         for skill, c in cost.items():
             if skill not in cost_avg:
@@ -642,4 +652,6 @@ def iros_task_loop():
             table.append(c)
             i += 1
 
+        table_np = np.asarray(table)
+        table = table_np.transpose().tolist()
         write.writerows(table)

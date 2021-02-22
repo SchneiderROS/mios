@@ -5,6 +5,7 @@ import numpy as np
 from utils.ws_client import *
 from xmlrpc.client import ServerProxy
 from utils.database import load_results
+import csv
 
 
 class Task:
@@ -477,7 +478,7 @@ def iros_task():
                 "Turnable": "iros_key",
                 "GoalOrientation": "iros_turn_goal"
             },
-            "turn_speed": [0.5, 2.5],
+            "turn_speed": [0.5, 2],
             "turn_acc": [2, 25.0]},
         "control": {
             "control_mode": 0,
@@ -486,7 +487,7 @@ def iros_task():
             }
         },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.03, 0.04]
         }
     }
     turn_back_context = {
@@ -495,7 +496,7 @@ def iros_task():
                 "Turnable": "iros_key",
                 "GoalOrientation": "iros_lock"
             },
-            "turn_speed": [0.5, 2.5],
+            "turn_speed": [0.5, 2],
             "turn_acc": [2, 25.0]},
         "control": {
             "control_mode": 0,
@@ -504,7 +505,7 @@ def iros_task():
             }
         },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.03, 0.04]
         }
     }
     extraction_context = {
@@ -514,20 +515,19 @@ def iros_task():
                 "ExtractTo": "iros_lock_approach",
                 "Extractable": "iros_key"
             },
-            "extraction_speed": [0.5, 0],
-            "extraction_acc": [1, 0.19],
-            "search_a": [3, 1.7, 3.6, 0.64, 0.85, 0],
-            "search_f": [0.77, 0, 0.8, 0.16, 0.58, 0],
-            "stuck_dx_thr": 0.09
+            "extraction_speed": [0.5, 4],
+            "extraction_acc": [1, 1.0],
+            "search_a": [0, 0, 0, 0, 0, 0],
+            "search_f": [0, 0, 0, 0, 0, 0]
         },
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [702, 276, 1798, 11, 131, 45]
+                "K_x": [2000, 2000, 2000, 200,200, 200]
             }
         },
         "user": {
-            "env_X": [0.03, 0.08]
+            "env_X": [0.02, 0.04]
         }
     }
     move3_context = {
@@ -600,18 +600,16 @@ def iros_task():
             "press_acc": [1, 3.39],
             "duration": 0,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
-            "ROI_phi": [0, 0, 0, 0, 0, 0],
-            "condition_level_success": "External",
-            "condition_level_error": "External"
+            "ROI_phi": [0, 0, 0, 0, 0, 0]
         },
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 6, 6, 6]
+                "K_x": [2000, 2000, 2000, 150, 150, 150]
             }
         },
         "user": {
-            "env_X": [0.02, 0.04]
+            "env_X": [0.01, 0.04]
         }
     }
     move5_context = {
@@ -644,6 +642,36 @@ def iros_task():
     iros1.add_skill("move_to_idle", "TaxMove", move5_context)
 
     iros1.start(True)
-    iros1.wait()
+    result = iros1.wait()
 
     print("Execution time: " + str(time.time() - t_0))
+
+    cost = dict()
+
+    for skill, r in result["result"]["task_result"]["skill_results"].items():
+        cost[skill] = r["cost"]["time"]
+
+    return cost
+
+
+def iros_task_loop():
+    cost_avg = dict()
+    for i in range(1):
+        cost = iros_task()
+        for skill, c in cost.items():
+            if skill not in cost_avg:
+                cost_avg[skill] = []
+            cost_avg[skill].append(c)
+
+    with open('iros_data.csv', 'w') as f:
+        write = csv.writer(f)
+        write.writerow(cost_avg.keys())
+        table = []
+        i = 0
+        for skill, c in cost_avg.items():
+            table.append(c)
+            i += 1
+
+        table_np = np.asarray(table)
+        table = table_np.transpose().tolist()
+        write.writerows(table)

@@ -866,9 +866,8 @@ def plot_stuff_1():
 
 def plot_iros_learning(host="collective-control-001.local"):
     p = DataProcessor()
-    skills = ["move", "turn", "press_button", "extraction", "insert_object", "place"]
-    tags2 = ["move", "turn", "press_button", "extraction", "insertion", "place"]
-    time = [1500, 1500, 2000, 1000, 2500, 2000]
+    skills = ["move", "turn", "press_button", "extraction", "insert_object", "place", "grab"]
+    tags2 = ["move", "turn", "press_button", "extraction", "insertion", "place", "grab"]
 
     fig, axes = plt.subplots(1, len(skills), sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
@@ -876,13 +875,13 @@ def plot_iros_learning(host="collective-control-001.local"):
         print("Fetching data for skill:" + skills[i])
         tags = [tags2[i]]
         results = get_multiple_experiment_data(host, skills[i], results_db="iros2021", filter={"meta.tags": {"$all": tags}})
-        cost, confidence = p.get_average_cost_over_time(results, time[i], True)
+        cost, confidence = p.get_average_cost_over_time(results, decreasing=True)
         cost = cost * 5
-        axes[i].fill_between(np.linspace(0, time[i], time[i]), cost-confidence*5, cost+confidence*5, alpha=0.2)
+        axes[i].fill_between(np.linspace(0, len(cost), len(cost)), cost-confidence*5, cost+confidence*5, alpha=0.2)
         axes[i].plot(cost, linewidth=2)
-        axes[i].plot([0, time[i]], [5, 5],  color="black", linestyle="dashed")
+        axes[i].plot([0, len(cost)], [5, 5],  color="black", linestyle="dashed")
         axes[i].set_ylim(0, 10)
-        axes[i].set_xlim(0, time[i])
+        axes[i].set_xlim(0, len(cost))
         axes[i].grid()
         axes[i].tick_params(axis="both", which="both", length=0)
         axes[i].set_title(skills[i], y=1.0, pad=-14)
@@ -890,7 +889,7 @@ def plot_iros_learning(host="collective-control-001.local"):
         if i == 0:
             axes[i].set_ylabel("Cost [s]                  t_max + h")
 
-    fig.set_size_inches(16, 4)
+    fig.set_size_inches(16, 3)
     plt.yticks(np.arange(0, 10, step=1))
     plt.savefig("iros_results.png", bbox_inches='tight', dpi=300)
     plt.suptitle("Skill Learning")
