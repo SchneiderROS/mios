@@ -34,7 +34,7 @@ class DataProcessor:
                 c.extend([c[-1]] * (n_trials - len(c)))
         return costs
 
-    def get_collection_of_costs_over_time(self, results: list, min_length: int, decreasing: bool = False, agent=None) -> list:
+    def get_collection_of_costs_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None) -> list:
         costs = []
         times = []
         max_span = 0
@@ -60,7 +60,7 @@ class DataProcessor:
                     if cnt_cost < len(times[i]) - 1:
                         cnt_cost += 1
                 cost_over_time[i][j] = current_cost
-            if len(cost_over_time[i]) < min_length:
+            if min_length is not False and len(cost_over_time[i]) < min_length:
                 cost_over_time[i].extend([cost_over_time[i][-1]] * (min_length - len(cost_over_time[i])))
         return cost_over_time
 
@@ -82,7 +82,7 @@ class DataProcessor:
     def get_average_cost(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None) -> np.ndarray:
         return np.average(np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent)), 0)
 
-    def get_average_cost_over_time(self, results: list, min_length: int, decreasing: bool = False, agent=None) -> Tuple[np.ndarray, np.ndarray]:
+    def get_average_cost_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None) -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs_over_time(results, min_length, decreasing, agent))
         confidence = 0.95
         interval = []

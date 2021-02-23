@@ -5,6 +5,7 @@ import numpy as np
 from utils.ws_client import *
 from xmlrpc.client import ServerProxy
 from utils.database import load_results
+import csv
 
 
 class Task:
@@ -110,7 +111,10 @@ def tax_test_place(robot="collective-panda-008.local"):
             "env_X": [0.01, 0.02]
         }
     }
-    place_context = load_results("collective-control-001.local", "iros2021", "turn", "f15ea299-7057-4953-80a3-c90c1d1b2919" , 149)
+    place_context = load_results("collective-control-001.local", "iros2021", "place", "b74b2197-5d1c-4049-984c-fc0e118a87ff" , 174)["skills"]["place"]
+    place_context["user"] = {
+        "env_X": [0.02, 0.05]
+    }
     t = Task(robot)
     t.add_skill("place", "TaxPlace", place_context)
     t.start()
@@ -131,7 +135,7 @@ def tax_test_turn(robot="collective-panda-008.local"):
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [665, 665, 665, 173, 173, 173]
             }
         },
         "user": {
@@ -157,7 +161,7 @@ def tax_test_turn(robot="collective-panda-008.local"):
         }
     }
 
-    turn_context = load_results("collective-control-001.local", "iros2021", "turn", "f15ea299-7057-4953-80a3-c90c1d1b2919" , 149)
+    # turn_context = load_results("collective-control-001.local", "iros2021", "turn", "f15ea299-7057-4953-80a3-c90c1d1b2919" , 149)
 
     t = Task(robot)
     t.add_skill("turn", "TaxTurn", turn_context)
@@ -205,33 +209,42 @@ def tax_test_move(robot):
 
 
 def tax_test_insertion(robot):
-    call_method(robot, 12000, "set_grasped_object", {"object": "key_pad"})
+    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
     insertion_context = {
         "skill": {
             "objects": {
-                "Container": "lock_pad",
-                "Approach": "lock_pad_above",
-                "Insertable": "key_pad"
+                "Container": "iros_lock",
+                "Approach": "iros_lock_approach",
+                "Insertable": "iros_key"
             },
             "approach_speed": [0.5, 1],
             "approach_acc": [1, 4],
-            "insertion_speed": [0.5, 1],
-            "insertion_acc": [1, 4],
+            "insertion_speed": [0.4, 0.077],
+            "insertion_acc": [0.78, 1.62],
             "f_max_push": 10,
-            "search_a": [10, 10, 0, 0, 0, 0],
-            "search_f": [1, 0.75, 0, 0, 0, 0],
+            "search_a": [5, 6, 4, 1.15, 1.5, 0],
+            "search_f": [2, 1, 0.6, 0.7, 0.87, 0],
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
-            "ROI_phi": [0, 0, 0, 0, 0, 0]
+            "ROI_phi": [0, 0, 0, 0, 0, 0],
+            "stuck_dx_thr": 0.035
         },
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [1500, 1500, 1500, 200, 200, 200]
+                "K_x": [1004, 536, 1617, 17, 35, 68]
             }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
         }
     }
-    insertion_context = load_results("collective-control-001.local", "iros2021", "press_button",
-                                        "62cb816d-7d22-48bd-9eb8-dd4440b1fe5f", 244)
+    # insertion_context = load_results("collective-control-001.local", "iros2021", "insert_object",
+    #                                     "62cb816d-7d22-48bd-9eb8-dd4440b1fe5f", 244)["skills"]["insertion"]
+    # insertion_context["skill"]["objects"]["Insertable"] = "iros_key"
+    # insertion_context["skill"]["objects"]["Container"] = "iros_lock"
+    # insertion_context["skill"]["objects"]["Approach"] = "iros_lock_approach"
+    #
+    # print(insertion_context)
     t = Task(robot)
     t.add_skill("insertion", "TaxInsertion", insertion_context)
     t.start()
@@ -248,8 +261,8 @@ def tax_test_button_press(robot):
             },
             "approach_speed": [0.5, 1],
             "approach_acc": [1, 4],
-            "press_speed": [0.5, 0.5],
-            "press_acc": [1, 4.0],
+            "press_speed": [0.24, 1],
+            "press_acc": [1, 3.39],
             "duration": 0,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
             "ROI_phi": [0, 0, 0, 0, 0, 0],
@@ -259,15 +272,15 @@ def tax_test_button_press(robot):
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [2000, 2000, 2000, 6, 6, 6]
             }
         },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.02, 0.04]
         }
     }
-    button_press_context = load_results("collective-control-001.local", "iros2021", "press_button",
-                                "f47f43db-05c4-4b06-9da4-be092e743274", 174)
+    # button_press_context = load_results("collective-control-001.local", "iros2021", "press_button",
+    #                             "f47f43db-05c4-4b06-9da4-be092e743274", 174)
     # s = ServerProxy("http://localhost:8000", allow_none=True)
     # s.subscribe_to_event("button_press", "collective-panda-010.local", "12000")
     t = Task(robot)
@@ -283,28 +296,32 @@ def subscribe_to_event_server(robot):
 
 
 def tax_test_extraction(robot="collective-panda-008.local"):
-    call_method(robot, 12000, "set_grasped_object", {"object": "key_pad"})
+    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
     extraction_context = {
         "skill": {
             "objects": {
-                "Container": "lock_pad",
-                "ExtractTo": "lock_pad_above",
-                "Extractable": "key_pad"
+                "Container": "iros_lock",
+                "ExtractTo": "iros_lock_approach",
+                "Extractable": "iros_key"
             },
-            "extraction_speed": [0.5, 0.5],
-            "extraction_acc": [2, 1.0],
-            "search_a": [0, 0, 0, 0, 0, 0],
-            "search_f": [0, 0, 0, 0, 0, 0]
+            "extraction_speed": [0.5, 0],
+            "extraction_acc": [1, 0.19],
+            "search_a": [3, 1.7, 3.6, 0.64, 0.85, 0],
+            "search_f": [0.77, 0, 0.8, 0.16, 0.58, 0],
+            "stuck_dx_thr": 0.09
         },
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [702, 276, 1798, 11, 131, 45]
             }
+        },
+        "user": {
+            "env_X": [0.03, 0.08]
         }
     }
-    extraction_context = load_results("collective-control-001.local", "iros2021", "extraction",
-                                        "6ab3f1d2-2501-4927-ac71-691340fccabd", 111)
+    # extraction_context = load_results("collective-control-001.local", "iros2021", "extraction",
+    #                                     "6ab3f1d2-2501-4927-ac71-691340fccabd", 111)
     t = Task(robot)
     t.add_skill("extract", "TaxExtraction", extraction_context)
     t.start()
@@ -436,19 +453,23 @@ def iros_task():
             },
             "approach_speed": [0.5, 1],
             "approach_acc": [1, 4],
-            "insertion_speed": [0.2, 0.5],
-            "insertion_acc": [0.5, 1.0],
-            "search_a": [3, 3, 0, 0, 0, 0],
-            "search_f": [1, 0.75, 0, 0, 0, 0],
+            "insertion_speed": [0.4, 0.077],
+            "insertion_acc": [0.78, 1.62],
+            "f_max_push": 10,
+            "search_a": [5, 6, 4, 1.15, 1.5, 0],
+            "search_f": [2, 1, 0.6, 0.7, 0.87, 0],
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
             "ROI_phi": [0, 0, 0, 0, 0, 0],
-            "f_max_push": 5
+            "stuck_dx_thr": 0.035
         },
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [500, 500, 2000, 200, 200, 200]
+                "K_x": [1004, 536, 1617, 17, 35, 68]
             }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
         }
     }
     turn_context = {
@@ -457,16 +478,16 @@ def iros_task():
                 "Turnable": "iros_key",
                 "GoalOrientation": "iros_turn_goal"
             },
-            "turn_speed": [0.2, 2],
-            "turn_acc": [0.5, 30.0]},
+            "turn_speed": [0.5, 2],
+            "turn_acc": [2, 25.0]},
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [665, 665, 665, 173, 173, 173]
             }
         },
         "user": {
-            "env_X": [0.03, 0.02]
+            "env_X": [0.03, 0.04]
         }
     }
     turn_back_context = {
@@ -475,15 +496,16 @@ def iros_task():
                 "Turnable": "iros_key",
                 "GoalOrientation": "iros_lock"
             },
-            "turn_speed": [0.2, 2],
-            "turn_acc": [0.5, 30.0]},
+            "turn_speed": [0.5, 2],
+            "turn_acc": [2, 25.0]},
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [665, 665, 665, 173, 173, 173]
             }
-        },"user": {
-            "env_X": [0.03, 0.02]
+        },
+        "user": {
+            "env_X": [0.03, 0.04]
         }
     }
     extraction_context = {
@@ -493,16 +515,19 @@ def iros_task():
                 "ExtractTo": "iros_lock_approach",
                 "Extractable": "iros_key"
             },
-            "extraction_speed": [0.5, 0.5],
-            "extraction_acc": [2, 1.0],
+            "extraction_speed": [0.5, 4],
+            "extraction_acc": [1, 1.0],
             "search_a": [0, 0, 0, 0, 0, 0],
             "search_f": [0, 0, 0, 0, 0, 0]
         },
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000,2000, 200,200, 200]
+                "K_x": [2000, 2000, 2000, 200,200, 200]
             }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
         }
     }
     move3_context = {
@@ -569,10 +594,10 @@ def iros_task():
                 "Button": "iros_button",
                 "Approach": "iros_button_approach"
             },
-            "approach_speed": [0.3, 0.5],
-            "approach_acc": [0.5, 1.0],
-            "press_speed": [0.1, 0.5],
-            "press_acc": [1, 1.0],
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "press_speed": [0.24, 1],
+            "press_acc": [1, 3.39],
             "duration": 0,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
             "ROI_phi": [0, 0, 0, 0, 0, 0]
@@ -580,11 +605,11 @@ def iros_task():
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [2000, 2000, 2000, 150, 150, 150]
             }
-         },
+        },
         "user": {
-            "env_X": [0.01, 0.02]
+            "env_X": [0.01, 0.04]
         }
     }
     move5_context = {
@@ -617,6 +642,36 @@ def iros_task():
     iros1.add_skill("move_to_idle", "TaxMove", move5_context)
 
     iros1.start(True)
-    iros1.wait()
+    result = iros1.wait()
 
     print("Execution time: " + str(time.time() - t_0))
+
+    cost = dict()
+
+    for skill, r in result["result"]["task_result"]["skill_results"].items():
+        cost[skill] = r["cost"]["time"]
+
+    return cost
+
+
+def iros_task_loop():
+    cost_avg = dict()
+    for i in range(1):
+        cost = iros_task()
+        for skill, c in cost.items():
+            if skill not in cost_avg:
+                cost_avg[skill] = []
+            cost_avg[skill].append(c)
+
+    with open('iros_data.csv', 'w') as f:
+        write = csv.writer(f)
+        write.writerow(cost_avg.keys())
+        table = []
+        i = 0
+        for skill, c in cost_avg.items():
+            table.append(c)
+            i += 1
+
+        table_np = np.asarray(table)
+        table = table_np.transpose().tolist()
+        write.writerows(table)
