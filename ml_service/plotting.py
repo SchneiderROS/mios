@@ -20,7 +20,7 @@ def single_experiment(host: str, task_type: str, database: str, tags: list = Non
         result = get_experiment_data(host, task_type, results_db=database, uuid=uuid)
     else:
         return
-    plot.plot_cost_over_trials(p.get_monotonically_decreasing_cost(result.get_cost_per_trial(agent="collective-panda-009.local")))
+    plot.plot_cost_over_trials(p.get_monotonically_decreasing_cost(result.get_cost_per_trial()))
 
 
 def average_experiment(host: str, task_type: str, database: str, tags: list, agent = None):
@@ -950,9 +950,41 @@ def plot_stuff_1():
 
 
 def plot_iros_learning(host="collective-control-001.local"):
+
+    expert = {
+        "move": {
+            "cost": [5.8, 5.02, 0.37],
+            "time": [6.17, 49.4, 30.4]
+        },
+        "turn": {
+            "cost": [1.12, 0.74, 0.63],
+            "time": [27, 15, 7]
+        },
+        "press_button": {
+            "cost": [0.65],
+            "time": [28]
+        },
+        "extraction": {
+            "cost": [0.68, 0.37],
+            "time": [28, 18]
+        },
+        "insertion": {
+            "cost": [1.35, 1.16, 1.16, 1.16, 1.16, 0.66],
+            "time": [36, 32, 26, 45, 5, 2]
+        },
+        "place": {
+            "cost": [4.23, 3.01],
+            "time": [22, 36]
+        },
+        "grab": {
+            "cost": [5.01, 3.51, 3.51, 3.21],
+            "time": [46, 78, 76, 26]
+        }
+    }
+
     p = DataProcessor()
-    skills = ["move", "turn", "press_button", "extraction", "insert_object", "place", "grab"]
-    tags2 = ["move", "turn", "press_button", "extraction", "insertion", "place", "grab"]
+    skills = ["move", "grab", "insert_object", "turn", "extraction", "place", "press_button"]
+    tags2 = ["move", "grab", "insertion", "turn", "extraction", "place", "press_button"]
 
     fig, axes = plt.subplots(1, len(skills), sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
@@ -965,6 +997,13 @@ def plot_iros_learning(host="collective-control-001.local"):
         axes[i].fill_between(np.linspace(0, len(cost), len(cost)), cost-confidence*5, cost+confidence*5, alpha=0.2)
         axes[i].plot(cost, linewidth=2)
         axes[i].plot([0, len(cost)], [5, 5],  color="black", linestyle="dashed")
+
+        time = [expert[tags2[i]]["time"][0]]
+        for j in range(1, len(expert[tags2[i]]["time"])):
+            time.append(expert[tags2[i]]["time"][j] + time[j-1])
+
+        axes[i].plot(time, expert[tags2[i]]["cost"], "r^")
+
         axes[i].set_ylim(0, 10)
         axes[i].set_xlim(0, len(cost))
         axes[i].grid()

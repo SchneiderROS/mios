@@ -681,21 +681,34 @@ def place(approach_pose: str, placeable: str, retract_pose: str, surface: str):
     reset_instructions = []
     task_context = {
         "name": "GenericTask",
+        "parameters": {
+            "skill_types": ["TaxGrab"],
+            "skill_names": ["grab"]
+        },
         "skills": {
-            "grab": {
+            "place": {
                 "skill": {
-                    "speed": [0.075, 0.5],
-                    "acc": [0.5, 1]
+                    "time_max": 5.0,
+                    "grasp_width": 0.032,
+                    "grasp_force": 30,
+                    "approach_speed": [0.5, 1],
+                    "approach_acc": [1, 4],
+                    "ROI_x": [-0.3, 0.3, -0.3, 0.3, -1, 1],
+                    "ROI_phi": [-0.03, 0.03, -0.03, 0.03, -1, 1],
+                    "objects": {
+                        "Approach": retract_pose,
+                        "Retract": approach_pose,
+                        "Placeable": placeable,
+                        "Surface": surface
+                    }
                 },
                 "control": {
-                    "control_mode": 2
+                    "control_mode": 0,
+                    "cart_imp": {
+                        "K_x": [2000, 2000, 2000, 200, 200, 200]
+                    }
                 }
             }
-        },
-        "parameters": {
-            "Approach": retract_pose,
-            "Retract": approach_pose,
-            "Grabbable": placeable
         }
     }
     # task_context = {

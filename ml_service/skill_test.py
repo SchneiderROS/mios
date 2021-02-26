@@ -67,10 +67,10 @@ def tax_test_grab(robot="collective-panda-008.local"):
             "time_max": 5,
             "approach_speed": [0.5, 1],
             "approach_acc": [1, 4],
-            "grab_speed": [0.5, 1.0],
-            "grab_acc": [1.0, 4.0],
-            "grasp_width": 0.03,
-            "grasp_speed": 100,
+            "grab_speed": [0.17, 0.8],
+            "grab_acc": [0.35, 0.94],
+            "grasp_width": 0.032,
+            "grasp_speed": 1.6,
             "grasp_force": 30,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
             "ROI_phi": [0, 0, 0, 0, 0, 0]
@@ -78,8 +78,11 @@ def tax_test_grab(robot="collective-panda-008.local"):
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200]
+                "K_x": [1138, 1138, 1338, 167, 167, 167]
             }
+        },
+        "user": {
+            "env_X": [0.005, 0.02]
         }
     }
 
