@@ -701,8 +701,7 @@ def place(approach_pose: str, placeable: str, retract_pose: str, surface: str):
                     "objects": {
                         "Approach": retract_pose,
                         "Retract": approach_pose,
-                        "Placeable": placeable,
-                        "Surface": surface
+                        "Grabbable": placeable
                     }
                 },
                 "control": {
