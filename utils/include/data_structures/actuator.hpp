@@ -29,7 +29,7 @@ public:
 public:
     bool is_valid() const;
     bool is_stopped() const;
-    bool is_settled(const LimitParameters& parameters) const;
+    bool is_settled(const LimitParameters& parameters, bool ignore=false) const;
     void set_zero(const Percept& p_0);
     void set_stop_factor(double stop_factor);
     bool is_new();

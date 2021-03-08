@@ -790,6 +790,10 @@ bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
         spdlog::error("Could not read parallels_frequency.");
         return false;
     }
+    if(!msrm_utils::read_json_param(p,"ignore_settling",ignore_settling)){
+        spdlog::error("Could not read ignore_settling.");
+        return false;
+    }
     if(p.find("objects")!=p.end()){
         read_skill_objects(p["objects"]);
     }
@@ -872,6 +876,7 @@ nlohmann::json SkillParameters::get_default_values(){
     nlohmann::json default_values;
     default_values["time_max"]=0;;
     default_values["parallels_frequency"]=1000;
+    default_values["ignore_settling"]=false;
     default_values["objects"]={};
     default_values["condition_level_pre"]="Model";
     default_values["condition_level_success"]="Model";
@@ -884,6 +889,7 @@ nlohmann::json SkillParameters::to_json() const{
     nlohmann::json json_object;
     json_object["time_max"]=time_max;
     json_object["parallels_frequency"]=parallels_frequency;
+    json_object["ignore_settling"]=ignore_settling;
     json_object["objects"]={};
 
     if(condition_level_pre==SkillConditionLevel::sclModel){

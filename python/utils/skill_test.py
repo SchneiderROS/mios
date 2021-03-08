@@ -359,39 +359,25 @@ def test_skill_queue(robot="localhost"):
 def iros_task():
     robot = "collective-panda-010.local"
 
-    #response = start_task(robot, "MoveToJointPose", {"pose": "iros_idle_pose"})
-    #wait_for_task(robot, response["result"]["task_uuid"])
+    response = start_task(robot, "MoveToJointPose", {"parameters": {"pose": "iros_idle_pose"}})
+    wait_for_task(robot, response["result"]["task_uuid"])
     t_0 = time.time()
     # move to grab key
     iros1 = Task(robot)
 
-    move1_context = {
-        "skill": {
-            "objects": {
-                "GoalPose": "iros_key_roi"
-            },
-            "speed": [0.7, 1],
-            "acc": [2, 5]
-        },
-        "control": {
-            "control_mode": 0,
-            "cart_imp": {
-                "K_x": [2000, 2000, 2000, 200,200, 200]
-            }
-        }
-    }
     grab_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
                 "Retract": "iros_key_grab_retract",
                 "Approach": "iros_key_grab_approach",
                 "Grabbable": "iros_key"
             },
-            "approach_speed": [0.5, 2],
-            "approach_acc": [2, 5.0],
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4.0],
             "grab_speed": [0.3, 2],
             "grab_acc": [1, 4],
-            "grasp_width": 0.03,
+            "grasp_width": 0.0,
             "grasp_speed": 100,
             "grasp_force": 30,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
@@ -401,23 +387,6 @@ def iros_task():
             "control_mode": 0,
             "cart_imp": {
                 "K_x": [2000, 2000, 2000, 200, 200, 200]
-            }
-        }
-    }
-    move2_context = {
-        "skill": {
-            "objects": {
-                "GoalPose": "iros_insertion_roi"
-            },
-            "speed": [0.7, 0.5],
-            "acc": [2, 5]
-        },
-        "control": {
-            "control_mode": 0,
-            "cart_imp": {
-
-                "K_x": [2000, 2000, 2000, 200,
-                        200, 200]
             }
         }
     }
@@ -432,7 +401,7 @@ def iros_task():
             "approach_speed": [0.5, 1],
             "approach_acc": [1, 4],
             "insertion_speed": [0.2, 0.5],
-            "insertion_acc": [0.5, 1.0],
+            "insertion_acc": [0.8, 1.0],
             "search_a": [3, 3, 0, 0, 0, 0],
             "search_f": [1, 0.75, 0, 0, 0, 0],
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
@@ -451,6 +420,7 @@ def iros_task():
     }
     turn_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
                 "Turnable": "iros_key",
                 "GoalOrientation": "iros_turn_goal"
@@ -486,9 +456,10 @@ def iros_task():
     }
     extraction_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
                 "Container": "iros_lock",
-                "ExtractTo": "iros_lock_approach",
+                "ExtractTo": "iros_lock_retract",
                 "Extractable": "iros_key"
             },
             "extraction_speed": [0.5, 4],
@@ -503,31 +474,16 @@ def iros_task():
             }
         },
         "user": {
-            "env_X": [0.02, 0.04]
+            "env_X": [0.01, 0.02]
         }
     }
-    move3_context = {
-        "skill": {
-            "objects": {
-                "GoalPose": "iros_key_roi"
-            },
-            "speed": [0.3, 0.5],
-            "acc": [1, 1]
-        },
-        "control": {
-            "control_mode": 0,
-            "cart_imp": {
 
-                "K_x": [2000, 2000, 2000, 200,
-                        200, 200]
-            }
-        }
-    }
     place_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
-                "Retract": "iros_key_grab_retract",
-                "Approach": "iros_key_grab_approach",
+                "Retract": "iros_key_place_retract",
+                "Approach": "iros_key_place_approach",
                 "Placeable": "iros_key",
                 "Surface": "iros_key_storage"
             },
@@ -535,7 +491,7 @@ def iros_task():
             "approach_acc": [1, 4],
             "place_speed": [0.1, 0.5],
             "place_acc": [0.5, 1.0],
-            "release_width": 0.03,
+            "release_width": 0.05,
             "release_speed": 100,
             "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
             "ROI_phi": [0, 0, 0, 0, 0, 0]
@@ -544,16 +500,17 @@ def iros_task():
             "control_mode": 0
         },
         "user": {
-            "env_X": [0.015, 0.04]
+            "env_X": [0.015, 0.02]
         }
     }
     move4_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
                 "GoalPose": "iros_button_roi"
             },
-            "speed": [0.5, 0.5],
-            "acc": [2, 1],
+            "speed": [0.5, 1],
+            "acc": [2, 4],
             "finger_width": 0,
             "finger_speed": 100
         },
@@ -569,12 +526,13 @@ def iros_task():
     }
     button_press_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
                 "Button": "iros_button",
                 "Approach": "iros_button_approach"
             },
-            "approach_speed": [0.3, 0.5],
-            "approach_acc": [0.5, 1.0],
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
             "press_speed": [0.1, 0.5],
             "press_acc": [1, 1.0],
             "duration": 0,
@@ -607,14 +565,11 @@ def iros_task():
         }
     }
 
-    # iros1.add_skill("move_to_key", "TaxMove", move1_context)
     iros1.add_skill("grab_key", "TaxGrab", grab_context)
-    # iros1.add_skill("move_to_insertion", "TaxMove", move2_context)
     iros1.add_skill("insertion", "TaxInsertion", insertion_context)
     iros1.add_skill("turn_key", "TaxTurn", turn_context)
     iros1.add_skill("turn_back_key", "TaxTurn", turn_back_context)
     iros1.add_skill("extraction", "TaxExtraction", extraction_context)
-    # iros1.add_skill("move_to_storage", "TaxMove", move3_context)
     iros1.add_skill("place_key", "TaxPlace", place_context)
     iros1.add_skill("move_to_button", "TaxMove", move4_context)
     iros1.add_skill("press_button", "TaxPressButton", button_press_context)

@@ -226,8 +226,8 @@ std::string ManipulationPrimitive::get_name() const{
     return m_name;
 }
 
-bool ManipulationPrimitive::is_settled() const{
-    return m_cmd.is_settled(m_memory->read_parameters()->limits);
+bool ManipulationPrimitive::is_settled(bool ignore) const{
+    return m_cmd.is_settled(m_memory->read_parameters()->limits, ignore);
 }
 
 const std::shared_ptr<PrimitiveStrategy> ManipulationPrimitive::get_strategy_interface(const std::string &name) const{

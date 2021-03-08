@@ -243,6 +243,8 @@ public:
          */
     unsigned parallels_frequency;
 
+    bool ignore_settling;
+
     SkillConditionLevel condition_level_pre;
     SkillConditionLevel condition_level_success;
     SkillConditionLevel condition_level_error;

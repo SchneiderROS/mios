@@ -386,7 +386,10 @@ bool Actuator::is_stopped() const{
     return m_stop;
 }
 
-bool Actuator::is_settled(const LimitParameters &parameters) const{
+bool Actuator::is_settled(const LimitParameters &parameters, bool ignore) const{
+    if(ignore){
+        return true;
+    }
     bool all_zero=true;
     for(unsigned i=0;i<7;i++){
         if(fabs(dq_d(i))>parameters.joint_space.ddq_max(0)/1000*m_stop_factor ||

@@ -102,7 +102,7 @@ bool TaxExtraction::check_local_pre_conditions(const Percept &p){
 }
 
 bool TaxExtraction::check_local_suc_conditions(const Percept &p){
-    return fabs((p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("ExtractTo").block<3,1>(0,3)).norm())<0.002;
+    return is_in_env("ExtractTo","move",p)
 }
 
 bool TaxExtraction::check_local_ex_conditions(const Percept &p){

@@ -264,7 +264,7 @@ private:
     void run_parallels();
     void stop_parallels();
     void terminate_parallels();
-    bool is_settled(const Percept& p);
+    bool is_settled(const Percept& p, bool ignore=false);
 
     std::unordered_map<std::string,std::shared_ptr<ManipulationPrimitive> > m_mp_graph;
     std::string m_init_mp;
