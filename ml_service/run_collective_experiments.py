@@ -49,6 +49,7 @@ def benchmark_collective(agents: list, unique_tag: str, n_iter: int = 1):
     threads = []
     pd = mios_ml_benchmark(0)
     delete_local_results(agents, "ml_results", pd.task_type, [tag])
+    delete_local_results([database], "collective_data", pd.task_type, [tag])
     s = ServerProxy("http://" + agents[0] + ":8001", allow_none=True)
     for i in range(n_iter):
         s.clear_memory()
@@ -56,7 +57,7 @@ def benchmark_collective(agents: list, unique_tag: str, n_iter: int = 1):
         for a in agents:
             pd = mios_ml_benchmark(benchmark_factors[j])
             pd.cost_function.geometry_factor = benchmark_factors[j]
-            tags = [tag, a, unique_tag]
+            tags = [tag, a, unique_tag, "f_" + str(benchmark_factors[j])]
             threads.append(
                 Thread(target=start_single_experiment, args=(a, [a], pd, service_config, i, tags, knowledge, False,)))
             threads[-1].start()
@@ -74,14 +75,31 @@ def plot_data_comparison(unique_tag: str):
     p = DataProcessor()
 
     for i in range(len(benchmark_factors)):
-        tags_single = ["collective_benchmark_single", unique_tag, "f_" + str(benchmark_factors[i])]
-        results = get_multiple_experiment_data(database, "benchmark_rastrigin",
-                                               results_db="collective_data",
-                                               filter={"meta.tags": {"$all": tags_single}})
-        cost_trial = p.get_average_cost(results, True)
-        cost_time, time = p.get_average_cost_over_time(results)
+        # tags_single = ["collective_benchmark_single", unique_tag, "f_" + str(benchmark_factors[i])]
+        # results_single = get_multiple_experiment_data(database, "benchmark_rastrigin",
+        #                                        results_db="collective_data",
+        #                                        filter={"meta.tags": {"$all": tags_single}})
+        # cost_trial = p.get_average_cost(results_single, True)
+        # cost_time = p.get_average_cost_over_time(results_single)
+        #
+        # axes[0, i].plot(cost_trial)
+        # axes[1, i].plot(cost_time)
+        # axes[0, i].set_xlabel("Trial [1]")
+        # axes[1, i].set_xlabel("Time [s]")
+        # axes[0, i].set_title("Task" + str(benchmark_factors[i]))
+
+        tags_shared = ["collective_benchmark_shared", unique_tag, "f_" + str(benchmark_factors[i])]
+        try:
+            results_shared = get_multiple_experiment_data(database, "benchmark_rastrigin",
+                                                          results_db="collective_data",
+                                                          filter={"meta.tags": {"$all": tags_shared}})
+        except DataNotFoundError:
+            print("No data found for tags: " + str(tags_shared))
+        cost_trial = p.get_average_cost(results_shared, True)
+        cost_time = p.get_average_cost_over_time(results_shared)
+
         axes[0, i].plot(cost_trial)
-        axes[1, i].plot(time, cost_time)
+        axes[1, i].plot(cost_time)
         axes[0, i].set_xlabel("Trial [1]")
         axes[1, i].set_xlabel("Time [s]")
         axes[0, i].set_title("Task" + str(benchmark_factors[i]))
