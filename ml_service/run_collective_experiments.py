@@ -61,11 +61,10 @@ def benchmark_collective(agents: list, unique_tag: str, n_iter: int = 1):
             threads.append(
                 Thread(target=start_single_experiment, args=(a, [a], pd, service_config, i, tags, knowledge, False,)))
             threads[-1].start()
+            j += 1
 
         for t in threads:
             t.join()
-
-        j += 1
 
     for a in agents:
         backup_results(a, database, pd.task_type, [tag], "collective_data")
