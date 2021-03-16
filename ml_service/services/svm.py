@@ -78,8 +78,8 @@ class SVMService(BaseService):
         self.gmm_active=False
         self.mean=0
            
-        self.episodes=self.configuration.n_trials/self.configuration.batch_width
-        self.numberOfParameters=2
+        self.episodes=int(self.configuration.n_trials/self.configuration.batch_width)
+        
         self.target_cost=None
 
         self.limits = self.problem_definition.domain.limits
@@ -101,14 +101,14 @@ class SVMService(BaseService):
         for i in range(0,int(self.configuration.n_trials/self.configuration.batch_width)):
             if self.keep_running is False:
                 break
-            self._setSamples(self.cnt_batch)
-            self._run_trial_par(self.action_list_norm)
-            self._trainSVM()
+            self._setSamples(self.cnt_batch)#done
+            self._run_trial_par(self.action_list_norm)#td
+            self._trainSVM()#td
 
         self.problem_data = {
             "parameters": self.bestSample,
             "cost": self.minCost,
-            "success": True
+            "success": True#?
         }
 
         self.stop()
@@ -259,10 +259,18 @@ class SVMService(BaseService):
         else:
             while i < self.configuration.batch_width:
                 if counter>=1000:
-                    action_norm=np.random.uniform(0,1,self.numberOfParameters)
                     if self.gmm_active==True:
                         action_norm=self.getGmmSample()
+                    else:
+                        action_norm=np.random.uniform(0,1,self.numberOfParameters)
 
+                    j=0
+                    for a in action_norm:
+                        if a<0:
+                            action_norm[j]=0
+                        if a>1:
+                            action_norm[j]=1
+                        j+=1
 
                     self.action_list_norm.append(action_norm)
                     i+=1
@@ -271,7 +279,7 @@ class SVMService(BaseService):
                     continue
 
 
-                if self.classifierActive==True:
+                else if self.classifierActive==True:
                     if self.gmm_active==True:
                         action_norm=self.getGmmSample()
                     else:
@@ -285,6 +293,7 @@ class SVMService(BaseService):
                         if a>1:
                             action_norm[j]=1
                         j+=1
+
                     aa=action_norm
                     aa=aa.reshape([1,-1])
                     prediction=self.classifier.predict(aa)
@@ -301,7 +310,15 @@ class SVMService(BaseService):
                         continue
                 else:
                     action_norm=np.random.uniform(0.0,1.0,self.numberOfParameters)
-                    action=self._norms2params(action_norm)
+
+                    j=0
+                    #print action_norm
+                    for a in action_norm:
+                        if a<0:
+                            action_norm[j]=0
+                        if a>1:
+                            action_norm[j]=1
+                        j+=1
 
                     self.action_list_norm.append(action_norm)
                     i+=1
@@ -313,7 +330,6 @@ class SVMService(BaseService):
             self.sampleCounter=lm-1
 
         x=np.random.multivariate_normal(self.sampling_gmm.means_[self.sampleCounter],np.diag(self.sampling_gmm.covariances_[self.sampleCounter]))
-
         self.sampleCounter+=1
         
         return x
