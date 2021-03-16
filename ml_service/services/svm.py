@@ -102,7 +102,6 @@ class SVMService(BaseService):
 
         self.engine.register_stop_condition(self._is_learned)
 
-    @property
     def _learn_task(self):
         self.mat_bounds = []
         self.numberOfParameters = len(self.limits)
