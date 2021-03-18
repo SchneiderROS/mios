@@ -19,6 +19,45 @@ class DataProcessor:
                 length = len(l)
         return length
 
+    def get_collection_of_successes(self, results: list) -> list:
+        successes = []
+        for r in results:
+            successes.append(r.get_successes_per_trial())
+
+        n_trials = self.find_maximum_length(successes)
+
+        for s in successes:
+            if len(s) < n_trials:
+                s.extend([s[-1]] * (n_trials - len(s)))
+        return successes
+
+    def get_collection_of_successes_over_time(self, results: list, min_length: int = False) -> list:
+        successes = []
+        times = []
+        max_span = 0
+        for r in results:
+            success, time = r.get_successes_per_time()
+            if time[-1] - time[0] > max_span:
+                max_span = time[-1] - time[0]
+            times.append(time)
+            successes.append(success)
+
+        max_span = int(np.ceil(max_span))
+        success_over_time = []
+        for i in range(len(successes)):
+            success_over_time.append([0] * max_span)
+            current_cost = successes[i][0]
+            cnt_cost = 0
+            for j in range(max_span):
+                if j > times[i][cnt_cost]:
+                    current_cost = successes[i][cnt_cost]
+                    if cnt_cost < len(times[i]) - 1:
+                        cnt_cost += 1
+                success_over_time[i][j] = current_cost
+            if min_length is not False and len(success_over_time[i]) < min_length:
+                success_over_time[i].extend([success_over_time[i][-1]] * (min_length - len(success_over_time[i])))
+        return success_over_time
+
     def get_collection_of_costs(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None) -> list:
         costs = []
         for r in results:
@@ -79,8 +118,26 @@ class DataProcessor:
             arr[i, -1] = percentage * cost[-1]
         return arr
 
-    def get_average_cost(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None) -> np.ndarray:
-        return np.average(np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent)), 0)
+    def get_average_cost(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None) -> Tuple[np.ndarray, np.ndarray]:
+        cost = np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent))
+        confidence = 0.95
+        interval = []
+        for i in range(cost.shape[1]):
+            se = scipy.stats.sem(cost[:, i])
+            h = se * scipy.stats.t.ppf((1 + confidence) / 2., cost.shape[0] - 1)
+            interval.append(h)
+        return np.average(cost, 0), np.asarray(interval)
+        #return np.average(np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent)), 0)
+
+    def get_average_success(self, results: list) -> Tuple[np.ndarray, np.ndarray]:
+        success = np.asarray(self.get_collection_of_successes(results))
+        confidence = 0.95
+        interval = []
+        for i in range(success.shape[1]):
+            se = scipy.stats.sem(success[:, i])
+            h = se * scipy.stats.t.ppf((1 + confidence) / 2., success.shape[0] - 1)
+            interval.append(h)
+        return np.average(success, 0), np.asarray(interval)
 
     def get_average_cost_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None) -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs_over_time(results, min_length, decreasing, agent))
@@ -91,6 +148,16 @@ class DataProcessor:
             h = se * scipy.stats.t.ppf((1 + confidence) / 2., cost.shape[0] - 1)
             interval.append(h)
         return np.average(cost, 0), np.asarray(interval)
+
+    def get_average_success_over_time(self, results: list, min_length: int = False) -> Tuple[np.ndarray, np.ndarray]:
+        success = np.asarray(self.get_collection_of_successes_over_time(results, min_length))
+        confidence = 0.95
+        interval = []
+        for i in range(success.shape[1]):
+            se = scipy.stats.sem(success[:, i])
+            h = se * scipy.stats.t.ppf((1 + confidence) / 2., success.shape[0] - 1)
+            interval.append(h)
+        return np.average(success, 0), np.asarray(interval)
 
     def get_monotonically_decreasing_cost(self, cost: np.ndarray) -> np.ndarray:
         cost_monotone = cost

@@ -27,6 +27,21 @@ class Result:
         self.uuid = data_tmp["meta"]["uuid"]
         self.tags = data_tmp["meta"]["tags"]
 
+    def get_successes_per_trial(self):
+        success = []
+        for t in self.trials:
+            success.append(t["success"])
+        return success
+
+    def get_successes_per_time(self):
+        success = []
+        time = []
+        t_0 = self.trials[0]["t_0"]
+        for t in self.trials:
+            success.append(t["success"])
+            time.append(t["t_1"] - t_0)
+        return success, time
+
     def get_cost_per_trial(self, episode_length: int = 1, agent: str = None) -> list:
         cost_raw = []
         cost = []

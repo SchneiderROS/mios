@@ -36,18 +36,25 @@ def average_experiment(host: str, task_type: str, database: str, tags: list, age
     plt.ylim([0,2.5])
     plt.show()
 
+
 def plot_experiment(host: str, task_type: str, database: str, tags: list):
     p = DataProcessor()
+    legend = []
 
     for i in range(10):
         try:
             tags_tmp = tags.copy()
             tags_tmp.append("n" + str(i+1))
-            print(tags_tmp)
+
             result = get_experiment_data(host, task_type, results_db=database, filter={"meta.tags": {"$all": tags_tmp}})
-            plot.plot_cost_over_trials(p.get_monotonically_decreasing_cost(result.get_cost_per_trial()))
-        except DataNotFoundError:
+            plt.plot(p.get_monotonically_decreasing_cost(result.get_cost_per_trial()))
+            legend.append("n" + str(i + 1))
+        except DataNotFoundError as e:
+            print("Data not found for tags: " + str(tags_tmp))
             pass
+
+    plt.legend(legend)
+    plt.show()
 
 
 def agent_learning(tags, hosts = ["collective-panda-002.local"]):
