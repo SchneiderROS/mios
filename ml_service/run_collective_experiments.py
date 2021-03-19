@@ -160,7 +160,8 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
         learning_thresholds = experiment_learning_thresholds
 
     fig, axes = plt.subplots(2, len(factors), sharey=True, gridspec_kw={'hspace': 0.2, 'wspace': 0})
-    fig_success, axes_success = plt.subplots(2, len(factors), gridspec_kw={'hspace': 0.2, 'wspace': 0})
+    fig_asr, axes_asr = plt.subplots(2, len(factors), sharey=True, gridspec_kw={'hspace': 0.2, 'wspace': 0})
+    fig_casr, axes_casr = plt.subplots(2, len(factors), gridspec_kw={'hspace': 0.2, 'wspace': 0})
 
     p = DataProcessor()
 
@@ -179,14 +180,16 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
             continue
         cost_trial_single, confidence_trial = p.get_average_cost(results_single, True)
         cost_time_single, confidence_time = p.get_average_cost_over_time(results_single, decreasing=True)
-        success_trial_single, confidence_success_trial = p.get_average_success(results_single)
-        success_time_single, confidence_success_time = p.get_average_success_over_time(results_single)
+        asr_trial_single, confidence_asr_trial = p.get_average_success(results_single)
+        asr_time_single, confidence_asr_time = p.get_average_success_over_time(results_single)
+        casr_trial_single, confidence_casr_trial = p.get_average_success(results_single)
+        casr_time_single, confidence_casr_time = p.get_average_success_over_time(results_single)
 
-        # for j in range(1, len(success_trial_single)):
-        #     success_trial_single[j] += success_trial_single[j-1]
-        #
-        # for j in range(1, len(success_time_single)):
-        #     success_time_single[j] += success_time_single[j-1]
+        for j in range(1, len(casr_trial_single)):
+            casr_trial_single[j] += casr_trial_single[j-1]
+
+        for j in range(1, len(casr_time_single)):
+            casr_time_single[j] += casr_time_single[j-1]
 
         knowledge_time_single.append(get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True), learning_thresholds[i], p))
         knowledge_time_parallel.append(get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True), learning_thresholds[i], p))
@@ -200,17 +203,17 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
         axes[1, i].set_xlabel("Time [s]")
         axes[0, i].set_title("Task" + str(factors[i]))
 
-        axes_success[0, i].plot(success_trial_single, "g")
-        # axes_success[0, i].fill_between(np.linspace(0, len(success_trial_single), len(success_trial_single)),
-        #                         success_trial_single - confidence_success_trial,
-        #                         success_trial_single + confidence_success_trial, alpha=0.2, color="g")
-        axes_success[1, i].plot(success_time_single, "g")
-        # axes_success[1, i].fill_between(np.linspace(0, len(success_time_single), len(success_time_single)),
-        #                         success_time_single - confidence_success_time, success_time_single + confidence_success_time,
-        #                         alpha=0.2, color="g")
-        axes_success[0, i].set_xlabel("Trial [1]")
-        axes_success[1, i].set_xlabel("Time [s]")
-        axes_success[0, i].set_title("Task" + str(factors[i]))
+        axes_asr[0, i].plot(asr_trial_single, "g")
+        axes_asr[1, i].plot(asr_time_single, "g")
+        axes_asr[0, i].set_xlabel("Trial [1]")
+        axes_asr[1, i].set_xlabel("Time [s]")
+        axes_asr[0, i].set_title("Task" + str(factors[i]))
+
+        axes_casr[0, i].plot(casr_trial_single, "g")
+        axes_casr[1, i].plot(casr_time_single, "g")
+        axes_casr[0, i].set_xlabel("Trial [1]")
+        axes_casr[1, i].set_xlabel("Time [s]")
+        axes_casr[0, i].set_title("Task" + str(factors[i]))
 
         tags_shared = [marker + "_shared", unique_tag_shared, "f_" + str(factors[i])]
         try:
@@ -222,14 +225,16 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
             continue
         cost_trial_shared, confidence_trial = p.get_average_cost(results_shared, True)
         cost_time_shared, confidence_time = p.get_average_cost_over_time(results_shared, min_length=len(cost_time_single), decreasing=True)
-        success_trial_shared, confidence_success_trial = p.get_average_success(results_shared)
-        success_time_shared, confidence_success_time = p.get_average_success_over_time(results_shared, min_length=len(success_time_single))
+        asr_trial_shared, confidence_asr_trial = p.get_average_success(results_shared)
+        asr_time_shared, confidence_asr_time = p.get_average_success_over_time(results_shared, min_length=len(asr_time_single))
+        casr_trial_shared, confidence_casr_trial = p.get_average_success(results_shared)
+        casr_time_shared, confidence_casr_time = p.get_average_success_over_time(results_shared, min_length=len(asr_time_single))
 
-        # for j in range(1, len(success_trial_shared)):
-        #     success_trial_shared[j] += success_trial_shared[j - 1]
-        #
-        # for j in range(1, len(success_time_shared)):
-        #     success_time_shared[j] += success_time_shared[j - 1]
+        for j in range(1, len(casr_trial_shared)):
+            casr_trial_shared[j] += casr_trial_shared[j - 1]
+
+        for j in range(1, len(casr_time_shared)):
+            casr_time_shared[j] += casr_time_shared[j - 1]
 
         knowledge_time_shared.append(get_learning_time(p.get_collection_of_costs_over_time(results_shared, decreasing=True), learning_thresholds[i], p))
         #knowledge_time_shared.append(get_learning_time(results_shared, learning_thresholds[i], p))
@@ -245,20 +250,29 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
         axes[0, i].set_ylim(0, 5)
         axes[1, i].set_ylim(0, 5)
 
-        axes_success[0, i].plot(success_trial_shared, "b")
-        # axes_success[0, i].fill_between(np.linspace(0, len(success_trial_shared), len(success_trial_shared)),
-        #                         success_trial_shared - confidence_success_trial,
-        #                         success_trial_shared + confidence_success_trial, alpha=0.2, color="b")
-        axes_success[1, i].plot(success_time_shared, "b")
-        # axes_success[1, i].fill_between(np.linspace(0, len(success_time_shared), len(success_time_shared)),
-        #                         success_time_shared - confidence_success_time, success_time_shared + confidence_success_time,
-        #                         alpha=0.2, color="b")
-        axes_success[0, i].set_xlabel("Trial [1]")
-        axes_success[1, i].set_xlabel("Time [s]")
-        axes_success[0, i].set_title("Task" + str(factors[i]))
+        axes_asr[0, i].plot(asr_trial_shared, "b")
+        axes_asr[1, i].plot(asr_time_shared, "b")
+        axes_asr[0, i].set_xlabel("Trial [1]")
+        axes_asr[1, i].set_xlabel("Time [s]")
+        axes_asr[0, i].set_title("Task" + str(factors[i]))
 
-        axes_success[0, i].set_ylim(0, 1)
-        axes_success[1, i].set_ylim(0, 1)
+        axes_asr[0, i].set_ylim(0, 1)
+        axes_asr[1, i].set_ylim(0, 1)
+
+        axes_casr[0, i].plot(casr_trial_shared, "b")
+        axes_casr[1, i].plot(casr_time_shared, "b")
+        axes_casr[0, i].set_xlabel("Trial [1]")
+        axes_casr[1, i].set_xlabel("Time [s]")
+        axes_casr[0, i].set_title("Task" + str(factors[i]))
+
+        axes_casr[0, i].plot([0, len(casr_trial_single)], [0, 200], color="black", linestyle="dashed")
+        axes_casr[1, i].plot([0, len(casr_time_single)], [0, 5000], color="black", linestyle="dashed")
+
+        axes_casr[0, i].set_ylim(0, 100)
+        axes_casr[1, i].set_ylim(0, 5000)
+
+        axes_casr[0, i].set_xlim(0, len(casr_trial_single))
+        axes_casr[1, i].set_xlim(0, len(casr_time_single))
 
         #axes[0, i].plot(get_difference_function(cost_trial_single, cost_trial_shared))
         #axes[1, i].plot(get_difference_function(cost_time_single, cost_time_shared))
@@ -266,15 +280,18 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
         if i == 0:
             axes[0, i].set_ylabel("Cost [s]")
             axes[1, i].set_ylabel("Cost [s]")
-            axes_success[0, i].set_ylabel("Average Success Rate [1]")
-            axes_success[1, i].set_ylabel("Average Success Rate [1]")
+            axes_asr[0, i].set_ylabel("Average Success Rate [1]")
+            axes_asr[1, i].set_ylabel("Average Success Rate [1]")
+            axes_asr[0, i].set_ylabel("Cumulative Average Success Rate [1]")
+            axes_asr[1, i].set_ylabel("Cumulative Average Success Rate [1]")
         else:
-            axes[0, i].set_yticks([])
-            axes[1, i].set_yticks([])
-            axes_success[0, i].set_yticks([])
-            axes_success[1, i].set_yticks([])
+            axes_casr[0, i].set_yticks([])
+            axes_casr[1, i].set_yticks([])
 
-        plt.legend(("Single Learning", "Collective Learning"))
+        if i == len(factors)-1:
+            axes[1, i].legend(("Single Learning", "Collective Learning"))
+            axes_asr[1, i].legend(("Single Learning", "Collective Learning"))
+            axes_casr[1, i].legend(("Single Learning", "Collective Learning", "Optimal Success Rate"))
 
     fig_knowledge, axes_knowledge = plt.subplots()
 
