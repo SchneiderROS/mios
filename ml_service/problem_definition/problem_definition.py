@@ -1,6 +1,7 @@
 from problem_definition.domain import Domain
 from engine.task_result import TaskResult
 from utils.exception import CostFunctionError
+from utils.exception import ProblemDefinitionError
 import logging
 from typing import Tuple
 import numpy as np
@@ -34,21 +35,19 @@ class CostFunction:
         self.cost_grid_val = np.array([[]])
         self.normal_cost = 1
 
-    def add_to_cost_grid(self, geometry_factor: float, cost_weights: np.ndarray, cost):
+    def add_to_cost_grid(self, identity: np.ndarray, cost):
         contains = False
-        task_identity = np.append(np.array([geometry_factor]), cost_weights)
         for i in range(len(self.cost_grid_weights)):
-            if np.array_equal(self.cost_grid_weights[i], task_identity):
+            if np.array_equal(self.cost_grid_weights[i], identity):
                 self.cost_grid_val[i] = cost
                 contains = True
                 break
         if contains is False:
-            self.cost_grid_weights = np.append(self.cost_grid_weights, task_identity.reshape(1, -1), axis=0)
+            self.cost_grid_weights = np.append(self.cost_grid_weights, identity.reshape(1, -1), axis=0)
             self.cost_grid_val = np.append(self.cost_grid_val, np.array([cost]).reshape(1, -1), axis=0)
 
     def to_dict(self):
         c = {
-            "geometry_factor": self.geometry_factor,
             "optimum_skills": self.optimum_skills,
             "optimum_weights": self.optimum_weights,
             "optimum_expressions": self.optimum_expressions,
@@ -64,7 +63,6 @@ class CostFunction:
     @staticmethod
     def from_dict(cf_dict: dict):
         c = CostFunction()
-        c.geometry_factor = cf_dict["geometry_factor"]
         c.optimum_skills = cf_dict["optimum_skills"]
         c.optimum_weights = cf_dict["optimum_weights"]
         c.optimum_expressions = cf_dict["optimum_expressions"]
@@ -79,8 +77,8 @@ class CostFunction:
 
 class ProblemDefinition:
     def __init__(self, task_type: str, domain: Domain, default_context: dict, setup_instructions: list,
-                 termination_instruction: list,
-                 reset_instruction: list, cost_function: CostFunction, tags=None):
+                 termination_instruction: list, reset_instruction: list, cost_function: CostFunction, identity: list,
+                 identity_weights: list = None, tags=None):
         if tags is None:
             tags = []
         self.domain = domain
@@ -93,19 +91,29 @@ class ProblemDefinition:
         self.cost_function = cost_function
         self.tags = tags
         self.optimum_thr = 0
+        if identity is None:
+            self.identity = [0]
+        else:
+            self.identity = identity
+        if identity_weights is None:
+            self.identity_weights = [1] * len(self.identity)
+        else:
+            self.identity_weights = identity_weights
+
+        if len(self.identity) != len(self.identity_weights):
+            logger.debug(str(len(self.identity)) + "!=" + str(len(self.identity_weights)))
+            raise CostFunctionError
 
     def calc_optimum_thr(self):
         if self.cost_function.cost_grid_weights.shape[0] > 2:
             self.optimum_thr = 1.0 * griddata(self.cost_function.cost_grid_weights, self.cost_function.cost_grid_val,
-                                              np.append(np.array([self.cost_function.geometry_factor]), self.cost_function.optimum_weights),
-                                              method="nearest")
+                                              self.identity, method="nearest")
             self.optimum_thr = float(self.optimum_thr)
-            print("THR: " + str(self.optimum_thr))
         else:
             self.optimum_thr = 0
 
-    def get_task_identity(self) -> dict:
-        return {"task_type": self.task_type, "optimum_weights": self.cost_function.optimum_weights, "tags": self.tags, "geometry_factor": self.cost_function.geometry_factor}
+    def get_task_identifier(self) -> dict:
+        return {"task_type": self.task_type, "tags": self.tags, "identity": self.identity}
 
     def to_dict(self) -> dict:
         problem_definition = {
@@ -118,7 +126,9 @@ class ProblemDefinition:
             "task_type": self.task_type,
             "tags": self.tags,
             "cost_function": self.cost_function.to_dict(),
-            "optimum_thr": self.optimum_thr
+            "optimum_thr": self.optimum_thr,
+            "identity": self.identity,
+            "identity_weights": self.identity_weights
         }
         return problem_definition
 
@@ -127,7 +137,7 @@ class ProblemDefinition:
         pd = ProblemDefinition(pd_dict["task_type"], Domain.from_dict(pd_dict["domain"]), pd_dict["default_context"],
                                pd_dict["setup_instructions"], pd_dict["termination_instructions"],
                                pd_dict["reset_instructions"], CostFunction.from_dict(pd_dict["cost_function"]),
-                               pd_dict["tags"])
+                               pd_dict["identity"], pd_dict["identity_weights"], pd_dict["tags"])
         pd.domain = Domain.from_dict(pd_dict["domain"])
         pd.cost_function = CostFunction.from_dict(pd_dict["cost_function"])
         return pd
@@ -160,10 +170,13 @@ class ProblemDefinition:
 
     def calculate_cost(self, result: TaskResult) -> Tuple[float, bool]:
         if len(self.cost_function.optimum_expressions) != 6:
+            logger.error("Length of cost_function.optimum_expressions must be 6.")
             raise CostFunctionError
         if len(self.cost_function.optimum_weights) != 6:
+            logger.error("Length of cost_function.optimum_weights must be 6.")
             raise CostFunctionError
         if sum(self.cost_function.optimum_weights) != 1:
+            logger.error("Sum of cost_function.optimum_weights must be 1.")
             raise CostFunctionError
 
         cost_per_weight = [0] * len(self.cost_function.optimum_weights)

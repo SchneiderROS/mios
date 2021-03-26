@@ -6,6 +6,7 @@ from utils.database import delete_local_knowledge
 from utils.database import backup_results
 from definitions.insertion_definitions import insert_generic
 from definitions.benchmark_definitions import mios_ml_benchmark
+from definitions.benchmark_definitions import mios_complex_ml_benchmark
 from threading import Thread
 from xmlrpc.client import ServerProxy
 import numpy as np
@@ -27,7 +28,7 @@ agents_benchmark = ["collective-panda-001", "collective-panda-002", "collective-
 agents_experiment = ["collective-panda-001", "collective-panda-007",
           "collective-panda-008", "collective-panda-009"]
 base_batch_size_benchmark = 5
-n_trials_benchmark = 200
+n_trials_benchmark = 20
 base_batch_size_experiment = 15
 n_trials_experiment = 180
 
@@ -402,3 +403,59 @@ def teach_generic_insertable(agent: str):
     call_method(agent, 12002, "teach_object", {"object": "generic_approach"})
     input("Press Enter to teach the container pose.")
     call_method(agent, 12002, "teach_object", {"object": "generic_container"})
+
+
+def benchmark_single_batchwise(agent: str,  unique_tag: str, n_tasks: int, n_iter: int = 1):
+
+    task_set = np.random.rand(n_tasks, 6).tolist()
+
+    service_config = SVMConfiguration()
+    service_config.exploration_mode = True
+    service_config.batch_width = base_batch_size_benchmark
+    service_config.n_trials = n_trials_benchmark
+
+    knowledge = {"mode": "local", "type": "predicted", "kb_location": agent, "scope": ["benchmark_batchwise"]}
+
+    for i in range(n_iter):
+        for j in range(len(task_set)):
+            x0 = task_set[j]
+            pd = mios_complex_ml_benchmark(x0, 10)
+            pd.identity = x0
+            delete_local_results([agent], "ml_results", pd.task_type, ["collective_benchmark_single_batchwise", unique_tag])
+            tags = ["collective_benchmark_single_batchwise", unique_tag, "t_" + str(j)]
+            start_single_experiment(agent, [agent], pd, service_config, i, tags, knowledge, False)
+
+    backup_results(agent, database, "benchmark", ["collective_benchmark_single_batchwise", unique_tag], "collective_data")
+
+
+def plot_batch_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchmark: bool = True):
+    if benchmark is True:
+        marker = "collective_benchmark"
+        skill = "benchmark_rastrigin"
+        learning_thresholds = benchmark_learning_thresholds
+    else:
+        marker = "collective_experiment"
+        skill = "insert_object"
+        learning_thresholds = experiment_learning_thresholds
+
+    n_tasks = 10
+
+    fig, axes = plt.subplots(2, n_tasks, sharey=True, gridspec_kw={'hspace': 0.2, 'wspace': 0})
+    fig_asr, axes_asr = plt.subplots(2, n_tasks, sharey=True, gridspec_kw={'hspace': 0.2, 'wspace': 0})
+    fig_casr, axes_casr = plt.subplots(2, n_tasks, gridspec_kw={'hspace': 0.2, 'wspace': 0})
+
+    p = DataProcessor()
+
+    knowledge_time_single = []
+    knowledge_time_shared = []
+    knowledge_time_parallel = []
+
+    for i in range(n_tasks):
+        tags_single = [marker + "_single", unique_tag_single, "f_" + str(factors[i])]
+        try:
+            results_single = get_multiple_experiment_data(database, skill,
+                                                   results_db="collective_data",
+                                                   filter={"meta.tags": {"$all": tags_single}})
+        except DataNotFoundError:
+            print("No data found for tags: " + str(tags_single))
+            continue

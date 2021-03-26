@@ -52,6 +52,8 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
         return
     s = ServerProxy("http://" + learner + ":8000", allow_none=True)
     if knowledge is not None:
+        if "kb_tags" not in knowledge:
+            knowledge["kb_tags"] = []
         if "n" + str(iter) in knowledge["kb_tags"]:
             knowledge["kb_tags"].remove("n" + str(iter))
         knowledge["kb_tags"].append("n" + str(iter+1))
