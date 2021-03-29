@@ -200,6 +200,7 @@ def plot_transfer_learning_3():
 
     p = DataProcessor()
     fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0})
+    fig_casr, axes_casr = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0})
     fig.set_size_inches(16, 9)
     for i in range(n_rows):
         for j in range(n_cols):
@@ -210,7 +211,8 @@ def plot_transfer_learning_3():
                     axes[i, j].set_xlim(0, 130)
             else:
                 axes[i, j].set_xlim(0, 1500)
-            axes[i, j].set_ylim(0, 1)
+            axes[i, j].set_ylim(0, 10)
+            axes_casr[i, j].set_ylim(0, 1500)
             axes[i, j].grid()
             axes[i, j].tick_params(axis="both", which="both", length=0)
             axes[i, j].set_title(tasks[i * n_rows + j], y=1.0, pad=-14)
@@ -221,13 +223,24 @@ def plot_transfer_learning_3():
                                                        results_db="transfer_base_v2",
                                                        filter={"meta.tags": {"$all": tags}})
                 if trial_wise is True:
-                    base_cost = p.get_average_cost(results, True, episode_size)
+                    base_cost, _ = p.get_average_cost(results, True, episode_size)
+                    base_casr, _ = p.get_average_success(results)
                 else:
-                    base_cost = p.get_average_cost_over_time(results, 1500, True)
+                    base_cost, _ = p.get_average_cost_over_time(results, 1500, True)
                     base_cost = base_cost[0:1500]
-                base_cost = np.insert(base_cost, 0, 1)
+                    base_casr, _ = p.get_average_success_over_time(results)
+                    base_casr = base_casr[0:1500]
+                base_cost = np.insert(base_cost, 0, 10)
+                base_cost = base_cost * 10
+                base_casr = np.insert(base_casr, 0, 0)
+
+                for k in range(1, len(base_casr)):
+                    base_casr[k] += base_casr[k - 1]
+
                 axes[i, j].plot(base_cost, linestyle="dashed", zorder=2, linewidth=4)
-                legend = [tasks[i * n_rows + j]]
+                axes_casr[i, j].plot([0, len(base_casr)], [0, len(base_casr)], color="black", linestyle="dashed")
+                axes_casr[i, j].plot(base_casr, linestyle="dashed", zorder=2, linewidth=4)
+                legend = ["Optimal CASR", tasks[i * n_rows + j]]
             except (DataNotFoundError, DataError):
                 print("Base cost for task " + tasks[i] + " not found.")
                 continue
@@ -238,11 +251,19 @@ def plot_transfer_learning_3():
                                                            results_db="transfer_all_v2",
                                                            filter={"meta.tags": {"$all": tags}})
                     if trial_wise is True:
-                        cost = p.get_average_cost(results, True, episode_size)
+                        cost, _ = p.get_average_cost(results, True, episode_size)
+                        casr, _ = p.get_average_success(results)
                     else:
-                        cost = p.get_average_cost_over_time(results, 1500, True)
+                        cost, _ = p.get_average_cost_over_time(results, 1500, True)
                         cost = cost[0:1500]
-                    cost = np.insert(cost, 0, 1)
+                        casr, _ = p.get_average_success_over_time(results)
+                        casr = casr[0:1500]
+                    cost = np.insert(cost, 0, 10)
+                    cost = cost * 10
+                    casr = np.insert(casr, 0, 0)
+
+                    for k in range(1, len(casr)):
+                        casr[k] += casr[k - 1]
 
                     if trial_wise is False:
                         baseline_factor = 1500
@@ -263,20 +284,22 @@ def plot_transfer_learning_3():
 
                     speedup_matrix[i * n_rows + j][t] = calculate_speedup(base_cost, cost)
                     axes[i, j].plot(cost, zorder=1, color = task_colors[t])
+                    axes_casr[i, j].plot(casr, zorder=1, color=task_colors[t])
 
                     legend.append("from_" + tasks[t])
                 except (DataNotFoundError, DataError):
                     pass
 
             axes[i, j].legend(legend, fontsize='x-small', loc=1)
+            axes_casr[i, j].legend(legend, fontsize='x-small', loc='upper left')
             # if i == 0:
             #     pass
             #     axes[i, j].annotate("t" + str(j), xy=(0.5, 1), xytext=(0, 5),
             #                         xycoords='axes fraction', textcoords='offset points',
             #                         size='large', ha='center', va='baseline')
             if j == 0:
-                axes[i, j].set_yticks([0.2, 0.4, 0.6, 0.8, 1])
-                axes[i, j].set_yticklabels(["0.2", "0.4", "0.6", "0.8", "1"])
+                axes[i, j].set_yticks([2, 4, 6, 8, 10])
+                axes[i, j].set_yticklabels(["2", "4", "6", "8", "10"])
             #     pass
             #     axes[i, j].annotate("t" + str(i), xy=(0, 0.5), xytext=(-axes[i, j].yaxis.labelpad - 5, 0),
             #                         xycoords=axes[i, j].yaxis.label, textcoords='offset points',
@@ -291,23 +314,36 @@ def plot_transfer_learning_3():
                     else:
                         axes[i, j].set_xticks([25, 50, 75, 100, 130])
                         axes[i, j].set_xticklabels(["25", "50", "75", "100", "130"])
+                        axes_casr[i, j].set_xticks([25, 50, 75, 100, 130])
+                        axes_casr[i, j].set_xticklabels(["25", "50", "75", "100", "130"])
                 else:
                     axes[i, j].set_xticks([250, 500, 750, 1000, 1250, 1500])
                     axes[i, j].set_xticklabels(["250", "500", "750", "1000", "1250", "1500"])
+                    axes_casr[i, j].set_xticks([250, 500, 750, 1000, 1250, 1500])
+                    axes_casr[i, j].set_xticklabels(["250", "500", "750", "1000", "1250", "1500"])
             axes[i, j].tick_params(axis='both', which='major', labelsize=12)
-    fig.add_subplot(111, frame_on=False)
-    plt.tick_params(labelcolor="none", bottom=False, left=False)
+            axes_casr[i, j].tick_params(axis='both', which='major', labelsize=12)
+    ax = fig.add_subplot(111, frame_on=False)
+    ax_casr = fig_casr.add_subplot(111, frame_on=False)
+    ax.tick_params(labelcolor="none", bottom=False, left=False)
+    ax_casr.tick_params(labelcolor="none", bottom=False, left=False)
     if trial_wise is True:
         if episode_wise is True:
-            plt.xlabel("Episode [1]")
+            ax.xlabel("Episode [1]")
+            ax_casr.xlabel("Episode [1]")
         else:
-            plt.xlabel("Trial [1]")
+            ax.xlabel("Trial [1]")
+            ax_casr.xlabel("Episode [1]")
     else:
-        plt.xlabel("Time [s]", fontsize = 12)
-    plt.ylabel("Normed execution time [s/10]", fontsize = 12)
+        ax.set_xlabel("Time [s]", fontsize = 12)
+        ax_casr.set_xlabel("Time [s]")
+    ax.set_ylabel("Execution time [s]", fontsize = 12)
+    ax_casr.set_ylabel("CASR [1]", fontsize=12)
 
     fig.set_size_inches(16, 9)
-    plt.savefig("results.png", bbox_inches='tight', dpi=300)
+    fig_casr.set_size_inches(16, 9)
+    fig.savefig("results_cost.png", bbox_inches='tight', dpi=300)
+    fig_casr.savefig("results_casr.png", bbox_inches='tight', dpi=300)
 
     es_matrix = np.zeros(le_ratio_matrix.shape)
     for i in range(le_ratio_matrix.shape[0]):
