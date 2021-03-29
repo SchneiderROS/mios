@@ -27,8 +27,8 @@ agents_benchmark = ["collective-panda-001", "collective-panda-002", "collective-
           "collective-panda-008", "collective-panda-009"]
 agents_experiment = ["collective-panda-001", "collective-panda-007",
           "collective-panda-008", "collective-panda-009"]
-base_batch_size_benchmark = 5
-n_trials_benchmark = 20
+base_batch_size_benchmark = 10
+n_trials_benchmark = 100
 base_batch_size_experiment = 15
 n_trials_experiment = 180
 
@@ -363,7 +363,7 @@ def get_learning_time(costs: list, learning_threshold: float, p: DataProcessor):
 
 
 def get_learning_duration(cost: np.ndarray, threshold: float):
-    if len(np.where(cost <= threshold)[0])==0:
+    if len(np.where(cost <= threshold)[0]) == 0:
         return len(cost)
     else:
         return np.where(cost <= threshold)[0][0]
@@ -407,6 +407,10 @@ def teach_generic_insertable(agent: str):
 
 def benchmark_single_batchwise(agent: str,  unique_tag: str, n_tasks: int, n_iter: int = 1):
 
+    delete_local_results([agent], "ml_results", "benchmark_rastrigin", ["collective_benchmark_single_batchwise"])
+    delete_local_results([database], "collective_data", "benchmark_rastrigin", ["collective_benchmark_single_batchwise"])
+    delete_local_knowledge([agent], "local_knowledge", "benchmark_rastrigin", ["benchmark_batchwise"])
+
     task_set = np.random.rand(n_tasks, 6).tolist()
 
     service_config = SVMConfiguration()
@@ -421,11 +425,10 @@ def benchmark_single_batchwise(agent: str,  unique_tag: str, n_tasks: int, n_ite
             x0 = task_set[j]
             pd = mios_complex_ml_benchmark(x0, 10)
             pd.identity = x0
-            delete_local_results([agent], "ml_results", pd.task_type, ["collective_benchmark_single_batchwise", unique_tag])
             tags = ["collective_benchmark_single_batchwise", unique_tag, "t_" + str(j)]
             start_single_experiment(agent, [agent], pd, service_config, i, tags, knowledge, False)
 
-    backup_results(agent, database, "benchmark", ["collective_benchmark_single_batchwise", unique_tag], "collective_data")
+    backup_results(agent, database, "benchmark_rastrigin", ["collective_benchmark_single_batchwise", unique_tag], "collective_data")
 
 
 def plot_batch_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchmark: bool = True):
@@ -438,20 +441,14 @@ def plot_batch_data_comparison(unique_tag_single: str, unique_tag_shared: str, b
         skill = "insert_object"
         learning_thresholds = experiment_learning_thresholds
 
-    n_tasks = 10
-
-    fig, axes = plt.subplots(2, n_tasks, sharey=True, gridspec_kw={'hspace': 0.2, 'wspace': 0})
-    fig_asr, axes_asr = plt.subplots(2, n_tasks, sharey=True, gridspec_kw={'hspace': 0.2, 'wspace': 0})
-    fig_casr, axes_casr = plt.subplots(2, n_tasks, gridspec_kw={'hspace': 0.2, 'wspace': 0})
+    n_tasks = 50
 
     p = DataProcessor()
 
     knowledge_time_single = []
-    knowledge_time_shared = []
-    knowledge_time_parallel = []
 
     for i in range(n_tasks):
-        tags_single = [marker + "_single", unique_tag_single, "f_" + str(factors[i])]
+        tags_single = [marker + "_single_batchwise", unique_tag_single, "t_" + str(i)]
         try:
             results_single = get_multiple_experiment_data(database, skill,
                                                    results_db="collective_data",
@@ -459,3 +456,31 @@ def plot_batch_data_comparison(unique_tag_single: str, unique_tag_shared: str, b
         except DataNotFoundError:
             print("No data found for tags: " + str(tags_single))
             continue
+
+        knowledge_time_single.append(
+            get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True), 0.01, p))
+
+    fig_knowledge, axes_knowledge = plt.subplots()
+
+    knowledge_time_single_avg, knowledge_time_single_conf = get_average_and_confidence(knowledge_time_single)
+
+    for i in range(1, len(knowledge_time_single_avg)):
+        knowledge_time_single_avg[i] += knowledge_time_single_avg[i - 1]
+
+    knowledge_time_single_avg = np.insert(knowledge_time_single_avg, 0, 0)
+    knowledge_time_single_conf = np.insert(knowledge_time_single_conf, 0, 0)
+
+    knowledge_units = np.linspace(0, len(knowledge_time_single_avg) - 1, len(knowledge_time_single_avg))
+
+    axes_knowledge.fill_betweenx(knowledge_units,
+                                 knowledge_time_single_avg - knowledge_time_single_conf,
+                                 knowledge_time_single_avg + knowledge_time_single_conf, alpha=0.2, color="g")
+    axes_knowledge.plot(knowledge_time_single_avg, knowledge_units, "g")
+
+    axes_knowledge.legend(("Single Learning", "Parallel Learning", "Collective Learning"))
+
+    plt.xlabel("Time [s]")
+    plt.ylabel("Tasks Learned [1]")
+    plt.title("Knowledge acquisition for four insertion tasks")
+
+    plt.show()

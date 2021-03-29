@@ -1,4 +1,5 @@
 from xmlrpc.client import ServerProxy
+import copy
 
 from definitions.insertion_definitions import *
 from utils.database import backup_result
@@ -26,9 +27,11 @@ def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service:
             continue
         s = ServerProxy("http://" + learner + ":8000", allow_none=True)
         if knowledge is not None:
-            if "n" + str(i) in knowledge["kb_tags"]:
-                knowledge["kb_tags"].remove("n" + str(i))
-            knowledge["kb_tags"].append("n" + str(i+1))
+            if "scope" not in knowledge:
+                knowledge["scope"] = []
+            if "n" + str(i) in knowledge["scope"]:
+                knowledge["scope"].remove("n" + str(i))
+            knowledge["scope"].append("n" + str(i+1))
         uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge)
         s.wait_for_service()
         # backup_result(agent, "collective-control-001.local", problem_def.task_type, uuid)
@@ -44,6 +47,8 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
     problem_def.tags.extend(tags)
     client = MongoDBClient(learner)
 
+    knowledge_tmp = copy.deepcopy(knowledge)
+
     if "n" + str(iter) in problem_def.tags:
         problem_def.tags.remove("n" + str(iter))
     problem_def.tags.append("n" + str(iter+1))
@@ -51,12 +56,13 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
         print("Continue at n" + str(iter+1))
         return
     s = ServerProxy("http://" + learner + ":8000", allow_none=True)
-    if knowledge is not None:
-        if "kb_tags" not in knowledge:
-            knowledge["kb_tags"] = []
-        if "n" + str(iter) in knowledge["kb_tags"]:
-            knowledge["kb_tags"].remove("n" + str(iter))
-        knowledge["kb_tags"].append("n" + str(iter+1))
-    uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge)
+    if knowledge_tmp is not None:
+        if "scope" not in knowledge_tmp:
+            knowledge_tmp["scope"] = []
+        if "n" + str(iter) in knowledge_tmp["scope"]:
+            knowledge_tmp["scope"].remove("n" + str(iter))
+        knowledge_tmp["scope"].append("n" + str(iter+1))
+        print(knowledge_tmp)
+    uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge_tmp)
     s.wait_for_service()
         # backup_result(agent, "collective-control-001.local", problem_def.task_type, uuid)
