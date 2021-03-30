@@ -9,10 +9,10 @@ def delete_local_results(agents: list, db: str, task_type: str, tags: list):
         client.remove(db, task_type, {"meta.tags": tags })
 
 
-def delete_local_knowledge(agents: list, db: str, task_type: str, tags: list):
+def delete_local_knowledge(agents: list, db: str, task_type: str, scope: list):
     for a in agents:
         client = MongoDBClient(a)
-        client.remove(db, task_type, {"meta.tags": tags })
+        client.remove(db, task_type, {"meta.scope": scope})
 
 
 def delete_global_results(agent: str, db: str, task_type: str, tags: list):
