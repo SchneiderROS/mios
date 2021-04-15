@@ -7,8 +7,8 @@ from definitions.insertion_definitions import insert_generic
 from threading import Thread
 
 
-robots = ["collective-panda-007", "collective-panda-002",
-          "collective-panda-001", "collective-panda-008",
+robots = ["collective-panda-prime", "collective-panda-007", "collective-panda-002",
+          "collective-panda-008", "collective-panda-003",
           "collective-panda-009"]
 
 
@@ -127,6 +127,11 @@ def demo_part_1():
     insertion_context2["skill"]["search_a"] = [8, 8, 0, 0, 0, 0]
     insertion_context2["skill"]["search_f"] = [1, 0.75, 0, 0, 0, 0]
     insertion_context3 = copy.deepcopy(insertion_context)
+    insertion_context3["skill"]["DeltaX"] = [-0.01, 0.005, 0, 0.0, -1.15, 0]
+    insertion_context3["skill"]["insertion_speed"] = [0.01, 0.01]
+    insertion_context3["skill"]["search_a"] = [8, 8, 0, 0, 0, 0]
+    insertion_context3["skill"]["search_f"] = [1, 0.75, 0, 0, 0, 0]
+    insertion_context3["control"]["cart_imp"]["K_x"] = [100, 100, 500, 50, 50, 50]
 
     t = Task(robots[0])
     t.add_skill("insertion1", "TaxInsertion", insertion_context1)
@@ -144,6 +149,8 @@ def demo_part_2():
     ip_slaves = []
     for i in range(1, len(robots)):
         ip_slaves.append(get_ip(robots[i]))
+
+    print(ip_slaves)
 
     telepresence_master_context = {
         "skill": {
@@ -184,6 +191,7 @@ def demo_part_2():
     for i in range(1, len(robots)):
         t = Task(robots[i])
         t.add_skill("telepresence", "Telepresence", telepresence_slave_context)
+        print(robots[i])
         t.start()
 
     input("Press key to stop.")
@@ -319,14 +327,15 @@ def demo_part_4():
     }
     t = Task(robots[0])
     t.add_skill("insertion", "TaxInsertion", insertion_context)
-    t.add_skill("turn", "TaxTurn", turn_context)
-    t.add_skill("turn_back", "TaxTurn", turn_back_context)
+    # t.add_skill("turn", "TaxTurn", turn_context)
+    # t.add_skill("turn_back", "TaxTurn", turn_back_context)
     t.add_skill("extraction", "TaxExtraction", extraction_context)
     t.start(True)
     t.wait()
 
 
 def teach_insertable(robot: str):
+    input("Press key to start teaching.")
     call_method(robot, 12002, "set_grasped_object", {"object": "generic_insertable"})
     input("Teach approach")
     call_method(robot, 12002, "teach_object", {"object": "generic_container_approach"})
