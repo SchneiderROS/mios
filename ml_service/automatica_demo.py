@@ -305,7 +305,7 @@ def demo_part_4():
             },
             "approach_speed": [0.2, 0.5],
             "approach_acc": [0.5, 1],
-            "insertion_speed": [0.1, 0.3],
+            "insertion_speed": [0.15, 0.3],
             "insertion_acc": [0.5, 1.62],
             "f_max_push": 10,
             "DeltaX": [0.005, 0, 0, 0, 10, 0],
@@ -318,7 +318,7 @@ def demo_part_4():
         "control": {
             "control_mode": 0,
             "cart_imp": {
-                "K_x": [1004, 536, 1617, 100, 100, 68]
+                "K_x": [1004, 1536, 1617, 100, 100, 68]
             }
         },
         "user": {
@@ -391,6 +391,35 @@ def demo_part_4():
     t.add_skill("extraction", "TaxExtraction", extraction_context)
     t.start()
     t.wait()
+
+    result = start_task(robots[0], "MoveToJointPose", {
+        "parameters": {
+            "pose": "automatica_telepresence",
+            "speed": 1,
+            "acc": 2
+        }
+    })
+    wait_for_task(robots[0], result["result"]["task_uuid"])
+
+    wiggle_context = {
+        "skill": {
+            "dX_fourier_a_a": [0, 0.05, 0.1, 0, 0, 0],
+            "dX_fourier_a_phi": [0, 0.71, 0.71, 0, 0, 0],
+            "dX_fourier_a_f": [0, 1, 0.5, 0, 0, 0],
+            "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
+            "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
+            "use_EE": True,
+            "time_max": 10
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+
+    t = Task(robots[0])
+    t.add_skill("fail", "GenericWiggleMotion", wiggle_context)
+    t.start(False)
+    result = t.wait()
 
 
 def teach_insertable(robot: str):
