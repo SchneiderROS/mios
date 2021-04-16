@@ -1331,7 +1331,7 @@ def tax_insertion(insertable: str, container: str, approach: str) -> ProblemDefi
     }
     reset_instructions.append({"method": "start_task", "parameters": task_context})
     pd = ProblemDefinition("insert_object", domain, default_context, [], [], reset_instructions,
-                           tax_insertion_cost(), ["insertion", insertable])
+                           tax_insertion_cost(), [1], tags=["insertion", insertable])
     return pd
 
 
