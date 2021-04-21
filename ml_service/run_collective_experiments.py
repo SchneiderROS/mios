@@ -465,7 +465,6 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
 
     robot_map = {
         0: "collective-panda-001.local",
-        1: "collective-panda-002.local",
         2: "collective-panda-007.local",
         3: "collective-panda-008.local",
         4: "collective-panda-009.local"
@@ -473,8 +472,8 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
 
     task_set = []
 
-    for i in range(5):
-        for j in range(11):
+    for i in range(len(robot_map)):
+        for j in range(n_tasks):
             task_set.append([i, j*0.1, 1-j*0.1])
 
     service_config = SVMConfiguration()
