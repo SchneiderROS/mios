@@ -463,18 +463,10 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
     delete_local_results([database], "collective_data", "insertion", ["collective_experiment_single_batchwise_similar"])
     delete_local_knowledge([agent], "local_knowledge", "insertion", ["experiment_batchwise_similar"])
 
-    robot_map = {
-        0: "collective-panda-001.local",
-        2: "collective-panda-007.local",
-        3: "collective-panda-008.local",
-        4: "collective-panda-009.local"
-    }
-
     task_set = []
 
-    for i in range(len(robot_map)):
-        for j in range(n_tasks):
-            task_set.append([i, j*0.1, 1-j*0.1])
+    for j in range(n_tasks):
+        task_set.append([j*0.1, 1-j*0.1])
 
     service_config = SVMConfiguration()
     service_config.exploration_mode = True
@@ -486,12 +478,12 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
     for i in range(n_iter):
         for j in range(len(task_set)):
             pd = insert_generic()
-            pd.cost_function.optimum_weights[0] = task_set[j][1]
-            pd.cost_function.optimum_weights[2] = task_set[j][2]
+            pd.cost_function.optimum_weights[0] = task_set[j][0]
+            pd.cost_function.optimum_weights[2] = task_set[j][1]
             pd.identity = task_set[j]
-            pd.identity_weights = [1, 1, 1]
+            pd.identity_weights = [1, 1]
             tags = ["collective_experiment_single_batchwise_similar", unique_tag, "t_" + str(j)]
-            start_single_experiment(robot_map[task_set[j][0]], [robot_map[task_set[j][0]]], pd, service_config, i, tags, knowledge, False)
+            start_single_experiment(agent, [agent], pd, service_config, i, tags, knowledge, False)
 
     backup_results(agent, database, "insertion", ["collective_experiment_single_batchwise_similar", unique_tag], "collective_data")
 
