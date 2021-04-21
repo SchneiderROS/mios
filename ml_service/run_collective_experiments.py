@@ -489,6 +489,7 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
             pd.cost_function.optimum_weights[0] = task_set[j][1]
             pd.cost_function.optimum_weights[2] = task_set[j][2]
             pd.identity = task_set[j]
+            pd.identity_weights = [1, 1, 1]
             tags = ["collective_experiment_single_batchwise_similar", unique_tag, "t_" + str(j)]
             start_single_experiment(robot_map[task_set[j][0]], [robot_map[task_set[j][0]]], pd, service_config, i, tags, knowledge, False)
 
