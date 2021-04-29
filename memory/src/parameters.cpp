@@ -779,6 +779,9 @@ SkillParameters::SkillParameters(){
     condition_level_success=SkillConditionLevel::sclModel;
     condition_level_error=SkillConditionLevel::sclModel;
     condition_level_exit=SkillConditionLevel::sclModel;
+    log_data=false;
+    data_length=0;
+    log_name="";
 }
 
 bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
@@ -792,6 +795,18 @@ bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
     }
     if(!msrm_utils::read_json_param(p,"ignore_settling",ignore_settling)){
         spdlog::error("Could not read ignore_settling.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(p,"log_data",log_data)){
+        spdlog::error("Could not read log_data.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(p,"data_length",data_length)){
+        spdlog::error("Could not read data_length.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param(p,"log_name",log_name)){
+        spdlog::error("Could not read log_name.");
         return false;
     }
     if(p.find("objects")!=p.end()){
@@ -877,6 +892,9 @@ nlohmann::json SkillParameters::get_default_values(){
     default_values["time_max"]=0;;
     default_values["parallels_frequency"]=1000;
     default_values["ignore_settling"]=false;
+    default_values["log_data"]=false;
+    default_values["data_length"]=0;
+    default_values["log_name"]="";
     default_values["objects"]={};
     default_values["condition_level_pre"]="Model";
     default_values["condition_level_success"]="Model";
@@ -890,6 +908,9 @@ nlohmann::json SkillParameters::to_json() const{
     json_object["time_max"]=time_max;
     json_object["parallels_frequency"]=parallels_frequency;
     json_object["ignore_settling"]=ignore_settling;
+    json_object["log_data"]=log_data;
+    json_object["data_length"]=data_length;
+    json_object["log_name"]=log_name;
     json_object["objects"]={};
 
     if(condition_level_pre==SkillConditionLevel::sclModel){

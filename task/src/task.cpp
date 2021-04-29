@@ -412,7 +412,7 @@ bool Task::check_context(const nlohmann::json &default_context, const nlohmann::
 
     std::unordered_set<std::string> top_level={"name","parameters","skills","_id","subtasks"};
     std::unordered_set<std::string> skill_level={"skill","control","limits","system","safety","frames","user","objects","type"};
-    std::unordered_set<std::string> common_skill_parameters={"time_max","parallels_frequency"};
+    std::unordered_set<std::string> common_skill_parameters={"time_max","parallels_frequency","log_data","data_length"};
 
     try{
         for(const auto& el : default_context.items()){

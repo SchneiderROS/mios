@@ -163,6 +163,7 @@ ControlReturnType SkillEngine::execute_skill(std::shared_ptr<Skill> skill){
         return ControlReturnType::crtException;
     }
     spdlog::info("Terminating skill...");
+    skill->write_logs();
     return result;
 }
 

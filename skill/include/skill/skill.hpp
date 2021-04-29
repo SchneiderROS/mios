@@ -143,6 +143,7 @@ public:
     Eigen::Matrix<double,4,4> get_object_grasp_pose_O(const std::string& object_name) const;
 
     virtual void write_custom_results(nlohmann::json& custom_results);
+    void write_logs();
     nlohmann::json& get_custom_results();
 
     const std::set<ControlMode>* get_valid_control_modes() const;
@@ -165,6 +166,8 @@ protected:
      * @param[in] p Percept struct.
      */
     virtual void auxiliaries(const Percept& p);
+
+    void log_data(const Percept& p);
 
     /**
      * Specify the initial manipulation primitive.
@@ -297,6 +300,9 @@ private:
 private:
     double m_cost_contact_forces_sum;
     double m_cost_effort_avg_sum;
+
+    std::vector<nlohmann::json> m_data_log;
+    long m_log_cnt;
 
 };
 

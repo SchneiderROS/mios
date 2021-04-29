@@ -244,6 +244,9 @@ public:
     unsigned parallels_frequency;
 
     bool ignore_settling;
+    bool log_data;
+    double data_length;
+    std::string log_name;
 
     SkillConditionLevel condition_level_pre;
     SkillConditionLevel condition_level_success;

@@ -4,9 +4,11 @@
 
 #include "utils/exceptions.hpp"
 #include "data_structures/object.hpp"
-#include <msrm_utils/math.hpp>
-#include <msrm_utils/benchmarking.hpp>
+#include "msrm_utils/math.hpp"
+#include "msrm_utils/benchmarking.hpp"
+#include "msrm_utils/files.hpp"
 #include <spdlog/spdlog.h>
+#include <boost/filesystem.hpp>
 
 namespace mios {
 
@@ -16,6 +18,10 @@ Skill::Skill(const std::string &type, const std::unordered_set<std::string> &obj
     m_msg_local_success(false),m_msg_global_success(false),m_cost_contact_forces_sum(0),m_cost_effort_avg_sum(0){
     spdlog::trace("Skill::Skill()");
     m_costs.insert(std::make_pair("ExecutionTime",0));
+
+    m_log_cnt=0;
+    nlohmann::json data_log;
+    m_data_log.resize(m_memory->read_parameters()->skill->data_length);
 }
 
 Skill::~Skill(){
@@ -193,6 +199,9 @@ Actuator* Skill::cycle(const Percept &p){
 
     if(m_life_cycle==SkillLifeCycle::slExecution){
         auxiliaries(p);
+        if(m_memory->read_parameters()->skill->log_data){
+            log_data(p);
+        }
         update_internal_models(p);
         update_policies(p);
         m_result.cost=measure_cost(p);
@@ -364,6 +373,22 @@ void Skill::auxiliaries(const Percept &p){
 
 }
 
+void Skill::log_data(const Percept &p){
+    if(m_log_cnt>=m_data_log.size()){
+        return;
+    }
+    m_data_log[m_log_cnt]["time"]=std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    m_data_log[m_log_cnt]["q"]=msrm_utils::from_eigen<double,7,1>(p.proprioception.q);
+    m_data_log[m_log_cnt]["dq"]=msrm_utils::from_eigen<double,7,1>(p.proprioception.dq);
+    m_data_log[m_log_cnt]["O_T_EE"]=msrm_utils::from_eigen<double,4,4>(p.proprioception.O_T_EE);
+    m_data_log[m_log_cnt]["dX"]=msrm_utils::from_eigen<double,6,1>(p.proprioception.O_dX_EE);
+    m_data_log[m_log_cnt]["tau_ext"]=msrm_utils::from_eigen<double,7,1>(p.proprioception.tau_ext);
+    m_data_log[m_log_cnt]["F_ext"]=msrm_utils::from_eigen<double,6,1>(p.proprioception.K_F_ext_K);
+
+
+    m_log_cnt++;
+}
+
 void Skill::parallels(){
 
 }
@@ -411,6 +436,43 @@ double Skill::get_custom_cost(const Percept &p){
 
 void Skill::write_custom_results(nlohmann::json &custom_results){
     m_result.results=nlohmann::json();
+}
+
+void Skill::write_logs(){
+    spdlog::info("Writing logs into file...");
+    std::string log_file = boost::filesystem::path(boost::filesystem::current_path()).string()+"/../logs/logs_"+m_memory->read_parameters()->skill->log_name+".txt";
+    boost::filesystem::create_directories(boost::filesystem::path(boost::filesystem::current_path()).string()+"/../logs/");
+    std::remove(log_file.c_str());
+    try{
+        for(const auto& el : m_data_log[0].items()){
+            if(m_data_log[0][el.key()].is_array()){
+                for(unsigned i=0;i<m_data_log[0][el.key()].size();i++){
+                    msrm_utils::write_data_to_file(el.key(),log_file);
+                }
+            }else{
+                msrm_utils::write_data_to_file(el.key(),log_file);
+            }
+        }
+        msrm_utils::write_endl_to_file(log_file);
+        if(m_log_cnt>=m_data_log.size()){
+            m_log_cnt=m_data_log.size();
+        }
+        for(unsigned i=0;i<m_log_cnt;i++){
+            for(const auto& el : m_data_log[i].items()){
+                if(m_data_log[i][el.key()].is_array()){
+                    for(unsigned j=0;j<m_data_log[i][el.key()].size();j++){
+                        msrm_utils::write_data_to_file(m_data_log[i][el.key()][j],log_file);
+                    }
+                }else{
+                    msrm_utils::write_data_to_file(m_data_log[i][el.key()],log_file);
+                }
+            }
+            msrm_utils::write_endl_to_file(log_file);
+        }
+    }catch(const nlohmann::json::exception& e){
+        spdlog::debug(e.what());
+    }
+    spdlog::info("Logs have been written to "+log_file+".");
 }
 
 nlohmann::json& Skill::get_custom_results(){
