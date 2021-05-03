@@ -52,7 +52,6 @@ public:
 private:
 
     bool is_stuck(const Percept& p);
-    bool is_outside(const Percept& p);
 
     std::shared_ptr<ManipulationPrimitive> create_approach_mp(const Percept& p);
     std::shared_ptr<ManipulationPrimitive> create_contact_mp(const Percept& p);

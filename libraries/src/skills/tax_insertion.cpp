@@ -136,9 +136,6 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > TaxInsertion::graph_trans
             return create_insert_mp(p);
         }
     }
-    if(is_outside(p)){
-        return create_approach_mp(p);
-    }
     return {};
 }
 
@@ -272,10 +269,6 @@ bool TaxInsertion::is_stuck(const Percept &p){
         return false;
     }
     return m_is_stuck;
-}
-
-bool TaxInsertion::is_outside(const Percept &p){
-    return false;
 }
 
 

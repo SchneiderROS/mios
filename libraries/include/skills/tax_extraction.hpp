@@ -7,12 +7,21 @@ namespace mios {
 struct SkillParametersTaxExtraction : public SkillParameters{
     bool from_json(const nlohmann::json &parameters) override;
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
-    Eigen::Matrix<double,2,1> extraction_speed;
-    Eigen::Matrix<double,2,1> extraction_acc;
-    Eigen::Matrix<double,6,1> search_a;
-    Eigen::Matrix<double,6,1> search_f;
 
-    double stuck_dx_thr;
+    struct P0{
+        Eigen::Matrix<double,6,1> K_x;
+        Eigen::Matrix<double,6,1> search_a;
+        Eigen::Matrix<double,6,1> search_f;
+        double f_pull;
+    }p0;
+
+    struct P1{
+        Eigen::Matrix<double,6,1> K_x;
+        Eigen::Matrix<double,2,1> dX_d;
+        Eigen::Matrix<double,2,1> ddX_d;
+        double f_pull;
+    }p1;
+
 };
 
 class TaxExtraction : public Skill{
