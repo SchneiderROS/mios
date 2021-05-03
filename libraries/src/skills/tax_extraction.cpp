@@ -102,7 +102,7 @@ bool TaxExtraction::check_local_pre_conditions(const Percept &p){
 }
 
 bool TaxExtraction::check_local_suc_conditions(const Percept &p){
-    return is_in_env("ExtractTo","move",p);
+    return get_active_mp()->get_strategy_interface("move")->finished();
 }
 
 bool TaxExtraction::check_local_ex_conditions(const Percept &p){

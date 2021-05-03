@@ -387,6 +387,45 @@ def plot_transfer_learning_3():
     plt.show()
 
 
+def test_speedup(base_task: str, second_task: str):
+    trial_wise = False
+    episode_size = 1
+    p = DataProcessor()
+
+    tags = ["transfer_learning", base_task]
+    results = get_multiple_experiment_data("collective-control-001.local", "insert_object",
+                                           results_db="transfer_base_v2",
+                                           filter={"meta.tags": {"$all": tags}})
+    if trial_wise is True:
+        base_cost, _ = p.get_average_cost(results, True, episode_size)
+        base_casr, _ = p.get_average_success(results)
+    else:
+        base_cost, _ = p.get_average_cost_over_time(results, 1500, True)
+        base_cost = base_cost[0:1500]
+        base_casr, _ = p.get_average_success_over_time(results)
+        base_casr = base_casr[0:1500]
+    base_cost = np.insert(base_cost, 0, 10)
+    base_cost = base_cost * 10
+
+    tags = ["transfer_learning", base_task, "from_" + second_task]
+    results = get_multiple_experiment_data("collective-control-001.local", "insert_object",
+                                           results_db="transfer_all_v2",
+                                           filter={"meta.tags": {"$all": tags}})
+    if trial_wise is True:
+        cost, _ = p.get_average_cost(results, True, episode_size)
+        casr, _ = p.get_average_success(results)
+    else:
+        cost, _ = p.get_average_cost_over_time(results, 1500, True)
+        cost = cost[0:1500]
+        casr, _ = p.get_average_success_over_time(results)
+        casr = casr[0:1500]
+    cost = np.insert(cost, 0, 10)
+    cost = cost * 10
+
+    speedup = calculate_speedup(base_cost, cost)
+    print(speedup)
+
+
 def find_convergence(cost: np.ndarray, interval: float = 0.05) -> int:
     for i in range(len(cost) - 1):
         in_interval = True
@@ -401,12 +440,12 @@ def find_convergence(cost: np.ndarray, interval: float = 0.05) -> int:
 
 
 def calculate_speedup(base_cost: list, cost: list):
-    confidences = np.linspace(0.02, 0.05, 8)
+    confidences = np.linspace(0.02, 0.1, 8)
     speedup_sum = 0
     for c in confidences:
         index_thr_base_cost = find_convergence(base_cost, c)
         thr_base_cost = base_cost[index_thr_base_cost]
-        index_thr_transfer_cost = np.where(cost < thr_base_cost)
+        index_thr_transfer_cost = np.where(cost < thr_base_cost + c)
         if index_thr_transfer_cost[0].size == 0:
             index_thr_transfer_cost = 1
             index_thr_base_cost = 1
