@@ -14,7 +14,6 @@ public:
         Eigen::Matrix<double,6,1> DeltaX;
         Eigen::Matrix<double,2,1> dX_d;
         Eigen::Matrix<double,2,1> ddX_d;
-
     }p0;
 
     struct P1{

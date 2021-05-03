@@ -244,6 +244,8 @@ public:
     unsigned parallels_frequency;
 
     bool ignore_settling;
+    Eigen::Matrix<double,6,1> ROI_x;
+    Eigen::Matrix<double,6,1> ROI_phi;
 
     SkillConditionLevel condition_level_pre;
     SkillConditionLevel condition_level_success;

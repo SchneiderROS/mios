@@ -775,6 +775,9 @@ nlohmann::json ControlParameters::to_json() const{
 SkillParameters::SkillParameters(){
     time_max=0;
     parallels_frequency=1;
+    ignore_settling=true;
+    ROI_x<<-10,10,-10,10,-10,10;
+    ROI_phi<<-10,10,-10,10,-10,10;
     condition_level_pre=SkillConditionLevel::sclModel;
     condition_level_success=SkillConditionLevel::sclModel;
     condition_level_error=SkillConditionLevel::sclModel;
@@ -792,6 +795,14 @@ bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
     }
     if(!msrm_utils::read_json_param(p,"ignore_settling",ignore_settling)){
         spdlog::error("Could not read ignore_settling.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(p,"ROI_x",ROI_x)){
+        spdlog::error("Could not read ROI_x.");
+        return false;
+    }
+    if(!msrm_utils::read_json_param<double,6,1>(p,"ROI_phi",ROI_phi)){
+        spdlog::error("Could not read ROI_phi.");
         return false;
     }
     if(p.find("objects")!=p.end()){
@@ -877,6 +888,8 @@ nlohmann::json SkillParameters::get_default_values(){
     default_values["time_max"]=0;;
     default_values["parallels_frequency"]=1000;
     default_values["ignore_settling"]=false;
+    default_values["ROI_x"]={-10,10,-10,10,-10,10};
+    default_values["ROI_phi"]={-10,10,-10,10,-10,10};
     default_values["objects"]={};
     default_values["condition_level_pre"]="Model";
     default_values["condition_level_success"]="Model";
@@ -891,6 +904,9 @@ nlohmann::json SkillParameters::to_json() const{
     json_object["parallels_frequency"]=parallels_frequency;
     json_object["ignore_settling"]=ignore_settling;
     json_object["objects"]={};
+
+    json_object["ROI_x"]=msrm_utils::from_eigen<double,6,1>(ROI_x);
+    json_object["ROI_phi"]=msrm_utils::from_eigen<double,6,1>(ROI_phi);
 
     if(condition_level_pre==SkillConditionLevel::sclModel){
         json_object["condition_level_pre"]="Model";
