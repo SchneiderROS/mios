@@ -471,10 +471,10 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
     for j in range(n_tasks):
         task_set.append([j*0.1, 1-j*0.1])
 
-    service_config = CMAESConfiguration()
+    service_config = SVMConfiguration()
     service_config.exploration_mode = True
-    service_config.n_ind = base_batch_size_benchmark
-    service_config.n_gen = n_trials_benchmark
+    service_config.batch_width = base_batch_size_experiment
+    service_config.n_trials = n_trials_experiment
 
     knowledge = {"mode": "local", "type": "similar", "kb_location": agent, "scope": ["experiment_batchwise_similar"]}
 
