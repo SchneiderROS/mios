@@ -6,19 +6,28 @@
 namespace mios{
 
 bool SkillParametersTaxPull::from_json(const nlohmann::json& parameters){
-    if(!msrm_utils::read_json_param<double,2,1>(parameters,"speed",speed)){
-        spdlog::error("Parameter speed could not be loaded but is mandatory.");
+    if(parameters.find("p0")==parameters.end()){
+        spdlog::error("Parameters for primitive 0 are missing.");
         return false;
-    }
-    if(!msrm_utils::read_json_param<double,2,1>(parameters,"acc",acc)){
-        spdlog::error("Parameter acc could not be loaded but is mandatory.");
-        return false;
+    }else if(parameters.find("p0")!=parameters.end()){
+        if(!msrm_utils::read_json_param<double,6,1>(parameters["p0"],"K_x",p0.K_x)){
+            spdlog::error("Missing parameter: p0.K_x");
+            return false;
+        }
+        if(!msrm_utils::read_json_param<double,2,1>(parameters["p0"],"dX_d",p0.dX_d)){
+            spdlog::error("Missing parameter: p0.dX_d");
+            return false;
+        }
+        if(!msrm_utils::read_json_param<double,2,1>(parameters["p0"],"ddX_d",p0.ddX_d)){
+            spdlog::error("Missing parameter: p0.ddX_d");
+            return false;
+        }
     }
     return true;
 }
 
 std::map<std::string, std::set<std::string> > SkillParametersTaxPull::get_parameter_list(){
-    return {{"speed",{}},{"acc",{}}};
+    return {{"p0",{"K_x","dX_d","ddX_d"}}};
 }
 
 TaxPull::TaxPull(const std::string& name, Memory* memory, Portal *portal):Skill("TaxPull",{"Pullable","GoalLocation"},name,memory,portal,{ControlMode::mCartTorque}){
@@ -42,7 +51,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPull::create_pull_mp(const Percept &p)
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("pull",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
-    move->set_goal(get_object_pose_T("GoalLocation"),skill_params->speed,skill_params->acc);
+    move->set_goal(get_object_pose_T("GoalLocation"),skill_params->p0.dX_d,skill_params->p0.ddX_d);
     return mp;
 }
 
@@ -54,7 +63,7 @@ bool TaxPull::check_local_pre_conditions(const Percept &p){
 }
 
 bool TaxPull::check_local_suc_conditions(const Percept &p){
-    return get_active_mp()->get_strategy_interface("move")->finished();
+    return is_in_env("GoalLocation","move",p);
 }
 
 bool TaxPull::check_local_err_conditions(const Percept &p){

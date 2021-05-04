@@ -231,7 +231,11 @@ bool ManipulationPrimitive::is_settled(bool ignore) const{
 }
 
 const std::shared_ptr<PrimitiveStrategy> ManipulationPrimitive::get_strategy_interface(const std::string &name) const{
-    return m_strategies.at(name).strategy;
+    if(m_strategies.find(name)==m_strategies.end()){
+        return nullptr;
+    }else{
+        return m_strategies.at(name).strategy;
+    }
 }
 
 }
