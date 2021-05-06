@@ -235,19 +235,19 @@ def tax_test_move(robot):
         f.write(str(total_cost)+"\n")
 
 
-def tax_test_insertion(robot):
-    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
+def tax_test_insertion(robot, insertable, container, approach):
+    call_method(robot, 12000, "set_grasped_object", {"object": insertable})
     insertion_context = {
         "skill": {
             "objects": {
-                "Container": "iros_lock",
-                "Approach": "iros_lock_approach",
-                "Insertable": "iros_key"
+                "Container": container,
+                "Approach": approach,
+                "Insertable": insertable
             },
             "time_max": 5,
-            "approach_speed": [0.5, 1],
-            "approach_acc": [1, 4],
-            "insertion_speed": [0.5, 0.5],
+            "approach_speed": [0.05, 0.5],
+            "approach_acc": [0.5, 1],
+            "insertion_speed": [0.1, 0.5],
             "insertion_acc": [0.8, 1],
             "f_max_push": 10,
             "DeltaX": [0.0005, -0.002, 0, 0, 0, 0],
@@ -325,17 +325,17 @@ def subscribe_to_event_server(robot):
     s.subscribe_to_event("button_press", robot, "12000")
 
 
-def tax_test_extraction(robot="collective-panda-008.local"):
-    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
+def tax_test_extraction(robot, extractable, container, extract_to):
+    call_method(robot, 12000, "set_grasped_object", {"object": extractable})
     extraction_context = {
         "skill": {
             "objects": {
-                "Container": "iros_lock",
-                "ExtractTo": "iros_lock_approach",
-                "Extractable": "iros_key"
+                "Container": container,
+                "ExtractTo": extract_to,
+                "Extractable": extractable
             },
             "time_max": 5,
-            "extraction_speed": [0.25, 0.15],
+            "extraction_speed": [0.2, 0.15],
             "extraction_acc": [1, 0.8],
             "search_a": [1, 1, 1, 0.3, 0.3, 0],
             "search_f": [0.2, 0.2, 0.2, 0.2, 0.2, 0],
