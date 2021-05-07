@@ -173,7 +173,7 @@ std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_contact_mp(const Per
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_insert_mp(const Percept &p){
-    spdlog::debug("TaxInsertion::create_insert_mp");
+    spdlog::trace("TaxInsertion::create_insert_mp");
     std::shared_ptr<SkillParametersTaxInsertion> skill_params = get_parameters<SkillParametersTaxInsertion>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("insert",p);
     mp->create_strategy<MoveToPoseStrategy>("orientation",1);
@@ -198,7 +198,7 @@ std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_insert_mp(const Perc
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxInsertion::create_wiggle_mp(const Percept &p){
-    spdlog::debug("TaxInsertion::create_wiggle_mp");
+    spdlog::trace("TaxInsertion::create_wiggle_mp");
     std::shared_ptr<SkillParametersTaxInsertion> skill_params = get_parameters<SkillParametersTaxInsertion>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("wiggle",p);
     mp->create_strategy<MoveToPoseStrategy>("orientation",1);

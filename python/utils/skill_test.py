@@ -127,3 +127,38 @@ def test_extraction(robot, extractable, container, retreat):
     t.start()
     result = t.wait()
     print(result)
+
+
+def test_push(robot, surface, approach):
+    context = {
+        "skill": {
+            "objects": {
+                "Surface": surface,
+                "Approach": approach
+            },
+            "time_max": 10,
+            "p0": {
+                "K_x": [1000, 1000, 1000, 100, 100, 100],
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1]
+            },
+            "p1": {
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+            "p2": {
+                "duration": 5,
+                "f_push": 5,
+                "K_x": [1000, 1000, 0, 100, 100, 100]
+            }
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t = Task(robot)
+    t.add_skill("push", "TaxPush", context)
+    t.start()
+    result = t.wait()
+    print(result)

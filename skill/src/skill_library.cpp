@@ -29,6 +29,7 @@
 #include "skills/tax_place.hpp"
 #include "skills/tax_press_button.hpp"
 #include "skills/tax_turn.hpp"
+#include "skills/tax_push.hpp"
 
 namespace mios {
 
@@ -58,6 +59,7 @@ SkillLibrary::SkillLibrary(Memory* memory, Portal* portal){
     m_skill_parameters.insert(std::make_pair("TaxPlace",std::make_shared<SkillParametersTaxPlace>()));
     m_skill_parameters.insert(std::make_pair("TaxPressButton",std::make_shared<SkillParametersTaxPressButton>()));
     m_skill_parameters.insert(std::make_pair("TaxTurn",std::make_shared<SkillParametersTaxTurn>()));
+    m_skill_parameters.insert(std::make_pair("TaxPush",std::make_shared<SkillParametersTaxPush>()));
 }
 
 const std::map<std::string,std::shared_ptr<Skill> >* SkillLibrary::get_skills() const{
