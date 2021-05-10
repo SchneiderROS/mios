@@ -164,6 +164,31 @@ def test_push(robot, surface, approach):
     print(result)
 
 
+def test_pull(robot, pullable):
+    call_method(robot, 12000, "set_grasped_object", {"object": pullable})
+    context = {
+        "skill": {
+            "objects": {
+                "Pullable": pullable
+            },
+            "time_max": 10,
+            "p0": {
+                "K_x": [1000, 1000, 0, 100, 100, 100],
+                "f_pull": 10,
+                "duration": 5
+            }
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t = Task(robot)
+    t.add_skill("pull", "TaxPull", context)
+    t.start()
+    result = t.wait()
+    print(result)
+
+
 def test_press_button(robot, button, approach):
     context = {
         "skill": {
@@ -235,6 +260,93 @@ def test_tip(robot, tippable, approach):
     }
     t = Task(robot)
     t.add_skill("tip", "TaxTip", context)
+    t.start()
+    result = t.wait()
+    print(result)
+
+
+def test_grab(robot, approach, grabbable, retract):
+    context = {
+        "skill": {
+            "objects": {
+                "Grabbable": grabbable,
+                "Approach": approach,
+                "Retract": retract
+            },
+            "time_max": 10,
+            "p0": {
+                "K_x": [1000, 1000, 1000, 100, 100, 100],
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "gripper_speed": 0.2,
+                "gripper_width": 0.06
+            },
+            "p1": {
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+            "p2": {
+                "grasp_width": 0.03,
+                "grasp_speed": 0.2,
+                "grasp_force": 40,
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+            "p3": {
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t = Task(robot)
+    t.add_skill("grab", "TaxGrab", context)
+    t.start()
+    result = t.wait()
+    print(result)
+
+
+def test_place(robot, approach, placeable, surface, retract):
+    call_method(robot, 12000, "set_grasped_object", {"object": placeable})
+    context = {
+        "skill": {
+            "objects": {
+                "Placeable": placeable,
+                "Approach": approach,
+                "Retract": retract,
+                "Surface": surface
+            },
+            "time_max": 10,
+            "p0": {
+                "K_x": [1000, 1000, 1000, 100, 100, 100],
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+            },
+            "p1": {
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+            "p2": {
+                "release_width": 0.06,
+                "release_speed": 0.2,
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+            "p3": {
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            },
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t = Task(robot)
+    t.add_skill("place", "TaxPlace", context)
     t.start()
     result = t.wait()
     print(result)
