@@ -21,7 +21,7 @@ import scipy.stats
 benchmark_factors = [0, 0.1, 0.2, 0.3, 0.4]
 benchmark_learning_thresholds = [0.01, 0.01, 0.01, 0.01]
 experiment_factors = [0, 0.1, 0.2, 0.3, 0.4]
-experiment_learning_thresholds = [1.1/5, 0.85/5, 0.8/5, 0.7/5, 0.7/5]
+experiment_learning_thresholds = [0.7/5, 0.5/5, 0.6/5, 0.7/5, 0.6/5]
 #experiment_learning_thresholds = [1, 1, 1, 1]
 database = "collective-control-001.local"
 agents_benchmark = ["collective-panda-001", "collective-panda-002", "collective-panda-003",
@@ -267,8 +267,8 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
         axes_casr[1, i].set_xlabel("Time [s]")
         axes_casr[0, i].set_title("Task" + str(factors[i]))
 
-        axes_casr[0, i].plot([0, len(casr_trial_single)], [0, 200], color="black", linestyle="dashed")
-        axes_casr[1, i].plot([0, len(casr_time_single)], [0, 5000], color="black", linestyle="dashed")
+        axes_casr[0, i].plot([0, len(casr_trial_single)], [0, len(casr_trial_single)], color="black", linestyle="dashed")
+        axes_casr[1, i].plot([0, len(casr_time_single)], [0, len(casr_time_single)], color="black", linestyle="dashed")
 
         axes_casr[0, i].set_ylim(0, 100)
         axes_casr[1, i].set_ylim(0, 5000)
@@ -343,6 +343,7 @@ def get_average_and_confidence(learning_times):
 
     means = []
     std = []
+    print(learning_times)
     for i in range(len(learning_times)):
         means.append(np.average(learning_times[i]))
 
@@ -359,8 +360,8 @@ def get_average_and_confidence(learning_times):
 def get_learning_time(costs: list, learning_threshold: float, p: DataProcessor):
     learning_time_average = []
     for i in range(len(costs)):
-        #learning_time_average.append(get_learning_duration(np.asarray(costs[i]), learning_threshold))
-        learning_time_average.append(find_convergence(np.asarray(costs[i]),0.001))
+        learning_time_average.append(get_learning_duration(np.asarray(costs[i]), learning_threshold))
+        #learning_time_average.append(find_convergence(np.asarray(costs[i]),0.001))
     return learning_time_average
 
 
