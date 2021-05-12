@@ -28,6 +28,16 @@ agents_benchmark = ["collective-panda-001", "collective-panda-002", "collective-
           "collective-panda-008", "collective-panda-009"]
 agents_experiment = ["collective-panda-001", "collective-panda-003", "collective-panda-007",
           "collective-panda-008", "collective-panda-009"]
+
+task_map = {
+    "collective-panda-001": "cylinder_40",
+    "collective-panda-002": "key_abus_e30",
+    "collective-panda-003": "plug_eth",
+    "collective-panda-007": "cylinder_20",
+    "collective-panda-008": "cylinder_60",
+    "collective-panda-009": "key_old",
+}
+
 base_batch_size_benchmark = 15
 n_trials_benchmark = 300
 base_batch_size_experiment = 15
@@ -81,13 +91,12 @@ def benchmark_collective(agents: list, unique_tag: str, n_iter: int = 1):
         backup_results(a, database, pd.task_type, [tag], "collective_data")
 
 
-def experiment_single(agent: str,  unique_tag: str, factor: float, n_iter: int = 1):
+def experiment_single(agent: str,  unique_tag: str, n_iter: int = 1):
     call_method(agent, 12002, "set_grasped_object", {"object": "generic_insertable"})
     pd = insert_generic()
     delete_local_results([agent], "ml_results", pd.task_type, ["collective_experiment_single", unique_tag])
-    tags = ["collective_experiment_single", "f_" + str(factor), unique_tag]
+    tags = ["collective_experiment_single", "task_" + str(task_map[agent]), unique_tag]
     pd = insert_generic()
-    pd.identity = [factor]
     service_config = SVMConfiguration()
     service_config.exploration_mode = True
     service_config.batch_width = base_batch_size_experiment
@@ -119,8 +128,7 @@ def experiment_collective(agents: list, unique_tag: str, n_iter: int = 1):
         j = 0
         for a in agents:
             pd = insert_generic()
-            pd.identity = [experiment_factors[j]]
-            tags = [tag, a, unique_tag, "f_" + str(experiment_factors[j])]
+            tags = [tag, a, unique_tag, "task_" + task_map[a]]
             threads.append(
                 Thread(target=start_single_experiment, args=(a, [a], pd, service_config, i, tags, knowledge, False,)))
             threads[-1].start()
@@ -172,109 +180,124 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
     knowledge_time_parallel = []
 
     for i in range(len(factors)):
+        found_single = True
+        found_shared = True
+
         tags_single = [marker + "_single", unique_tag_single, "f_" + str(factors[i])]
         try:
             results_single = get_multiple_experiment_data(database, skill,
                                                    results_db="collective_data",
                                                    filter={"meta.tags": {"$all": tags_single}})
+
+            cost_trial_single, confidence_trial = p.get_average_cost(results_single, True)
+            cost_time_single, confidence_time = p.get_average_cost_over_time(results_single, decreasing=True)
+            asr_trial_single, confidence_asr_trial = p.get_average_success(results_single)
+            asr_time_single, confidence_asr_time = p.get_average_success_over_time(results_single)
+            casr_trial_single, confidence_casr_trial = p.get_average_success(results_single)
+            casr_time_single, confidence_casr_time = p.get_average_success_over_time(results_single)
+
+            for j in range(1, len(casr_trial_single)):
+                casr_trial_single[j] += casr_trial_single[j - 1]
+
+            for j in range(1, len(casr_time_single)):
+                casr_time_single[j] += casr_time_single[j - 1]
+
+            knowledge_time_single.append(
+                get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True),
+                                  learning_thresholds[i], p))
+            knowledge_time_parallel.append(
+                get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True),
+                                  learning_thresholds[i], p))
+            # knowledge_time_parallel.append(get_learning_time(results_single, learning_thresholds[i], p))
+
+            axes[0, i].plot(cost_trial_single * 5, "g")
+            axes[0, i].fill_between(np.linspace(0, len(cost_trial_single), len(cost_trial_single)),
+                                    cost_trial_single * 5 - confidence_trial * 5,
+                                    cost_trial_single * 5 + confidence_trial * 5, alpha=0.2, color="g")
+            axes[1, i].plot(cost_time_single * 5, "g")
+            axes[1, i].fill_between(np.linspace(0, len(cost_time_single), len(cost_time_single)),
+                                    cost_time_single * 5 - confidence_time * 5,
+                                    cost_time_single * 5 + confidence_time * 5, alpha=0.2, color="g")
+
+            axes_asr[0, i].plot(asr_trial_single, "g")
+            axes_asr[1, i].plot(asr_time_single, "g")
+
+            axes_casr[0, i].plot(casr_trial_single, "g")
+            axes_casr[1, i].plot(casr_time_single, "g")
+
         except DataNotFoundError:
             print("No data found for tags: " + str(tags_single))
-            continue
-        cost_trial_single, confidence_trial = p.get_average_cost(results_single, True)
-        cost_time_single, confidence_time = p.get_average_cost_over_time(results_single, decreasing=True)
-        asr_trial_single, confidence_asr_trial = p.get_average_success(results_single)
-        asr_time_single, confidence_asr_time = p.get_average_success_over_time(results_single)
-        casr_trial_single, confidence_casr_trial = p.get_average_success(results_single)
-        casr_time_single, confidence_casr_time = p.get_average_success_over_time(results_single)
-
-        for j in range(1, len(casr_trial_single)):
-            casr_trial_single[j] += casr_trial_single[j-1]
-
-        for j in range(1, len(casr_time_single)):
-            casr_time_single[j] += casr_time_single[j-1]
-
-        knowledge_time_single.append(get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True), learning_thresholds[i], p))
-        knowledge_time_parallel.append(get_learning_time(p.get_collection_of_costs_over_time(results_single, decreasing=True), learning_thresholds[i], p))
-        #knowledge_time_parallel.append(get_learning_time(results_single, learning_thresholds[i], p))
-
-        axes[0, i].plot(cost_trial_single * 5, "g")
-        axes[0, i].fill_between(np.linspace(0, len(cost_trial_single), len(cost_trial_single)), cost_trial_single * 5 - confidence_trial * 5, cost_trial_single * 5 + confidence_trial * 5, alpha=0.2, color="g")
-        axes[1, i].plot(cost_time_single * 5, "g")
-        axes[1, i].fill_between(np.linspace(0, len(cost_time_single), len(cost_time_single)), cost_time_single * 5 - confidence_time * 5, cost_time_single * 5 + confidence_time * 5, alpha=0.2, color="g")
-        axes[0, i].set_xlabel("Trial [1]")
-        axes[1, i].set_xlabel("Time [s]")
-        axes[0, i].set_title("Task" + str(factors[i]))
-
-        axes_asr[0, i].plot(asr_trial_single, "g")
-        axes_asr[1, i].plot(asr_time_single, "g")
-        axes_asr[0, i].set_xlabel("Trial [1]")
-        axes_asr[1, i].set_xlabel("Time [s]")
-        axes_asr[0, i].set_title("Task" + str(factors[i]))
-
-        axes_casr[0, i].plot(casr_trial_single, "g")
-        axes_casr[1, i].plot(casr_time_single, "g")
-        axes_casr[0, i].set_xlabel("Trial [1]")
-        axes_casr[1, i].set_xlabel("Time [s]")
-        axes_casr[0, i].set_title("Task" + str(factors[i]))
+            found_single = False
 
         tags_shared = [marker + "_shared", unique_tag_shared, "f_" + str(factors[i])]
         try:
             results_shared = get_multiple_experiment_data(database, skill,
                                                           results_db="collective_data",
                                                           filter={"meta.tags": {"$all": tags_shared}})
+
+            cost_trial_shared, confidence_trial = p.get_average_cost(results_shared, True)
+            cost_time_shared, confidence_time = p.get_average_cost_over_time(results_shared, decreasing=True)
+            asr_trial_shared, confidence_asr_trial = p.get_average_success(results_shared)
+            asr_time_shared, confidence_asr_time = p.get_average_success_over_time(results_shared)
+            casr_trial_shared, confidence_casr_trial = p.get_average_success(results_shared)
+            casr_time_shared, confidence_casr_time = p.get_average_success_over_time(results_shared)
+
+            for j in range(1, len(casr_trial_shared)):
+                casr_trial_shared[j] += casr_trial_shared[j - 1]
+
+            for j in range(1, len(casr_time_shared)):
+                casr_time_shared[j] += casr_time_shared[j - 1]
+
+            knowledge_time_shared.append(
+                get_learning_time(p.get_collection_of_costs_over_time(results_shared, decreasing=True),
+                                  learning_thresholds[i], p))
+            # knowledge_time_shared.append(get_learning_time(results_shared, learning_thresholds[i], p))
+
+            axes[0, i].plot(cost_trial_shared * 5, "b")
+            axes[0, i].fill_between(np.linspace(0, len(cost_trial_shared), len(cost_trial_shared)),
+                                    cost_trial_shared * 5 - confidence_trial * 5,
+                                    cost_trial_shared * 5 + confidence_trial * 5, alpha=0.2, color="b")
+            axes[1, i].plot(cost_time_shared * 5, "b")
+            axes[1, i].fill_between(np.linspace(0, len(cost_time_shared), len(cost_time_shared)),
+                                    cost_time_shared * 5 - confidence_time * 5,
+                                    cost_time_shared * 5 + confidence_time * 5, alpha=0.2, color="b")
+
+            axes[0, i].set_ylim(0, 5)
+            axes[1, i].set_ylim(0, 5)
+
+            axes_asr[0, i].plot(asr_trial_shared, "b")
+            axes_asr[1, i].plot(asr_time_shared, "b")
+
+            axes_casr[0, i].plot(casr_trial_shared, "b")
+            axes_casr[1, i].plot(casr_time_shared, "b")
         except DataNotFoundError:
             print("No data found for tags: " + str(tags_shared))
+            found_shared = False
+
+        if found_single is False and found_shared is False:
             continue
-        cost_trial_shared, confidence_trial = p.get_average_cost(results_shared, True)
-        cost_time_shared, confidence_time = p.get_average_cost_over_time(results_shared, min_length=len(cost_time_single), decreasing=True)
-        asr_trial_shared, confidence_asr_trial = p.get_average_success(results_shared)
-        asr_time_shared, confidence_asr_time = p.get_average_success_over_time(results_shared, min_length=len(asr_time_single))
-        casr_trial_shared, confidence_casr_trial = p.get_average_success(results_shared)
-        casr_time_shared, confidence_casr_time = p.get_average_success_over_time(results_shared, min_length=len(asr_time_single))
 
-        for j in range(1, len(casr_trial_shared)):
-            casr_trial_shared[j] += casr_trial_shared[j - 1]
-
-        for j in range(1, len(casr_time_shared)):
-            casr_time_shared[j] += casr_time_shared[j - 1]
-
-        knowledge_time_shared.append(get_learning_time(p.get_collection_of_costs_over_time(results_shared, decreasing=True), learning_thresholds[i], p))
-        #knowledge_time_shared.append(get_learning_time(results_shared, learning_thresholds[i], p))
-
-        axes[0, i].plot(cost_trial_shared * 5, "b")
-        axes[0, i].fill_between(np.linspace(0, len(cost_trial_shared), len(cost_trial_shared)), cost_trial_shared * 5 - confidence_trial * 5, cost_trial_shared * 5 + confidence_trial * 5, alpha=0.2, color="b")
-        axes[1, i].plot(cost_time_shared * 5, "b")
-        axes[1, i].fill_between(np.linspace(0, len(cost_time_shared), len(cost_time_shared)), cost_time_shared *5 - confidence_time * 5, cost_time_shared * 5 + confidence_time * 5, alpha=0.2, color="b")
-        axes[0, i].set_xlabel("Trial [1]")
-        axes[1, i].set_xlabel("Time [s]")
-        axes[0, i].set_title("Task" + str(factors[i]))
-
-        axes[0, i].set_ylim(0, 5)
-        axes[1, i].set_ylim(0, 5)
-
-        axes_asr[0, i].plot(asr_trial_shared, "b")
-        axes_asr[1, i].plot(asr_time_shared, "b")
-        axes_asr[0, i].set_xlabel("Trial [1]")
-        axes_asr[1, i].set_xlabel("Time [s]")
-        axes_asr[0, i].set_title("Task" + str(factors[i]))
+        if found_single is True:
+            plot_trial_length = len(casr_trial_single)
+            plot_time_length = len(casr_time_single)
+        elif found_shared is True:
+            plot_trial_length = len(casr_trial_shared)
+            plot_time_length = len(casr_time_shared)
 
         axes_asr[0, i].set_ylim(0, 1)
         axes_asr[1, i].set_ylim(0, 1)
-
-        axes_casr[0, i].plot(casr_trial_shared, "b")
-        axes_casr[1, i].plot(casr_time_shared, "b")
         axes_casr[0, i].set_xlabel("Trial [1]")
         axes_casr[1, i].set_xlabel("Time [s]")
         axes_casr[0, i].set_title("Task" + str(factors[i]))
 
-        axes_casr[0, i].plot([0, len(casr_trial_single)], [0, len(casr_trial_single)], color="black", linestyle="dashed")
-        axes_casr[1, i].plot([0, len(casr_time_single)], [0, len(casr_time_single)], color="black", linestyle="dashed")
+        axes_casr[0, i].plot([0, plot_trial_length], [0, plot_trial_length], color="black", linestyle="dashed")
+        axes_casr[1, i].plot([0, plot_time_length], [0, plot_time_length], color="black", linestyle="dashed")
 
-        axes_casr[0, i].set_ylim(0, 100)
-        axes_casr[1, i].set_ylim(0, 5000)
+        axes_casr[0, i].set_ylim(0, plot_trial_length)
+        axes_casr[1, i].set_ylim(0, plot_time_length)
 
-        axes_casr[0, i].set_xlim(0, len(casr_trial_single))
-        axes_casr[1, i].set_xlim(0, len(casr_time_single))
+        axes_casr[0, i].set_xlim(0, plot_trial_length)
+        axes_casr[1, i].set_xlim(0, plot_time_length)
 
         #axes[0, i].plot(get_difference_function(cost_trial_single, cost_trial_shared))
         #axes[1, i].plot(get_difference_function(cost_time_single, cost_time_shared))
@@ -311,22 +334,24 @@ def plot_data_comparison(unique_tag_single: str, unique_tag_shared: str, benchma
     knowledge_time_shared_avg = np.insert(knowledge_time_shared_avg, 0, 0)
     knowledge_time_shared_conf = np.insert(knowledge_time_shared_conf, 0, 0)
 
-    knowledge_units = np.linspace(0, len(knowledge_time_parallel_avg)-1, len(knowledge_time_parallel_avg))
+    knowledge_units_single = np.linspace(0, len(knowledge_time_single_avg)-1, len(knowledge_time_single_avg))
+    knowledge_units_parallel = np.linspace(0, len(knowledge_time_parallel_avg) - 1, len(knowledge_time_parallel_avg))
+    knowledge_units_shared = np.linspace(0, len(knowledge_time_shared_avg) - 1, len(knowledge_time_shared_avg))
 
-    axes_knowledge.fill_betweenx(knowledge_units,
+    axes_knowledge.fill_betweenx(knowledge_units_single,
                          knowledge_time_single_avg - knowledge_time_single_conf,
                          knowledge_time_single_avg + knowledge_time_single_conf, alpha=0.2, color="g")
-    axes_knowledge.plot(knowledge_time_single_avg, knowledge_units, "g")
+    axes_knowledge.plot(knowledge_time_single_avg, knowledge_units_single, "g")
 
-    axes_knowledge.fill_betweenx(knowledge_units,
+    axes_knowledge.fill_betweenx(knowledge_units_parallel,
                                 knowledge_time_parallel_avg - knowledge_time_parallel_conf,
                                 knowledge_time_parallel_avg + knowledge_time_parallel_conf, alpha=0.2, color="r")
-    axes_knowledge.plot(knowledge_time_parallel_avg, knowledge_units, "r")
+    axes_knowledge.plot(knowledge_time_parallel_avg, knowledge_units_parallel, "r")
 
-    axes_knowledge.fill_betweenx(knowledge_units,
+    axes_knowledge.fill_betweenx(knowledge_units_shared,
                                 knowledge_time_shared_avg - knowledge_time_shared_conf,
                                 knowledge_time_shared_avg + knowledge_time_shared_conf, alpha=0.2, color="b")
-    axes_knowledge.plot(knowledge_time_shared_avg, knowledge_units, "b")
+    axes_knowledge.plot(knowledge_time_shared_avg, knowledge_units_shared, "b")
     #axes_knowledge.plot(knowledge_time_single_avg, np.linspace(0,  len(knowledge_time_single_avg)-1, len(knowledge_time_single_avg)))
     axes_knowledge.legend(("Single Learning", "Parallel Learning", "Collective Learning"))
 
