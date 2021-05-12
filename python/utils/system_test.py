@@ -630,8 +630,8 @@ def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int 
     received_pkgs = []
     start_time = time.time()
     try:       
-        print("\n    --Interrupt with ctrl+c--\n")                                    
-        while True:  
+        print("\n    --Interrupt with ctrl+c--\n")
+        while True:
             data, adrr = s.recvfrom(4096)  
             received_pkgs.append(json.loads(data.decode("utf-8")))
             cnt += 1 
@@ -646,8 +646,6 @@ def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int 
         if pkg.get("tau_ext", False) != False and pkg.get("q", False) != False:
             pkg_validation_cnt +=1
     print(cnt-pkg_validation_cnt, " package(s) are corrupted.")
-
-
     print("Stopping Telemtry_UDP again...")
     result_2 = call_method(address, 12000, "stop_telemetry", {}, timeout=5)
     if result_2["result"]["result"] == True:

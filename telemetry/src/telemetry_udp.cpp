@@ -170,7 +170,7 @@ void Telemetry_UDP::sending_loop(){
                     case 38: msrm_utils::write_json_array<double,7,1>(msg_data["q_d"],p->controller.q_d); break;
                     case 39: msrm_utils::write_json_array<double,7,1>(msg_data["dq_d"],p->controller.dq_d); break;
                     case 40: msrm_utils::write_json_array<double,7,1>(msg_data["tau_ff"],p->controller.tau_ff); break;
-                    default: msg_data["Error"] = "No definded Telemetry subscribed";
+                    default: msg_data[subscribtion] = "Not a definded Telemetry.";
                 }
             }
             // send to every subscriber
