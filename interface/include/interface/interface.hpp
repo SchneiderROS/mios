@@ -8,11 +8,10 @@ class Core;
 class TaskEngine;
 class Portal;
 class Memory;
-class TelemetryUDP;
 
 class CommandInterface{
 public:
-    CommandInterface(Core *core, TaskEngine *task_engine, Portal *portal, Memory* memory, TelemetryUDP* telemetry);
+    CommandInterface(Core *core, TaskEngine *task_engine, Portal *portal, Memory* memory);
 private:
     void bind_methods();
 
@@ -68,7 +67,6 @@ private:
     TaskEngine* m_task_engine;
     Portal* m_portal;
     Memory* m_memory;
-    TelemetryUDP* m_telemetry;
 
 };
 

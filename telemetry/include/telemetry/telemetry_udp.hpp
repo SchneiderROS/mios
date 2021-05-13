@@ -11,24 +11,31 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <map>
 #include <nlohmann/json.hpp>
+
+namespace msrm_utils{
+class UDPStreamSender;
+}
 
 
 namespace mios {
 
 class Core;
+class Portal;
 
 struct Subscriber{
     unsigned port;
     std::string ip;
     std::string address;
     std::vector<std::string> subscribtions; 
+    std::shared_ptr<msrm_utils::UDPStreamSender> stream;
 };
 
 class TelemetryUDP{
 public:
-    TelemetryUDP(Core *core);
+    TelemetryUDP(Core* core, Portal* portal);
     ~TelemetryUDP();
 
     bool add_subscriber(const std::string &addr, const unsigned port, const std::vector<std::string> &subs);
@@ -39,20 +46,21 @@ private:
     bool send(const nlohmann::json &msg_data, const std::string &address, const unsigned port);
     void sending_loop();
 
-    Core *m_core;
+    Core* m_core;
+    Portal* m_portal;
 
-    std::vector<Subscriber> subscriber_vector;
-    std::atomic<bool> keep_running;
-    std::thread sending_thread;
-    bool thread_running;
+    std::vector<Subscriber> m_subscribers;
+    std::atomic<bool> m_keep_running;
+    std::thread m_thr_send;
+    bool m_thread_running;
+    std::mutex m_mtx_subscriber;
 
     unsigned m_frequency;  //ms
-    std::chrono::time_point<std::chrono::high_resolution_clock> time_1;
-    std::chrono::time_point<std::chrono::high_resolution_clock> time_2;
-    std::chrono::duration<double, std::milli> time_duration;
-    int m_socket;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_time_1;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_time_2;
+    std::chrono::duration<double, std::milli> m_time_duration;
 
-    std::map<std::string, unsigned> perception{
+    std::map<std::string, unsigned> m_data_map{
                     //End effector pose in origin frame (O).
                         {"O_T_EE", 1},
                     //End effector pose in task frame (TF).

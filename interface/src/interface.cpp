@@ -4,7 +4,6 @@
 #include "task/task_engine.hpp"
 #include "portal/portal.hpp"
 #include "memory/memory.hpp"
-#include "telemetry/telemetry_udp.hpp"
 #include <spdlog/spdlog.h>
 
 
@@ -12,7 +11,7 @@ namespace mios {
 
 using msrm_utils::ArgPair;
 
-CommandInterface::CommandInterface(Core *core, TaskEngine *task_engine,Portal* portal,Memory* memory,TelemetryUDP* telemetry):m_core(core),m_task_engine(task_engine),m_portal(portal),m_memory(memory),m_telemetry(telemetry){
+CommandInterface::CommandInterface(Core *core, TaskEngine *task_engine,Portal* portal,Memory* memory):m_core(core),m_task_engine(task_engine),m_portal(portal),m_memory(memory){
     bind_methods();
 }
 
@@ -450,7 +449,7 @@ nlohmann::json CommandInterface::subscribe_telemetry(const nlohmann::json &reque
         return response;
     }
 
-    if(!m_telemetry->add_subscriber(request["ip"], request["port"], request["subscribe"])){
+    if(!m_core->get_telemetry()->add_subscriber(request["ip"], request["port"], request["subscribe"])){
         response["result"] = false;
         response["error_message"] = "Could not add subscriber "+request.dump();
     };
@@ -458,7 +457,7 @@ nlohmann::json CommandInterface::subscribe_telemetry(const nlohmann::json &reque
 }
 nlohmann::json CommandInterface::stop_telemetry(const nlohmann::json &request){
     nlohmann::json response;
-    response["result"] = m_telemetry->stop_sending();
+    response["result"] = m_core->get_telemetry()->stop_sending();
     return response;
 }
 //nlohmann::json CommandInterface::subscribe_to_event_stream(const nlohmann::json &request){

@@ -29,9 +29,10 @@
 namespace mios {
 
 Core::Core(unsigned database_port, unsigned robot_configuration):m_memory(database_port),m_skill_engine(SkillEngine(this)),m_panda_body(PandaBody(&m_memory)),
-    m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_skill_library(&m_memory,&m_portal),m_telemetry(TelemetryUDP(this)),
-    m_task_engine(TaskEngine(this)),m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory,&m_telemetry)),m_ros_node(this,&m_task_engine,&m_portal,&m_memory),
-    m_controller_pipeline(std::make_unique<NullControllerPipeline>()),m_is_ready(false),m_robot_configuration(robot_configuration),m_hand_grace_period(0),m_blend_skill(false){
+    m_portal(Portal("0.0.0.0",12000,"mios/core","0.0.0.0",12001,12002)),m_skill_library(&m_memory,&m_portal),m_task_engine(TaskEngine(this)),
+    m_command_interface(CommandInterface(this,&m_task_engine,&m_portal,&m_memory)),m_ros_node(this,&m_task_engine,&m_portal,&m_memory),
+    m_telemetry(TelemetryUDP(this,&m_portal)),m_controller_pipeline(std::make_unique<NullControllerPipeline>()),m_is_ready(false),
+    m_robot_configuration(robot_configuration),m_blend_skill(false),m_hand_grace_period(0){
 }
 
 Core::~Core(){
@@ -109,8 +110,13 @@ LearningModule* Core::get_learning_module(){
     return &m_learning_module;
 }
 
+TelemetryUDP* Core::get_telemetry(){
+    return &m_telemetry;
+}
+
 ControlReturnType Core::execute_skill(){
-    spdlog::debug("CORE: execute_skill");
+    std::scoped_lock<std::mutex> busy_lock(m_mtx_is_busy);
+    spdlog::trace("CORE:execute_skill()");
 
     if(!m_panda_body.pre_run_checks()){
         if(!m_panda_body.recover()){
@@ -493,6 +499,15 @@ const Percept* Core::get_percept() const{
 
 bool Core::is_ready() const{
     return m_is_ready;
+}
+
+bool Core::is_busy(){
+    if(m_mtx_is_busy.try_lock()){
+        m_mtx_is_busy.unlock();
+        return false;
+    }else{
+        return false;
+    }
 }
 
 }
