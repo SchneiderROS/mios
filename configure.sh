@@ -116,7 +116,7 @@ then
 git clone https://gitlab.lrz.de/ge29miq/msrm_utils.git
 fi
 cd msrm_utils
-git checkout v1.0.3
+git checkout v1.1.1
 cd cpp
 mkdir -p build/debug
 mkdir -p build/release
