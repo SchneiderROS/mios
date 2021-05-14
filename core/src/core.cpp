@@ -506,7 +506,7 @@ bool Core::is_busy(){
         m_mtx_is_busy.unlock();
         return false;
     }else{
-        return false;
+        return true;
     }
 }
 
