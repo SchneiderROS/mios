@@ -24,8 +24,7 @@ experiment_factors = [0, 0.1, 0.2, 0.3, 0.4]
 experiment_learning_thresholds = [0.7/5, 0.5/5, 0.6/5, 0.7/5, 0.6/5]
 #experiment_learning_thresholds = [1, 1, 1, 1]
 database = "collective-control-001.local"
-agents_benchmark = ["collective-panda-001", "collective-panda-002", "collective-panda-003",
-          "collective-panda-008", "collective-panda-009"]
+agents_benchmark = ["collective-panda-001", "collective-panda-003"]
 agents_experiment = ["collective-panda-001", "collective-panda-003", "collective-panda-007",
           "collective-panda-008", "collective-panda-009"]
 

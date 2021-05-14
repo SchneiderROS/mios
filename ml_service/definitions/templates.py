@@ -1246,7 +1246,8 @@ def tax_insertion(insertable: str, container: str, approach: str) -> ProblemDefi
         "K_psi": 0.1
     }
 
-    domain = Domain(limits, context_mapping, x_0)
+    non_shareables = ["offset_x", "offset_y", "offset_phi", "offset_chi"]
+    domain = Domain(limits, context_mapping, x_0, non_shareables)
     default_context = {
         "name": "GenericTask",
         "parameters": {

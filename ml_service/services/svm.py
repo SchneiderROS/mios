@@ -201,12 +201,21 @@ class SVMService(BaseService):
                     continue
                 else:
                     break
+            print("LEN new_set: " + str(len(new_set)))
+            print("LEN x_set_external: " + str(len(x_set_external)))
             for i in new_set:
                 x_set.append(i[0])
                 costs.append((i[1],))
             # for i in range(len(x_set_external)):
             #     x_set.append(x_set_external[i])
             #     costs.append((cost_external[i],))
+            for i in range(len(new_set)):
+                for j in range(len(new_set[i])):
+                    print("###################################")
+                    print(self.problem_definition.domain.non_shareables)
+                    if self.problem_definition.domain.vector_mapping[j] in self.problem_definition.domain.non_shareables:
+                        print("Not sharing: " + self.problem_definition.domain.vector_mapping[j])
+                        new_set[i][j] = x_set_external[i][j]
 
         costs_tmp = []
         for c in costs:
