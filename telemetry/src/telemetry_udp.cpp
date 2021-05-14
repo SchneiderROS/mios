@@ -70,6 +70,8 @@ bool TelemetryUDP::remove_subscriber(const std::string &addr){
                 return false;
             }
             if((*it).stream->disconnect()){
+                std::string name = "telemetry_" + (*it).ip + ":" + std::to_string((*it).port);
+                m_portal->close_udp_outstream(name);
                 m_subscribers.erase(it);
                 m_mtx_subscriber.unlock();
                 spdlog::debug("TelemetryUDP::remove_subscriber: removed subscriber "+addr);
