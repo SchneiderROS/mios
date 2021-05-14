@@ -620,11 +620,11 @@ def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int 
     print("Testing Telemtry_UDP module...")
     print("subscribe to Telemetry_UDP with \"tau_ext\", \"q\"...")
     result_1 = call_method(address, 12000, "subscribe_telemetry",
-                           {"ip": subscriber_addr, "port": subscriber_port, "subscribe": ["tau_ext", "q"]})
-    if result_1["result"]["result"] == True:
+                           {"ip": subscriber_addr, "port": subscriber_port, "subscribe": ["tau_ext", "q"]},silent=False, timeout=7)
+    if result_1["result"]["result"]:
         print("successfull subscribed.")
     else:
-        print("Error while subscribing: ", result)
+        print("Error while subscribing: ", result_1)
     print("receiving subscribed telemetry packages for next 10 seconds...")
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind((subscriber_addr, subscriber_port))
@@ -634,7 +634,7 @@ def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int 
     try:
         print("\n    --Interrupt with ctrl+c--\n")
         while True:
-            data, adrr = s.recvfrom(4096)
+            data, adrr = s.recvfrom(8192)
             received_pkgs.append(json.loads(data.decode("utf-8")))
             cnt += 1
             if time.time() - start_time > 10:
@@ -652,11 +652,12 @@ def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int 
     result_2 = call_method(address, 12000, "unsubscribe_telemetry", {"ip": subscriber_addr})
     if result_2["result"]["result"]:
         print("successfull unsibscribed.")
-    if result_1["result"]["result"] and cnt - pkg_validation_cnt == 0 and result_2["result"]["result"]:
+    if cnt < 1:
+        print("Received no package. Test failed!")
+    elif result_1["result"]["result"] and cnt - pkg_validation_cnt == 0 and result_2["result"]["result"]:
         print("\nEverything works fine :)")
     else:
         print("\nTest failed!")
-
 
 def start_skill(address: str, skill: str, parameters: dict, control: dict):
     response = start_task(address, "GenericTask", parameters={"parameters": {
