@@ -116,7 +116,7 @@ void TelemetryUDP::sending_loop(){
     while(m_keep_running){
         m_time_1 = std::chrono::high_resolution_clock::now();
         // get current percept
-        if(m_core->is_busy()){
+        if(!m_core->is_busy()){
             if(!m_core->refresh_percept({})){
                 spdlog::warn("No current state available, could not refresh perception.");
             }
