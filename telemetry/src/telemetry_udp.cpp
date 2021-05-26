@@ -29,14 +29,13 @@ bool TelemetryUDP::add_subscriber(const std::string &addr, const unsigned port, 
         return false;
     }
     // is subscriber already in subscriber list?
-    std::string name = "telemetry_" + ip + ":" + std::to_string(port);
-    Subscriber sub_temp = {port, ip, addr, subs, m_portal->open_udp_outstream(name,ip,port)};
-
     m_mtx_subscriber.lock();
     auto it = std::find_if(m_subscribers.begin(), m_subscribers.end(),
                     [&ip_temp = addr](const Subscriber &sub) -> bool
                     { return ip_temp == sub.address; });
     if(it == m_subscribers.end()){
+        std::string name = "telemetry_" + ip + ":" + std::to_string(port);
+        Subscriber sub_temp = {port, ip, addr, subs, m_portal->open_udp_outstream(name,ip,port)};
         m_subscribers.push_back(sub_temp);  // add new subscriber
         if(!sub_temp.stream->connect()){
             spdlog::error("Could not connect outgoing UDP stream to " + sub_temp.address + ":" + std::to_string(sub_temp.port));
@@ -45,13 +44,8 @@ bool TelemetryUDP::add_subscriber(const std::string &addr, const unsigned port, 
         }
     }
     else{  // update subscriber
-        spdlog::debug("TelemetryUDP::add_subscriber: Updating existing Subsciber " + sub_temp.address + ":"+std::to_string(sub_temp.port));
-        for(auto &sub : m_subscribers){
-            if(sub.address == sub_temp.address){
-                sub.subscribtions = sub_temp.subscribtions;
-                sub.port = sub_temp.port;
-            }
-        }
+        spdlog::debug("TelemetryUDP::add_subscriber: Updating existing Subsciber " + (*it).address + ":"+std::to_string((*it).port));
+        (*it).subscribtions = subs;
     }
     m_mtx_subscriber.unlock();
     return true;
