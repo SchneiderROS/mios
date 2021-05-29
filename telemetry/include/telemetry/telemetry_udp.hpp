@@ -29,7 +29,7 @@ struct Subscriber{
     unsigned port;
     std::string ip;
     std::string address;
-    std::vector<std::string> subscribtions; 
+    std::vector<std::string> subscriptions;
     std::shared_ptr<msrm_utils::UDPStreamSender> stream;
 };
 

@@ -45,7 +45,7 @@ bool TelemetryUDP::add_subscriber(const std::string &addr, const unsigned port, 
     }
     else{  // update subscriber
         spdlog::debug("TelemetryUDP::add_subscriber: Updating existing Subsciber " + (*it).address + ":"+std::to_string((*it).port));
-        (*it).subscribtions = subs;
+        (*it).subscriptions = subs;
     }
     m_mtx_subscriber.unlock();
     return true;
@@ -121,8 +121,8 @@ void TelemetryUDP::sending_loop(){
         for(auto sub : m_subscribers){
             // build message for every subscriber
             nlohmann::json msg_data;
-            for(std::string subscribtion : sub.subscribtions){
-                switch(m_data_map.find(subscribtion)->second){
+            for(std::string subscription : sub.subscriptions){
+                switch(m_data_map.find(subscription)->second){
                 case 1: msrm_utils::write_json_array<double,4,4>(msg_data["O_T_EE"],p->proprioception.O_T_EE); break;
                 case 2: msrm_utils::write_json_array<double,4,4>(msg_data["T_T_EE"],p->proprioception.T_T_EE); break;
                 case 3: msrm_utils::write_json_array<double,7,1>(msg_data["q"],p->proprioception.q); break;
@@ -175,7 +175,7 @@ void TelemetryUDP::sending_loop(){
                 case 38: msrm_utils::write_json_array<double,7,1>(msg_data["q_d"],p->controller.q_d); break;
                 case 39: msrm_utils::write_json_array<double,7,1>(msg_data["dq_d"],p->controller.dq_d); break;
                 case 40: msrm_utils::write_json_array<double,7,1>(msg_data["tau_ff"],p->controller.tau_ff); break;
-                default: msg_data[subscribtion] = "Not a definded Telemetry.";
+                default: msg_data[subscription] = "Not a defined Telemetry.";
                 }
             }
             // send to every subscriber
