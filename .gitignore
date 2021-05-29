@@ -66,6 +66,11 @@ CMakeLists.txt.user*
 venv
 
 
+# IDE files #
+###########
+.idea
+cmake-build-*
+
 # doxygen #
 ###########
 doc/html/*
