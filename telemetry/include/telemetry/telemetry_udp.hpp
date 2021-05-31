@@ -39,7 +39,7 @@ public:
     TelemetryUDP(Core* core, Portal* portal);
     ~TelemetryUDP();
 
-    bool add_subscriber(const std::string &addr, const unsigned port, const std::vector<std::string> &subs
+    bool add_subscriber(const std::string &addr, unsigned port, const std::vector<std::string> &subs,
                         bool sendWithTerminatingNullCharacter);
     bool remove_subscriber(const std::string &addr);
     bool start_sending();

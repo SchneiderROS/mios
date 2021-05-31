@@ -10,7 +10,7 @@
 
 namespace mios {
 
-TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_thread_running(false),m_keep_running(false),m_frequency(200){
+TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_thread_running(false),m_keep_running(false),m_frequency(5){
     start_sending();
 }
 
@@ -18,7 +18,7 @@ TelemetryUDP::~TelemetryUDP(){
     stop_sending();
 }
 
-bool TelemetryUDP::add_subscriber(const std::string &addr, const unsigned port, const std::vector<std::string> &subs
+bool TelemetryUDP::add_subscriber(const std::string &addr, const unsigned port, const std::vector<std::string> &subs,
                                   bool sendWithTerminatingNullCharacter){
     // check ip address:
     std::string ip = addr;
@@ -112,7 +112,7 @@ void TelemetryUDP::sending_loop(){
     spdlog::trace("TelemetryUDP::sending_loop()");
     while(m_keep_running){
         m_time_1 = std::chrono::high_resolution_clock::now();
-        // get current percept
+        // get current perception
         if(!m_core->is_busy()){
             if(!m_core->refresh_percept({})){
                 spdlog::warn("No current state available, could not refresh perception.");
