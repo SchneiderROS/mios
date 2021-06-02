@@ -4,9 +4,8 @@
 
 #include "utils/exceptions.hpp"
 #include "data_structures/object.hpp"
-#include "msrm_utils/math.hpp"
-#include "msrm_utils/benchmarking.hpp"
-#include "msrm_utils/files.hpp"
+#include <msrm_cpp_utils/math.hpp>
+#include <msrm_cpp_utils/benchmarking.hpp>
 #include <spdlog/spdlog.h>
 #include <boost/filesystem.hpp>
 

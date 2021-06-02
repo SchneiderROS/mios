@@ -7,6 +7,7 @@
 #include <chrono>
 #include <unordered_set>
 #include <set>
+#include <mutex>
 
 #include "memory/memory.hpp"
 #include "panda/panda_body.hpp"
@@ -20,6 +21,7 @@
 #include "interface/interface.hpp"
 #include "interface/ros_node.hpp"
 #include "learning_module/learning_module.hpp"
+#include "telemetry/telemetry_udp.hpp"
 
 #include "data_structures/percept.hpp"
 #include "data_structures/actuator.hpp"
@@ -72,8 +74,10 @@ public:
     CommandInterface* get_command_interface();
     RosNode* get_ros_node();
     LearningModule* get_learning_module();
+    TelemetryUDP* get_telemetry();
     const Percept *get_percept() const;
     bool is_ready() const;
+    bool is_busy();
 
 private:
     franka::Finishable *control_base_cycle(const franka::RobotState& state);
@@ -96,6 +100,7 @@ private:
     CommandInterface m_command_interface;
     RosNode m_ros_node;
     LearningModule m_learning_module;
+    TelemetryUDP m_telemetry;
     std::unique_ptr<ControllerPipeline> m_controller_pipeline;
     std::set<std::unique_ptr<SafetyModuleStage1> > m_safety_stage_1;
     std::set<std::unique_ptr<SafetyModuleStage2> > m_safety_stage_2;
@@ -104,6 +109,7 @@ private:
     bool m_is_ready;
     unsigned m_robot_configuration;
     bool m_blend_skill;
+    std::mutex m_mtx_is_busy;
 
 private:
     unsigned m_hand_grace_period;
