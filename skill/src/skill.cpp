@@ -439,6 +439,9 @@ void Skill::write_custom_results(nlohmann::json &custom_results){
 }
 
 void Skill::write_logs(){
+    if(!m_memory->read_parameters()->skill->log_data || m_data_log.size()==0){
+        return;
+    }
     spdlog::info("Writing logs into file...");
     std::string log_file = boost::filesystem::path(boost::filesystem::current_path()).string()+"/../logs/logs_"+m_memory->read_parameters()->skill->log_name+".txt";
     boost::filesystem::create_directories(boost::filesystem::path(boost::filesystem::current_path()).string()+"/../logs/");
