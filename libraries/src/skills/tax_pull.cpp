@@ -1,7 +1,9 @@
 #include "skills/tax_pull.hpp"
 #include "strategies/cart_compliance_strategy.hpp"
 #include "strategies/ff_strategy.hpp"
-#include <msrm_utils/math.hpp>
+#include "strategies/desired_wrench_strategy.hpp"
+#include "strategies/move_to_pose.hpp"
+#include <msrm_cpp_utils/math.hpp>
 
 namespace mios{
 

@@ -686,3 +686,61 @@ def test_hammer(robot, approach, hammerable, hammer):
     t.start()
     result = t.wait()
     print(result)
+
+
+def test_task(robot):
+    slidable = "skill_test_slide_slidable"
+    goal_pose = "skill_test_slide_goal_pose"
+    surface = "skill_test_slide_surface"
+    call_method(robot, 12000, "set_grasped_object", {"object": slidable})
+    context_slide = {
+        "skill": {
+            "objects": {
+                "GoalPose": goal_pose,
+                "Slidable": slidable,
+                "Surface": surface
+            },
+            "time_max": 10,
+            "p0": {
+                "K_x": [1000, 1000, 0, 100, 100, 100],
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "f_slide": 10
+            }
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    shovable = "skill_test_shove_shovable"
+    approach = "skill_test_shove_approach"
+    location = "skill_test_shove_location"
+    context_shove = {
+        "skill": {
+            "objects": {
+                "Shovable": shovable,
+                "Approach": approach,
+                "Location": location,
+            },
+            "time_max": 10,
+            "p0": {
+                "K_x": [1000, 1000, 1000, 100, 100, 100],
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+            },
+            "p1": {
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [1000, 1000, 1000, 100, 100, 100]
+            }
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t = Task(robot)
+    t.add_skill("slide", "TaxSlide", context_slide)
+    t.add_skill("shove", "TaxShove", context_shove)
+    t.start(queue=True)
+    result = t.wait()
+    print(result)

@@ -4,7 +4,7 @@
 #include "strategies/cart_compliance_strategy.hpp"
 #include "strategies/ff_strategy.hpp"
 #include "strategies/twist_strategy.hpp"
-#include "msrm_utils/math.hpp"
+#include <msrm_cpp_utils/math.hpp>
 
 namespace mios{
 
