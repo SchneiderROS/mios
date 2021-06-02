@@ -116,7 +116,7 @@ then
 git clone https://gitlab.lrz.de/ge29miq/msrm_utils.git
 fi
 cd msrm_utils
-git checkout v1.3.0
+git checkout v1.3.1
 mkdir -p build/release
 cd build/release
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${ROOT} ../..
