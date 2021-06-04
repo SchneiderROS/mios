@@ -11,7 +11,7 @@
 #include "strategies/remote_torque_strategy.hpp"
 #include "strategies/ff_strategy.hpp"
 
-#include <msrm_utils/math.hpp>
+#include <msrm_cpp_utils/math.hpp>
 
 namespace mios{
 
@@ -54,6 +54,9 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
     }
     if(!msrm_utils::read_json_param(parameters,"deadband_k",deadband_k)){
         deadband_k=0;
+    }
+    if(!msrm_utils::read_json_param(parameters,"terminate_when_loc",terminate_when_loc)){
+        terminate_when_loc=false;
     }
     std::string telepresence_mode;
     if(!msrm_utils::read_json_param(parameters,"telepresence_mode",telepresence_mode)){
@@ -121,7 +124,7 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
 }
 
 std::map<std::string,std::set<std::string> > SkillParametersTelepresence::get_parameter_list(){
-    return {{"is_master",{}},{"ip_dst",{}},{"port_dst",{}},{"port_src",{}},{"ws_port_dst",{}},{"multicast",{}},{"multicast_group",{}},{"telepresence_mode",{}},
+    return {{"is_master",{}},{"ip_dst",{}},{"port_dst",{}},{"port_src",{}},{"ws_port_dst",{}},{"terminate_when_loc",{}},{"multicast",{}},{"multicast_group",{}},{"telepresence_mode",{}},
         {"joystick",{"amp","force_thr","static_frame"}},{"direct_joint",{"alpha"}},{"direct_cart",{"alpha"}},{"direct_cart",{"plane"}}};
 }
 
@@ -253,6 +256,9 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
         }
         if(get_active_mp()->get_name()=="telepresence"){
             if(!read_parameters<Params>()->multicast && get_active_mp()->get_strategy_interface("telepresence")->finished()){
+                if(read_parameters<Params>()->terminate_when_loc){
+                    invoke_failure();
+                }
                 m_handshake_stage=0;
                 spdlog::trace("Telepresence: Terminating telepresence (master)");
                 std::shared_ptr<ManipulationPrimitive> mp = create_mp("handshake",p);
@@ -376,6 +382,9 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > Telepresence::graph_trans
         }
         if(get_active_mp()->get_name()=="telepresence"){
             if(get_active_mp()->get_strategy_interface("telepresence")->finished()){
+                if(read_parameters<Params>()->terminate_when_loc){
+                    invoke_failure();
+                }
                 m_handshake_stage=0;
                 spdlog::debug("Telepresence: Terminating telepresence (slave)");
                 std::shared_ptr<ManipulationPrimitive> mp = create_mp("handshake",p);

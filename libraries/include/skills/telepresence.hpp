@@ -21,6 +21,7 @@ public:
     TelepresenceMode mode;
     bool use_zoh_deadband;
     double deadband_k;
+    bool terminate_when_loc;
 
     struct Joystick{
         Eigen::Matrix<double,6,1> amp;

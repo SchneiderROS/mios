@@ -616,6 +616,27 @@ def test_generic_task(address):
     print(response)
 
 
+def test_logging(address):
+    print('Testing exceptional stop...')
+    rtn = start_task(address, "TestTask1", queue=True, parameters={
+        "skills": {
+            "t1_s1": {
+                "skill": {
+                    "log_data": True,
+                    "data_length": 2000
+                }
+            }
+        }
+    })
+    msg_error(rtn['result']['result'], 'start_stop_exception', 'Result is false', rtn)
+    task_uuid = rtn["result"]["task_uuid"]
+    time.sleep(1)
+    rtn = stop_task(address, True)
+    msg_error(rtn is not None, 'start_stop_exception', 'None returned', rtn)
+    msg_error(rtn['result']['result'], 'start_stop_exception', 'Result is false', rtn)
+    rtn = wait_for_task(address, task_uuid)
+
+
 def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int = 12346):
     print("Testing Telemtry_UDP module...")
     print("subscribe to Telemetry_UDP with \"tau_ext\", \"q\"...")
@@ -658,6 +679,7 @@ def test_telemetry_udp(address: str, subscriber_addr: str, subscriber_port: int 
         print("\nEverything works fine :)")
     else:
         print("\nTest failed!")
+
 
 def start_skill(address: str, skill: str, parameters: dict, control: dict):
     response = start_task(address, "GenericTask", parameters={"parameters": {
