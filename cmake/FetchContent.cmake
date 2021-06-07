@@ -1,3 +1,13 @@
+find_package(Eigen3 REQUIRED)
+
+if(NOT TARGET Eigen3::Eigen3)
+  add_library(Eigen3::Eigen3 INTERFACE IMPORTED)
+  set_target_properties(Eigen3::Eigen3 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS}
+    INTERFACE_COMPILE_DEFINITIONS "${EIGEN3_DEFINITIONS}"
+  )
+endif()
+
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/_deps)
@@ -14,5 +24,10 @@ FetchContent_Declare(
 set(BUILD_EXAMPLES OFF CACHE INTERNAL "No examples")
 set(BUILD_TESTS OFF CACHE INTERNAL "No examples")
 
-FetchContent_MakeAvailable(json libfranka)
+FetchContent_Declare(
+    msrm_cpp_utils
+    GIT_REPOSITORY https://gitlab.lrz.de/ge29miq/msrm_utils.git
+    GIT_TAG build_pipeline)
+
+FetchContent_MakeAvailable(json libfranka msrm_cpp_utils)
 
