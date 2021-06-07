@@ -10,12 +10,7 @@ endif()
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
-set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/_deps)
-
-FetchContent_Declare(
-    json
-    GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git
-    GIT_TAG v3.9.1)
+set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/_deps)
 
 FetchContent_Declare(
     libfranka
@@ -29,5 +24,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://gitlab.lrz.de/ge29miq/msrm_utils.git
     GIT_TAG build_pipeline)
 
-FetchContent_MakeAvailable(json libfranka msrm_cpp_utils)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE INTERNAL "")
+
+FetchContent_MakeAvailable(libfranka msrm_cpp_utils)
 

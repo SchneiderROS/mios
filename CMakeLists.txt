@@ -134,6 +134,11 @@ include(cmake/FetchContent.cmake)
 add_library(${PROJECT_NAME}::project_options ALIAS project_options)
 add_library(${PROJECT_NAME}::project_warnings ALIAS project_warnings)
 
+# ROS stuff
+find_package(roscpp REQUIRED
+    std_srvs REQUIRED
+    message_generation REQUIRED)
+
 add_subdirectory(src)
 
 message("#########################################")

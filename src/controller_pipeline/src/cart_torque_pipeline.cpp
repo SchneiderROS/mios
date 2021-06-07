@@ -1,6 +1,6 @@
-#include "controller_pipeline/cart_torque_pipeline.hpp"
+#include "mios/controller_pipeline/cart_torque_pipeline.hpp"
 #include "spdlog/spdlog.h"
-#include "msrm_cpp_utils/math.hpp"
+#include "msrm_cpp_utils/math/math.hpp"
 #include <iostream>
 
 namespace mios {

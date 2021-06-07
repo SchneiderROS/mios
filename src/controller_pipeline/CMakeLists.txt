@@ -44,6 +44,7 @@ target_link_libraries(${MODULE_NAME}
     PRIVATE
     project_options
     project_warnings
+    msrm_cpp_utils::math
     )
 
 apply_module_options(${MODULE_NAME})
