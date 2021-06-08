@@ -1,8 +1,8 @@
-#include "skill/skill_engine.hpp"
-//#include "skill/skill.hpp"
-#include "skills/null_skill.hpp"
-#include "core/core.hpp"
-#include "memory/memory.hpp"
+#include "mios/skill/skill_engine.hpp"
+//#include "mios/skill/skill.hpp"
+#include "mios/skills/null_skill.hpp"
+#include "mios/core/core.hpp"
+#include "mios/memory/memory.hpp"
 
 namespace mios{
 

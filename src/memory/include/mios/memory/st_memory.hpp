@@ -3,11 +3,11 @@
 #include <optional>
 #include <mutex>
 
-#include "data_structures/parameters.hpp"
-#include "data_structures/task_data.hpp"
-#include "data_structures/object.hpp"
-#include "data_structures/percept.hpp"
-#include "data_structures/event.hpp"
+#include "mios/data_structures/parameters.hpp"
+#include "mios/data_structures/task_data.hpp"
+#include "mios/data_structures/object.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/data_structures/event.hpp"
 
 namespace mios {
 

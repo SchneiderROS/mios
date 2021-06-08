@@ -10,12 +10,12 @@ conan_cmake_run(
     CONANFILE
     conanfile.txt
     BASIC_SETUP
-    CONAN_COMMAND
-    ${CONAN_CMD}
+#    CONAN_COMMAND
+#    ${CONAN_CMD}
     CMAKE_TARGETS
-    BUILD
-    missing
+#    BUILD
+#    missing
     )
 
-include(${PROJECT_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+#include(${PROJECT_BINARY_DIR}/conanbuildinfo.cmake)
+#conan_basic_setup()

@@ -1,22 +1,22 @@
-#include "core/core.hpp"
+#include "mios/core/core.hpp"
 
-#include <msrm_cpp_utils/math.hpp>
-#include <msrm_cpp_utils/conversion.hpp>
-#include <msrm_cpp_utils/json.hpp>
-#include <msrm_cpp_utils/system.hpp>
-#include "utils/exceptions.hpp"
-#include "skill/skill.hpp"
+#include "msrm_cpp_utils/math/math.hpp"
+#include "msrm_cpp_utils/conversion/conversion.hpp"
+#include "msrm_cpp_utils/json/json.hpp"
+#include "msrm_cpp_utils/system/system.hpp"
+#include "mios/utils/exceptions.hpp"
+#include "mios/skill/skill.hpp"
 
-#include "controller_pipeline/cart_torque_pipeline.hpp"
-#include "controller_pipeline/joint_torque_pipeline.hpp"
-#include "controller_pipeline/cart_velocity_pipeline.hpp"
-#include "controller_pipeline/joint_velocity_pipeline.hpp"
-#include "controller_pipeline/null_pipeline.hpp"
+#include "mios/controller_pipeline/cart_torque_pipeline.hpp"
+#include "mios/controller_pipeline/joint_torque_pipeline.hpp"
+#include "mios/controller_pipeline/cart_velocity_pipeline.hpp"
+#include "mios/controller_pipeline/joint_velocity_pipeline.hpp"
+#include "mios/controller_pipeline/null_pipeline.hpp"
 
-#include "safety_stage_1/velocity_walls.hpp"
-#include "safety_stage_2/virtual_cube.hpp"
-#include "safety_stage_2/virtual_joint_walls.hpp"
-#include "safety_stage_2/cartesian_velocity_damping.hpp"
+#include "mios/safety_stage_1/velocity_walls.hpp"
+#include "mios/safety_stage_2/virtual_cube.hpp"
+#include "mios/safety_stage_2/virtual_joint_walls.hpp"
+#include "mios/safety_stage_2/cartesian_velocity_damping.hpp"
 
 #include <iostream>
 #include <chrono>

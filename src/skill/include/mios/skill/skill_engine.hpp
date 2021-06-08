@@ -4,9 +4,9 @@
 #include <atomic>
 #include <list>
 
-#include "data_structures/percept.hpp"
-#include "skill/skill.hpp"
-#include "utils/types.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/skill/skill.hpp"
+#include "mios/utils/types.hpp"
 
 namespace mios {
 class Core;

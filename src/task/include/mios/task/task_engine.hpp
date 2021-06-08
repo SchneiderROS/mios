@@ -4,8 +4,8 @@
 #include <list>
 #include <atomic>
 
-#include "task/task.hpp"
-#include <msrm_cpp_utils/json.hpp>
+#include "mios/task/task.hpp"
+#include "msrm_cpp_utils/json/json.hpp"
 
 namespace mios {
 

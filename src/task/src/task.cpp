@@ -1,13 +1,13 @@
-#include "task/task.hpp"
+#include "mios/task/task.hpp"
 
-#include "core/core.hpp"
-#include "memory/memory.hpp"
-#include "tasks/null_task.hpp"
+#include "mios/core/core.hpp"
+#include "mios/memory/memory.hpp"
+#include "mios/tasks/null_task.hpp"
 
 #include <random>
 #include <sstream>
-#include <spdlog/spdlog.h>
-#include "msrm_cpp_utils/system.hpp"
+#include "spdlog/spdlog.h"
+#include "msrm_cpp_utils/system/system.hpp"
 
 namespace mios {
 

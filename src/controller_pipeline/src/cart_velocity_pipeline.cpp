@@ -1,4 +1,4 @@
-#include "controller_pipeline/cart_velocity_pipeline.hpp"
+#include "mios/controller_pipeline/cart_velocity_pipeline.hpp"
 
 namespace mios {
 

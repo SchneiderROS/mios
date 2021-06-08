@@ -3,8 +3,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <msrm_cpp_utils/output.hpp>
-
 namespace mios {
 
 class TaskException :  public std::exception{

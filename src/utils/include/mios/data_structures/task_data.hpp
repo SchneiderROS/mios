@@ -1,10 +1,11 @@
 #pragma once
 
+#include "mios/data_structures/results.hpp"
+#include "nlohmann/json.hpp"
+
 #include <unordered_map>
 #include <string>
-#include <nlohmann/json.hpp>
 
-#include "data_structures/results.hpp"
 
 namespace mios {
 

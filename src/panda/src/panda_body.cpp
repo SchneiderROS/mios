@@ -1,14 +1,14 @@
-#include "panda/panda_body.hpp"
-#include <spdlog/spdlog.h>
-#include <msrm_cpp_utils/network.hpp>
-#include <msrm_cpp_utils/conversion.hpp>
+#include "mios/panda/panda_body.hpp"
+#include "spdlog/spdlog.h"
+#include "msrm_cpp_utils/network/network.hpp"
+#include "msrm_cpp_utils/conversion/conversion.hpp"
 
 #include <mutex>
 #include <thread>
 
-#include <franka/exception.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/embed.h>
+#include "franka/exception.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/embed.h"
 
 #include "plugins/conv_vel2pose_wrapper.hpp"
 

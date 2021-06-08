@@ -1,9 +1,10 @@
 #pragma once
 
-#include "data_structures/percept.hpp"
-#include "data_structures/actuator.hpp"
-#include "strategy/primitive_strategy.hpp"
-#include "utils/exceptions.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/data_structures/actuator.hpp"
+#include "mios/strategy/primitive_strategy.hpp"
+#include "mios/utils/exceptions.hpp"
+
 #include <map>
 
 namespace mios {

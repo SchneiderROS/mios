@@ -1,4 +1,4 @@
-#include "controller_pipeline/null_pipeline.hpp"
+#include "mios/controller_pipeline/null_pipeline.hpp"
 
 namespace mios {
 

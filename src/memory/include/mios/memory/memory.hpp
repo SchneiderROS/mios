@@ -1,7 +1,7 @@
 #pragma once
 
-#include "memory/lt_memory.hpp"
-#include "memory/st_memory.hpp"
+#include "mios/memory/lt_memory.hpp"
+#include "mios/memory/st_memory.hpp"
 
 namespace mios {
 

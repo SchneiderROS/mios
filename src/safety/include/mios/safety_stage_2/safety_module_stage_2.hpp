@@ -1,9 +1,9 @@
 #pragma once
 
-#include "data_structures/actuator.hpp"
-#include "data_structures/percept.hpp"
-#include "memory/memory.hpp"
-#include <eigen3/Eigen/Core>
+#include "mios/data_structures/actuator.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/memory/memory.hpp"
+#include "eigen3/Eigen/Core"
 
 namespace mios {
 

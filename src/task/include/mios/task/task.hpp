@@ -1,5 +1,16 @@
 #pragma once
 
+#include "mios/portal/portal.hpp"
+#include "msrm_cpp_utils/json/json.hpp"
+#include "spdlog/spdlog.h"
+
+#include "mios/task/taskobserver.hpp"
+#include "mios/skill/skill_engine.hpp"
+#include "mios/utils/exceptions.hpp"
+#include "mios/data_structures/results.hpp"
+#include "mios/skill/skill.hpp"
+#include "mios/utils/types.hpp"
+
 #include <list>
 #include <map>
 #include <unordered_set>
@@ -7,16 +18,6 @@
 #include <atomic>
 #include <stdlib.h>
 #include <memory>
-#include "portal/portal.hpp"
-#include <msrm_cpp_utils/json.hpp>
-#include <spdlog/spdlog.h>
-
-#include "task/taskobserver.hpp"
-#include "skill/skill_engine.hpp"
-#include "utils/exceptions.hpp"
-#include "data_structures/results.hpp"
-#include "skill/skill.hpp"
-#include "utils/types.hpp"
 
 namespace mios {
 

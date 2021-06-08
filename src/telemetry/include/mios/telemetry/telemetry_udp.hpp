@@ -13,7 +13,8 @@
 #include <thread>
 #include <mutex>
 #include <map>
-#include <nlohmann/json.hpp>
+
+#include "nlohmann/json.hpp"
 
 namespace msrm_utils{
 class UDPStreamSender;

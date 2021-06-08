@@ -1,4 +1,4 @@
-#include "learning_module/learning_module.hpp"
+#include "mios/learning_module/learning_module.hpp"
 #include "spdlog/spdlog.h"
 
 namespace mios {

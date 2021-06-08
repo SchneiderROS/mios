@@ -1,24 +1,24 @@
 #pragma once
 
+
+#include "msrm_cpp_utils/json/json.hpp"
+
+#include "mios/manipulation_primitive/manipulation_primitive.hpp"
+#include "mios/memory/memory.hpp"
+#include "mios/portal/portal.hpp"
+
+#include "mios/data_structures/percept.hpp"
+#include "mios/data_structures/actuator.hpp"
+#include "mios/data_structures/parameters.hpp"
+
+#include "mios/utils/exceptions.hpp"
+#include "mios/data_structures/results.hpp"
+#include "spdlog/spdlog.h"
+
 #include <unordered_map>
 #include <unordered_set>
 #include <atomic>
 #include <thread>
-#include <msrm_cpp_utils/json.hpp>
-
-#include "manipulation_primitive/manipulation_primitive.hpp"
-#include "memory/memory.hpp"
-#include "portal/portal.hpp"
-
-#include "data_structures/percept.hpp"
-#include "data_structures/actuator.hpp"
-#include "data_structures/parameters.hpp"
-
-#include "utils/exceptions.hpp"
-#include "data_structures/results.hpp"
-
-#include <spdlog/spdlog.h>
-
 
 namespace mios {
 

@@ -1,14 +1,12 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 #include <memory>
 #include <unordered_map>
 
-#include "mongodb_client/mongodb_client.hpp"
-#include "data_structures/parameters.hpp"
-#include "data_structures/task_data.hpp"
-
-
+#include "mios/mongodb_client/mongodb_client.hpp"
+#include "mios/data_structures/parameters.hpp"
+#include "mios/data_structures/task_data.hpp"
 
 namespace mios {
 

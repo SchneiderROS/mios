@@ -1,6 +1,6 @@
 #pragma once
 
-#include "controller_pipeline/controller_pipeline.hpp"
+#include "mios/controller_pipeline/controller_pipeline.hpp"
 
 namespace mios {
 

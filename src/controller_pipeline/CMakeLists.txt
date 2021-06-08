@@ -36,16 +36,24 @@ add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
 
 target_include_directories(${MODULE_NAME}
     PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     src
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
-    project_options
-    project_warnings
+    ${PROJECT_NAME}_project_options
+    ${PROJECT_NAME}_project_warnings
+    ${PROJECT_NAME}_project_deps
+    ${PROJECT_NAME}::memory
+    ${PROJECT_NAME}::utils
     msrm_cpp_utils::math
+    Franka::Franka
     )
+
+set_target_properties(${MODULE_NAME} PROPERTIES PUBLIC_HEADER "${${MODULE_NAME}_HEADER_FILES}")
 
 apply_module_options(${MODULE_NAME})
 

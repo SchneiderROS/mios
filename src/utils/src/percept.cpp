@@ -1,5 +1,5 @@
-#include "data_structures/percept.hpp"
-#include <msrm_cpp_utils/math.hpp>
+#include "mios/data_structures/percept.hpp"
+#include "msrm_cpp_utils/math/math.hpp"
 
 namespace mios {
 

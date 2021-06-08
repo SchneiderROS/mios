@@ -1,9 +1,10 @@
 #pragma once
 
-#include "data_structures/percept.hpp"
-#include <unordered_map>
+#include "mios/data_structures/percept.hpp"
+#include "nlohmann/json.hpp"
+
 #include <string>
-#include <nlohmann/json.hpp>
+#include <unordered_map>
 
 namespace mios {
 

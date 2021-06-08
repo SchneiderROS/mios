@@ -1,5 +1,5 @@
-#include "memory/memory.hpp"
-#include <spdlog/spdlog.h>
+#include "mios/memory/memory.hpp"
+#include "spdlog/spdlog.h"
 
 namespace mios {
 

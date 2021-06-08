@@ -1,6 +1,6 @@
-#include "manipulation_primitive/manipulation_primitive.hpp"
-#include "memory/memory.hpp"
-#include <spdlog/spdlog.h>
+#include "mios/manipulation_primitive/manipulation_primitive.hpp"
+#include "mios/memory/memory.hpp"
+#include "spdlog/spdlog.h"
 
 namespace mios {
 

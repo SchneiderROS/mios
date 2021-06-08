@@ -2,8 +2,8 @@
 
 #include <map>
 #include <string>
-#include "skill/skill.hpp"
-#include "data_structures/parameters.hpp"
+#include "mios/skill/skill.hpp"
+#include "mios/data_structures/parameters.hpp"
 
 namespace mios{
 

@@ -1,16 +1,15 @@
-#include "telemetry/telemetry_udp.hpp"
+#include "mios/telemetry/telemetry_udp.hpp"
 
-#include "msrm_cpp_utils/network.hpp"
-#include "msrm_cpp_utils/output.hpp"
+#include "msrm_cpp_utils/network/network.hpp"
 #include "spdlog/spdlog.h"
 
-#include "core/core.hpp"
-#include "portal/portal.hpp"
+#include "mios/core/core.hpp"
+#include "mios/portal/portal.hpp"
 
 
 namespace mios {
 
-TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_thread_running(false),m_keep_running(false),m_frequency(5){
+TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_keep_running(false),m_thread_running(false),m_frequency(5){
     start_sending();
 }
 

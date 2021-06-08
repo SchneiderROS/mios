@@ -1,8 +1,8 @@
-#include "portal/portal.hpp"
+#include "mios/portal/portal.hpp"
 
-#include <msrm_cpp_utils/network.hpp>
-#include "msrm_cpp_utils/system.hpp"
-#include <spdlog/spdlog.h>
+#include "msrm_cpp_utils/network/network.hpp"
+#include "msrm_cpp_utils/system/system.hpp"
+#include "spdlog/spdlog.h"
 
 namespace mios {
 

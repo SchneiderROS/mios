@@ -3,16 +3,16 @@
 #include <functional>
 #include <atomic>
 
-#include <franka/robot.h>
-#include <franka/gripper.h>
-#include <franka/model.h>
-#include <franka/robot_state.h>
-#include <franka/gripper_state.h>
-#include "panda/softhand2.hpp"
+#include "franka/robot.h"
+#include "franka/gripper.h"
+#include "franka/model.h"
+#include "franka/robot_state.h"
+#include "franka/gripper_state.h"
+#include "mios/panda/softhand2.hpp"
 
-#include "data_structures/parameters.hpp"
-#include "utils/types.hpp"
-#include "memory/memory.hpp"
+#include "mios/data_structures/parameters.hpp"
+#include "mios/utils/types.hpp"
+#include "mios/memory/memory.hpp"
 
 namespace mios {
 

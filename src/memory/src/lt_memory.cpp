@@ -1,9 +1,9 @@
-#include "memory/lt_memory.hpp"
-#include "task/task.hpp"
-#include "task/taskfactory.hpp"
-#include <spdlog/spdlog.h>
-#include <msrm_cpp_utils/json.hpp>
-#include "skill/skill_library.hpp"
+#include "mios/memory/lt_memory.hpp"
+#include "mios/task/task.hpp"
+#include "mios/task/taskfactory.hpp"
+#include "mios/skill/skill_library.hpp"
+#include "spdlog/spdlog.h"
+#include "msrm_cpp_utils/json/json.hpp"
 
 
 namespace mios {

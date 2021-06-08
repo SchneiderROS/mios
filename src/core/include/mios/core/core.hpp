@@ -9,22 +9,22 @@
 #include <set>
 #include <mutex>
 
-#include "memory/memory.hpp"
-#include "panda/panda_body.hpp"
-#include "controller_pipeline/controller_pipeline.hpp"
-#include "safety_stage_1/safety_module_stage_1.hpp"
-#include "safety_stage_2/safety_module_stage_2.hpp"
-#include "skill/skill_engine.hpp"
-#include "task/task_engine.hpp"
-#include "portal/portal.hpp"
-#include "skill/skill_library.hpp"
-#include "interface/interface.hpp"
-#include "interface/ros_node.hpp"
-#include "learning_module/learning_module.hpp"
-#include "telemetry/telemetry_udp.hpp"
+#include "mios/memory/memory.hpp"
+#include "mios/panda/panda_body.hpp"
+#include "mios/controller_pipeline/controller_pipeline.hpp"
+#include "mios/safety_stage_1/safety_module_stage_1.hpp"
+#include "mios/safety_stage_2/safety_module_stage_2.hpp"
+#include "mios/skill/skill_engine.hpp"
+#include "mios/task/task_engine.hpp"
+#include "mios/portal/portal.hpp"
+#include "mios/skill/skill_library.hpp"
+#include "mios/interface/interface.hpp"
+#include "mios/interface/ros_node.hpp"
+#include "mios/learning_module/learning_module.hpp"
+#include "mios/telemetry/telemetry_udp.hpp"
 
-#include "data_structures/percept.hpp"
-#include "data_structures/actuator.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/data_structures/actuator.hpp"
 
 
 

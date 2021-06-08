@@ -1,4 +1,4 @@
-#include "data_structures/event.hpp"
+#include "mios/data_structures/event.hpp"
 
 namespace mios {
 

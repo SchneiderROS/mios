@@ -25,16 +25,24 @@ endif()
 
 add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
 
+find_package(PythonLibsNew REQUIRED)
+
 target_include_directories(${MODULE_NAME}
     PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     src
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    ${PYTHON_INCLUDE_DIRS}
     )
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
-    project_options
-    project_warnings
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_options
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_warnings
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
+    PUBLIC
+    CONAN_PKG::pybind11
+    CONAN_PKG::nlohmann_json
     )
 
 apply_module_options(${MODULE_NAME})

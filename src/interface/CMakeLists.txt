@@ -27,16 +27,30 @@ endif()
 
 add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
 
+find_package(roscpp REQUIRED
+    std_srvs REQUIRED
+    message_generation REQUIRED)
+
 target_include_directories(${MODULE_NAME}
     PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     src
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    ${roscpp_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/src/ros_workspace/devel/include
     )
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
-    project_options
-    project_warnings
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_options
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_warnings
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
+    ${PROJECT_NAME}::core
+    ${PROJECT_NAME}::portal
+    ${PROJECT_NAME}::memory
+    ${PROJECT_NAME}::task
+    PUBLIC
+    roscpp
     )
 
 apply_module_options(${MODULE_NAME})

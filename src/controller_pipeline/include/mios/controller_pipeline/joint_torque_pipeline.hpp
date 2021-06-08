@@ -1,6 +1,6 @@
 #pragma once
 
-#include "controller_pipeline/controller_pipeline.hpp"
+#include "mios/controller_pipeline/controller_pipeline.hpp"
 
 #include "plugins/cntr_joint_var_imp_wrapper.hpp"
 #include "plugins/cntr_mux_wrapper.hpp"

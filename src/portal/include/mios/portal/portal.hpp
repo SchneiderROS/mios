@@ -5,8 +5,9 @@
 #include <map>
 #include <unordered_map>
 #include <queue>
-#include <nlohmann/json.hpp>
-#include <msrm_cpp_utils/network.hpp>
+
+#include "nlohmann/json.hpp"
+#include "msrm_cpp_utils/network/network.hpp"
 
 namespace mios {
 

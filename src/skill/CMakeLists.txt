@@ -31,14 +31,26 @@ add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
 
 target_include_directories(${MODULE_NAME}
     PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     src
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
-    project_options
-    project_warnings
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_options
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_warnings
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
+    ${PROJECT_NAME}::memory
+    ${PROJECT_NAME}::portal
+    ${PROJECT_NAME}::skills
+    ${PROJECT_NAME}::core
+    Franka::Franka
+    msrm_cpp_utils::files
+    msrm_cpp_utils::math
+    msrm_cpp_utils::conversion
+    PUBLIC
+    ${PROJECT_NAME}::manipulation_primitive
     )
 
 apply_module_options(${MODULE_NAME})

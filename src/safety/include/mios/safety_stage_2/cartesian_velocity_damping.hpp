@@ -1,6 +1,6 @@
 #pragma once
 
-#include "safety_stage_2/safety_module_stage_2.hpp"
+#include "mios/safety_stage_2/safety_module_stage_2.hpp"
 
 namespace mios{
 

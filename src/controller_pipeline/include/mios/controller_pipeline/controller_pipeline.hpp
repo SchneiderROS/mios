@@ -1,10 +1,10 @@
 #pragma once
 
-#include "data_structures/percept.hpp"
-#include "data_structures/actuator.hpp"
-#include "memory/memory.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/data_structures/actuator.hpp"
+#include "mios/memory/memory.hpp"
 
-#include <franka/control_types.h>
+#include "franka/control_types.h"
 
 namespace mios {
 

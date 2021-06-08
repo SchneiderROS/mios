@@ -1,4 +1,4 @@
-#include "controller_pipeline/joint_velocity_pipeline.hpp"
+#include "mios/controller_pipeline/joint_velocity_pipeline.hpp"
 
 namespace mios {
 

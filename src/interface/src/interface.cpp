@@ -1,10 +1,10 @@
-#include "interface/interface.hpp"
+#include "mios/interface/interface.hpp"
 
-#include "core/core.hpp"
-#include "task/task_engine.hpp"
-#include "portal/portal.hpp"
-#include "memory/memory.hpp"
-#include <spdlog/spdlog.h>
+#include "mios/core/core.hpp"
+#include "mios/task/task_engine.hpp"
+#include "mios/portal/portal.hpp"
+#include "mios/memory/memory.hpp"
+#include "spdlog/spdlog.h"
 
 
 namespace mios {

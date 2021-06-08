@@ -1,4 +1,4 @@
-#include "controller_pipeline/joint_torque_pipeline.hpp"
+#include "mios/controller_pipeline/joint_torque_pipeline.hpp"
 #include <iostream>
 
 namespace mios {

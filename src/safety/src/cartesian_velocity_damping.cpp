@@ -1,5 +1,5 @@
-#include "safety_stage_2/cartesian_velocity_damping.hpp"
-#include "msrm_cpp_utils/math.hpp"
+#include "mios/safety_stage_2/cartesian_velocity_damping.hpp"
+#include "msrm_cpp_utils/math/math.hpp"
 
 namespace mios{
 

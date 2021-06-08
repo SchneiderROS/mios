@@ -1,10 +1,10 @@
 #pragma once
 
-#include <eigen3/Eigen/Core>
+#include "eigen3/Eigen/Core"
 #include <set>
 
-#include "data_structures/percept.hpp"
-#include "data_structures/parameters.hpp"
+#include "mios/data_structures/percept.hpp"
+#include "mios/data_structures/parameters.hpp"
 
 namespace mios {
 
