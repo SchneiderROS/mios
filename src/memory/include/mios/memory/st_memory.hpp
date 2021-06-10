@@ -1,13 +1,18 @@
 #pragma once
 
-#include <optional>
-#include <mutex>
 
 #include "mios/data_structures/parameters.hpp"
 #include "mios/data_structures/task_data.hpp"
 #include "mios/data_structures/object.hpp"
 #include "mios/data_structures/percept.hpp"
 #include "mios/data_structures/event.hpp"
+
+#include "nlohmann/json.hpp"
+
+#include <optional>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 
 namespace mios {
 
@@ -60,7 +65,7 @@ public:
     std::optional<nlohmann::json> get_live_parameter(const std::string& parameter);
     Object *get_object(const std::string& name);
     const Event* get_event(const std::string& name) const;
-    const std::map<std::string, Object>* get_environment() const;
+    const std::unordered_map<std::string, Object>* get_environment() const;
 
 private:
     bool reserve_parameters(const nlohmann::json task_context, const std::string &skill_id);
@@ -68,7 +73,7 @@ private:
 
 private:
     std::mutex m_mtx_live_context;
-    std::map<std::string,Object> m_environment;
+    std::unordered_map<std::string,Object> m_environment;
     std::unordered_map<std::string,Event> m_events;
     LiveContext m_live_context;
     Parameters m_parameters;

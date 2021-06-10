@@ -44,16 +44,18 @@ target_link_libraries(${MODULE_NAME}
     ${PROJECT_NAME}::skills
     ${PROJECT_NAME}::core
     Franka::Franka
-    msrm_cpp_utils::files
-    msrm_cpp_utils::math
-    msrm_cpp_utils::conversion
     msrm_cpp_utils::benchmarking
+    msrm_cpp_utils::conversion
+    msrm_cpp_utils::files
+    msrm_cpp_utils::json
+    msrm_cpp_utils::math
     PUBLIC
     ${PROJECT_NAME}::manipulation_primitive
     ${PROJECT_NAME}::memory
     ${PROJECT_NAME}::portal
     ${PROJECT_NAME}::utils
-    msrm_cpp_utils::json
+    CONAN_PKG::spdlog
+    CONAN_PKG::nlohmann_json
     )
 
 apply_module_options(${MODULE_NAME})

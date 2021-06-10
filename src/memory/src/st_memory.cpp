@@ -3,24 +3,26 @@
 #include "spdlog/spdlog.h"
 
 #include "msrm_cpp_utils/json/json.hpp"
-#include "msrm_cpp_utils/system/system.hpp"
 #include "msrm_cpp_utils/math/math.hpp"
 
 namespace mios {
 
 STMemory::STMemory():m_environment({{"NullObject",Object("NullObject")},{"EndEffector",Object("EndEffector")}}),m_live_context(LiveContext(&m_environment.at("NullObject"))){
-
+    spdlog::trace("STMemory::STMemory");
 }
 
 bool STMemory::is_ok() const{
+    spdlog::trace("STMemory::is_ok");
     return true;
 }
 
 void STMemory::link_to_lt_memory(LTMemory *lt_memory){
+    spdlog::trace("STMemory::link_to_lt_memory");
     m_lt_memory=lt_memory;
 }
 
 bool STMemory::initialize(){
+    spdlog::trace("STMemory::initialize");
     if(!syncronize_with_lt_memory()){
         return false;
     }
@@ -28,6 +30,7 @@ bool STMemory::initialize(){
 }
 
 bool STMemory::syncronize_with_lt_memory(){
+    spdlog::trace("STMemory::syncronize_with_lt_memory");
     if(!m_lt_memory->load_environment(m_environment)){
         return false;
     }else{
@@ -55,11 +58,13 @@ const Parameters* STMemory::read_parameters() const{
 }
 
 void STMemory::set_live_parameter(const std::string &key, const nlohmann::json &value){
+    spdlog::trace("STMemory::set_live_parameter");
     std::scoped_lock<std::mutex> lock(m_mtx_live_context);
     m_live_context.live_parameters[key]=value;
 }
 
 void STMemory::post_event(const std::string &name, const nlohmann::json &content){
+    spdlog::trace("STMemory::post_event");
     if(m_events.find(name)==m_events.end()){
         spdlog::debug("STMemory::post_event("+name+","+content.dump()+")");
         m_events.emplace(std::make_pair(name,Event(name,content)));
@@ -71,6 +76,7 @@ void STMemory::post_event(const std::string &name, const nlohmann::json &content
 }
 
 const Event* STMemory::get_event(const std::string &name) const{
+    spdlog::trace("STMemory::get_event");
     if(m_events.find(name)==m_events.end()){
         return nullptr;
     }else{
@@ -79,16 +85,19 @@ const Event* STMemory::get_event(const std::string &name) const{
 }
 
 void STMemory::remove_event(const std::string &name){
+    spdlog::trace("STMemory::remove_event");
     if(m_events.find(name)!=m_events.end()){
         m_events.erase(m_events.find(name));
     }
 }
 
-const std::map<std::string,Object>* STMemory::get_environment() const{
+const std::unordered_map<std::string,Object>* STMemory::get_environment() const{
+    spdlog::trace("STMemory::get_environment");
     return &m_environment;
 }
 
 std::optional<nlohmann::json> STMemory::get_live_parameter(const std::string &parameter) {
+    spdlog::trace("STMemory::get_live_parameter");
     if(!m_mtx_live_context.try_lock()){
         return {};
     }
@@ -102,6 +111,7 @@ std::optional<nlohmann::json> STMemory::get_live_parameter(const std::string &pa
 }
 
 bool STMemory::apply_skill_context(const nlohmann::json task_context, const std::string &skill_id){
+    spdlog::trace("STMemory::apply_skill_context");
     if(task_context.find("skills")==task_context.end()){
         spdlog::error("The current task context contains no skills");
         return false;
@@ -146,6 +156,7 @@ bool STMemory::apply_skill_context(const nlohmann::json task_context, const std:
 }
 
 bool STMemory::apply_reserved_skill_context(const std::string& skill_id){
+    spdlog::trace("STMemory::apply_reserved_skill_context");
     if(m_reserved_parameters.find(skill_id)==m_reserved_parameters.end()){
         spdlog::error("No parameters reserved for skill with id " + skill_id + ".");
         return false;
@@ -155,6 +166,7 @@ bool STMemory::apply_reserved_skill_context(const std::string& skill_id){
 }
 
 bool STMemory::reserve_parameters(const nlohmann::json task_context, const std::string &skill_id){
+    spdlog::trace("STMemory::reserve_parameters");
     if(task_context.find("skills")==task_context.end()){
         spdlog::error("The current task context contains no skills");
         return false;
@@ -199,10 +211,12 @@ bool STMemory::reserve_parameters(const nlohmann::json task_context, const std::
 }
 
 void STMemory::clear_reserved_skills(){
+    spdlog::trace("STMemory::clear_reserved_skills");
     m_reserved_parameters.clear();
 }
 
 bool STMemory::set_default_parameters(){
+    spdlog::trace("STMemory::set_default_parameters");
     nlohmann::json default_parameters;
     if(!m_lt_memory->load_default_parameters(default_parameters)){
         return false;
@@ -230,6 +244,7 @@ bool STMemory::set_default_parameters(){
 }
 
 void STMemory::merge_live_context(){
+    spdlog::trace("STMemory::merge_live_context");
     if(m_live_context.grasped_object->name!="NullObject"){
         m_parameters.user.load_m=m_live_context.grasped_object->mass;
         m_parameters.user.load_com=(m_parameters.frames.F_T_EE*msrm_utils::invert_transformation_matrix(m_live_context.grasped_object->OB_T_gp)).block<3,1>(0,3);
@@ -239,6 +254,7 @@ void STMemory::merge_live_context(){
 }
 
 bool STMemory::update_object(const std::string &name, bool teach_width, const Percept& p){
+    spdlog::trace("STMemory::update_object(string,bool,Percept)");
     if(name=="NullObject"){
         spdlog::error("Cannot overwrite NullObject");
         return false;
@@ -258,6 +274,7 @@ bool STMemory::update_object(const std::string &name, bool teach_width, const Pe
 }
 
 bool STMemory::update_object(const std::string &name, const nlohmann::json &description){
+    spdlog::trace("STMemory::update_object(string,json)");
     if(name=="NullObject"){
         spdlog::error("Cannot overwrite NullObject");
         return false;
@@ -273,6 +290,7 @@ bool STMemory::update_object(const std::string &name, const nlohmann::json &desc
 }
 
 bool STMemory::update_partial_object(const std::string &name, const nlohmann::json &description){
+    spdlog::trace("STMemory::update_partial_object");
     if(name=="NullObject"){
         spdlog::error("Cannot overwrite NullObject");
         return false;
@@ -314,8 +332,7 @@ bool STMemory::update_partial_object(const std::string &name, const nlohmann::js
 }
 
 void STMemory::internal_update(const Percept &p){
-    // Update special objects
-//    spdlog::debug("STMemory::internal_update()");
+    spdlog::trace("STMemory::internal_update");
     if(m_environment.find("EndEffector")==m_environment.end()){
         m_environment.insert(std::make_pair("EndEffector",Object("EndEffector")));
     }
@@ -327,7 +344,7 @@ void STMemory::internal_update(const Percept &p){
 }
 
 Object* STMemory::get_object(const std::string &name){
-    spdlog::debug("STMemory: get_object("+name+")");
+    spdlog::trace("STMemory::get_object");
     if(m_environment.find(name)==m_environment.end()){
         return &m_environment.at("NullObject");
     }else{

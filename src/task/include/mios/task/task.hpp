@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Eigen/Core"
 #include "mios/portal/portal.hpp"
-#include "msrm_cpp_utils/json/json.hpp"
-#include "spdlog/spdlog.h"
 
 #include "mios/task/taskobserver.hpp"
 #include "mios/skill/skill_engine.hpp"
@@ -12,14 +9,22 @@
 #include "mios/skill/skill.hpp"
 #include "mios/utils/types.hpp"
 
+#include "msrm_cpp_utils/json/json.hpp"
+#include "spdlog/spdlog.h"
+#include "eigen3/Eigen/Core"
+#include "nlohmann/json.hpp"
 
 #include <list>
 #include <map>
 #include <unordered_set>
 #include <unordered_map>
+#include <set>
 #include <atomic>
 #include <stdlib.h>
 #include <memory>
+#include <mutex>
+#include <memory>
+#include <string>
 
 namespace mios {
 

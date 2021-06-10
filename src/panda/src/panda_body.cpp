@@ -1,21 +1,22 @@
 #include "mios/panda/panda_body.hpp"
-#include "spdlog/spdlog.h"
+#include "mios/memory/memory.hpp"
 #include "msrm_cpp_utils/network/network.hpp"
 #include "msrm_cpp_utils/conversion/conversion.hpp"
+#include "plugins/conv_vel2pose_wrapper.hpp"
 
-#include <mutex>
-#include <thread>
+#include "spdlog/spdlog.h"
 
 #include "franka/exception.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/embed.h"
 
-#include "plugins/conv_vel2pose_wrapper.hpp"
+#include <thread>
 
 namespace mios {
 
 PandaBody::PandaBody(Memory *memory):m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(nullptr),m_has_arm(false),m_hand(PandaHandNone),m_arm_connected(false),m_hand_connected(false),
 m_memory(memory){
+    spdlog::trace("PandaBody::PandaBody");
     m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 }
 
@@ -239,6 +240,7 @@ std::optional<std::string> PandaBody::find_robot(){
 }
 
 ControlReturnType PandaBody::control(std::function<franka::Torques (const franka::RobotState&,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::control(Torques)");
     try{
         if(m_arm_connected){
             spdlog::debug("PandaBody: control<Torques>");
@@ -268,9 +270,9 @@ ControlReturnType PandaBody::control(std::function<franka::Torques (const franka
 }
 
 ControlReturnType PandaBody::control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::control(CartesianVelocities)");
     if(m_arm_connected){
         try{
-            spdlog::debug("PandaBody: control<CartesianVelocities>");
             m_panda_arm->control(controller_callback);
             return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
@@ -296,6 +298,7 @@ ControlReturnType PandaBody::control(std::function<franka::CartesianVelocities (
 }
 
 ControlReturnType PandaBody::control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::control(JointVelocities)");
     if(m_arm_connected){
         try{
             spdlog::debug("PandaBody: control<JointVelocities>");
@@ -324,9 +327,9 @@ ControlReturnType PandaBody::control(std::function<franka::JointVelocities (cons
 }
 
 ControlReturnType PandaBody::control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::control(CartesianPose)");
     if(m_arm_connected){
         try{
-            spdlog::debug("PandaBody: control<CartesianPose>");
             m_panda_arm->control(controller_callback);
             return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
@@ -352,9 +355,9 @@ ControlReturnType PandaBody::control(std::function<franka::CartesianPose (const 
 }
 
 ControlReturnType PandaBody::control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::control(JointPositions)");
     if(m_arm_connected){
         try{
-            spdlog::debug("PandaBody: control<JointPositions>");
             m_panda_arm->control(controller_callback);
             return ControlReturnType::crtNominal;
         }catch(const franka::ControlException& e){
@@ -380,6 +383,7 @@ ControlReturnType PandaBody::control(std::function<franka::JointPositions (const
 }
 
 void PandaBody::dummy_control(std::function<franka::Torques (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::dummy_control(Torques)");
     franka::Torques tau_J={0,0,0,0,0,0,0};
 
     m_robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
@@ -399,6 +403,7 @@ void PandaBody::dummy_control(std::function<franka::Torques (const franka::Robot
 }
 
 void PandaBody::dummy_control(std::function<franka::CartesianVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::dummy_control(CartesianVelocities)");
     franka::CartesianVelocities dX_d={0,0,0,0,0,0};
     m_robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
     m_robot_state.O_F_ext_hat_K={0,0,0,0,0,0};
@@ -426,6 +431,7 @@ void PandaBody::dummy_control(std::function<franka::CartesianVelocities (const f
 }
 
 void PandaBody::dummy_control(std::function<franka::JointVelocities (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::dummy_control(JointVelocities)");
     franka::JointVelocities dq_d={0,0,0,0,0,0,0};
     m_robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
     m_robot_state.O_F_ext_hat_K={0,0,0,0,0,0};
@@ -448,6 +454,7 @@ void PandaBody::dummy_control(std::function<franka::JointVelocities (const frank
 }
 
 void PandaBody::dummy_control(std::function<franka::CartesianPose (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::dummy_control(CartesianPose)");
     franka::CartesianPose O_T_EE_d={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     m_robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
     m_robot_state.O_F_ext_hat_K={0,0,0,0,0,0};
@@ -467,6 +474,7 @@ void PandaBody::dummy_control(std::function<franka::CartesianPose (const franka:
 }
 
 void PandaBody::dummy_control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
+    spdlog::trace("PandaBody::dummy_control(JointPositions)");
     franka::JointPositions q_d={0,0,0,0,0,0,0};
     franka::RobotState m_robot_state;
     m_robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
@@ -487,6 +495,7 @@ void PandaBody::dummy_control(std::function<franka::JointPositions (const franka
 }
 
 bool PandaBody::set_robot_parameters(){
+    spdlog::trace("PandaBody::set_robot_parameters");
     if(!m_arm_connected){
         return true;
     }
@@ -523,6 +532,7 @@ bool PandaBody::set_robot_parameters(){
 }
 
 bool PandaBody::set_load(double load_m, std::array<double, 3> load_com, std::array<double, 9> load_I){
+    spdlog::trace("PandaBody::set_load");
     try{
         m_panda_arm->setLoad(load_m,load_com,load_I);
         return true;
@@ -536,6 +546,7 @@ bool PandaBody::set_load(double load_m, std::array<double, 3> load_com, std::arr
 }
 
 bool PandaBody::set_ee(std::array<double, 16> F_T_EE){
+    spdlog::trace("PandaBody::set_ee");
     try{
         m_panda_arm->setEE(F_T_EE);
         return true;
@@ -549,6 +560,7 @@ bool PandaBody::set_ee(std::array<double, 16> F_T_EE){
 }
 
 bool PandaBody::get_robot_state(franka::RobotState &state) const{
+    spdlog::trace("PandaBody::get_robot_state");
     if(m_arm_connected){
         try{
             state=m_panda_arm->readOnce();
@@ -567,6 +579,7 @@ bool PandaBody::get_robot_state(franka::RobotState &state) const{
 }
 
 bool PandaBody::get_gripper_state(franka::GripperState &state) const{
+    spdlog::trace("PandaBody::get_gripper_state");
     if(m_hand_connected && m_hand==PandaHandDefault){
         try{
             state=m_panda_hand->readOnce();
@@ -589,6 +602,7 @@ const std::unique_ptr<franka::Model>& PandaBody::get_panda_model() const{
 }
 
 bool PandaBody::start_desk_task(const std::string &task,const std::optional<std::string> &ip, const std::string user, const std::string& password){
+    spdlog::trace("PandaBody::start_desk_task");
     disconnect_from_gripper();
     disconnect_from_robot();
 
@@ -617,6 +631,7 @@ bool PandaBody::start_desk_task(const std::string &task,const std::optional<std:
 }
 
 bool PandaBody::stop_desk_task(const std::optional<std::string> &ip, const std::string user, const std::string& password){
+    spdlog::trace("PandaBody::stop_desk_task");
     nlohmann::json response;
     bool result;
     try{
@@ -632,6 +647,7 @@ bool PandaBody::stop_desk_task(const std::optional<std::string> &ip, const std::
 }
 
 void PandaBody::wait_for_desk_task(const std::optional<std::string> &ip, const std::string user, const std::string& password){
+    spdlog::trace("PandaBody::wait_for_desk_task");
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
@@ -653,6 +669,7 @@ void PandaBody::wait_for_desk_task(const std::optional<std::string> &ip, const s
 }
 
 bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::string user, const std::string& password){
+    spdlog::trace("PandaBody::shutdown_robot");
     disconnect_from_gripper();
     disconnect_from_robot();
 
@@ -670,7 +687,7 @@ bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::
 }
 
 bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
-
+    spdlog::trace("PandaBody::unlock_brakes");
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
@@ -686,7 +703,7 @@ bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::s
 }
 
 bool PandaBody::lock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
-
+spdlog::trace("PandaBody::lock_brakes");
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
@@ -701,6 +718,7 @@ bool PandaBody::lock_brakes(const std::optional<std::string> &ip, const std::str
 }
 
 bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const std::string user, const std::string& password){
+    spdlog::trace("PandaBody::move_to_pack_pose");
     disconnect_from_gripper();
     disconnect_from_robot();
 
@@ -725,6 +743,7 @@ bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const st
 }
 
 bool PandaBody::grasp(double width, double speed, double force, double epsilon_inner, double epsilon_outer) const{
+    spdlog::trace("PandaBody::grasp");
     std::scoped_lock<std::mutex> lock(m_mtx_hand_active);
     if(!m_hand_connected){
         spdlog::error("No gripper connected.");
@@ -769,6 +788,7 @@ bool PandaBody::grasp(double width, double speed, double force, double epsilon_i
 }
 
 bool PandaBody::move_to_finger_position(double width, double speed) const{
+    spdlog::trace("PandaBody::move_to_finger_position");
     std::scoped_lock<std::mutex> lock(m_mtx_hand_active);
     if(!m_hand_connected){
         return false;
@@ -807,6 +827,7 @@ bool PandaBody::move_to_finger_position(double width, double speed) const{
 }
 
 bool PandaBody::stop_gripper(){
+    spdlog::trace("PandaBody::stop_gripper");
 //    std::scoped_lock<std::mutex> lock(m_mtx_hand_active);
     if(!m_hand_connected){
         return false;
@@ -829,6 +850,7 @@ bool PandaBody::stop_gripper(){
 }
 
 bool PandaBody::home_gripper() const{
+    spdlog::trace("PandaBody::home_gripper");
     std::scoped_lock<std::mutex> lock(m_mtx_hand_active);
     if(!m_hand_connected){
         return false;
@@ -861,11 +883,13 @@ bool PandaBody::is_hand_active(){
 }
 
 void PandaBody::get_default_robot_state(franka::RobotState &state) const{
+    spdlog::trace("PandaBody::get_default_robot_state");
     state=m_robot_state;
     state.robot_mode=franka::RobotMode::kIdle;
 }
 
 void PandaBody::get_default_gripper_state(franka::GripperState &state) const{
+    spdlog::trace("PandaBody::get_default_gripper_state");
     state=m_gripper_state;
 }
 

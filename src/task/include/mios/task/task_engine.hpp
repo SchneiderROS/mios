@@ -1,11 +1,19 @@
 #pragma once
 
+#include "mios/task/task.hpp"
+#include "mios/task/taskobserver.hpp"
+#include "mios/data_structures/results.hpp"
+
+#include "nlohmann/json.hpp"
+
 #include <map>
 #include <list>
 #include <atomic>
+#include <tuple>
+#include <mutex>
+#include <string>
+#include <utility>
 
-#include "mios/task/task.hpp"
-#include "msrm_cpp_utils/json/json.hpp"
 
 namespace mios {
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <mutex>
-#include <set>
 
 #include "mongocxx/client.hpp"
 #include "mongocxx/instance.hpp"
@@ -9,6 +7,11 @@
 #include "mongocxx/collection.hpp"
 
 #include "nlohmann/json.hpp"
+
+#include <mutex>
+#include <set>
+#include <string>
+#include <map>
 
 namespace mios {
 

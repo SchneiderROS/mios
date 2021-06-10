@@ -1,12 +1,14 @@
 #include "mios/skill/skill.hpp"
-#include "franka/exception.h"
 
 #include "mios/utils/exceptions.hpp"
 #include "mios/data_structures/object.hpp"
+
 #include "msrm_cpp_utils/files/files.hpp"
 #include "msrm_cpp_utils/math/math.hpp"
+#include "msrm_cpp_utils/json/json.hpp"
 #include "msrm_cpp_utils/benchmarking/benchmarking.hpp"
 #include "spdlog/spdlog.h"
+#include "franka/exception.h"
 
 #include <chrono>
 #include <boost/filesystem.hpp>
@@ -38,6 +40,7 @@ std::shared_ptr<ManipulationPrimitive> Skill::get_mp(const std::string &mp) cons
 }
 
 std::shared_ptr<ManipulationPrimitive> Skill::create_mp(const std::string &name, const Percept &p){
+    spdlog::trace("Skill::create_mp");
     if(m_active_mp->get_name()==name){
         throw SkillException("Manipulation primitive with name " + name + " is already active. Implementation of manipulation graph seems faulty.");
     }
@@ -91,6 +94,7 @@ Object* Skill::update_object(const std::string &o){
 }
 
 bool Skill::initialize(const Percept &p){
+    spdlog::trace("Skill::initialize");
     if(!msrm_utils::is_orthonormal(m_memory->read_parameters()->frames.O_R_T)){
         spdlog::error("O_R_T of skill "+m_id+" is invalid. Aborting execution.");
         std::cout<<"O_R_T: "<<m_memory->read_parameters()->frames.O_R_T<<std::endl;
@@ -231,10 +235,12 @@ bool Skill::is_settled(const Percept &p, bool ignore){
 }
 
 void Skill::set_pause(bool pause){
+    spdlog::trace("Skill::set_pause");
     m_flag_pause=pause;
 }
 
 void Skill::append_error(const std::string& error){
+    spdlog::trace("Skill::append_error");
     m_result.last_errors.emplace_back(error);
 }
 
@@ -243,6 +249,7 @@ Eigen::Matrix<double,3,3> Skill::get_O_R_T_0(const Percept &p) const{
 }
 
 void Skill::set_init_mp(const std::string& name){
+    spdlog::trace("Skill::set_init_mp");
     if(m_mp_graph.find(name)==m_mp_graph.end()){
         throw SkillException("Error when setting initial mp. No mp with name " + name + " available.");
     }
@@ -250,6 +257,7 @@ void Skill::set_init_mp(const std::string& name){
 }
 
 void Skill::terminate(const Percept& p){
+    spdlog::trace("Skill::terminate");
     for(auto& mp : m_mp_graph){
         mp.second->terminate(p);
     }
@@ -257,12 +265,12 @@ void Skill::terminate(const Percept& p){
 }
 
 void Skill::invoke_failure(){
-    spdlog::debug("Skill::invoke_failure()");
+    spdlog::trace("Skill::invoke_failure");
     m_flag_invoke_failure=true;
 }
 
 void Skill::invoke_success(){
-    spdlog::debug("Skill::invoke_success()");
+    spdlog::trace("Skill::invoke_success");
     m_flag_invoke_success=true;
 }
 
@@ -343,7 +351,7 @@ const std::string& Skill::get_id() const{
 }
 
 bool Skill::ground_objects(){
-    spdlog::debug("SKILL:GROUND_OBJECTS");
+    spdlog::trace("Skill::ground_objects");
     for(const auto& o : m_objects){
         if(m_memory->get_parameters()->skill->objects.find(o)==m_memory->get_parameters()->skill->objects.end()){
             spdlog::error("No object of type " + o + " has been provided.");
@@ -395,6 +403,7 @@ void Skill::parallels(){
 }
 
 void Skill::run_parallels(){
+    spdlog::trace("Skill::run_parallels");
     while(m_flag_parallels_running){
         auto start = std::chrono::high_resolution_clock::now();
         this->parallels();
@@ -407,10 +416,12 @@ void Skill::run_parallels(){
 }
 
 void Skill::stop_parallels(){
+    spdlog::trace("Skill::stop_parallels");
     m_flag_parallels_running=false;
 }
 
 void Skill::terminate_parallels(){
+    spdlog::trace("Skill::terminate_parallels");
     m_flag_parallels_running=false;
     if(m_thr_parallels.joinable()){
         m_thr_parallels.join();
@@ -436,10 +447,12 @@ double Skill::get_custom_cost(const Percept &p){
 }
 
 void Skill::write_custom_results(nlohmann::json &custom_results){
+    spdlog::trace("Skill::write_custom_results");
     m_result.results=nlohmann::json();
 }
 
 void Skill::write_logs(){
+    spdlog::trace("Skill::write_logs");
     if(!m_memory->read_parameters()->skill->log_data || m_data_log.size()==0){
         return;
     }

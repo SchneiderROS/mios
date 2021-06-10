@@ -1,12 +1,15 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
-#include <memory>
-#include <unordered_map>
-
 #include "mios/mongodb_client/mongodb_client.hpp"
 #include "mios/data_structures/object.hpp"
 #include "mios/data_structures/task_data.hpp"
+
+#include "nlohmann/json.hpp"
+
+#include <string>
+#include <memory>
+#include <unordered_map>
+
 
 namespace mios {
 
@@ -26,14 +29,14 @@ public:
 
     bool get_task_data(const std::string uuid,TaskData& data) const;
 
-    std::shared_ptr<Task> load_task(const std::string& task_id, const nlohmann::json& user_context, mios::Core *core);
-    std::shared_ptr<Task> load_subtask(const std::string& task_id, const nlohmann::json& user_context, mios::Core *core);
+    std::shared_ptr<Task> load_task(const std::string& task_id, const nlohmann::json& user_context, Core *core);
+    std::shared_ptr<Task> load_subtask(const std::string& task_id, const nlohmann::json& user_context, Core *core);
     bool load_default_task_context(const std::string task_id, nlohmann::json &task_context);
     bool load_default_skill_context(const std::string skill_id, nlohmann::json &skill_context);
 
     void store_task_data(const std::string& uuid, const std::string& task_id, const nlohmann::json& context, const TaskResult& result);
 
-    bool load_environment(std::map<std::string, Object> &environment);
+    bool load_environment(std::unordered_map<std::string, Object> &environment);
     bool upload_environment_element(const Object &element);
 
     bool update_database();

@@ -1,7 +1,7 @@
 #include "mios/skill/skill_library.hpp"
-#include "mios/memory/memory.hpp"
-#include "mios/portal/portal.hpp"
-#include "mios/data_structures/percept.hpp"
+
+#include "mios/skill/skill.hpp"
+#include "mios/data_structures/parameters.hpp"
 
 #include "mios/skills/test_skill_1.hpp"
 #include "mios/skills/generic_wiggle_motion.hpp"
@@ -30,9 +30,12 @@
 #include "mios/skills/tax_press_button.hpp"
 #include "mios/skills/tax_turn.hpp"
 
+#include "spdlog/spdlog.h"
+
 namespace mios {
 
-SkillLibrary::SkillLibrary(Memory* memory, Portal* portal){
+SkillLibrary::SkillLibrary(){
+    spdlog::trace("SkillLibrary::SkillLibrary");
     m_skill_parameters.insert(std::make_pair("TestSkill1",std::make_shared<SkillParametersTestSkill1>()));
     m_skill_parameters.insert(std::make_pair("GenericWiggleMotion",std::make_shared<SkillParametersGenericWiggleMotion>()));
     m_skill_parameters.insert(std::make_pair("MoveToPoseJoint",std::make_shared<SkillParametersMoveToPoseJoint>()));
@@ -60,11 +63,13 @@ SkillLibrary::SkillLibrary(Memory* memory, Portal* portal){
     m_skill_parameters.insert(std::make_pair("TaxTurn",std::make_shared<SkillParametersTaxTurn>()));
 }
 
-const std::map<std::string,std::shared_ptr<Skill> >* SkillLibrary::get_skills() const{
+const std::unordered_map<std::string,std::shared_ptr<Skill> >* SkillLibrary::get_skills() const{
+    spdlog::trace("SkillLibrary::get_skills");
     return &m_skills;
 }
 
-const std::map<std::string,std::shared_ptr<SkillParameters> >* SkillLibrary::get_skill_parameters() const{
+const std::unordered_map<std::string,std::shared_ptr<SkillParameters> >* SkillLibrary::get_skill_parameters() const{
+    spdlog::trace("SkillLibrary::get_skill_parameters");
     return &m_skill_parameters;
 }
 

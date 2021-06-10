@@ -1,6 +1,8 @@
 #include "mios/softhand2/softhand2.hpp"
 #include "spdlog/spdlog.h"
 
+#include <unistd.h>
+
 
 namespace mios{
 
@@ -58,7 +60,6 @@ bool Softhand2::initialize(){
 }
 
 bool Softhand2::move(double position){
-    std::cout<<"MOVE"<<std::endl;
     short int commands[2];
     if(position>1) position=1;
     if(position<0) position=0;
@@ -66,7 +67,6 @@ bool Softhand2::move(double position){
     commands[1] = 0;
     commSetInputs(&m_settings, m_device_id, commands);
     usleep(500000);
-    char status;
     return true;
 }
 

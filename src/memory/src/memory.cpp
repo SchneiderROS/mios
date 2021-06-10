@@ -4,11 +4,13 @@
 namespace mios {
 
 Memory::Memory(unsigned database_port):m_lt_memory(database_port){
+    spdlog::trace("Memory::Memory");
     m_st_memory.link_to_lt_memory(&m_lt_memory);
     m_lt_memory.link_to_st_memory(&m_st_memory);
 }
 
 bool Memory::is_ok() const{
+    spdlog::trace("Memory::is_ok");
     if(!m_lt_memory.is_ok()){
         spdlog::error("Long-term memory state is not ok");
         return false;
@@ -21,6 +23,7 @@ bool Memory::is_ok() const{
 }
 
 bool Memory::initialize(SkillLibrary *skill_library, unsigned robot_configuration){
+    spdlog::trace("Memory::initialize");
     spdlog::info("Initializing long-term memory...");
     m_lt_memory.link_to_skill_library(skill_library);
     if(!m_lt_memory.initialize(robot_configuration)){

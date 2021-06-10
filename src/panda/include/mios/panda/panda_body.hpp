@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <atomic>
 
 #include "franka/robot.h"
 #include "franka/gripper.h"
@@ -12,9 +10,17 @@
 
 #include "mios/data_structures/parameters.hpp"
 #include "mios/utils/types.hpp"
-#include "mios/memory/memory.hpp"
+
+#include <string>
+#include <optional>
+#include <memory>
+#include <functional>
+#include <atomic>
+#include <mutex>
 
 namespace mios {
+
+class Memory;
 
 class PandaBody{
 public:

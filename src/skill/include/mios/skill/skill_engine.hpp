@@ -1,12 +1,18 @@
 #pragma once
 
-#include <memory>
-#include <atomic>
-#include <list>
-
 #include "mios/data_structures/percept.hpp"
 #include "mios/skill/skill.hpp"
 #include "mios/utils/types.hpp"
+#include "mios/data_structures/results.hpp"
+
+#include "nlohmann/json.hpp"
+#include "spdlog/spdlog.h"
+
+#include <memory>
+#include <list>
+#include <unordered_map>
+#include <string>
+
 
 namespace mios {
 class Core;
@@ -30,6 +36,7 @@ public:
 
     bool is_running_queue();
     template<typename T>bool reserve_skill_context(const nlohmann::json task_context, const std::string& skill_id){
+        spdlog::trace("SkillEngine::reserve_skill_context");
         return m_memory->reserve_skill_context<T>(task_context,skill_id);
     }
     std::unordered_map<std::string, SkillResult> get_results();

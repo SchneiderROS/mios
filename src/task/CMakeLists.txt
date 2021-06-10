@@ -45,14 +45,16 @@ target_link_libraries(${MODULE_NAME}
     ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     ${PROJECT_NAME}::core
     ${PROJECT_NAME}::memory
+    msrm_cpp_utils::system
+    msrm_cpp_utils::files
     PUBLIC
     ${PROJECT_NAME}::portal
     ${PROJECT_NAME}::skill
     ${PROJECT_NAME}::utils
     ${PROJECT_NAME}::tasks
     msrm_cpp_utils::json
-    msrm_cpp_utils::system
-    msrm_cpp_utils::files
+    CONAN_PKG::nlohmann_json
+    CONAN_PKG::eigen
     )
 
 apply_module_options(${MODULE_NAME})

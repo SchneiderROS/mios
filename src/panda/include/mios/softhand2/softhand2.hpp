@@ -1,8 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <string.h>
-#include <unistd.h>
 #include "mios/softhand2/qbmove_communications.h"
 
 namespace mios{

@@ -2,6 +2,8 @@
 
 #include "mios/safety_stage_1/safety_module_stage_1.hpp"
 
+#include "eigen3/Eigen/Core"
+
 namespace mios{
 
 class VelocityWallsSafetyModule : public SafetyModuleStage1{

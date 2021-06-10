@@ -18,7 +18,7 @@
 namespace mios {
 
 MongodbClient::MongodbClient(const std::string &database, unsigned port){
-    spdlog::trace("[MONGODBCLIENT]: CONSTRUCTOR");
+    spdlog::trace("MongodbClient::MongodbClient");
     std::scoped_lock<std::mutex> lock(m_mutex_db_access);
     spdlog::debug("Connecting to database " + database + " on localhost:" + std::to_string(port));
     mongocxx::uri uri("mongodb://localhost:"+std::to_string(port));
@@ -36,6 +36,7 @@ MongodbClient::MongodbClient(const std::string &database, unsigned port){
 }
 
 bool MongodbClient::read_documents(const std::string &collection, std::set<nlohmann::json> &docs){
+    spdlog::trace("MongodbClient::read_documents(string,set<json>)");
     try {
         if(!m_mongodb.has_collection(collection)){
             spdlog::error("Database has no "+collection+" collection");
@@ -75,7 +76,7 @@ bool MongodbClient::read_documents(const std::string &collection, std::set<nlohm
 }
 
 bool MongodbClient::read_document(const std::string& name, const std::string& collection, nlohmann::json &descr){
-    spdlog::trace("[MONGODBCLIENT]: READ_DOCUMENT("+name+","+collection+")");
+    spdlog::trace("MongodbClient::read_document(string,string,json)");
     std::scoped_lock<std::mutex> lock(m_mutex_db_access);
     try{
         if(!m_mongodb.has_collection(collection)){
@@ -129,7 +130,7 @@ bool MongodbClient::read_document(const std::string& name, const std::string& co
 }
 
 bool MongodbClient::write_documents(const std::string &collection, const std::set<nlohmann::json> &docs, bool overwrite){
-    spdlog::trace("[MONGODBCLIENT]: READ_DOCUMENTS("+collection+")");
+    spdlog::trace("MongodbClient::write_documents");
     for(const auto& d : docs){
         if(d.find("name")==d.end()){
             spdlog::error("Cannot upload document to database since it has no field <name>.");
@@ -143,6 +144,7 @@ bool MongodbClient::write_documents(const std::string &collection, const std::se
 }
 
 bool MongodbClient::write_document(const std::string& name, const std::string& collection, const nlohmann::json &descr, bool overwrite){
+    spdlog::trace("MongodbClient::write_document");
     std::scoped_lock<std::mutex> lock(m_mutex_db_access);
     try{
         if(!m_mongodb.has_collection(collection)){
@@ -188,6 +190,7 @@ bool MongodbClient::write_document(const std::string& name, const std::string& c
 }
 
 bool MongodbClient::make_document_consistent(const std::string& name, std::string collection, const nlohmann::json& template_doc){
+    spdlog::trace("MongodbClient::make_document_consistent");
     try{
         bsoncxx::document::view_or_value doc=bsoncxx::from_json(template_doc.dump());
         if(!m_mongodb.has_collection(collection)){
@@ -256,6 +259,7 @@ bool MongodbClient::make_document_consistent(const std::string& name, std::strin
 }
 
 bool MongodbClient::health_check() const{
+    spdlog::trace("MongodbClient::health_check");
     try{
         unsigned n_doc_parameters=6;
         if(!m_mongodb.has_collection("parameters")){

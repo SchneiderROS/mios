@@ -9,9 +9,11 @@
 namespace mios {
 
 LTMemory::LTMemory(unsigned database_port):m_mongodb_client("mios",database_port){
+    spdlog::trace("LTMemory::LTMemory");
 }
 
 bool LTMemory::is_ok() const{
+    spdlog::trace("LTMemory::is_ok");
     if(!m_mongodb_client.health_check()){
         spdlog::error("Database health check failed.");
         return false;
@@ -20,14 +22,17 @@ bool LTMemory::is_ok() const{
 }
 
 void LTMemory::link_to_st_memory(STMemory *st_memory){
+    spdlog::trace("LTMemory::link_to_st_memory");
     m_st_memory=st_memory;
 }
 
 void LTMemory::link_to_skill_library(SkillLibrary *skill_library){
+    spdlog::trace("LTMemory::link_to_skill_library");
     m_skill_library=skill_library;
 }
 
 bool LTMemory::initialize(unsigned robot_configuration){
+    spdlog::trace("LTMemory::initialize");
     if(!make_database_consistent()){
         return false;
     }
@@ -64,6 +69,7 @@ bool LTMemory::initialize(unsigned robot_configuration){
 }
 
 bool LTMemory::make_database_consistent(){
+    spdlog::trace("LTMemory::make_database_consistent");
     nlohmann::json default_values;
     default_values=SystemParameters().to_json();
     default_values["name"]="system";
@@ -109,6 +115,7 @@ bool LTMemory::make_database_consistent(){
 }
 
 bool LTMemory::make_default_tasks_consistent(){
+    spdlog::trace("LTMemory::make_default_tasks_consistent");
     nlohmann::json default_values;
     default_values["name"]="TestTask1";
     default_values["skills"]={
@@ -246,6 +253,7 @@ bool LTMemory::make_default_tasks_consistent(){
 }
 
 bool LTMemory::make_default_environment_consistent(){
+    spdlog::trace("LTMemory::make_default_environment_consistent");
     nlohmann::json default_values;
     Object o = Object("TestObject1");
     o.grasp_force=1;
@@ -256,7 +264,7 @@ bool LTMemory::make_default_environment_consistent(){
 }
 
 bool LTMemory::get_task_data(const std::string uuid, TaskData &data) const{
-    spdlog::debug("LTMEMORY::get_task_data(" + uuid + ")");
+    spdlog::trace("LTMemory::get_task_data");
     if(m_task_data.find(uuid)==m_task_data.end()){
         return false;
     }else{
@@ -266,6 +274,7 @@ bool LTMemory::get_task_data(const std::string uuid, TaskData &data) const{
 }
 
 std::shared_ptr<Task> LTMemory::load_task(const std::string& task_id, const nlohmann::json& user_context,Core* core){
+    spdlog::trace("LTMemory::load_task");
     std::shared_ptr<Task> task = TaskFactory::create_task(TaskFactory::get_task_name(task_id),core);
     //    if(task->get_context().find("parameters")!=task->get_context().end()){
     //        if(!task->read_parameters(task->get_context()["parameters"])){
@@ -281,6 +290,7 @@ std::shared_ptr<Task> LTMemory::load_task(const std::string& task_id, const nloh
 }
 
 std::shared_ptr<Task> LTMemory::load_subtask(const std::string& task_id, const nlohmann::json& user_context,Core* core){
+    spdlog::trace("LTMemory::load_subtask");
     std::shared_ptr<Task> task = TaskFactory::create_task(TaskFactory::get_task_name(task_id),core);
     if(!task->load_context(user_context)){
         spdlog::error("Could not load context for subtask " + task->get_id());
@@ -297,6 +307,7 @@ std::shared_ptr<Task> LTMemory::load_subtask(const std::string& task_id, const n
 }
 
 bool LTMemory::load_default_parameters(nlohmann::json &parameters){
+    spdlog::trace("LTMemory::load_default_parameters");
     if(!m_mongodb_client.read_document("control","parameters",parameters["control"])){
         return false;
     }
@@ -319,10 +330,12 @@ bool LTMemory::load_default_parameters(nlohmann::json &parameters){
 }
 
 bool LTMemory::load_default_task_context(const std::string task_id,nlohmann::json& task_context){
+    spdlog::trace("LTMemory::load_default_task_context");
     return m_mongodb_client.read_document(task_id,"tasks",task_context);
 }
 
 bool LTMemory::load_default_skill_context(const std::string skill_type,nlohmann::json& skill_context){
+    spdlog::trace("LTMemory::load_default_skill_context");
     std::map<std::string, std::set<std::string> > skill_parameters;
     if(m_skill_library->get_skill_parameters()->find(skill_type)==m_skill_library->get_skill_parameters()->end()){
         spdlog::error("Could not find skill type " + skill_type + " in library.");
@@ -347,10 +360,12 @@ bool LTMemory::load_default_skill_context(const std::string skill_type,nlohmann:
 }
 
 void LTMemory::store_task_data(const std::string &uuid, const std::string &task_id, const nlohmann::json &context, const TaskResult &result){
+    spdlog::trace("LTMemory::store_task_data");
     m_task_data.emplace(std::make_pair(uuid,TaskData(task_id,context,result)));
 }
 
-bool LTMemory::load_environment(std::map<std::string, Object> &environment){
+bool LTMemory::load_environment(std::unordered_map<std::string, Object> &environment){
+    spdlog::trace("LTMemory::load_environment");
     std::set<nlohmann::json> docs;
     environment.emplace(std::make_pair("NullObject",Object("NullObject")));
     if(!m_mongodb_client.read_documents("environment",docs)){
@@ -363,11 +378,12 @@ bool LTMemory::load_environment(std::map<std::string, Object> &environment){
 }
 
 bool LTMemory::upload_environment_element(const Object& element){
+    spdlog::trace("LTMemory::upload_environment_element");
     return m_mongodb_client.write_document(element.name,"environment",element.to_json(),true);
 }
 
 bool LTMemory::update_database(){
-    spdlog::debug("LTMemory::update_database()");
+    spdlog::trace("LTMemory::update_database");
     if(!m_mongodb_client.write_document("system","parameters",m_st_memory->read_parameters()->system.to_json(),true)){
         return false;
     }

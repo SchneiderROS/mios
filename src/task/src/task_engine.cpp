@@ -1,16 +1,19 @@
 #include "mios/task/task_engine.hpp"
+
 #include "mios/task/taskfactory.hpp"
 #include "mios/core/core.hpp"
 #include "mios/memory/memory.hpp"
 
-#include <sstream>
 #include "spdlog/spdlog.h"
+
+#include <sstream>
 
 namespace mios {
 
 
 
 TaskEngine::TaskEngine(Core *core):m_keep_running(true),m_core(core),m_memory(core->get_memory()),m_task_life_cycle(TaskLifeCycle::Switch),m_active_task(TaskFactory::create_task(TaskName::TaskNameIdleTask,core)){
+    spdlog::trace("TaskEngine::TaskEngine");
 }
 
 void TaskEngine::reset(){

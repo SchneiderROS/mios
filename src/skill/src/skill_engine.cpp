@@ -4,18 +4,21 @@
 #include "mios/core/core.hpp"
 #include "mios/memory/memory.hpp"
 
+
 namespace mios{
 
 SkillEngine::SkillEngine(Core* core):m_core(core),m_memory(core->get_memory()),m_active_skill(std::make_shared<NullSkill>("NullSkill",m_memory,m_core->get_portal())),m_queue(false){
-
+spdlog::trace("SkillEngine::SkillEngine");
 }
 
 bool SkillEngine::apply_skill_context(const nlohmann::json &task_context, const std::string &skill_name){
+    spdlog::trace("SkillEngine::apply_skill_context");
     spdlog::info("Applying skill context...");
     return m_memory->apply_skill_context(task_context,skill_name);
 }
 
 bool SkillEngine::load_skill(std::shared_ptr<Skill> skill){
+    spdlog::trace("SkillEngine::load_skill");
     spdlog::info("Loading skill "+skill->get_id()+"...");
     m_active_skill=skill;
 
@@ -44,6 +47,7 @@ bool SkillEngine::load_skill(std::shared_ptr<Skill> skill){
 }
 
 bool SkillEngine::blend_skill_stage_1(){
+    spdlog::trace("SkillEngine::blend_skill_stage_1");
     m_active_skill->terminate(*m_core->get_percept());
     m_results.insert(std::pair<std::string,SkillResult>(m_active_skill->get_id(),m_active_skill->get_result()));
 
@@ -62,6 +66,7 @@ bool SkillEngine::blend_skill_stage_1(){
 }
 
 bool SkillEngine::blend_skill_stage_2(){
+    spdlog::trace("SkillEngine::blend_skill_stage_2");
     spdlog::info("Initializing...");
     if(!m_active_skill->initialize(*m_core->get_percept())){
         return false;
@@ -70,23 +75,28 @@ bool SkillEngine::blend_skill_stage_2(){
 }
 
 bool SkillEngine::is_last_skill(){
+    spdlog::trace("SkillEngine::is_last_skill");
     return m_it_skill_queue==m_skill_queue.end();
 }
 
 bool SkillEngine::add_skill(std::shared_ptr<Skill> skill){
+    spdlog::trace("SkillEngine::add_skill");
     m_skill_queue.push_back(skill);
     return true;
 }
 
 void SkillEngine::clear_skill_queue(){
+    spdlog::trace("SkillEngine::clear_skill_queue");
     m_skill_queue.clear();
 }
 
 void SkillEngine::clear_results(){
+    spdlog::trace("SkillEngine::clear_results");
     m_results.clear();
 }
 
 ControlReturnType SkillEngine::execute_skill_queue(){
+    spdlog::trace("SkillEngine::execute_skill_queue");
     m_queue=true;
     m_it_skill_queue=m_skill_queue.begin();
     m_active_skill=*m_it_skill_queue;
@@ -132,14 +142,17 @@ ControlReturnType SkillEngine::execute_skill_queue(){
 }
 
 bool SkillEngine::is_running_queue(){
+    spdlog::trace("SkillEngine::is_running_queue");
     return m_queue;
 }
 
 void SkillEngine::unload_skill(){
+    spdlog::trace("SkillEngine::unload_skill");
     m_active_skill=std::make_shared<NullSkill>("NullSkill",m_memory,m_core->get_portal());
 }
 
 ControlReturnType SkillEngine::execute_skill(std::shared_ptr<Skill> skill){
+    spdlog::trace("SkillEngine::execute_skill");
     m_queue=false;
     if(!load_skill( skill)){
         spdlog::error("Skill could not be loaded.");
@@ -168,6 +181,7 @@ ControlReturnType SkillEngine::execute_skill(std::shared_ptr<Skill> skill){
 }
 
 void SkillEngine::stop_skill(){
+    spdlog::trace("SkillEngine::stop_skill");
     m_active_skill->invoke_failure();
 }
 
@@ -177,6 +191,7 @@ Actuator* SkillEngine::get_next_command(const Percept& percept){
 }
 
 std::unordered_map<std::string,SkillResult> SkillEngine::get_results(){
+    spdlog::trace("SkillEngine::get_results");
     return m_results;
 }
 

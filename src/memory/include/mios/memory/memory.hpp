@@ -2,6 +2,16 @@
 
 #include "mios/memory/lt_memory.hpp"
 #include "mios/memory/st_memory.hpp"
+#include "mios/data_structures/event.hpp"
+#include "mios/data_structures/parameters.hpp"
+#include "mios/data_structures/task_data.hpp"
+#include "mios/data_structures/percept.hpp"
+
+#include "nlohmann/json.hpp"
+
+#include <optional>
+#include <memory>
+#include <string>
 
 namespace mios {
 

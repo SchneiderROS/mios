@@ -46,12 +46,13 @@ target_link_libraries(${MODULE_NAME}
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
     ${PROJECT_NAME}::${PROJECT_NAME}_project_warnings
     ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
-    ${PROJECT_NAME}::utils
     ${PROJECT_NAME}::memory
-    Franka::Franka
     msrm_cpp_utils::network
     msrm_cpp_utils::conversion
     CONAN_PKG::pybind11
+    PUBLIC
+    ${PROJECT_NAME}::utils
+    Franka::Franka
     )
 
 apply_module_options(${MODULE_NAME})
