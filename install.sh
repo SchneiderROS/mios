@@ -6,14 +6,14 @@ ROOT=$(dirname "$(realpath $0)")
 cd ${ROOT}
 
 ### make ros components ###
-cd ${ROOT}/ros_workspace
+cd ${ROOT}/src/ros_workspace
 catkin_make
 
 ### make ###
 cd ${ROOT}
-mkdir -p ${ROOT}/build/release
+mkdir -p ${ROOT}/build/Release
 
-cd ${ROOT}/build/release
+cd ${ROOT}/build/Release
 cmake ../..
 
 make -j$(nproc --all) install

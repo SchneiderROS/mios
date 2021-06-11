@@ -48,7 +48,7 @@ option(SIMPLE_BUILD "Build the project as minimally as possible" OFF)
 option(BUILD_DOC "Build the project's documentation" OFF)
 option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
 option(DEBUG_LOGGING "Enabling debug logging" OFF)
-option(ENABLE_IPO "Enable Interprocedural Optimization, aka Link Time Optimization (LTO)" OFF)
+option(ENABLE_IPO "Enable Interprocedural Optimization, aka Link Time Optimization (LTO)" ON)
 option(ENABLE_PCH "Enable Precompiled Headers" ON)
 option(ENABLE_UNITY_BUILD "Enable unity build" ON)
 
@@ -132,9 +132,12 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_options ALIAS ${PROJECT_NAM
 add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_warnings ALIAS ${PROJECT_NAME}_project_warnings)
 add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_deps ALIAS ${PROJECT_NAME}_project_deps)
 
+
 target_link_libraries(${PROJECT_NAME}_project_deps
     INTERFACE
     CONAN_PKG::spdlog
+    stdc++fs
+    boost_system
     )
 
 add_subdirectory(src)

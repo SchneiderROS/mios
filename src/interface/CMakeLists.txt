@@ -44,7 +44,6 @@ target_link_libraries(${MODULE_NAME}
     ${roscpp_LIBRARIES}
     PUBLIC
     CONAN_PKG::nlohmann_json
-    CONAN_PKG::boost
     )
 
 apply_module_options(${MODULE_NAME})
