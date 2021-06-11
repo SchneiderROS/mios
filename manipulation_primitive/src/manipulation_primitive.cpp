@@ -45,6 +45,7 @@ Actuator* ManipulationPrimitive::step(const Percept &p){
 }
 
 void ManipulationPrimitive::terminate(const Percept &p){
+    spdlog::trace("ManipulationPrimitive::terminate()");
     if(m_flag_initialized && !m_flag_terminated){
         for(auto& s : m_strategies){
             s.second.strategy->terminate(p);
@@ -224,6 +225,10 @@ void ManipulationPrimitive::set_flag_error(){
 
 std::string ManipulationPrimitive::get_name() const{
     return m_name;
+}
+
+bool ManipulationPrimitive::has_strategies() const{
+    return m_strategies.size()>0;
 }
 
 bool ManipulationPrimitive::is_settled(bool ignore) const{
