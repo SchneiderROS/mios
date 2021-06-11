@@ -9,11 +9,11 @@ DesiredWrenchStrategy::DesiredWrenchStrategy():PrimitiveStrategy({CommandPattern
     m_dF_max.setZero();
 }
 
-void DesiredWrenchStrategy::initialize(const Percept& p_0){
+void DesiredWrenchStrategy::initialize([[maybe_unused]] const Percept& p_0){
 
 }
 
-void DesiredWrenchStrategy::get_next_command(Actuator& cmd, const Percept& p_0){
+void DesiredWrenchStrategy::get_next_command(Actuator& cmd, [[maybe_unused]] const Percept& p_0){
     for(unsigned i=0;i<3;i++){
         double diff_TF_F_d_t = m_TF_F_d(i)-m_TF_F_d_limiter(i);
         double diff_TF_F_d_r = m_TF_F_d(i+3)-m_TF_F_d_limiter(i+3);
@@ -27,7 +27,7 @@ void DesiredWrenchStrategy::get_next_command(Actuator& cmd, const Percept& p_0){
     m_TF_F_d_limiter=cmd.TF_F_d;
 }
 
-void DesiredWrenchStrategy::terminate(const Percept& p){
+void DesiredWrenchStrategy::terminate([[maybe_unused]] const Percept& p){
 
 }
 

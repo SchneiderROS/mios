@@ -9,7 +9,7 @@ FFStrategy::FFStrategy():PrimitiveStrategy({CommandPatternCartesianFFWrench}){
     m_dF_max.setZero();
 }
 
-void FFStrategy::initialize(const Percept &p_0){
+void FFStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
 void FFStrategy::get_next_command(Actuator &cmd, const Percept &p){
@@ -31,7 +31,7 @@ void FFStrategy::get_next_command(Actuator &cmd, const Percept &p){
     m_TF_F_ff_limiter=cmd.TF_F_ff;
 }
 
-void FFStrategy::terminate(const Percept &p){
+void FFStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

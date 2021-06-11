@@ -6,7 +6,7 @@ GripperStrategy::GripperStrategy():PrimitiveStrategy({CommandPatternGripper}){
     m_request=GripperRequest::None;
 }
 
-void GripperStrategy::initialize(const Percept &p_0){
+void GripperStrategy::initialize([[maybe_unused]] const Percept &p_0){
     m_gripper_finished=false;
 }
 
@@ -24,7 +24,7 @@ void GripperStrategy::get_next_command(Actuator &cmd, const Percept &p){
     }
 }
 
-void GripperStrategy::terminate(const Percept &p){
+void GripperStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

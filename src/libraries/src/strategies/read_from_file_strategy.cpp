@@ -18,18 +18,18 @@ ReadFromFileStrategy::ReadFromFileStrategy():PrimitiveStrategy({CommandPatternCa
 
 }
 
-void ReadFromFileStrategy::initialize(const Percept &p_0){
+void ReadFromFileStrategy::initialize([[maybe_unused]] const Percept &p_0){
     m_cnt_data=0;
 }
 
-void ReadFromFileStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void ReadFromFileStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     if(m_cnt_data<m_data.size()){
         cmd.TF_T_EE_d=Eigen::Matrix<double,4,4>(m_data[m_cnt_data].data());
         m_cnt_data++;
     }
 }
 
-void ReadFromFileStrategy::terminate(const Percept &p){
+void ReadFromFileStrategy::terminate([[maybe_unused]] const Percept &p){
 }
 
 bool ReadFromFileStrategy::finished(){

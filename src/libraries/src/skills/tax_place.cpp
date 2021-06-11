@@ -51,7 +51,7 @@ TaxPlace::TaxPlace(const std::string& name, Memory* memory, Portal* portal):Skil
 
 }
 
-Eigen::Matrix<double,3,3> TaxPlace::get_O_R_T_0(const Percept &p) const{
+Eigen::Matrix<double,3,3> TaxPlace::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
     if(get_object("Surface")->name!="NullObject"){
         return get_object("Surface")->O_T_OB.block<3,3>(0,0);
     }else{
@@ -153,7 +153,7 @@ bool TaxPlace::check_local_pre_conditions(const Percept &p){
     return true;
 }
 
-bool TaxPlace::check_local_suc_conditions(const Percept &p){
+bool TaxPlace::check_local_suc_conditions([[maybe_unused]] const Percept &p){
 //    if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-m_t_sim).count()>700 && get_active_mp()->get_name()=="release"){
 //        return true;
 //    }
@@ -183,8 +183,8 @@ bool TaxPlace::check_local_ex_conditions(const Percept &p){
 
 bool TaxPlace::check_local_err_conditions(const Percept &p){
     const Eigen::Matrix<double,6,1>& ROI_x=get_parameters<SkillParametersTaxPlace>()->ROI_x;
-    const Eigen::Matrix<double,6,1>& ROI_phi=get_parameters<SkillParametersTaxPlace>()->ROI_phi;
-    double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Surface").block<3,1>(0,2)));
+    [[maybe_unused]] const Eigen::Matrix<double,6,1>& ROI_phi=get_parameters<SkillParametersTaxPlace>()->ROI_phi;
+    [[maybe_unused]] double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Surface").block<3,1>(0,2)));
     Eigen::Matrix<double,3,1> dist = p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Surface").block<3,1>(0,3);
     if(dist(0) < ROI_x(0) || dist(0) > ROI_x(1) || dist(1) < ROI_x(2) || dist(1) > ROI_x(3) || dist(2) < ROI_x(4) || dist(2) > ROI_x(5)){
         return true;

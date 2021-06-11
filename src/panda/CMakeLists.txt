@@ -13,19 +13,10 @@ set(${MODULE_NAME}_HEADER_FILES
     include/${PROJECT_NAME}/softhand2/softhand2.hpp
     )
 
-if(BUILD_SHARED_LIBS)
-    add_library(${MODULE_NAME}
-        SHARED
-        ${${MODULE_NAME}_SRC}
-        ${${MODULE_NAME}_HEADER_FILES}
-        )
-else()
-    add_library(${MODULE_NAME}
-        STATIC
-        ${${MODULE_NAME}_SRC}
-        ${${MODULE_NAME}_HEADER_FILES}
-        )
-endif()
+add_library(${MODULE_NAME}
+    ${${MODULE_NAME}_SRC}
+    ${${MODULE_NAME}_HEADER_FILES}
+    )
 
 
 add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})

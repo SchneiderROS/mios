@@ -16,6 +16,7 @@ class Object;
 
 class IParameters{
 public:
+    virtual ~IParameters() = default;
     virtual bool from_json(const nlohmann::json& parameters) = 0;
     virtual nlohmann::json to_json() const = 0;
 
@@ -216,6 +217,7 @@ public:
 class SkillParameters : public IParameters{
 public:
     SkillParameters();
+    virtual ~SkillParameters() = default;
 
     /**
      * Reads common skill parameters into the local configuration struct.
@@ -278,7 +280,7 @@ public:
 
 class LiveContext{
 public:
-    LiveContext(Object* grasped_object);
+    LiveContext(Object* grasped_object_in);
     std::string executable_path;
     nlohmann::json live_parameters;
     const Object* grasped_object;

@@ -33,7 +33,7 @@ Actuator* ManipulationPrimitive::step(const Percept &p){
     for(auto& s : m_strategies){
         s.second.strategy->get_next_command(s.second.cmd,p);
     }
-    if(!compose_command(p)){
+    if(!compose_command()){
         spdlog::error("Command composition at primitive layer failed.");
         m_cmd.stop();
     }
@@ -54,7 +54,7 @@ void ManipulationPrimitive::terminate(const Percept &p){
     }
 }
 
-bool ManipulationPrimitive::compose_command(const Percept& p){
+bool ManipulationPrimitive::compose_command(){
 //    m_cmd.set_zero(p);
     m_cmd.TF_dX_d.setZero();
     m_cmd.TF_F_ff.setZero();
@@ -145,7 +145,7 @@ bool ManipulationPrimitive::compose_command(const Percept& p){
             }
         }
         if(strategy_command_pattern.find(CommandPatternGripper)!=strategy_command_pattern.end()){
-            if(!O_R_T_set){
+            if(!gripper_set){
                 m_cmd.gripper_request=s.second.cmd.get_gripper_request();
                 m_cmd.gripper_width=s.second.cmd.gripper_width;
                 m_cmd.gripper_speed=s.second.cmd.gripper_speed;

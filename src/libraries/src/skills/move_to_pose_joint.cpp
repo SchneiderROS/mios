@@ -57,7 +57,7 @@ std::shared_ptr<ManipulationPrimitive> MoveToPoseJoint::get_initial_mp(const Per
     return mp;
 }
 
-bool MoveToPoseJoint::check_local_suc_conditions(const Percept &p){
+bool MoveToPoseJoint::check_local_suc_conditions([[maybe_unused]] const Percept &p){
     if(get_active_mp()->get_strategy<MoveToJointPoseStrategy>("s_0")->finished()){
         if(!m_finished){
             m_finished=true;

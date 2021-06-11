@@ -69,11 +69,11 @@ bool MoveToContact::check_local_suc_conditions(const Percept &p){
     return false;
 }
 
-bool MoveToContact::check_local_ex_conditions(const Percept &p){
+bool MoveToContact::check_local_ex_conditions([[maybe_unused]] const Percept &p){
     return true;
 }
 
-bool MoveToContact::check_local_err_conditions(const Percept &p){
+bool MoveToContact::check_local_err_conditions([[maybe_unused]] const Percept &p){
     return get_active_mp()->get_strategy<MoveToPoseStrategy>("s_0")->finished();
 }
 

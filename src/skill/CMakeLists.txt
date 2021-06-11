@@ -12,19 +12,10 @@ set(${MODULE_NAME}_HEADER_FILES
     include/${PROJECT_NAME}/${MODULE_NAME}/skill_library.hpp
     )
 
-if(BUILD_SHARED_LIBS)
-    add_library(${MODULE_NAME}
-        SHARED
-        ${${MODULE_NAME}_SRC}
-        ${${MODULE_NAME}_HEADER_FILES}
-        )
-else()
-    add_library(${MODULE_NAME}
-        STATIC
-        ${${MODULE_NAME}_SRC}
-        ${${MODULE_NAME}_HEADER_FILES}
-        )
-endif()
+add_library(${MODULE_NAME}
+    ${${MODULE_NAME}_SRC}
+    ${${MODULE_NAME}_HEADER_FILES}
+    )
 
 
 add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
@@ -47,13 +38,13 @@ target_link_libraries(${MODULE_NAME}
     msrm_cpp_utils::benchmarking
     msrm_cpp_utils::conversion
     msrm_cpp_utils::files
-    msrm_cpp_utils::json
     msrm_cpp_utils::math
     PUBLIC
     ${PROJECT_NAME}::manipulation_primitive
     ${PROJECT_NAME}::memory
     ${PROJECT_NAME}::portal
     ${PROJECT_NAME}::utils
+    msrm_cpp_utils::json
     CONAN_PKG::spdlog
     CONAN_PKG::nlohmann_json
     )

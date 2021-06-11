@@ -961,7 +961,7 @@ Parameters::Parameters():control(ControlParameters()),system(SystemParameters())
 
 }
 
-LiveContext::LiveContext(Object* grasped_object):grasped_object(grasped_object){
+LiveContext::LiveContext(Object* grasped_object_in):grasped_object(grasped_object_in){
 
 }
 

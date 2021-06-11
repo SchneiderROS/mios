@@ -16,9 +16,3 @@
 #include <functional>
 #include <thread>
 #include <list>
-
-#include <nlohmann/json.hpp>
-
-#include <eigen3/Eigen/Core>
-
-#include <spdlog/spdlog.h>

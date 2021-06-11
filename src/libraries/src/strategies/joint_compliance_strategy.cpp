@@ -7,15 +7,15 @@ JointComplianceStrategy::JointComplianceStrategy():PrimitiveStrategy({CommandPat
     m_xi_theta.setZero();
 }
 
-void JointComplianceStrategy::initialize(const Percept &p_0){
+void JointComplianceStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
-void JointComplianceStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void JointComplianceStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     cmd.K_theta=m_K_theta;
     cmd.xi_theta=m_xi_theta;
 }
 
-void JointComplianceStrategy::terminate(const Percept &p){
+void JointComplianceStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

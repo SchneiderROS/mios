@@ -476,17 +476,17 @@ void PandaBody::dummy_control(std::function<franka::CartesianPose (const franka:
 void PandaBody::dummy_control(std::function<franka::JointPositions (const franka::RobotState &,franka::Duration)> controller_callback){
     spdlog::trace("PandaBody::dummy_control(JointPositions)");
     franka::JointPositions q_d={0,0,0,0,0,0,0};
-    franka::RobotState m_robot_state;
-    m_robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
-    m_robot_state.O_F_ext_hat_K={0,0,0,0,0,0};
-    m_robot_state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
-    m_robot_state.dq={0,0,0,0,0,0,0};
+    franka::RobotState robot_state;
+    robot_state.K_F_ext_hat_K={0,0,0,0,0,0};
+    robot_state.O_F_ext_hat_K={0,0,0,0,0,0};
+    robot_state.tau_ext_hat_filtered={0,0,0,0,0,0,0};
+    robot_state.dq={0,0,0,0,0,0,0};
     std::chrono::high_resolution_clock::time_point t_0;
     franka::Duration duration(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t_0));
     while(!q_d.motion_finished){
         auto t_s_start = std::chrono::system_clock::now();
-        q_d=controller_callback(m_robot_state,duration);
-        m_robot_state.q=q_d.q;
+        q_d=controller_callback(robot_state,duration);
+        robot_state.q=q_d.q;
         auto t_s_end = std::chrono::system_clock::now();
         double t=std::chrono::duration_cast<std::chrono::microseconds>(t_s_end-t_s_start).count();
         duration=franka::Duration(t);

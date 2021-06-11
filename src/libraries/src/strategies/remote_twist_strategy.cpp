@@ -9,7 +9,7 @@ RemoteTwistStrategy::RemoteTwistStrategy():PrimitiveStrategy({CommandPatternCart
     m_static_frame=true;
 }
 
-void RemoteTwistStrategy::initialize(const Percept &p_0){
+void RemoteTwistStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
 void RemoteTwistStrategy::get_next_command(Actuator &cmd, const Percept &p){
@@ -21,7 +21,7 @@ void RemoteTwistStrategy::get_next_command(Actuator &cmd, const Percept &p){
     }
 }
 
-void RemoteTwistStrategy::terminate(const Percept &p){
+void RemoteTwistStrategy::terminate([[maybe_unused]] const Percept &p){
     if(m_receiver!=nullptr){
         m_receiver->disconnect();
     }

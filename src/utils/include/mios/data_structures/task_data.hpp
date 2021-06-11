@@ -13,7 +13,7 @@ struct TaskData{
     TaskData():name("NullData"),context(nlohmann::json()){
 
     }
-    TaskData(const std::string& name, const nlohmann::json& context, const TaskResult& result):name(name),context(context),result(result){
+    TaskData(const std::string& name_in, const nlohmann::json& context_in, const TaskResult& result_in):name(name_in),context(context_in),result(result_in){
 
     }
     std::string name;

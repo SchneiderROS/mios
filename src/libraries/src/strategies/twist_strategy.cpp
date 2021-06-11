@@ -9,10 +9,10 @@ TwistStrategy::TwistStrategy():PrimitiveStrategy({CommandPatternCartesianTwist})
     m_ddX_max.setZero();
 }
 
-void TwistStrategy::initialize(const Percept &p_0){
+void TwistStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
-void TwistStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void TwistStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     for(unsigned i=0;i<3;i++){
         double diff_TF_dX_d_t = m_TF_dX_d(i)-m_TF_dX_d_limiter(i);
         double diff_TF_dX_d_r = m_TF_dX_d(i+3)-m_TF_dX_d_limiter(i+3);
@@ -26,7 +26,7 @@ void TwistStrategy::get_next_command(Actuator &cmd, const Percept &p){
     m_TF_dX_d_limiter=cmd.TF_dX_d;
 }
 
-void TwistStrategy::terminate(const Percept &p){
+void TwistStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

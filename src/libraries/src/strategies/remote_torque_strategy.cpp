@@ -10,7 +10,7 @@ RemoteTorqueStrategy::RemoteTorqueStrategy():PrimitiveStrategy({CommandPatternJo
     m_tau_in[0]={0,0,0,0,0,0,0};
 }
 
-void RemoteTorqueStrategy::initialize(const Percept &p_0){
+void RemoteTorqueStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
 void RemoteTorqueStrategy::get_next_command(Actuator &cmd, const Percept &p){
@@ -29,7 +29,7 @@ void RemoteTorqueStrategy::get_next_command(Actuator &cmd, const Percept &p){
     }
 }
 
-void RemoteTorqueStrategy::terminate(const Percept &p){
+void RemoteTorqueStrategy::terminate([[maybe_unused]] const Percept &p){
     if(m_receiver!=nullptr){
         m_receiver->disconnect();
     }

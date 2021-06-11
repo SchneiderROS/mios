@@ -13,6 +13,7 @@
 #include "spdlog/spdlog.h"
 #include "eigen3/Eigen/Core"
 #include "nlohmann/json.hpp"
+#include "msrm_cpp_utils/json/json.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -306,7 +307,7 @@ private:
     double m_cost_effort_avg_sum;
 
     std::vector<nlohmann::json> m_data_log;
-    long m_log_cnt;
+    unsigned long m_log_cnt;
 
 };
 

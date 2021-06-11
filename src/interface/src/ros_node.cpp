@@ -83,7 +83,6 @@ bool RosNode::remove_task(mios_msg::RemoveTask::Request &request, mios_msg::Remo
 bool RosNode::wait_for_task(mios_msg::WaitForTask::Request &request, mios_msg::WaitForTask::Response &response){
     spdlog::debug("RosNode: wait_for_task");
     std::string task_uuid;
-    bool result;
     std::string error_message;
     TaskResult task_result;
     std::tie(response.result,task_result,response.error_message)=m_task_engine->wait_for_task(request.task_uuid);
@@ -105,7 +104,7 @@ bool RosNode::wait_for_task(mios_msg::WaitForTask::Request &request, mios_msg::W
     return true;
 }
 
-bool RosNode::is_busy(mios_msg::IsBusy::Request &request, mios_msg::IsBusy::Response &response){
+bool RosNode::is_busy([[maybe_unused]] mios_msg::IsBusy::Request &request, mios_msg::IsBusy::Response &response){
     spdlog::debug("RosNode: is_busy");
     response.busy=m_task_engine->is_busy();
     response.result=true;
@@ -178,7 +177,7 @@ bool RosNode::move_gripper(mios_msg::MoveGripper::Request &request, mios_msg::Mo
     return true;
 }
 
-bool RosNode::home_gripper(mios_msg::HomeGripper::Request &request, mios_msg::HomeGripper::Response &response){
+bool RosNode::home_gripper([[maybe_unused]] mios_msg::HomeGripper::Request &request, mios_msg::HomeGripper::Response &response){
     if(!m_core->home_gripper()){
         response.error_message="Homing has failed.";
         response.result=false;
@@ -264,7 +263,7 @@ bool RosNode::download_object_context(mios_msg::DownloadObjectContext::Request &
     return true;
 }
 
-bool RosNode::get_state(mios_msg::GetState::Request &request, mios_msg::GetState::Response &response){
+bool RosNode::get_state([[maybe_unused]] mios_msg::GetState::Request &request, mios_msg::GetState::Response &response){
     response.error_message="";
     response.result=true;
     if(!m_core->refresh_percept({})){
@@ -280,7 +279,7 @@ bool RosNode::get_state(mios_msg::GetState::Request &request, mios_msg::GetState
     return true;
 }
 
-bool RosNode::get_model(mios_msg::GetModel::Request &request, mios_msg::GetModel::Response &response){
+bool RosNode::get_model([[maybe_unused]] mios_msg::GetModel::Request &request, mios_msg::GetModel::Response &response){
     response.error_message="";
     response.result=true;
     if(!m_core->refresh_percept({})){
@@ -306,27 +305,27 @@ bool RosNode::start_desk_task(mios_msg::StartDeskTask::Request &request, mios_ms
     return true;
 }
 
-bool RosNode::stop_desk_task(mios_msg::StopDeskTask::Request &request, mios_msg::StopDeskTask::Response &response){
+bool RosNode::stop_desk_task([[maybe_unused]] mios_msg::StopDeskTask::Request &request, mios_msg::StopDeskTask::Response &response){
     response.result=m_core->stop_desk_task();
     return true;
 }
 
-bool RosNode::unlock_brakes(mios_msg::UnlockBrakes::Request &request, mios_msg::UnlockBrakes::Response &response){
+bool RosNode::unlock_brakes([[maybe_unused]] mios_msg::UnlockBrakes::Request &request, mios_msg::UnlockBrakes::Response &response){
     response.result=m_core->unlock_body();
     return true;
 }
 
-bool RosNode::lock_brakes(mios_msg::LockBrakes::Request &request, mios_msg::LockBrakes::Response &response){
+bool RosNode::lock_brakes([[maybe_unused]] mios_msg::LockBrakes::Request &request, mios_msg::LockBrakes::Response &response){
     response.result=m_core->lock_body();
     return true;
 }
 
-bool RosNode::shutdown(mios_msg::Shutdown::Request &request, mios_msg::Shutdown::Response &response){
+bool RosNode::shutdown([[maybe_unused]] mios_msg::Shutdown::Request &request, mios_msg::Shutdown::Response &response){
     response.result=m_core->shutdown_body();
     return true;
 }
 
-bool RosNode::pack_pose(mios_msg::PackPose::Request &request, mios_msg::PackPose::Response &response){
+bool RosNode::pack_pose([[maybe_unused]] mios_msg::PackPose::Request &request, mios_msg::PackPose::Response &response){
     response.result=m_core->pack_body();
     return true;
 }
@@ -338,7 +337,7 @@ bool RosNode::set_live_parameter(mios_msg::SetLiveParameter::Request &request, m
     return true;
 }
 
-bool RosNode::terminate(mios_msg::Terminate::Request &request, mios_msg::Terminate::Response &response){
+bool RosNode::terminate([[maybe_unused]] mios_msg::Terminate::Request &request, mios_msg::Terminate::Response &response){
     m_task_engine->stop();
     return true;
 }

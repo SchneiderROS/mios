@@ -16,13 +16,13 @@ void MoveToPoseStrategy::initialize(const Percept &p_0){
     m_mogen_p2p.initialize();
 }
 
-void MoveToPoseStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void MoveToPoseStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     m_mogen_p2p.u.t_scale=m_t_scale;
     m_mogen_p2p.step();
     cmd.TF_dX_d=m_mogen_p2p.y.dX_d;
 }
 
-void MoveToPoseStrategy::terminate(const Percept &p){
+void MoveToPoseStrategy::terminate([[maybe_unused]] const Percept &p){
     m_mogen_p2p.terminate();
 }
 

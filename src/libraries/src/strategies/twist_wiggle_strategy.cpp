@@ -6,11 +6,11 @@ TwistWiggleStrategy::TwistWiggleStrategy():PrimitiveStrategy({CommandPatternCart
 
 }
 
-void TwistWiggleStrategy::initialize(const Percept &p_0){
+void TwistWiggleStrategy::initialize([[maybe_unused]] const Percept &p_0){
     m_X_d_old.setZero();
 }
 
-void TwistWiggleStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void TwistWiggleStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     for(unsigned i=0;i<6;i++){
         m_X_d(i)=m_a_a(i)*cos(2*M_PI*m_a_f(i)*cmd.t+m_a_phi(i))+m_b_a(i)*sin(2*M_PI*m_b_f(i)*cmd.t+m_b_phi(i));
         cmd.TF_dX_d(i)=(m_X_d(i)-m_X_d_old(i))/0.001;
@@ -18,7 +18,7 @@ void TwistWiggleStrategy::get_next_command(Actuator &cmd, const Percept &p){
     m_X_d_old=m_X_d;
 }
 
-void TwistWiggleStrategy::terminate(const Percept &p){
+void TwistWiggleStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

@@ -63,7 +63,7 @@ public:
     const std::shared_ptr<PrimitiveStrategy> get_strategy_interface(const std::string& name) const;
 
 private:
-    bool compose_command(const Percept &p);
+    bool compose_command();
 
 private:
     const std::string m_name;

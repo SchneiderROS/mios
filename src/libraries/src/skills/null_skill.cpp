@@ -7,7 +7,7 @@ SkillParametersNullSkill::SkillParametersNullSkill():SkillParameters(){
 
 }
 
-bool SkillParametersNullSkill::from_json(const nlohmann::json &parameters){
+bool SkillParametersNullSkill::from_json([[maybe_unused]] const nlohmann::json &parameters){
     return false;
 }
 
@@ -25,11 +25,11 @@ std::shared_ptr<ManipulationPrimitive> NullSkill::get_initial_mp(const Percept &
     return mp;
 }
 
-bool NullSkill::check_local_suc_conditions(const Percept &p){
+bool NullSkill::check_local_suc_conditions([[maybe_unused]] const Percept &p){
     return false;
 }
 
-bool NullSkill::check_local_err_conditions(const Percept &p){
+bool NullSkill::check_local_err_conditions([[maybe_unused]] const Percept &p){
     return true;
 }
 

@@ -13,7 +13,7 @@ public:
     /**
      * The constructor sets default values for the object properties.
      */
-    Object(const std::string name);
+    Object(const std::string name_in);
 
     /**
      * Transforms the internal object representation into json format.

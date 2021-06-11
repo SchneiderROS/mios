@@ -244,7 +244,7 @@ void Skill::append_error(const std::string& error){
     m_result.last_errors.emplace_back(error);
 }
 
-Eigen::Matrix<double,3,3> Skill::get_O_R_T_0(const Percept &p) const{
+Eigen::Matrix<double,3,3> Skill::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
     return m_memory->read_parameters()->frames.O_R_T;
 }
 
@@ -322,19 +322,19 @@ bool Skill::check_global_suc_conditions(const Percept &p) const{
     return false;
 }
 
-bool Skill::check_local_pre_conditions(const Percept &p){
+bool Skill::check_local_pre_conditions([[maybe_unused]] const Percept &p){
     return true;
 }
 
-bool Skill::check_local_err_conditions(const Percept &p){
+bool Skill::check_local_err_conditions([[maybe_unused]] const Percept &p){
     return false;
 }
 
-bool Skill::check_local_ex_conditions(const Percept &p){
+bool Skill::check_local_ex_conditions([[maybe_unused]] const Percept &p){
     return true;
 }
 
-std::optional<std::shared_ptr<ManipulationPrimitive> > Skill::graph_transition(const Percept &p){
+std::optional<std::shared_ptr<ManipulationPrimitive> > Skill::graph_transition([[maybe_unused]] const Percept &p){
     return {};
 }
 
@@ -378,7 +378,7 @@ bool Skill::ground_objects(){
     return true;
 }
 
-void Skill::auxiliaries(const Percept &p){
+void Skill::auxiliaries([[maybe_unused]] const Percept &p){
 
 }
 
@@ -442,11 +442,11 @@ SkillCost Skill::measure_cost(const Percept &p){
     return cost;
 }
 
-double Skill::get_custom_cost(const Percept &p){
+double Skill::get_custom_cost([[maybe_unused]] const Percept &p){
     return 0;
 }
 
-void Skill::write_custom_results(nlohmann::json &custom_results){
+void Skill::write_custom_results([[maybe_unused]] nlohmann::json &custom_results){
     spdlog::trace("Skill::write_custom_results");
     m_result.results=nlohmann::json();
 }
@@ -472,7 +472,7 @@ void Skill::write_logs(){
         }
         msrm_utils::write_endl_to_file(log_file);
         if(m_log_cnt>=m_data_log.size()){
-            m_log_cnt=m_data_log.size();
+            m_log_cnt=static_cast<unsigned long>(m_data_log.size());
         }
         for(unsigned i=0;i<m_log_cnt;i++){
             for(const auto& el : m_data_log[i].items()){
@@ -504,15 +504,15 @@ const std::shared_ptr<ManipulationPrimitive> Skill::get_active_mp() const{
     return m_active_mp;
 }
 
-void Skill::update_internal_models(const Percept& p){
+void Skill::update_internal_models([[maybe_unused]] const Percept& p){
 
 }
 
-void Skill::update_policies(const Percept &p){
+void Skill::update_policies([[maybe_unused]] const Percept &p){
 
 }
 
-double Skill::get_goal_heuristic(const Percept &p){
+double Skill::get_goal_heuristic([[maybe_unused]] const Percept &p){
     return 0;
 }
 

@@ -13,13 +13,13 @@ void RemoteJointPoseStrategy::initialize(const Percept &p_0){
     m_q_d_in[0]=msrm_utils::convert_to_array<double,7,1>(p_0.proprioception.q);
 }
 
-void RemoteJointPoseStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void RemoteJointPoseStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     for(unsigned i=0;i<7;i++){
         cmd.q_d(i)=m_q_d_in[0][i];
     }
 }
 
-void RemoteJointPoseStrategy::terminate(const Percept &p){
+void RemoteJointPoseStrategy::terminate([[maybe_unused]] const Percept &p){
     if(m_receiver!=nullptr){
         m_receiver->disconnect();
     }

@@ -6,16 +6,16 @@ FFWiggleStrategy::FFWiggleStrategy():PrimitiveStrategy({CommandPatternCartesianF
 
 }
 
-void FFWiggleStrategy::initialize(const Percept &p_0){
+void FFWiggleStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
-void FFWiggleStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void FFWiggleStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     for(unsigned i=0;i<6;i++){
         cmd.TF_F_ff(i)=m_a_a(i)*cos(2*M_PI*m_a_f(i)*cmd.t+m_a_phi(i))+m_b_a(i)*sin(2*M_PI*m_b_f(i)*cmd.t+m_b_phi(i));
     }
 }
 
-void FFWiggleStrategy::terminate(const Percept &p){
+void FFWiggleStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

@@ -42,7 +42,6 @@ private:
 
     bool check_local_pre_conditions(const Percept &p) override;
     bool check_local_suc_conditions(const Percept &p) override;
-    bool check_local_ex_conditions(const Percept &p) override;
     bool check_local_err_conditions(const Percept &p) override;
 
     void update_policies(const Percept &p) override;

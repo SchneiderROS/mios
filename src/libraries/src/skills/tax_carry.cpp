@@ -60,14 +60,14 @@ std::shared_ptr<ManipulationPrimitive> TaxCarry::get_initial_mp(const Percept &p
     return mp;
 }
 
-bool TaxCarry::check_local_pre_conditions(const Percept &p){
+bool TaxCarry::check_local_pre_conditions([[maybe_unused]] const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Carriable")->name){
         return false;
     }
     return true;
 }
 
-bool TaxCarry::check_local_suc_conditions(const Percept &p){
+bool TaxCarry::check_local_suc_conditions([[maybe_unused]] const Percept &p){
     if(get_active_mp()->get_strategy<MoveToPoseStrategy>("s_0")->finished()){
         if(!m_finished){
             m_finished=true;
@@ -79,14 +79,14 @@ bool TaxCarry::check_local_suc_conditions(const Percept &p){
     }
 }
 
-bool TaxCarry::check_local_err_conditions(const Percept &p){
+bool TaxCarry::check_local_err_conditions([[maybe_unused]] const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Carriable")->name){
         return true;
     }
     return false;
 }
 
-bool TaxCarry::check_local_ex_conditions(const Percept &p){
+bool TaxCarry::check_local_ex_conditions([[maybe_unused]] const Percept &p){
     if(std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_t_finished).count()>=get_parameters<SkillParametersTaxCarry>()->t_settle*1000){
         return true;
     }else{

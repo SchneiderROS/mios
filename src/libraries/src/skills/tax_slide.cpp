@@ -29,7 +29,7 @@ TaxSlide::TaxSlide(const std::string& name, Memory* memory, Portal *portal):Skil
 
 }
 
-Eigen::Matrix<double,3,3> TaxSlide::get_O_R_T_0(const Percept &p) const{
+Eigen::Matrix<double,3,3> TaxSlide::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
     if(get_object("Slidable")->name!="NullObject"){
         return get_object("Slidable")->O_T_OB.block<3,3>(0,0);
     }else{
@@ -65,7 +65,7 @@ bool TaxSlide::check_local_pre_conditions(const Percept &p){
     return true;
 }
 
-bool TaxSlide::check_local_suc_conditions(const Percept &p){
+bool TaxSlide::check_local_suc_conditions([[maybe_unused]] const Percept &p){
     return get_active_mp()->get_strategy_interface("move")->finished();
 }
 

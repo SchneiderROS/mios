@@ -4,15 +4,15 @@
 namespace mios {
 
 CartVelocityControllerPipeline::CartVelocityControllerPipeline():m_panda_cmd({0,0,0,0,0,0}){
-    spdlog::trace("CartVelocityControllerPipeline::CartVelocityControllerPipeline()");
+    spdlog::trace("CartVelocityControllerPipeline::CartVelocityControllerPipeline");
 }
 
 
-void CartVelocityControllerPipeline::initialize(const Percept &p_0, Memory *memory){
-    spdlog::trace("CartVelocityControllerPipeline::initialize()");
+void CartVelocityControllerPipeline::initialize([[maybe_unused]] const Percept &p_0, [[maybe_unused]] Memory *memory){
+    spdlog::trace("CartVelocityControllerPipeline::initialize");
 }
 
-franka::Finishable *CartVelocityControllerPipeline::step(const Percept &p, const Actuator &cmd){
+franka::Finishable *CartVelocityControllerPipeline::step([[maybe_unused]] const Percept &p, const Actuator &cmd){
 
     Eigen::Matrix<double,6,1> O_dX_d;
     O_dX_d<<cmd.O_R_T*cmd.TF_dX_d.block<3,1>(0,0),cmd.O_R_T*cmd.TF_dX_d.block<3,1>(3,0);
@@ -29,16 +29,16 @@ bool CartVelocityControllerPipeline::is_valid_command(const franka::Finishable* 
     return true;
 }
 
-void CartVelocityControllerPipeline::update_percept(Percept::Controller &p){
+void CartVelocityControllerPipeline::update_percept([[maybe_unused]] Percept::Controller &p){
 
 }
 
 void CartVelocityControllerPipeline::terminate(){
-    spdlog::trace("CartVelocityControllerPipeline::terminate()");
+    spdlog::trace("CartVelocityControllerPipeline::terminate");
 }
 
-void CartVelocityControllerPipeline::context_switch(const Percept &p){
-    spdlog::trace("CartVelocityControllerPipeline::context_switch()");
+void CartVelocityControllerPipeline::context_switch([[maybe_unused]] const Percept &p){
+    spdlog::trace("CartVelocityControllerPipeline::context_switch");
 }
 
 }

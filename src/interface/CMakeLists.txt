@@ -10,19 +10,10 @@ set(${MODULE_NAME}_HEADER_FILES
     include/${PROJECT_NAME}/${MODULE_NAME}/ros_node.hpp
     )
 
-if(BUILD_SHARED_LIBS)
-    add_library(${MODULE_NAME}
-        SHARED
-        ${${MODULE_NAME}_SRC}
-        ${${MODULE_NAME}_HEADER_FILES}
-        )
-else()
-    add_library(${MODULE_NAME}
-        STATIC
-        ${${MODULE_NAME}_SRC}
-        ${${MODULE_NAME}_HEADER_FILES}
-        )
-endif()
+add_library(${MODULE_NAME}
+    ${${MODULE_NAME}_SRC}
+    ${${MODULE_NAME}_HEADER_FILES}
+    )
 
 
 add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
@@ -53,6 +44,7 @@ target_link_libraries(${MODULE_NAME}
     ${roscpp_LIBRARIES}
     PUBLIC
     CONAN_PKG::nlohmann_json
+    CONAN_PKG::boost
     )
 
 apply_module_options(${MODULE_NAME})

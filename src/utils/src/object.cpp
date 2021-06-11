@@ -4,7 +4,7 @@
 
 namespace mios {
 
-Object::Object(const std::string name):name(name){
+Object::Object(const std::string name_in):name(name_in){
     q.setZero();
     O_T_OB=Eigen::Matrix<double,4,4>::Identity();
     OB_T_gp=Eigen::Matrix<double,4,4>::Identity();

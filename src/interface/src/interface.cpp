@@ -71,7 +71,7 @@ void CommandInterface::bind_methods(){
 
 }
 
-nlohmann::json CommandInterface::terminate(const nlohmann::json &request){
+nlohmann::json CommandInterface::terminate([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:terminate()");
     m_task_engine->stop();
     return nlohmann::json();
@@ -134,10 +134,10 @@ nlohmann::json CommandInterface::wait_for_task(const nlohmann::json &request){
         task_result_response["error"]=task_result.errors;
         nlohmann::json skill_results;
         for(const auto& r : task_result.skill_results){
-            nlohmann::json result;
-            result["cost"] = r.second.cost.to_json();
-            result["heuristic"] = r.second.heuristic;
-            skill_results[r.first]=result;
+            nlohmann::json skill_result;
+            skill_result["cost"] = r.second.cost.to_json();
+            skill_result["heuristic"] = r.second.heuristic;
+            skill_results[r.first]=skill_result;
         }
         task_result_response["skill_results"]=skill_results;
     }else{
@@ -154,7 +154,7 @@ nlohmann::json CommandInterface::wait_for_task(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::is_busy(const nlohmann::json &request){
+nlohmann::json CommandInterface::is_busy([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:is_busy()");
     nlohmann::json response;
     response["result"]=true;
@@ -234,7 +234,7 @@ nlohmann::json CommandInterface::move_gripper(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::home_gripper(const nlohmann::json &request){
+nlohmann::json CommandInterface::home_gripper([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:home_gripper()");
     nlohmann::json response;
     response["result"]=false;
@@ -376,7 +376,7 @@ nlohmann::json CommandInterface::download_object_context(const nlohmann::json &r
     return response;
 }
 
-nlohmann::json CommandInterface::get_state(const nlohmann::json &request){
+nlohmann::json CommandInterface::get_state([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:get_state()");
     nlohmann::json response;
     bool result=true;
@@ -404,7 +404,7 @@ nlohmann::json CommandInterface::get_state(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::get_model(const nlohmann::json &request){
+nlohmann::json CommandInterface::get_model([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:get_model()");
     nlohmann::json response;
     bool result=true;
@@ -425,7 +425,7 @@ nlohmann::json CommandInterface::get_model(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::reload_database(const nlohmann::json &request){
+nlohmann::json CommandInterface::reload_database([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:reload_database()");
     nlohmann::json response;
     response["result"]=true;
@@ -503,7 +503,7 @@ nlohmann::json CommandInterface::start_desk_task(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::stop_desk_task(const nlohmann::json &request){
+nlohmann::json CommandInterface::stop_desk_task([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:stop_desk_task()");
     nlohmann::json response;
     bool result=m_core->stop_desk_task();
@@ -511,7 +511,7 @@ nlohmann::json CommandInterface::stop_desk_task(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::unlock_brakes(const nlohmann::json &request){
+nlohmann::json CommandInterface::unlock_brakes([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:unlock_brakes()");
     nlohmann::json response;
     bool result=m_core->unlock_body();
@@ -519,7 +519,7 @@ nlohmann::json CommandInterface::unlock_brakes(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::lock_brakes(const nlohmann::json &request){
+nlohmann::json CommandInterface::lock_brakes([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:lock_brakes()");
     nlohmann::json response;
     bool result=m_core->lock_body();
@@ -527,7 +527,7 @@ nlohmann::json CommandInterface::lock_brakes(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::shutdown(const nlohmann::json &request){
+nlohmann::json CommandInterface::shutdown([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:shutdown()");
     nlohmann::json response;
     bool result=m_core->shutdown_body();
@@ -535,7 +535,7 @@ nlohmann::json CommandInterface::shutdown(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::pack_pose(const nlohmann::json &request){
+nlohmann::json CommandInterface::pack_pose([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:pack_pose()");
     nlohmann::json response;
     response["error"]="";
@@ -609,7 +609,7 @@ nlohmann::json CommandInterface::learn_task(const nlohmann::json &request){
     return response;
 }
 
-nlohmann::json CommandInterface::stop_learning(const nlohmann::json &request){
+nlohmann::json CommandInterface::stop_learning([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface::stop_learning()");
     return nlohmann::json();
 }

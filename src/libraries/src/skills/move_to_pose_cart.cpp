@@ -64,7 +64,7 @@ std::shared_ptr<ManipulationPrimitive> MoveToPoseCart::get_initial_mp(const Perc
     return mp;
 }
 
-bool MoveToPoseCart::check_local_suc_conditions(const Percept &p){
+bool MoveToPoseCart::check_local_suc_conditions([[maybe_unused]] const Percept &p){
     if(get_active_mp()->get_strategy<MoveToPoseStrategy>("s_0")->finished()){
         if(!m_finished){
             m_finished=true;

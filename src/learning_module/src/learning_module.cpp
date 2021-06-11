@@ -43,7 +43,7 @@ std::string LearningModule::learn_task(const nlohmann::json &problem_definition,
         }else if(service_configuration["service_name"]=="generic"){
             configuration = pybind11::module::import("services.generic_optimizer").attr("GenericOptimizerConfiguration")();
         }
-        pybind11::object problem_definition = pybind11::module::import("problem_definition.problem_definition").attr("ProblemDefinition")(domain,default_context,pybind11::list(),pybind11::list(),pybind11::list());
+        pybind11::object py_problem_definition = pybind11::module::import("problem_definition.problem_definition").attr("ProblemDefinition")(domain,default_context,pybind11::list(),pybind11::list(),pybind11::list());
         pybind11::set agents_set;
         for(const auto& a : agents){
             std::string agent;
@@ -51,7 +51,7 @@ std::string LearningModule::learn_task(const nlohmann::json &problem_definition,
             agents_set.add(agent);
         }
         spdlog::debug("LearningModule::learn_task.start_learning");
-        pybind11::object result = m_ml_interface.attr("start_learning")(problem_definition, configuration,agents);
+        pybind11::object result = m_ml_interface.attr("start_learning")(py_problem_definition, configuration,agents);
         return result.cast<std::string>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());

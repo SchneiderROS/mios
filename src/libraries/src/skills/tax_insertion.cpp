@@ -61,12 +61,12 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxInsertion::get_p
 }
 
 TaxInsertion::TaxInsertion(const std::string &name, Memory *memory,Portal* portal):Skill("TaxInsertion",{"Insertable","Container","Approach"},name,memory,portal,
-{ControlMode::mCartTorque}),m_is_stuck(false),m_dx_avg_last(0){
+{ControlMode::mCartTorque}),m_dx_avg_last(0),m_is_stuck(false){
     m_dx_avg_mem.assign(100,0);
 }
 
 
-Eigen::Matrix<double, 3, 3> TaxInsertion::get_O_R_T_0(const Percept &p) const{
+Eigen::Matrix<double, 3, 3> TaxInsertion::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
     return get_object("Container")->O_T_OB.block<3,3>(0,0);
 }
 
@@ -210,14 +210,10 @@ bool TaxInsertion::check_local_suc_conditions(const Percept &p){
     return depth && lateral;
 }
 
-bool TaxInsertion::check_local_ex_conditions(const Percept &p){
-    return true;
-}
-
 bool TaxInsertion::check_local_err_conditions(const Percept &p){
     const Eigen::Matrix<double,6,1>& ROI_x=get_parameters<SkillParametersTaxInsertion>()->ROI_x;
-    const Eigen::Matrix<double,6,1>& ROI_phi=get_parameters<SkillParametersTaxInsertion>()->ROI_phi;
-    double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Container").block<3,1>(0,2)));
+    [[maybe_unused]] const Eigen::Matrix<double,6,1>& ROI_phi=get_parameters<SkillParametersTaxInsertion>()->ROI_phi;
+    [[maybe_unused]] double error_angle=acos(p.proprioception.T_T_EE.block<3,1>(0,2).dot(get_object_pose_T("Container").block<3,1>(0,2)));
     Eigen::Matrix<double,3,1> dist = p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Container").block<3,1>(0,3);
     if(dist(0) < ROI_x(0) || dist(0) > ROI_x(1) || dist(1) < ROI_x(2) || dist(1) > ROI_x(3) || dist(2) < ROI_x(4) || dist(2) > ROI_x(5)){
         return true;
@@ -225,7 +221,7 @@ bool TaxInsertion::check_local_err_conditions(const Percept &p){
     return false;
 }
 
-double TaxInsertion::get_goal_heuristic(const Percept &p){
+double TaxInsertion::get_goal_heuristic([[maybe_unused]] const Percept &p){
     return (get_result().p_1.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Container").block<3,1>(0,3)).norm();
 }
 

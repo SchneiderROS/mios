@@ -4,15 +4,15 @@
 namespace mios {
 
 JointVelocityControllerPipeline::JointVelocityControllerPipeline():m_panda_cmd({0,0,0,0,0,0,0}){
-    spdlog::trace("JointVelocityControllerPipeline::JointVelocityControllerPipeline()");
+    spdlog::trace("JointVelocityControllerPipeline::JointVelocityControllerPipeline");
 }
 
 
-void JointVelocityControllerPipeline::initialize(const Percept &p_0, Memory *memory){
-    spdlog::trace("JointVelocityControllerPipeline::initialize()");
+void JointVelocityControllerPipeline::initialize([[maybe_unused]] const Percept &p_0, [[maybe_unused]] Memory *memory){
+    spdlog::trace("JointVelocityControllerPipeline::initialize");
 }
 
-franka::Finishable *JointVelocityControllerPipeline::step(const Percept &p, const Actuator &cmd){
+franka::Finishable *JointVelocityControllerPipeline::step([[maybe_unused]] const Percept &p, const Actuator &cmd){
     if(cmd.get_command_pattern()->find(CommandPatternJointPose)!=cmd.get_command_pattern()->end()){
 
     }
@@ -29,15 +29,15 @@ bool JointVelocityControllerPipeline::is_valid_command(const franka::Finishable*
     return true;
 }
 
-void JointVelocityControllerPipeline::update_percept(Percept::Controller &p){
+void JointVelocityControllerPipeline::update_percept([[maybe_unused]] Percept::Controller &p){
 }
 
 void JointVelocityControllerPipeline::terminate(){
-    spdlog::trace("JointVelocityControllerPipeline::terminate()");
+    spdlog::trace("JointVelocityControllerPipeline::terminate");
 }
 
-void JointVelocityControllerPipeline::context_switch(const Percept &p){
-    spdlog::trace("JointVelocityControllerPipeline::context_switch()");
+void JointVelocityControllerPipeline::context_switch([[maybe_unused]] const Percept &p){
+    spdlog::trace("JointVelocityControllerPipeline::context_switch");
 }
 
 }

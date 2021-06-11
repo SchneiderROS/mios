@@ -20,7 +20,7 @@ public:
 private:
 
     std::vector<std::array<double,16> > m_data;
-    long m_cnt_data;
+    unsigned long m_cnt_data;
 
 };
 

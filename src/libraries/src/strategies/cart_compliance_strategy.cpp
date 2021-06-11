@@ -7,15 +7,15 @@ CartComplianceStrategy::CartComplianceStrategy():PrimitiveStrategy({CommandPatte
     m_xi_x.setZero();
 }
 
-void CartComplianceStrategy::initialize(const Percept &p_0){
+void CartComplianceStrategy::initialize([[maybe_unused]] const Percept &p_0){
 }
 
-void CartComplianceStrategy::get_next_command(Actuator &cmd, const Percept &p){
+void CartComplianceStrategy::get_next_command(Actuator &cmd, [[maybe_unused]] const Percept &p){
     cmd.K_x=m_K_x;
     cmd.xi_x=m_xi_x;
 }
 
-void CartComplianceStrategy::terminate(const Percept &p){
+void CartComplianceStrategy::terminate([[maybe_unused]] const Percept &p){
 
 }
 

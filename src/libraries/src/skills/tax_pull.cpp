@@ -25,7 +25,7 @@ TaxPull::TaxPull(const std::string& name, Memory* memory, Portal *portal):Skill(
 
 }
 
-Eigen::Matrix<double,3,3> TaxPull::get_O_R_T_0(const Percept &p) const{
+Eigen::Matrix<double,3,3> TaxPull::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
     if(get_object("Pullable")->name!="NullObject"){
         return get_object("Pullable")->O_T_OB.block<3,3>(0,0);
     }else{
@@ -46,18 +46,18 @@ std::shared_ptr<ManipulationPrimitive> TaxPull::create_pull_mp(const Percept &p)
     return mp;
 }
 
-bool TaxPull::check_local_pre_conditions(const Percept &p){
+bool TaxPull::check_local_pre_conditions([[maybe_unused]] const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Pullable")->name){
         return false;
     }
     return true;
 }
 
-bool TaxPull::check_local_suc_conditions(const Percept &p){
+bool TaxPull::check_local_suc_conditions([[maybe_unused]] const Percept &p){
     return get_active_mp()->get_strategy_interface("move")->finished();
 }
 
-bool TaxPull::check_local_err_conditions(const Percept &p){
+bool TaxPull::check_local_err_conditions([[maybe_unused]] const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Pullable")->name){
         return true;
     }
