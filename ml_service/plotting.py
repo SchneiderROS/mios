@@ -1112,3 +1112,11 @@ def plot_iros_learning(host="collective-control-001.local"):
     plt.savefig("iros_results.png", bbox_inches='tight', dpi=300)
     plt.suptitle("Skill Learning")
     plt.show()
+
+def live_plotting():
+    from plotting.live_plotter import live_plot
+    #lp = LivePlotter([],[])
+    #lp.start_plot()
+    live_plot()
+if __name__ == "__main__":
+    live_plotting()
