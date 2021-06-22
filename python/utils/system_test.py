@@ -30,7 +30,7 @@ def system_diagnose(address):
         test_primitive_sequence(address)
         test_multilayer_tasks(address)
         test_subtask_start_stop(address)
-        test_task_queue(address)
+        #test_task_queue(address)
         test_skill_parallel(address)
         test_live_parameters(address)
         test_memory(address)
@@ -59,7 +59,7 @@ def test_exception_handling(hostname):
     msg_error('task_uuid' in rtn['result'], 'exception_handling_skill', 'Result has no unique task id', rtn)
 
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 5, "exception_handling_task",
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 5, "exception_handling_skill",
               "Wrong result code", rtn)
 
     rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "control", "success": True}})
@@ -68,7 +68,7 @@ def test_exception_handling(hostname):
     msg_error('task_uuid' in rtn['result'], 'exception_handling_control', 'Result has no unique task id', rtn)
 
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 1, "exception_handling_task",
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 1, "exception_handling_control",
               "Wrong result code", rtn)
 
     rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "invalid", "success": True}})
@@ -77,7 +77,7 @@ def test_exception_handling(hostname):
     msg_error('task_uuid' in rtn['result'], 'exception_handling_invalid', 'Result has no unique task id', rtn)
 
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 2, "exception_handling_task",
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 2, "exception_handling_invalid",
               "Wrong result code", rtn)
 
     rtn = start_task(address, 'TestTask1', {"parameters": {'exception': "network", "success": True}})
@@ -86,7 +86,7 @@ def test_exception_handling(hostname):
     msg_error('task_uuid' in rtn['result'], 'exception_handling_network', 'Result has no unique task id', rtn)
 
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 3, "exception_handling_task",
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 3, "exception_handling_network",
               "Wrong result code", rtn)
 
     rtn = start_task(address, 'TestTask1', {"parameters": {"exception": "realtime", "success": True}})
@@ -95,7 +95,7 @@ def test_exception_handling(hostname):
     msg_error('task_uuid' in rtn['result'], 'exception_handling_realtime', 'Result has no unique task id', rtn)
 
     rtn = wait_for_task(address, rtn['result']['task_uuid'])
-    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 4, "exception_handling_task",
+    msg_error(rtn["result"]["task_result"]["results"]["t1_s1"]["result_code"] == 4, "exception_handling_realtime",
               "Wrong result code", rtn)
 
 
@@ -408,6 +408,7 @@ def test_task_queue(address):
     call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
     call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
     call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    input("stop task")
     stop_task(address, True)
     rtn = wait_for_task(address, results[8]['result']['task_uuid'])
     msg_error(rtn["result"]["result"] is False, "queue_exception",
@@ -425,6 +426,7 @@ def test_task_queue(address):
     call_method(address, 12000, 'remove_task', {'task_uuid': results[0]['result']['task_uuid']})
     call_method(address, 12000, 'remove_task', {'task_uuid': results[6]['result']['task_uuid']})
     call_method(address, 12000, 'remove_task', {'task_uuid': results[9]['result']['task_uuid']})
+    input("stop task")
     stop_task(address)
     for i in range(10):
         rtn = wait_for_task(address, results[i]['result']['task_uuid'])

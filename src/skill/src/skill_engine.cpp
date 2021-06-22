@@ -143,7 +143,6 @@ ControlReturnType SkillEngine::execute_skill_queue(){
 }
 
 bool SkillEngine::is_running_queue(){
-    spdlog::trace("SkillEngine::is_running_queue");
     return m_queue;
 }
 

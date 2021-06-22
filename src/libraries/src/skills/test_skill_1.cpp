@@ -112,22 +112,27 @@ void TestSkill1::auxiliaries(const Percept &p){
     double t_run=std::chrono::duration_cast<std::chrono::seconds>(p.time-m_memory->get_live_context()->t_skill).count();
     if(t_run>c->t_exception){
         if(c->exception=="control"){
+            spdlog::trace("TestSkill1::auxiliaries::control");
             m_result_code=1;
             throw franka::ControlException("This is a control exception that has been thrown for test purposes");
         }
         if(c->exception=="invalid"){
+            spdlog::trace("TestSkill1::auxiliaries::invalid");
             m_result_code=2;
             throw franka::InvalidOperationException("This is an invalid operation exception that has been thrown for test purposes");
         }
         if(c->exception=="network"){
+            spdlog::trace("TestSkill1::auxiliaries::network");
             m_result_code=3;
             throw franka::NetworkException("This is a network exception that has been thrown for test purposes");
         }
         if(c->exception=="realtime"){
+            spdlog::trace("TestSkill1::auxiliaries::realtime");
             m_result_code=4;
             throw franka::RealtimeException("This is a realtime exception that has been thrown for test purposes");
         }
         if(c->exception=="skill"){
+            spdlog::trace("TestSkill1::auxiliaries::skill");
             m_result_code=5;
             throw SkillException("This is a skill exception that has been thrown for test purposes");
         }

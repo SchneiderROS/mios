@@ -560,7 +560,7 @@ bool PandaBody::set_ee(std::array<double, 16> F_T_EE){
 }
 
 bool PandaBody::get_robot_state(franka::RobotState &state) const{
-    spdlog::trace("PandaBody::get_robot_state");
+//    spdlog::trace("PandaBody::get_robot_state");
     if(m_arm_connected){
         try{
             state=m_panda_arm->readOnce();
@@ -579,7 +579,7 @@ bool PandaBody::get_robot_state(franka::RobotState &state) const{
 }
 
 bool PandaBody::get_gripper_state(franka::GripperState &state) const{
-    spdlog::trace("PandaBody::get_gripper_state");
+//    spdlog::trace("PandaBody::get_gripper_state");
     if(m_hand_connected && m_hand==PandaHandDefault){
         try{
             state=m_panda_hand->readOnce();

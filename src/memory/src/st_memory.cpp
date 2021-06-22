@@ -332,7 +332,7 @@ bool STMemory::update_partial_object(const std::string &name, const nlohmann::js
 }
 
 void STMemory::internal_update(const Percept &p){
-    spdlog::trace("STMemory::internal_update");
+//    spdlog::trace("STMemory::internal_update");
     if(m_environment.find("EndEffector")==m_environment.end()){
         m_environment.insert(std::make_pair("EndEffector",Object("EndEffector")));
     }

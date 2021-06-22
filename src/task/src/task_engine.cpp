@@ -197,15 +197,15 @@ void TaskEngine::life_cycle(){
             std::scoped_lock<std::mutex> queue_lock(m_mtx_task_queue);
             spdlog::debug("TaskLifeCycle: switch, task_uuid: "+m_active_task->get_uuid());
             if(m_active_task->get_result().exception || exceptional_event || m_active_task->get_result().empty_queue){
-                spdlog::debug("TaskEngine::life_cycle.empty_queue");
+                spdlog::trace("TaskEngine::life_cycle.empty_queue");
                 m_task_queue.clear();
             }
             if(!m_task_queue.empty()){
-                spdlog::debug("TaskEngine::life_cycle.get_first_element");
+                spdlog::trace("TaskEngine::life_cycle.get_first_element");
                 m_task_queue.pop_front();
             }
             if(m_task_queue.empty()){
-                spdlog::debug("TaskEngine::life_cycle.add_idle_task");
+                spdlog::trace("TaskEngine::life_cycle.add_idle_task");
                 m_task_queue.emplace_back(std::make_tuple("IdleTask",m_memory->load_task("IdleTask",nlohmann::json(),m_core),nlohmann::json()));
             }
             m_active_task = std::get<1>(m_task_queue.front());
