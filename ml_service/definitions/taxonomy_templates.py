@@ -1,0 +1,217 @@
+from problem_definition.domain import Domain
+from problem_definition.problem_definition import ProblemDefinition
+from problem_definition.problem_definition import CostFunction
+
+
+def insertion(insertable: str, container: str, approach: str) -> ProblemDefinition:
+    limits = {
+        "p0_offset_x": (-0.005, 0.005),
+        "p0_offset_y": (-0.005, 0.005),
+        "p0_offset_phi": (-10, 10),
+        "p0_offset_chi": (-10, 10),
+        "p1_dx_d": (0, 0.5),
+        "p1_dphi_d": (0, 1),
+        "p1_ddx_d": (0, 1),
+        "p1_ddphi_d": (0, 4),
+        "p1_K_x": (0, 2000),
+        "p1_K_phi": (0, 2000),
+        "p2_dx_d": (0, 0.5),
+        "p2_dphi_d": (0, 1),
+        "p2_ddx_d": (0, 1),
+        "p2_ddphi_d": (0, 4),
+        "p2_wiggle_a_x": (0, 10),
+        "p2_wiggle_a_y": (0, 10),
+        "p2_wiggle_a_z": (0, 10),
+        "p2_wiggle_a_phi": (0, 2),
+        "p2_wiggle_a_chi": (0, 2),
+        "p2_wiggle_f_x": (0, 3),
+        "p2_wiggle_f_y": (0, 3),
+        "p2_wiggle_f_z": (0, 3),
+        "p2_wiggle_f_phi": (0, 1),
+        "p2_wiggle_f_chi": (0, 1),
+        "p2_K_x": (0, 2000),
+        "p2_K_y": (0, 2000),
+        "p2_K_z": (0, 2000),
+        "p2_K_phi": (0, 200),
+        "p2_K_chi": (0, 200),
+        "p2_K_psi": (0, 200),
+        "p2_f_push": (0, 30)
+    }
+    context_mapping = {
+        "p0_offset_x": ["skills.insertion.skill.p0.DeltaX-1"],
+        "p0_offset_y": ["skills.insertion.skill.p0.DeltaX-2"],
+        "p0_offset_phi": ["skills.insertion.skill.p0.DeltaX-4"],
+        "p0_offset_chi": ["skills.insertion.skill.p0.DeltaX-5"],
+        "p1_dx_d": ["skills.insertion.skill.p1.dX_d-1"],
+        "p1_dphi_d": ["skills.insertion.skill.p1.dX_d-2"],
+        "p1_ddx_d": ["skills.insertion.skill.p1.ddX_d-1"],
+        "p1_ddphi_d": ["skills.insertion.skill.p1.ddX_d-2"],
+        "p1_K_x": ["skills.insertion.skill.p1.K_x-1", "skills.insertion.skill.p1.K_x-2",
+                   "skills.insertion.skill.p1.K_x-3"],
+        "p1_K_phi": ["skills.insertion.skill.p1.K_x-4", "skills.insertion.skill.p1.K_x-5",
+                     "skills.insertion.skill.p1.K_x-6"],
+        "p2_dx_d": ["skills.insertion.skill.p2.dX_d-1"],
+        "p2_dphi_d": ["skills.insertion.skill.p2.dX_d-2"],
+        "p2_ddx_d": ["skills.insertion.skill.p2.ddX_d-1"],
+        "p2_ddphi_d": ["skills.insertion.skill.p2.ddX_d-2"],
+        "p2_wiggle_a_x": ["skills.insertion.skill.p2.search_a-1"],
+        "p2_wiggle_a_y": ["skills.insertion.skill.p2.search_a-2"],
+        "p2_wiggle_a_z": ["skills.insertion.skill.p2.search_a-3"],
+        "p2_wiggle_a_phi": ["skills.insertion.skill.p2.search_a-4"],
+        "p2_wiggle_a_chi": ["skills.insertion.skill.p2.search_a-5"],
+        "p2_wiggle_f_x": ["skills.insertion.skill.p2.search_f-1"],
+        "p2_wiggle_f_y": ["skills.insertion.skill.p2.search_f-2"],
+        "p2_wiggle_f_z": ["skills.insertion.skill.p2.search_f-3"],
+        "p2_wiggle_f_phi": ["skills.insertion.skill.p2.search_f-4"],
+        "p2_wiggle_f_chi": ["skills.insertion.skill.p2.search_f-5"],
+        "p2_K_x": ["skills.insertion.skill.p2.K_x-1"],
+        "p2_K_y": ["skills.insertion.skill.p2.K_x-2"],
+        "p2_K_z": ["skills.insertion.skill.p2.K_x-3"],
+        "p2_K_phi": ["skills.insertion.skill.p2.K_x-4"],
+        "p2_K_chi": ["skills.insertion.skill.p2.K_x-5"],
+        "p2_K_psi": ["skills.insertion.skill.p2.K_x-6"],
+        "p2_f_push": ["skills.insertion.skill.p2.f_push"]
+    }
+
+    x_0 = {
+        "p0_offset_x": 0.5,
+        "p0_offset_y": 0.5,
+        "p0_offset_phi": 0.5,
+        "p0_offset_chi": 0.5,
+        "p1_dx_d": 0.1,
+        "p1_dphi_d": 0.1,
+        "p1_ddx_d": 0.1,
+        "p1_ddphi_d": 0.1,
+        "p1_K_x": 0.1,
+        "p1_K_phi": 0.1,
+        "p2_dx_d": 0.1,
+        "p2_dphi_d": 0.1,
+        "p2_ddx_d": 0.1,
+        "p2_ddphi_d": 0.1,
+        "p2_wiggle_a_x": 0.1,
+        "p2_wiggle_a_y": 0.1,
+        "p2_wiggle_a_z": 0.1,
+        "p2_wiggle_a_phi": 0.1,
+        "p2_wiggle_a_chi": 0.1,
+        "p2_wiggle_f_x": 0.1,
+        "p2_wiggle_f_y": 0.1,
+        "p2_wiggle_f_z": 0.1,
+        "p2_wiggle_f_phi": 0.1,
+        "p2_wiggle_f_chi": 0.1,
+        "p2_K_x": 0.1,
+        "p2_K_y": 0.1,
+        "p2_K_z": 0.1,
+        "p2_K_phi": 0.1,
+        "p2_K_chi": 0.1,
+        "p2_K_psi": 0.1,
+        "p2_f_push": 0.1
+    }
+
+    domain = Domain(limits, context_mapping, x_0)
+    default_skill_context = {
+        "name": "GenericTask",
+        "parameters": {
+            "skill_types": ["TaxInsertion"],
+            "skill_names": ["insertion"]
+        },
+        "skills": {
+            "insertion": {
+                "skill": {
+                    "time_max": 5.0,
+                    "ROI_x": [-0.03, 0.03, -0.03, 0.03, -1, 1],
+                    "ROI_phi": [-0.03, 0.03, -0.03, 0.03, -1, 1],
+                    "objects": {
+                        "Insertable": insertable,
+                        "Container": container,
+                        "Approach": approach,
+                    },
+                    "p0": {
+                        "dX_d": [0.1, 0.5],
+                        "ddX_d": [0.5, 1],
+                        "K_x": [2000, 2000, 2000, 200, 200, 200],
+                        "DeltaX": [0, 0, 0, 0, 0, 0]
+                    },
+                    "p2": {
+                        "search_a": [0, 0, 0, 0, 0, 0],
+                        "search_f": [0, 0, 0, 0, 0, 0]
+                    },
+                    "p3": {
+                        "dX_d": [0.1, 0.5],
+                        "ddX_d": [0.5, 1],
+                        "K_x": [2000, 2000, 2000, 200, 200, 200],
+                        "f_push": 0
+                    }
+                },
+                "control": {
+                    "control_mode": 0
+                },
+                "user": {
+                    "env_X": [0.005, 0.01, 0.01, 0.03, 0.03, 0.03],
+                }
+            }
+        }
+    }
+    reset_instructions = []
+    reset_context = {
+        "name": "GenericTask",
+        "parameters": {
+            "skill_types": ["TaxExtraction", "MoveToPoseJoint"],
+            "skill_names": ["extraction", "move"]
+        },
+        "skills": {
+            "extraction": {
+                "skill": {
+                    "objects": {
+                        "Extractable": insertable,
+                        "Container": container,
+                        "ExtractTo": approach
+                    },
+                    "p0":{
+                        "dX_d": [0.1, 0.5],
+                        "ddX_d": [0.5, 1],
+                        "search_a": [0, 0, 0, 0, 0, 0],
+                        "search_f": [0, 0, 0, 0, 0, 0],
+                        "K_x": [500, 500, 1000, 100, 100, 100]
+                    },
+                    "p1": {
+                        "dX_d": [0.1, 0.5],
+                        "ddX_d": [0.5, 1],
+                        "K_x": [500, 500, 1000, 100, 100, 100]
+                    }
+                },
+                "control": {
+                    "control_mode": 0
+                }
+            },
+            "move": {
+                "skill": {
+                    "speed": 0.5,
+                    "acc": 1,
+                    "q_g": [0, 0, 0, 0, 0, 0, 0],
+                    "objects": {
+                        "goal_pose": approach
+                    }
+                },
+                "control": {
+                    "control_mode": 3
+                },
+                "user": {
+                    "env_X": [0.005, 0.005, 0.005, 0.0175, 0.0175, 0.0175]
+                }
+            }
+        }
+    }
+    reset_instructions.append({"method": "start_task", "parameters": reset_context})
+    pd = ProblemDefinition("insertion", domain, default_skill_context, [], [], reset_instructions,
+                           insertion_cost(), [1], tags=["insertion", insertable])
+    return pd
+
+
+def insertion_cost() -> CostFunction:
+    c = CostFunction()
+    c.optimum_skills.append("insertion")
+    c.optimum_weights["time"] = 1
+    c.max_cost["time"] = 5
+    c.heuristic_skills = ["insertion"]
+    c.heuristic_expressions = "np.exp(var*100)"
+    return c

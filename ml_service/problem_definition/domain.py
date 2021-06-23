@@ -1,4 +1,9 @@
+import logging
+
 import numpy as np
+
+
+logger = logging.getLogger("ml_service")
 
 
 class Domain:
@@ -59,3 +64,32 @@ class Domain:
                    self.limits[self.vector_mapping[i]][0]
 
         return x
+
+    def self_check(self) -> bool:
+        healthy = True
+        for l in self.limits.keys():
+            if l not in self.x_0:
+                logger.error("Parameter " + l + " is in domain limits but not in initial values.")
+                healthy = False
+            if l not in self.context_mapping:
+                logger.error("Parameter " + l + " is in domain limits but not in context map.")
+                healthy = False
+
+        for x in self.x_0.keys():
+            if x not in self.limits:
+                logger.error("Parameter " + x + " is in initial values but not in domain limits.")
+                healthy = False
+            if x not in self.context_mapping:
+                logger.error("Parameter " + x + " is in initial values but not in context map.")
+                healthy = False
+
+        for m in self.context_mapping.keys():
+            if m not in self.limits:
+                logger.error("Parameter " + m + " is in context map but not in limits.")
+                healthy = False
+            if m not in self.x_0:
+                logger.error("Parameter " + m + " is in context map but not in initial values.")
+                healthy = False
+
+        return healthy
+

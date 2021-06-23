@@ -12,24 +12,16 @@ logger = logging.getLogger("ml_service")
 
 
 class CostFunction:
-    """
-    cost functions:
-    1 - time
-    2 - contact forces
-    3 - average effort
-    4 - total effort
-    5 - distance
-    6 - custom
-    """
+
+    cost_types = ["time", "contact_forces", "effort_avg", "effort_total", "distance", "custom"]
 
     def __init__(self):
-        self.geometry_factor = None
         self.optimum_skills = []
-        self.optimum_weights = [0] * 6
-        self.optimum_expressions = ["var"] * 6
+        self.optimum_weights = dict.fromkeys(self.cost_types, 0)
+        self.optimum_expressions = dict.fromkeys(self.cost_types, "var")
+        self.max_cost = dict.fromkeys(self.cost_types, 0)
         self.heuristic_skills = []
         self.heuristic_expressions = "var"
-        self.max_cost = [1] * 6
         self.finish_thr = 0
         self.cost_grid_weights = np.array([[]])
         self.cost_grid_val = np.array([[]])
@@ -104,6 +96,14 @@ class ProblemDefinition:
             logger.debug(str(len(self.identity)) + "!=" + str(len(self.identity_weights)))
             raise CostFunctionError
 
+    def self_check(self):
+        healthy = True
+        if self.domain.self_check() is False:
+            healthy = False
+
+        return healthy
+
+
     def calc_optimum_thr(self):
         if self.cost_function.cost_grid_weights.shape[0] > 2:
             self.optimum_thr = 1.0 * griddata(self.cost_function.cost_grid_weights, self.cost_function.cost_grid_val,
@@ -175,31 +175,26 @@ class ProblemDefinition:
         if len(self.cost_function.optimum_weights) != 6:
             logger.error("Length of cost_function.optimum_weights must be 6.")
             raise CostFunctionError
-        if sum(self.cost_function.optimum_weights) != 1:
+        if sum(self.cost_function.optimum_weights.values()) != 1:
             logger.error("Sum of cost_function.optimum_weights must be 1.")
             raise CostFunctionError
 
-        cost_per_weight = [0] * len(self.cost_function.optimum_weights)
+        cost_per_weight = dict.fromkeys(self.cost_function.cost_types, 0)
         for s in self.cost_function.optimum_skills:
-            print(result.cost[s])
-            cost_per_weight[0] += result.cost[s]["time"]
-            cost_per_weight[1] += result.cost[s]["contact_forces"]
-            cost_per_weight[2] += result.cost[s]["effort_avg"]
-            cost_per_weight[3] += result.cost[s]["effort_total"]
-            cost_per_weight[4] += result.cost[s]["distance"]
-            cost_per_weight[5] += result.cost[s]["custom"]
+            for cost_type in cost_per_weight.keys():
+                cost_per_weight[cost_type] += result.cost[s][cost_type]
 
         cost = 0
-        for i in range(len(cost_per_weight)):
-            if self.cost_function.optimum_weights[i] > 0:
-                var = cost_per_weight[i]
-                cost += self.cost_function.optimum_weights[i] * (
-                            eval(self.cost_function.optimum_expressions[i]) / self.cost_function.max_cost[i]) * self.cost_function.normal_cost
+        for cost_type in cost_per_weight.keys():
+            if self.cost_function.optimum_weights[cost_type] > 0:
+                var = cost_per_weight[cost_type]
+                cost += self.cost_function.optimum_weights[cost_type] * (
+                            eval(self.cost_function.optimum_expressions[cost_type]) / self.cost_function.max_cost[cost_type]) * self.cost_function.normal_cost
 
-                if eval(self.cost_function.optimum_expressions[i]) > self.cost_function.max_cost[i]:
+                if eval(self.cost_function.optimum_expressions[cost_type]) > self.cost_function.max_cost[cost_type]:
                     logger.debug("Exceeded maximum cost! Cost is " + str(
-                        eval(self.cost_function.optimum_expressions[i])) + ", maximum cost is " + str(
-                        self.cost_function.max_cost[i]))
+                        eval(self.cost_function.optimum_expressions[cost_type])) + ", maximum cost is " + str(
+                        self.cost_function.max_cost[cost_type]))
                     result.success = False
 
         heuristic = 0

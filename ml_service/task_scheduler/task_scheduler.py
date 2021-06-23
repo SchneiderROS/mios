@@ -5,7 +5,6 @@ from problem_definition.problem_definition import ProblemDefinition
 from services.base_service import ServiceConfiguration
 from xmlrpc.client import ServerProxy
 import time
-from pushover import Client
 
 
 logger = logging.getLogger("ml_service")
@@ -32,7 +31,7 @@ class TaskScheduler:
         self.kb_location = "localhost"
         self.done_tasks = 0
         self.n_tasks = 0
-        self.pushover_client = Client(notification_user_token, api_token=notification_api_token)
+        #self.pushover_client = Client(notification_user_token, api_token=notification_api_token)
         self.pushover_fail_cnt = 0
 
     def stop(self):

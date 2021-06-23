@@ -72,6 +72,9 @@ class Interface:
                    agents: set, knowledge: dict = None) -> str:
         if self.service_lock.acquire(blocking=False) is False:
             return "INVALID"
+
+        if problem_definition.self_check() is False:
+            return "INVALID"
         problem_definition.uuid = str(uuid.uuid4())
         if configuration.service_name == "cmaes":
             self.service = CMAESService()

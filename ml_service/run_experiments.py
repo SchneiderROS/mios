@@ -608,3 +608,17 @@ def tax_learn_grab(robot: str, agents: list, n_iter: int = 1):
     service_config.n_gen = 20
     tags = ["iros2021", "grab"]
     start_experiment(robot, agents, pd, service_config, n_iter, tags=tags, keep_record=False)
+
+
+from definitions.taxonomy_templates import insertion
+
+
+def taxonomy_learning(robot: str):
+    call_method(robot, 12002, "set_grasped_object", {"object": "cylinder_30"})
+    pd = insertion("cylinder_30", "hole_30", "hole_30_above")
+    service_config = SVMConfiguration()
+    service_config.exploration_mode = True
+    service_config.n_trials = 100
+    service_config.batch_width = 10
+    tags = ["taxonomy", "insertion"]
+    start_experiment(robot, [robot], pd, service_config, 1, tags=tags, keep_record=False)
