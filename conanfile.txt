@@ -12,3 +12,4 @@ mongo-cxx-driver/3.6.2
 
 [generators]
 cmake
+cmake_find_package

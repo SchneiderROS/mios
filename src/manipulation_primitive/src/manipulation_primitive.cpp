@@ -201,6 +201,10 @@ bool ManipulationPrimitive::compose_command(){
 
         weight_check+=s.second.weight;
     }
+    if(actuator_command_pattern.size()==0){
+        spdlog::error("No command patterns could be added.");
+        return false;
+    }
     m_cmd.set_command_pattern(actuator_command_pattern);
     return true;
 }

@@ -41,6 +41,7 @@ public:
     void terminate_control_cycle();
 
     bool refresh_percept(std::optional<Eigen::Matrix<double, 3, 3> > O_R_TF, bool wait=true);
+    bool try_refresh_percept(std::optional<Eigen::Matrix<double, 3, 3> > O_R_TF, bool wait=true);
 
     // Gripper
     bool grasp_object(const std::string& name, double speed=1);
@@ -105,6 +106,7 @@ private:
     unsigned m_robot_configuration;
     bool m_blend_skill;
     std::mutex m_mtx_is_busy;
+    std::mutex m_mtx_FCI;
 
 private:
     unsigned m_hand_grace_period;

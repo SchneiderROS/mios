@@ -1,4 +1,4 @@
-#include "mios/controller_pipeline/cart_torque_pipeline.hpp"
+﻿#include "mios/controller_pipeline/cart_torque_pipeline.hpp"
 #include "spdlog/spdlog.h"
 #include "msrm_cpp_utils/math/math.hpp"
 
@@ -24,6 +24,7 @@ void CartTorqueControllerPipeline::initialize(const Percept &p_0, Memory *memory
 }
 
 franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const Actuator &cmd){
+
     input_cntr_aic(p);
     input_cntr_force(p);
     input_cntr_mux(p);
@@ -39,7 +40,10 @@ franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const A
     else{
         m_cntr_aic.u.TF_T_EE_d=m_T_T_EE_0;
     }
+
     m_O_T_EE_d=msrm_utils::rotate_matrix(m_cntr_aic.u.TF_T_EE_d,cmd.O_R_T);
+
+
     m_cntr_aic.u.O_R_T=cmd.O_R_T;
 
     m_cntr_aic.u.K_x=cmd.K_x;
@@ -64,6 +68,8 @@ franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const A
     m_cntr_mux.u.tau_J_d=tau_J_d_total;
     m_cntr_mux.step();
     m_panda_cmd.tau_J={m_cntr_mux.y.tau_J_d_checked(0),m_cntr_mux.y.tau_J_d_checked(1),m_cntr_mux.y.tau_J_d_checked(2),m_cntr_mux.y.tau_J_d_checked(3),m_cntr_mux.y.tau_J_d_checked(4),m_cntr_mux.y.tau_J_d_checked(5),m_cntr_mux.y.tau_J_d_checked(6)};
+
+
 
     return &m_panda_cmd;
 }
@@ -132,8 +138,9 @@ void CartTorqueControllerPipeline::initialize_cntr_aic(const Percept &p,Memory* 
 
     m_cntr_aic.initialize();
     m_conv_vel2pose.u.reset<<1;
-    m_conv_vel2pose.initialize();
+    m_conv_vel2pose.initialize(true,1000);
     m_conv_vel2pose.step();
+    m_conv_vel2pose.u.reset<<0;
 
 }
 

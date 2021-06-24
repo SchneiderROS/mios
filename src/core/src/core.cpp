@@ -119,7 +119,6 @@ TelemetryUDP* Core::get_telemetry(){
 
 ControlReturnType Core::execute_skill(){
     spdlog::trace("Core:execute_skill()");
-    std::scoped_lock<std::mutex> busy_lock(m_mtx_is_busy);
 
     if(!m_panda_body.pre_run_checks()){
         if(!m_panda_body.recover()){
@@ -494,7 +493,6 @@ bool Core::refresh_percept(std::optional<Eigen::Matrix<double,3,3> > O_R_TF, boo
         }
 
     }
-
     m_percept.update(m_panda_body.get_panda_model(),robot_state,gripper_state,O_R_TF);
     m_controller_pipeline->update_percept(m_percept.controller);
     m_memory.internal_update(m_percept);
