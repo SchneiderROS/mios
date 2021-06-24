@@ -30,6 +30,7 @@ target_include_directories(${MODULE_NAME}
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    ${PYTHON_INCLUDE_DIRS}
     )
 
 
