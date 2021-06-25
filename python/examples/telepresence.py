@@ -73,7 +73,10 @@ def direct_joint_mode(master: str, slave: str):
             }
         },
         "control": {
-            "control_mode": 1
+            "control_mode": 1,
+            "joint_imp": {
+                "K_theta": [1500,1200,800,600,300,200,50]
+            }
         }
     }
     t_m = Task(master)
