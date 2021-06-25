@@ -32,6 +32,8 @@ target_include_directories(${MODULE_NAME}
     ${PYTHON_INCLUDE_DIRS}
     )
 
+find_package(conv_vel2pose REQUIRED)
+
 target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
@@ -41,6 +43,7 @@ target_link_libraries(${MODULE_NAME}
     msrm_cpp_utils::network
     msrm_cpp_utils::conversion
     CONAN_PKG::pybind11
+    conv_vel2pose::conv_vel2pose
     PUBLIC
     ${PROJECT_NAME}::utils
     Franka::Franka
