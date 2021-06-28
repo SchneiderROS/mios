@@ -2,7 +2,7 @@
 
 #include "mios/controller_pipeline/controller_pipeline.hpp"
 
-#include "eigen3/Eigen/Core"
+#include "Eigen/Core"
 
 namespace mios {
 

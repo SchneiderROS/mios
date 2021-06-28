@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mios/strategy/primitive_strategy.hpp"
-#include <eigen3/Eigen/Core>
+#include "Eigen/Core"
 
 namespace mios {
 

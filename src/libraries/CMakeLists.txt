@@ -21,12 +21,12 @@ target_include_directories(${MODULE_NAME}
 
 find_package(mogen_p2p REQUIRED)
 find_package(mogen_p2p_joint REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
     ${PROJECT_NAME}::${PROJECT_NAME}_project_warnings
-    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     ${PROJECT_NAME}::manipulation_primitive
     ${PROJECT_NAME}::portal
     msrm_cpp_utils::math
@@ -35,7 +35,8 @@ target_link_libraries(${MODULE_NAME}
     PUBLIC
     mogen_p2p::mogen_p2p
     mogen_p2p_joint::mogen_p2p_joint
-    CONAN_PKG::eigen
+    Eigen3::Eigen
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     )
 
 apply_module_options(${MODULE_NAME})
@@ -66,13 +67,13 @@ target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
     ${PROJECT_NAME}::${PROJECT_NAME}_project_warnings
-    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     msrm_cpp_utils::files
     msrm_cpp_utils::conversion
     msrm_cpp_utils::math
     ${PROJECT_NAME}::strategies
     PUBLIC
     ${PROJECT_NAME}::skill
+    ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     )
 
 apply_module_options(${MODULE_NAME})

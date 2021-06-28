@@ -23,6 +23,8 @@ target_include_directories(${MODULE_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
 
+find_package(nlohmann_json REQUIRED)
+
 target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
@@ -31,7 +33,7 @@ target_link_libraries(${MODULE_NAME}
     msrm_cpp_utils::system
     PUBLIC
     msrm_cpp_utils::network
-    CONAN_PKG::nlohmann_json
+    nlohmann_json::nlohmann_json
     )
 
 apply_module_options(${MODULE_NAME})

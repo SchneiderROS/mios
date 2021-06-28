@@ -5,8 +5,8 @@
 cmake_minimum_required(VERSION 3.16...3.20)
 
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 13)
-set(PROJECT_VERSION_PATCH 3)
+set(PROJECT_VERSION_MINOR 14)
+set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 configure_file (
@@ -61,6 +61,7 @@ option(ENABLE_UNITY_BUILD "Enable unity build" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/src/plugins)
+
 
 add_library(${PROJECT_NAME}_project_warnings INTERFACE)
 add_library(${PROJECT_NAME}_project_options INTERFACE)
@@ -142,10 +143,12 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_options ALIAS ${PROJECT_NAM
 add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_warnings ALIAS ${PROJECT_NAME}_project_warnings)
 add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_deps ALIAS ${PROJECT_NAME}_project_deps)
 
+find_package(spdlog REQUIRED)
+find_package(Boost REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}_project_deps
     INTERFACE
-    CONAN_PKG::spdlog
+    spdlog::spdlog
     )
 
 add_subdirectory(src)

@@ -2,10 +2,10 @@
 
 #include "mios/controller_pipeline/controller_pipeline.hpp"
 
-#include "cntr_joint_var_imp_wrapper.hpp"
-#include "cntr_mux_wrapper.hpp"
+#include "cntr_joint_var_imp/cntr_joint_var_imp_wrapper.hpp"
+#include "cntr_mux/cntr_mux_wrapper.hpp"
 
-#include "eigen3/Eigen/Core"
+#include "Eigen/Core"
 
 namespace mios {
 
