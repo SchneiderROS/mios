@@ -12,7 +12,6 @@ target_include_directories(mios
 
 find_package(pybind11 REQUIRED)
 find_package(cxxopts REQUIRED)
-find_package(Boost REQUIRED)
 
 target_link_libraries(mios
     PRIVATE
