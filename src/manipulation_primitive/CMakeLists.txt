@@ -25,6 +25,8 @@ target_include_directories(${MODULE_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
 
+find_package(Eigen3 REQUIRED)
+
 target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
@@ -34,7 +36,7 @@ target_link_libraries(${MODULE_NAME}
     ${PROJECT_NAME}::strategies
     PUBLIC
     ${PROJECT_NAME}::utils
-    CONAN_PKG::eigen
+    Eigen3::Eigen
     )
 
 apply_module_options(${MODULE_NAME})

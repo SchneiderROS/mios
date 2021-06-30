@@ -2,7 +2,7 @@
 
 #include "mios/data_structures/actuator.hpp"
 #include "mios/data_structures/percept.hpp"
-#include "eigen3/Eigen/Core"
+#include "Eigen/Core"
 
 #include <set>
 

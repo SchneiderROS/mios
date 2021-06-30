@@ -11,7 +11,7 @@
 #include "mios/utils/exceptions.hpp"
 
 #include "spdlog/spdlog.h"
-#include "eigen3/Eigen/Core"
+#include "Eigen/Core"
 #include "nlohmann/json.hpp"
 #include "msrm_cpp_utils/json/json.hpp"
 

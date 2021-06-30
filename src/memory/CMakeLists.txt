@@ -28,6 +28,9 @@ target_include_directories(${MODULE_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
 
+find_package(nlohmann_json REQUIRED)
+find_package(mongocxx REQUIRED)
+
 target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
@@ -39,8 +42,8 @@ target_link_libraries(${MODULE_NAME}
     msrm_cpp_utils::math
     PUBLIC
     ${PROJECT_NAME}::utils
-    CONAN_PKG::nlohmann_json
-    CONAN_PKG::mongo-cxx-driver
+    nlohmann_json::nlohmann_json
+    mongo::mongocxx_static
     )
 
 apply_module_options(${MODULE_NAME})

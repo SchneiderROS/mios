@@ -39,6 +39,7 @@ find_package(cntr_joint_var_imp REQUIRED)
 find_package(cntr_nullsp_proj REQUIRED)
 find_package(cntr_mux REQUIRED)
 find_package(conv_vel2pose REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
@@ -56,7 +57,7 @@ target_link_libraries(${MODULE_NAME}
     ${PROJECT_NAME}::memory
     ${PROJECT_NAME}::utils
     Franka::Franka
-    CONAN_PKG::eigen
+    Eigen3::Eigen
     )
 
 set_target_properties(${MODULE_NAME} PROPERTIES PUBLIC_HEADER "${${MODULE_NAME}_HEADER_FILES}")

@@ -27,6 +27,10 @@ target_include_directories(${MODULE_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
 
+find_package(spdlog REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(Boost REQUIRED)
+
 target_link_libraries(${MODULE_NAME}
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
@@ -39,14 +43,15 @@ target_link_libraries(${MODULE_NAME}
     msrm_cpp_utils::conversion
     msrm_cpp_utils::files
     msrm_cpp_utils::math
+    Boost::filesystem
     PUBLIC
     ${PROJECT_NAME}::manipulation_primitive
     ${PROJECT_NAME}::memory
     ${PROJECT_NAME}::portal
     ${PROJECT_NAME}::utils
     msrm_cpp_utils::json
-    CONAN_PKG::spdlog
-    CONAN_PKG::nlohmann_json
+    spdlog::spdlog
+    nlohmann_json::nlohmann_json
     )
 
 apply_module_options(${MODULE_NAME})

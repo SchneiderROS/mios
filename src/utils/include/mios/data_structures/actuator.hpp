@@ -1,6 +1,6 @@
 #pragma once
 
-#include "eigen3/Eigen/Core"
+#include "Eigen/Core"
 #include <set>
 
 #include "mios/data_structures/percept.hpp"

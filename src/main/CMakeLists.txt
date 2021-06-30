@@ -10,6 +10,9 @@ target_include_directories(mios
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     )
 
+find_package(pybind11 REQUIRED)
+find_package(cxxopts REQUIRED)
+
 target_link_libraries(mios
     PRIVATE
     ${PROJECT_NAME}::${PROJECT_NAME}_project_options
@@ -17,8 +20,8 @@ target_link_libraries(mios
     ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     PUBLIC
     ${PROJECT_NAME}::core
-    CONAN_PKG::pybind11
-    CONAN_PKG::cxxopts
+    pybind11::pybind11
+    cxxopts::cxxopts
     stdc++fs
     )
 

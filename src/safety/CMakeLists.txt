@@ -34,6 +34,7 @@ target_include_directories(${MODULE_NAME}
 
 find_package(virtual_cube REQUIRED)
 find_package(virtual_walls_joint REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 target_link_libraries(${MODULE_NAME}
     PRIVATE
@@ -46,7 +47,7 @@ target_link_libraries(${MODULE_NAME}
     virtual_walls_joint::virtual_walls_joint
     ${PROJECT_NAME}::memory
     ${PROJECT_NAME}::utils
-    CONAN_PKG::eigen
+    Eigen3::Eigen
     )
 
 apply_module_options(${MODULE_NAME})
