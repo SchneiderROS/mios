@@ -180,8 +180,8 @@ nlohmann::json LimitParameters::to_json() const{
 }
 
 UserParameters::UserParameters(){
-    dX_default<<1.7,2.5;
-    ddX_default<<13,25;
+    dX_default<<0.1,0.5;
+    ddX_default<<0.5,1;
     dq_default=0.5;
     ddq_default=1;
 
