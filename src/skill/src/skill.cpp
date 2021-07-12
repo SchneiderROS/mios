@@ -11,6 +11,7 @@
 #include "franka/exception.h"
 
 #include <chrono>
+#include <cmath>
 #include "boost/filesystem.hpp"
 
 namespace mios {
@@ -515,12 +516,17 @@ bool Skill::is_in_env(const std::string &pose, const std::string &mp, const Perc
         return false;
     }
     if(get_active_mp()->get_strategy_interface(mp)->finished()){
-        if((p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T(pose).block<3,1>(0,3)).norm()<m_memory->read_parameters()->user.env_X(0)
-           && acos(((get_object_pose_T(pose).block<3,3>(0,0).transpose()*p.proprioception.T_T_EE.block<3,3>(0,0)).trace()-1)/2) < m_memory->read_parameters()->user.env_X(1)){
-            return true;
-        }else{
-            return false;
+        bool reached_position=true;
+        bool reached_orientation=true;
+        for(unsigned i=0;i<3;i++){
+            if(fabs(p.proprioception.T_T_EE(i,3)-get_object_pose_T(pose)(i,3))>m_memory->read_parameters()->user.env_X(i)){
+                reached_position=false;
+            }
         }
+        if(acos(((get_object_pose_T(pose).block<3,3>(0,0).transpose()*p.proprioception.T_T_EE.block<3,3>(0,0)).trace()-1)/2) > m_memory->read_parameters()->user.env_X(3)){
+            reached_orientation=false;
+        }
+        return reached_position && reached_orientation;
     }
     return false;
 }

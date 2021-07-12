@@ -47,7 +47,7 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxShove::get_param
     return {{"p0",{"K_x","dX_d","ddX_d"}},{"p1",{"K_x","dX_d","ddX_d"}}};
 }
 
-TaxShove::TaxShove(const std::string& name, Memory* memory, Portal* portal):Skill("TaxShove",{"Shovable","Approach","Location"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
+TaxShove::TaxShove(const std::string& name, Memory* memory, Portal* portal):Skill("TaxShove",{"Shovable","Approach","Direction"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
     m_has_contact=false;
 }
 
@@ -85,7 +85,7 @@ std::shared_ptr<ManipulationPrimitive> TaxShove::create_shove_mp(const Percept &
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("shove",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
-    move->set_goal(get_object_pose_T("Location"),skill_params->p1.dX_d,skill_params->p1.ddX_d);
+    move->set_goal(get_object_pose_T("Direction"),skill_params->p1.dX_d,skill_params->p1.ddX_d);
     mp->create_strategy<CartComplianceStrategy>("compliance",1);
     mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(skill_params->p1.K_x,m_memory->read_parameters()->control.cart_imp.xi_x);
     return mp;

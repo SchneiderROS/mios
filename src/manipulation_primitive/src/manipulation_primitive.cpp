@@ -245,7 +245,7 @@ bool ManipulationPrimitive::is_settled(bool ignore) const{
 const std::shared_ptr<PrimitiveStrategy> ManipulationPrimitive::get_strategy_interface(const std::string &name) const{
     if(m_strategies.find(name)==m_strategies.end()){
         spdlog::error("Primitive " + m_name + " has no strategy with name " + name + ".");
-        return std::make_shared<NullStrategy>(NullStrategy());
+        throw SkillException();
     }else{
         return m_strategies.at(name).strategy;
     }

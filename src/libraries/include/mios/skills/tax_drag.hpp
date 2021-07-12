@@ -2,20 +2,20 @@
 
 #include "mios/skill/skill.hpp"
 namespace mios{
-class SkillParametersTaxPull : public SkillParameters{
+class SkillParametersTaxDrag : public SkillParameters{
 public:
     bool from_json(const nlohmann::json& parameters) override;
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
     struct P0{
         Eigen::Matrix<double,6,1> K_x;
-        double f_pull;
-        double duration;
+        Eigen::Matrix<double,2,1> dX_d;
+        Eigen::Matrix<double,2,1> ddX_d;
     }p0;
 };
 
-class TaxPull : public Skill{
+class TaxDrag : public Skill{
 public:
-    TaxPull(const std::string& name, Memory* memory, Portal* portal);
+    TaxDrag(const std::string& name, Memory* memory, Portal* portal);
     Eigen::Matrix<double,3,3> get_O_R_T_0(const Percept& p) const override;
 
 private:
@@ -24,7 +24,7 @@ private:
     bool check_local_suc_conditions(const Percept& p) override;
     bool check_local_err_conditions(const Percept &p) override;
 
-    std::shared_ptr<ManipulationPrimitive> create_pull_mp(const Percept& p);
+    std::shared_ptr<ManipulationPrimitive> create_drag_mp(const Percept& p);
 
 private:
 

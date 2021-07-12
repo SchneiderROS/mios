@@ -11,12 +11,12 @@
 #include "mios/skills/tax_press_button.hpp"
 #include "mios/skills/tax_turn.hpp"
 #include "mios/skills/tax_push.hpp"
-#include "mios/skills/tax_pull.hpp"
+#include "mios/skills/tax_drag.hpp"
 #include "mios/skills/tax_tip.hpp"
 #include "mios/skills/tax_shove.hpp"
 #include "mios/skills/tax_carry.hpp"
 #include "mios/skills/tax_turn_lever.hpp"
-#include "mios/skills/tax_slide.hpp"
+#include "mios/skills/tax_slide_object.hpp"
 #include "mios/skills/tax_swipe.hpp"
 #include "mios/skills/tax_bend.hpp"
 //#include "mios/skills/tax_hold.hpp"
@@ -75,7 +75,7 @@ SkillLibrary::SkillLibrary(){
     m_skill_parameters.insert(std::make_pair("TaxPressButton",std::make_shared<SkillParametersTaxPressButton>()));
     m_skill_parameters.insert(std::make_pair("TaxTurn",std::make_shared<SkillParametersTaxTurn>()));
     m_skill_parameters.insert(std::make_pair("TaxPush",std::make_shared<SkillParametersTaxPush>()));
-    m_skill_parameters.insert(std::make_pair("TaxPull",std::make_shared<SkillParametersTaxPull>()));
+    m_skill_parameters.insert(std::make_pair("TaxDrag",std::make_shared<SkillParametersTaxDrag>()));
     m_skill_parameters.insert(std::make_pair("TaxTip",std::make_shared<SkillParametersTaxTip>()));
     m_skill_parameters.insert(std::make_pair("TaxShove",std::make_shared<SkillParametersTaxShove>()));
     m_skill_parameters.insert(std::make_pair("TaxCarry",std::make_shared<SkillParametersTaxCarry>()));

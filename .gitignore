@@ -79,6 +79,5 @@ doc/latex/*
 
 # Mios #
 ########
-mios
 src/ros_workspace/devel
 include/commons/config.hpp

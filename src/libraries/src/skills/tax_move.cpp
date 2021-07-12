@@ -32,8 +32,7 @@ bool SkillParametersTaxMove::from_json(const nlohmann::json &parameters){
             return false;
         }
         if(!msrm_utils::read_json_param<double,4,4>(parameters["p0"],"T_T_EE_g_offset",p0.T_T_EE_g_offset)){
-            spdlog::error("Missing parameter: p0.T_T_EE_g_offset");
-            return false;
+            p0.T_T_EE_g_offset.setIdentity();
         }
         if(!msrm_utils::read_json_param<double,4,4>(parameters["p0"],"T_T_EE_g",p0.T_T_EE_g) && !object_set){
             spdlog::error("Missing parameter: p0.T_T_EE_g or GoalPose object.");
@@ -97,8 +96,6 @@ bool TaxMove::check_local_suc_conditions(const Percept &p){
             m_finished=true;
             m_t_finished=std::chrono::high_resolution_clock::now();
         }
-        return true;
-
         if(is_in_env("GoalPose","move",p)){
             return true;
         }else{

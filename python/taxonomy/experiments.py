@@ -58,3 +58,31 @@ def tip_test_enter():
     t = TipTest("collective-panda-008")
     start_experiment(t, {"Tippable": "tip_enter_key", "Approach": "tip_enter_approach"},
                      {"GoalPose": "tip_enter_approach"}, 1)
+
+
+def grab_test_item():
+    t = GrabTest("collective-panda-008")
+    start_experiment(t, {"Approach": "grab_item_approach", "Grabbable": "grab_item", "Retract": "grab_item_retract"},
+                     {"Approach": "grab_item_approach", "Placeable": "grab_item", "Retract": "grab_item_retract",
+                      "Surface": "grab_item"}, 1)
+
+
+def carry_test_item():
+    t = CarryTest("collective-panda-008")
+    start_experiment(t, {"Carriable": "carry_item", "GoalPose": "carry_item_goal"}, {"GoalPose": "carry_item_start"}, 1)
+
+
+def move_test():
+    t = MoveTest("collective-panda-008")
+    start_experiment(t, {"GoalPose": "move_goal"}, {"GoalPose": "move_start"}, 1)
+
+
+def drag_box_test():
+    t = DragTest("collective-panda-008")
+    start_experiment(t, {"Draggable": "drag_box", "GoalPose": "drag_box_goal"}, {}, 1)
+
+
+def shove_lid_test():
+    t = ShoveTest("collective-panda-008")
+    start_experiment(t, {"Shovable": "shove_lid", "Approach": "shove_lid_approach", "Direction": "shove_lid_direction"},
+                     {"GoalPose": "shove_lid_approach"}, 1)

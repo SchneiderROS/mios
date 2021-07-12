@@ -28,11 +28,11 @@
 #include "mios/skills/tax_turn.hpp"
 #include "mios/skills/tax_push.hpp"
 #include "mios/skills/tax_tip.hpp"
-#include "mios/skills/tax_pull.hpp"
+#include "mios/skills/tax_drag.hpp"
 #include "mios/skills/tax_carry.hpp"
 #include "mios/skills/tax_shove.hpp"
 #include "mios/skills/tax_turn_lever.hpp"
-#include "mios/skills/tax_slide.hpp"
+#include "mios/skills/tax_slide_object.hpp"
 #include "mios/skills/tax_swipe.hpp"
 #include "mios/skills/tax_bend.hpp"
 #include "mios/skills/tax_hammer.hpp"
@@ -98,8 +98,8 @@ void GenericTask::add_any_skill(unsigned int index){
     case msrm_utils::str_to_int("TaxPush"):
         add_skill<TaxPush,SkillParametersTaxPush>(name);
         break;
-    case msrm_utils::str_to_int("TaxPull"):
-        add_skill<TaxPull,SkillParametersTaxPull>(name);
+    case msrm_utils::str_to_int("TaxDrag"):
+        add_skill<TaxDrag,SkillParametersTaxDrag>(name);
         break;
     case msrm_utils::str_to_int("TaxPressButton"):
         add_skill<TaxPressButton,SkillParametersTaxPressButton>(name);
@@ -216,8 +216,8 @@ void GenericTask::execute_any_skill(unsigned index){
     case msrm_utils::str_to_int("TaxPush"):
         execute_skill<TaxPush,SkillParametersTaxPush>(name);
         break;
-    case msrm_utils::str_to_int("TaxPull"):
-        execute_skill<TaxPull,SkillParametersTaxPull>(name);
+    case msrm_utils::str_to_int("TaxDrag"):
+        execute_skill<TaxDrag,SkillParametersTaxDrag>(name);
         break;
     case msrm_utils::str_to_int("TaxTip"):
         execute_skill<TaxTip,SkillParametersTaxTip>(name);

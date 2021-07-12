@@ -1,6 +1,6 @@
 #include "mios/strategies/ff_strategy.hpp"
 #include "mios/strategies/cart_compliance_strategy.hpp"
-#include "mios/skills/tax_slide.hpp"
+#include "mios/skills/tax_slide_object.hpp"
 #include "mios/strategies/desired_wrench_strategy.hpp"
 #include "mios/strategies/move_to_pose.hpp"
 #include "msrm_cpp_utils/math/math.hpp"
