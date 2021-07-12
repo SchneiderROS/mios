@@ -80,7 +80,7 @@ SkillLibrary::SkillLibrary(){
     m_skill_parameters.insert(std::make_pair("TaxShove",std::make_shared<SkillParametersTaxShove>()));
     m_skill_parameters.insert(std::make_pair("TaxCarry",std::make_shared<SkillParametersTaxCarry>()));
     m_skill_parameters.insert(std::make_pair("TaxTurnLever",std::make_shared<SkillParametersTaxTurnLever>()));
-    m_skill_parameters.insert(std::make_pair("TaxSlide",std::make_shared<SkillParametersTaxSlide>()));
+    m_skill_parameters.insert(std::make_pair("TaxSlideObject",std::make_shared<SkillParametersTaxSlideObject>()));
     m_skill_parameters.insert(std::make_pair("TaxSwipe",std::make_shared<SkillParametersTaxSwipe>()));
     m_skill_parameters.insert(std::make_pair("TaxBend",std::make_shared<SkillParametersTaxBend>()));
 //    m_skill_parameters.insert(std::make_pair("TaxHold",std::make_shared<SkillParametersTaxHold>()));

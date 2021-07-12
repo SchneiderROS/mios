@@ -116,8 +116,8 @@ void GenericTask::add_any_skill(unsigned int index){
     case msrm_utils::str_to_int("TaxTurnLever"):
         add_skill<TaxTurnLever,SkillParametersTaxTurnLever>(name);
         break;
-    case msrm_utils::str_to_int("TaxSlide"):
-        add_skill<TaxSlide,SkillParametersTaxSlide>(name);
+    case msrm_utils::str_to_int("TaxSlideObject"):
+        add_skill<TaxSlideObject,SkillParametersTaxSlideObject>(name);
         break;
     case msrm_utils::str_to_int("TaxSwipe"):
         add_skill<TaxSwipe,SkillParametersTaxSwipe>(name);
@@ -231,8 +231,8 @@ void GenericTask::execute_any_skill(unsigned index){
     case msrm_utils::str_to_int("TaxTurnLever"):
         execute_skill<TaxTurnLever,SkillParametersTaxTurnLever>(name);
         break;
-    case msrm_utils::str_to_int("TaxSlide"):
-        execute_skill<TaxSlide,SkillParametersTaxSlide>(name);
+    case msrm_utils::str_to_int("TaxSlideObject"):
+        execute_skill<TaxSlideObject,SkillParametersTaxSlideObject>(name);
         break;
     case msrm_utils::str_to_int("TaxSwipe"):
         execute_skill<TaxSwipe,SkillParametersTaxSwipe>(name);

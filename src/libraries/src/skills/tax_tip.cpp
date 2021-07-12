@@ -165,7 +165,10 @@ bool TaxTip::check_local_suc_conditions(const Percept &p){
 
 bool TaxTip::check_local_ex_conditions(const Percept &p){
     if(get_active_mp()->get_name()=="retract"){
-        return get_active_mp()->get_strategy_interface("move")->finished();
+        std::cout<<"T: "<<get_object_pose_T("Approach")<<std::endl;
+        std::cout<<"T_d: "<<p.controller.TF_T_EE_d<<std::endl;
+        return is_in_env("Approach","move",p);
+//        return get_active_mp()->get_strategy_interface("move")->finished();
     }
     return false;
 }

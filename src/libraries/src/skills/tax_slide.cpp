@@ -7,7 +7,7 @@
 
 namespace mios{
 
-bool SkillParametersTaxSlide::from_json(const nlohmann::json& parameters){
+bool SkillParametersTaxSlideObject::from_json(const nlohmann::json& parameters){
     if(parameters.find("p0")==parameters.end()){
         spdlog::error("Parameters for primitive 0 are missing.");
         return false;
@@ -32,25 +32,25 @@ bool SkillParametersTaxSlide::from_json(const nlohmann::json& parameters){
     return true;
 }
 
-std::map<std::string, std::set<std::string> > SkillParametersTaxSlide::get_parameter_list(){
+std::map<std::string, std::set<std::string> > SkillParametersTaxSlideObject::get_parameter_list(){
     return {{"p0",{"K_x","dX_d","ddX_d","f_slide"}}};
 }
 
-TaxSlide::TaxSlide(const std::string& name, Memory* memory, Portal *portal):Skill("TaxSlide",{"Surface","Slidable","GoalPose"},name,memory,portal,{ControlMode::mCartTorque}){
+TaxSlideObject::TaxSlideObject(const std::string& name, Memory* memory, Portal *portal):Skill("TaxSlide",{"Surface","Slidable","GoalPose"},name,memory,portal,{ControlMode::mCartTorque}){
 
 }
 
-Eigen::Matrix<double,3,3> TaxSlide::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
+Eigen::Matrix<double,3,3> TaxSlideObject::get_O_R_T_0([[maybe_unused]] const Percept &p) const{
     return get_object("Slidable")->O_T_OB.block<3,3>(0,0);
 }
 
-std::shared_ptr<ManipulationPrimitive> TaxSlide::get_initial_mp(const Percept& p){
+std::shared_ptr<ManipulationPrimitive> TaxSlideObject::get_initial_mp(const Percept& p){
     return create_slide_mp(p);
 }
 
-std::shared_ptr<ManipulationPrimitive> TaxSlide::create_slide_mp(const Percept &p){
+std::shared_ptr<ManipulationPrimitive> TaxSlideObject::create_slide_mp(const Percept &p){
     spdlog::trace("TaxSlide::create_slide_mp()");
-    std::shared_ptr<SkillParametersTaxSlide> skill_params = get_parameters<SkillParametersTaxSlide>();
+    std::shared_ptr<SkillParametersTaxSlideObject> skill_params = get_parameters<SkillParametersTaxSlideObject>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("pull",p);
     mp->create_strategy<MoveToPoseStrategy>("slide",1);
     mp->create_strategy<FFStrategy>("push",1);
@@ -65,7 +65,7 @@ std::shared_ptr<ManipulationPrimitive> TaxSlide::create_slide_mp(const Percept &
     return mp;
 }
 
-bool TaxSlide::check_local_pre_conditions(const Percept &p){
+bool TaxSlideObject::check_local_pre_conditions(const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Slidable")->name){
         return false;
     }
@@ -75,11 +75,11 @@ bool TaxSlide::check_local_pre_conditions(const Percept &p){
     return true;
 }
 
-bool TaxSlide::check_local_suc_conditions(const Percept &p){
+bool TaxSlideObject::check_local_suc_conditions(const Percept &p){
     return get_active_mp()->get_strategy_interface("slide")->finished();
 }
 
-bool TaxSlide::check_local_err_conditions(const Percept &p){
+bool TaxSlideObject::check_local_err_conditions(const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Slidable")->name){
         return true;
     }

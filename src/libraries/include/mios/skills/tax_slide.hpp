@@ -2,7 +2,7 @@
 
 #include "mios/skill/skill.hpp"
 namespace mios{
-class SkillParametersTaxSlide : public SkillParameters{
+class SkillParametersTaxSlideObject : public SkillParameters{
 public:
     bool from_json(const nlohmann::json& parameters) override;
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
@@ -14,9 +14,9 @@ public:
     }p0;
 };
 
-class TaxSlide : public Skill{
+class TaxSlideObject : public Skill{
 public:
-    TaxSlide(const std::string& name, Memory* memory, Portal* portal);
+    TaxSlideObject(const std::string& name, Memory* memory, Portal* portal);
     Eigen::Matrix<double,3,3> get_O_R_T_0(const Percept& p) const override;
 
 private:
