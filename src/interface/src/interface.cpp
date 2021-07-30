@@ -209,9 +209,10 @@ nlohmann::json CommandInterface::release_object(const nlohmann::json &request){
     if(request["width"]==-1){
         width={};
     }else{
-        request["width"].get_to(width.value());
+        double width_tmp;
+        request["width"].get_to(width_tmp);
+        width=width_tmp;
     }
-    spdlog::trace("After read");
     if(!m_core->release_object(width,request["speed"])){
         response["result"]=false;
         response["error"]="Releasing has failed.";
