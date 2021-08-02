@@ -17,7 +17,7 @@ void FFWrenchFourierStrategy::initialize([[maybe_unused]] const Percept &p_0){
 
 void FFWrenchFourierStrategy::get_next_command(Actuator &cmd, const Percept &p){
     for(unsigned i=0;i<6;i++){
-        cmd.TF_F_ff(i)=m_a0(i)/2 + m_a1(i)*cos(2*M_PI*m_f(i)*cmd.t) + m_a2(i)*cos(2*M_PI*m_f(i)*cmd.t) + m_b1(i)*cos(2*M_PI*m_f(i)*cmd.t) + m_b2(i)*cos(2*M_PI*m_f(i)*cmd.t);
+        cmd.TF_F_ff(i)=m_a0(i)/2 + m_a1(i)*cos(2*M_PI*m_f(i)*cmd.t) + m_a2(i)*cos(2*2*M_PI*m_f(i)*cmd.t) + m_b1(i)*cos(2*M_PI*m_f(i)*cmd.t) + m_b2(i)*cos(2*2*M_PI*m_f(i)*cmd.t);
     }
 }
 
