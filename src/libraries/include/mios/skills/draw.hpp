@@ -14,10 +14,14 @@ public:
     bool file_mode;
     unsigned port_src;
 
+    double surface_distance;
+
     Eigen::Matrix<double,2,1> approach_speed;
     Eigen::Matrix<double,2,1> approach_acc;
     Eigen::Matrix<double,2,1> contact_speed;
     Eigen::Matrix<double,2,1> contact_acc;
+    Eigen::Matrix<double,2,1> draw_speed;
+    Eigen::Matrix<double,2,1> draw_acc;
 
 };
 
@@ -40,11 +44,17 @@ private:
     bool check_local_err_conditions(const Percept &p) override;
 
     void update_policies(const Percept &p) override;
+    void auxiliaries(const Percept& p) override;
+
+private:
+
+    Eigen::Matrix<double,4,4> from_image_to_world(const Eigen::Matrix<double,3,1>& position);
 
 private:
 
     std::vector<Eigen::Matrix<double,3,1> > m_positions;
     std::vector<bool> m_start_positions;
+    unsigned m_position_cnt;
 
 };
 
