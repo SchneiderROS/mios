@@ -29,6 +29,7 @@
 #include "mios/skills/tax_place.hpp"
 #include "mios/skills/tax_press_button.hpp"
 #include "mios/skills/tax_turn.hpp"
+#include "mios/skills/draw.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -61,6 +62,7 @@ SkillLibrary::SkillLibrary(){
     m_skill_parameters.insert(std::make_pair("TaxPlace",std::make_shared<SkillParametersTaxPlace>()));
     m_skill_parameters.insert(std::make_pair("TaxPressButton",std::make_shared<SkillParametersTaxPressButton>()));
     m_skill_parameters.insert(std::make_pair("TaxTurn",std::make_shared<SkillParametersTaxTurn>()));
+    m_skill_parameters.insert(std::make_pair("Draw",std::make_shared<SkillParametersDraw>()));
 }
 
 const std::unordered_map<std::string,std::shared_ptr<Skill> >* SkillLibrary::get_skills() const{

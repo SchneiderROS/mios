@@ -659,3 +659,44 @@ def iros_task_loop():
         table_np = np.asarray(table)
         table = table_np.transpose().tolist()
         write.writerows(table)
+
+
+def test_draw(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "test_draw_pen"})
+    draw_context = {
+        "skill": {
+            "objects": {
+                "Pen": "test_draw_pen",
+                "Surface": "test_draw_surface"
+            },
+            "approach_speed": [0.2, 0.5],
+            "approach_acc": [0.5, 1],
+            "contact_speed": [0.05, 0.5],
+            "contact_acc": [0.5, 1],
+            "draw_speed": [0.2, 0.5],
+            "draw_acc": [0.5, 1],
+            "file_mode": True,
+            "path_file": "painting.txt",
+            "f_draw": 10,
+            "surface_distance": 0.05,
+            "port_src": 8888
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [1500, 1500, 1500, 150, 150, 150]
+            },
+            "nullspace_control": {
+                "K_theta": [20, 20, 15, 10, 7, 5, 2],
+                "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+                "active": True
+            }
+        },
+        "user": {
+            "F_ext_contact": [8, 5]
+        }
+    }
+    t = Task(robot)
+    t.add_skill("draw", "Draw", draw_context)
+    t.start()
+    result = t.wait()

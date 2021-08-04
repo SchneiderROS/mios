@@ -22,6 +22,11 @@ private:
     Eigen::Matrix<double,2,1> m_ddX_d;
 
     unsigned m_cnt;
+    double m_path_pos;
+    double m_path_length;
+
+    Eigen::Matrix<double,6,1> m_TF_dX_d;
+    Eigen::Matrix<double,6,1> m_TF_dX_d_limiter;
 
 };
 

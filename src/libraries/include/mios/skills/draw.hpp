@@ -43,12 +43,11 @@ private:
     bool check_local_suc_conditions(const Percept &p) override;
     bool check_local_err_conditions(const Percept &p) override;
 
-    void update_policies(const Percept &p) override;
-    void auxiliaries(const Percept& p) override;
-
 private:
 
     Eigen::Matrix<double,4,4> from_image_to_world(const Eigen::Matrix<double,3,1>& position);
+    bool load_data(const std::string& file_path);
+    bool check_data();
 
 private:
 
