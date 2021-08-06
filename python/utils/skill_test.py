@@ -1,694 +1,734 @@
 #!/usr/bin/python3 -u
 import time
-from pymongo import MongoClient
-from ws_client import *
-import logging
-import sys
 import numpy as np
-import copy
+
+from ws_client import *
+from xmlrpc.client import ServerProxy
+
 import csv
 
 
-logger = logging.getLogger("skill_test")
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+class Task:
+    def __init__(self, robot):
+        self.skill_names = []
+        self.skill_types = []
+        self.skill_context = dict()
+
+        self.robot = robot
+        self.task_uuid = "INVALID"
+        self.t_0 = 0
+
+    def add_skill(self, name, type, context):
+        self.skill_names.append(name)
+        self.skill_types.append(type)
+        self.skill_context[name] = context
+
+    def start(self, queue: bool = False):
+        self.t_0 = time.time()
+        response = start_task(self.robot, "GenericTask", parameters={
+            "parameters": {
+                "skill_names": self.skill_names,
+                "skill_types": self.skill_types,
+                "as_queue": queue
+            },
+            "skills": self.skill_context
+        })
+        self.task_uuid = response["result"]["task_uuid"]
+
+    def wait(self):
+        result = wait_for_task(self.robot, self.task_uuid)
+        print("Task execution took " + str(time.time() - self.t_0) + " s.")
+        print(self.task_uuid)
+        return result
 
 
-
-
-
-
-def test_insertion(robot, insertable, container, approach, record_performance: bool = False, context: dict = None):
-    call_method(robot, 12000, "set_grasped_object", {"object": insertable})
-    if context is None:
-        context = {
+def start_skill(address: str, skill: str, parameters: dict, control: dict, user: dict = {}, skill_name: str = "skill"):
+    response = start_task(address, "GenericTask", parameters={"parameters": {
+        "skill_names": [skill_name],
+        "skill_types": [skill]
+    },
+        "skills": {
             "skill": {
-                "objects": {
-                    "Container": container,
-                    "Approach": approach,
-                    "Insertable": insertable
-                },
-                "time_max": 10,
-                "p0": {
-                    "dX_d": [0.1, 0.5],
-                    "ddX_d": [0.5, 1],
-                    "DeltaX": [-0.005, 0, 0, 0, 10, 0],
-                    "K_x": [1000, 1000, 1000, 100, 100, 100]
-                },
-                "p1": {
-                    "dX_d": [0.1, 0.5],
-                    "ddX_d": [0.5, 1],
-                    "K_x": [1000, 1000, 1000, 100, 100, 100]
-                },
-                "p2": {
-                    "search_a": [10, 10, 0, 0, 0, 0],
-                    "search_f": [1, 0.75, 0, 0, 0, 0],
-                    "K_x": [1000, 1000, 0, 100, 100, 100],
-                    "f_push": 15,
-                    "dX_d": [0.1, 0.5],
-                    "ddX_d": [0.5, 1]
-                },
-                "p3": {
-                    "dX_d": [0.1, 0.5],
-                    "ddX_d": [0.5, 1],
-                    "f_push": 15,
-                    "K_x": [1000, 1000, 0, 100, 100, 100]
-                }
-            },
-            "control": {
-                "control_mode": 0
-            },
-            "user": {
-                "env_X": [0.005, 0.01, 0.01, 0.05, 0.05, 0.05],
-                "env_dX": [0.001, 0.001, 0.001, 0.005, 0.005, 0.005]
+                "skill": parameters,
+                "control": control,
+                "user": user
             }
-        }
-    t = Task(robot)
-    t.add_skill("insertion", "TaxInsertion", context)
-    t.start()
-    result = t.wait()
-    print(result)
-    if record_performance is True:
-        upload_result("collective-control-001", "insertion", insertable, result)
+        }})
+    return response
 
 
-def test_extraction(robot, extractable, container, retreat, record_performance: bool = False):
-    call_method(robot, 12000, "set_grasped_object", {"object": extractable})
-    context = {
+def tax_test_grab(robot="collective-panda-008.local"):
+    grab_context = {
         "skill": {
             "objects": {
-                "Container": container,
-                "ExtractTo": retreat,
-                "Extractable": extractable
+                "Retract": "iros_key_grab_retract",
+                "Approach": "iros_key_grab_approach",
+                "Grabbable": "iros_key"
             },
-            "time_max": 10,
-            "p0": {
-                "search_a": [5, 5, 0, 1, 1, 0],
-                "search_f": [2, 1.5, 0, 1, 0.75, 0],
-                "K_x": [50, 50, 1000, 50, 50, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-                # "f_pull": 40
+            "time_max": 5,
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "grab_speed": [0.05, 0.1],
+            "grab_acc": [0.1, 0.4],
+            "grasp_width": 0.03,
+            "grasp_speed": 0.2,
+            "grasp_force": 30,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [1900, 1900, 1900, 190, 190, 190]
+            }
+        }
+    }
+    t = Task(robot)
+    t.add_skill("grab", "TaxGrab", grab_context)
+    t.start()
+    result = t.wait()
+    cost = result["result"]["task_result"]["skill_results"]["grab"]["cost"]["time"]
+    heuristic = result["result"]["task_result"]["skill_results"]["grab"]["heuristic"]
+    total_cost = cost + heuristic
+    with open("expert_data_grab.txt", "a") as f:
+        f.write(str(total_cost) + "\n")
+
+    print("Total cost: " + str(total_cost))
+
+
+def tax_test_place(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
+    place_context = {
+        "skill": {
+            "objects": {
+                "Retract": "iros_key_grab_retract",
+                "Approach": "iros_key_grab_approach",
+                "Placeable": "iros_key",
+                "Surface": "iros_key_storage"
             },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                # "f_pull": 40,
+            "time_max": 5,
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "place_speed": [0.5, 1.0],
+            "place_acc": [1., 4.0],
+            "release_width": 0.06,
+            "release_speed": 2.0,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.015, 0.02]
+        }
+    }
+    t = Task(robot)
+    t.add_skill("place", "TaxPlace", place_context)
+    t.start()
+    result = t.wait()
+    cost = result["result"]["task_result"]["skill_results"]["place"]["cost"]["time"]
+    heuristic = result["result"]["task_result"]["skill_results"]["place"]["heuristic"]
+    total_cost = cost + heuristic
+    with open("expert_data_place.txt", "a") as f:
+        f.write(str(total_cost) + "\n")
+
+    print("Total cost: " + str(total_cost))
+
+
+def tax_test_turn(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
+    turn_context = {
+        "skill": {
+            "objects": {
+                "Turnable": "iros_key",
+                "GoalOrientation": "iros_turn_goal"
+            },
+            "turn_speed": [0.5, 2.5],
+            "turn_acc": [2, 25]},
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.01, 0.02]
+        }
+    }
+    turn_back_context = {
+        "skill": {
+            "objects": {
+                "Turnable": "iros_key",
+                "GoalOrientation": "iros_lock"
+            },
+            "turn_speed": [0.2, 2.5],
+            "turn_acc": [0.5, 30.0]},
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.01, 0.02]
+        }
+    }
+    t = Task(robot)
+    t.add_skill("turn", "TaxTurn", turn_context)
+    #t.add_skill("turn_back", "TaxTurn", turn_back_context)
+    t.start()
+    result = t.wait()
+    cost = result["result"]["task_result"]["skill_results"]["turn"]["cost"]["time"]
+    heuristic = result["result"]["task_result"]["skill_results"]["turn"]["heuristic"]
+    total_cost = cost + heuristic
+    with open("expert_turn_place.txt", "a") as f:
+        f.write(str(total_cost) + "\n")
+
+    print("Total cost: " + str(total_cost))
+
+
+def test_tax_press_button(robot="collective-panda-008.local"):
+    start_skill(robot, "TaxPressButton",
+                {"objects": {"Button": "iros_button", "Approach": "iros_button_approach"},
+                 "approach_speed": [0.05, 0.5], "approach_acc": [0.5, 1.0],
+                 "press_speed": [0.05, 0.5], "press_acc": [0.5, 1.0], "duration": 2,
+                 "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+                 "ROI_phi": [0, 0, 0, 0, 0, 0],
+                 "condition_level_success": "External",
+                 "condition_level_error": "External"
+                 },
+                {"control_mode": 0},
+                {
+                    "env_X": [0.005, 0.1]
+                })
+
+
+def tax_test_move(robot, location):
+    move1_context = {
+        "skill": {
+            "objects": {
+                "GoalPose": location
+            },
+            "speed": [0.1, 0.5],
+            "acc": [0.5, 1.0]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        }
+    }
+    t = Task(robot)
+    t.add_skill("move", "TaxMove", move1_context)
+    t.start()
+    result = t.wait()
+
+
+def tax_test_insertion(robot):
+    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
+    insertion_context = {
+        "skill": {
+            "objects": {
+                "Container": "iros_lock",
+                "Approach": "iros_lock_approach",
+                "Insertable": "iros_key"
+            },
+            "time_max": 5,
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "insertion_speed": [0.5, 0.5],
+            "insertion_acc": [0.8, 1],
+            "f_max_push": 10,
+            "DeltaX": [0.0005, -0.002, 0, 0, 0, 0],
+            "search_a": [10, 10, 1, 0.3, 0.3, 0],
+            "search_f": [1, 0.75, 0.8, 0.8, 0.8, 0],
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0],
+            "stuck_dx_thr": 0.05
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        }
+    }
+    t = Task(robot)
+    t.add_skill("insertion", "TaxInsertion", insertion_context)
+    t.start()
+    result = t.wait()
+    cost = result["result"]["task_result"]["skill_results"]["insertion"]["cost"]["time"]
+    heuristic = result["result"]["task_result"]["skill_results"]["insertion"]["heuristic"]
+    total_cost = cost + heuristic
+    with open("expert_data_insertion.txt", "a") as f:
+        f.write(str(total_cost) + "\n")
+
+    print("Total cost: " + str(total_cost))
+
+
+def tax_test_button_press(robot):
+    button_press_context = {
+        "skill": {
+            "objects": {
+                "Button": "iros_button",
+                "Approach": "iros_button_approach"
+            },
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "press_speed": [0.5, 1],
+            "f_push": 1,
+            "press_acc": [1, 4],
+            "duration": 0,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0],
+            "condition_level_success": "External",
+            "condition_level_error": "External"
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.01, 0.02]
+        }
+    }
+    # s = ServerProxy("http://localhost:8000", allow_none=True)
+    # s.subscribe_to_event("button_press", "collective-panda-010.local", "12000")
+    t = Task(robot)
+    t.add_skill("button_press", "TaxPressButton", button_press_context)
+    t.start()
+    result = t.wait()
+    cost = result["result"]["task_result"]["skill_results"]["button_press"]["cost"]["time"]
+    heuristic = result["result"]["task_result"]["skill_results"]["button_press"]["heuristic"]
+    total_cost = cost + heuristic
+    with open("expert_data_button_press.txt", "a") as f:
+        f.write(str(total_cost) + "\n")
+
+    print("Total cost: " + str(total_cost))
+
+
+def subscribe_to_event_server(robot):
+    s = ServerProxy("http://collective-control-001.local:8002", allow_none=True)
+    s.subscribe_to_event("button_press", robot, "12000")
+
+
+def tax_test_extraction(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "iros_key"})
+    extraction_context = {
+        "skill": {
+            "objects": {
+                "Container": "iros_lock",
+                "ExtractTo": "iros_lock_approach",
+                "Extractable": "iros_key"
+            },
+            "time_max": 5,
+            "extraction_speed": [0.25, 0.15],
+            "extraction_acc": [1, 0.8],
+            "search_a": [1, 1, 1, 0.3, 0.3, 0],
+            "search_f": [0.2, 0.2, 0.2, 0.2, 0.2, 0],
+            "stuck_dx_thr": 0.05
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        }
+    }
+    t = Task(robot)
+    t.add_skill("extract", "TaxExtraction", extraction_context)
+    t.start()
+    result = t.wait()
+    cost = result["result"]["task_result"]["skill_results"]["extract"]["cost"]["time"]
+    heuristic = result["result"]["task_result"]["skill_results"]["extract"]["heuristic"]
+    total_cost = cost + heuristic
+    with open("expert_data_extraction.txt", "a") as f:
+        f.write(str(total_cost) + "\n")
+
+    print("Total cost: " + str(total_cost))
+
+
+def test_skill_queue(robot="localhost"):
+    move1_context = {
+        "skill": {
+            "objects": {
+                "GoalPose": "test_pose_1"
+            },
+            "speed": [0.1, 0.5],
+            "acc": [0.5, 5]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "frames": {
+            "O_R_T": [1, 0, 0, 0, 1, 0, 0, 0, 1]
+        }
+    }
+    move2_context = {
+        "skill": {
+            "objects": {
+                "GoalPose": "test_pose_2"
+            },
+            "speed": [0.1, 0.5],
+            "acc": [0.5, 5]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
                 "K_x": [1000, 1000, 1000, 100, 100, 100]
             }
+        },
+        "frames": {
+            "O_R_T": [1, 0, 0, 0, -1, 0, 0, 0, -1]
+        }
+    }
+    t = Task(robot)
+    t.add_skill("move1", "TaxMove", move1_context)
+    t.add_skill("move2", "TaxMove", move2_context)
+    t.add_skill("move3", "TaxMove", move1_context)
+    t.add_skill("move4", "TaxMove", move2_context)
+    t.add_skill("move5", "TaxMove", move1_context)
+    t.add_skill("move6", "TaxMove", move2_context)
+    t.start(True)
+    result = t.wait()
+    print(result)
+
+
+def iros_task():
+    robot = "collective-panda-010.local"
+
+    response = start_task(robot, "MoveToJointPose", {"parameters": {"pose": "iros_idle_pose"}})
+    wait_for_task(robot, response["result"]["task_uuid"])
+    t_0 = time.time()
+    # move to grab key
+    iros1 = Task(robot)
+
+    grab_context = {
+        "skill": {
+            "ignore_settling": True,
+            "objects": {
+                "Retract": "iros_key_grab_retract",
+                "Approach": "iros_key_grab_approach",
+                "Grabbable": "iros_key"
+            },
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4.0],
+            "grab_speed": [0.3, 2],
+            "grab_acc": [1, 4],
+            "grasp_width": 0.0,
+            "grasp_speed": 100,
+            "grasp_force": 30,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        }
+    }
+
+    insertion_context = {
+        "skill": {
+            "objects": {
+                "Container": "iros_lock",
+                "Approach": "iros_lock_approach",
+                "Insertable": "iros_key"
+            },
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "insertion_speed": [0.2, 0.5],
+            "insertion_acc": [0.8, 1.0],
+            "search_a": [3, 3, 0, 0, 0, 0],
+            "search_f": [1, 0.75, 0, 0, 0, 0],
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0],
+            "f_max_push": 5
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [500, 500, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.02, 0.04]
+        }
+    }
+    turn_context = {
+        "skill": {
+            "ignore_settling": True,
+            "objects": {
+                "Turnable": "iros_key",
+                "GoalOrientation": "iros_turn_goal"
+            },
+            "turn_speed": [0.2, 2],
+            "turn_acc": [0.5, 30.0]},
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.03, 0.02]
+        }
+    }
+    turn_back_context = {
+        "skill": {
+            "objects": {
+                "Turnable": "iros_key",
+                "GoalOrientation": "iros_lock"
+            },
+            "turn_speed": [0.2, 2],
+            "turn_acc": [0.5, 30.0]},
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+        },"user": {
+            "env_X": [0.03, 0.02]
+        }
+    }
+    extraction_context = {
+        "skill": {
+            "ignore_settling": True,
+            "objects": {
+                "Container": "iros_lock",
+                "ExtractTo": "iros_lock_retract",
+                "Extractable": "iros_key"
+            },
+            "extraction_speed": [0.5, 4],
+            "extraction_acc": [1, 1.0],
+            "search_a": [0, 0, 0, 0, 0, 0],
+            "search_f": [0, 0, 0, 0, 0, 0]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200,200, 200]
+            }
+        },
+        "user": {
+            "env_X": [0.01, 0.02]
+        }
+    }
+
+    place_context = {
+        "skill": {
+            "ignore_settling": True,
+            "objects": {
+                "Retract": "iros_key_place_retract",
+                "Approach": "iros_key_place_approach",
+                "Placeable": "iros_key",
+                "Surface": "iros_key_storage"
+            },
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "place_speed": [0.1, 0.5],
+            "place_acc": [0.5, 1.0],
+            "release_width": 0.05,
+            "release_speed": 100,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0]
         },
         "control": {
             "control_mode": 0
         },
         "user": {
-            "env_X": [0.005, 0.01, 0.01, 0.05, 0.05, 0.05],
-            "env_dX": [0.001, 0.001, 0.001, 0.005, 0.005, 0.005]
+            "env_X": [0.015, 0.02]
         }
     }
-    t = Task(robot)
-    t.add_skill("extraction", "TaxExtraction", context)
-    t.start()
-    result = t.wait()
-    print(result)
-    if record_performance is True:
-        upload_result("collective-control-001", "extraction", extractable, result)
-
-
-def test_push(robot, surface, approach):
-    context = {
+    move4_context = {
         "skill": {
+            "ignore_settling": True,
             "objects": {
-                "Surface": surface,
-                "Approach": approach
+                "GoalPose": "iros_button_roi"
             },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-            "p2": {
-                "duration": 5,
-                "f_push": 5,
-                "K_x": [1000, 1000, 0, 100, 100, 100]
-            }
+            "speed": [0.5, 1],
+            "acc": [2, 4],
+            "finger_width": 0,
+            "finger_speed": 100
         },
         "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("push", "TaxPush", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_pull(robot, pullable):
-    call_method(robot, 12000, "set_grasped_object", {"object": pullable})
-    context = {
-        "skill": {
-            "objects": {
-                "Pullable": pullable
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 0, 100, 100, 100],
-                "f_pull": 10,
-                "duration": 5
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("pull", "TaxPull", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_press_button(robot, button, approach):
-    context = {
-        "skill": {
-            "objects": {
-                "Button": button,
-                "Approach": approach
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-            "p2": {
-                "duration": 5,
-                "f_push": 40,
-                "K_x": [1000, 1000, 0, 100, 100, 100]
-            },
-            "p3": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("press_button", "TaxPressButton", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_tip(robot, tippable, approach):
-    context = {
-        "skill": {
-            "objects": {
-                "Tippable": tippable,
-                "Approach": approach
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "f_tip": 10
-            },
-            "p2": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("tip", "TaxTip", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_grab(robot, approach, grabbable, retract):
-    context = {
-        "skill": {
-            "objects": {
-                "Grabbable": grabbable,
-                "Approach": approach,
-                "Retract": retract
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "gripper_speed": 0.2,
-                "gripper_width": 0.06
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-            "p2": {
-                "grasp_width": 0.03,
-                "grasp_speed": 0.2,
-                "grasp_force": 40,
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-            "p3": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("grab", "TaxGrab", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_place(robot, approach, placeable, surface, retract):
-    call_method(robot, 12000, "set_grasped_object", {"object": placeable})
-    context = {
-        "skill": {
-            "objects": {
-                "Placeable": placeable,
-                "Approach": approach,
-                "Retract": retract,
-                "Surface": surface
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-            "p2": {
-                "release_width": 0.06,
-                "release_speed": 0.2,
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-            "p3": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            },
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("place", "TaxPlace", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_shove(robot, approach, shovable, location):
-    context = {
-        "skill": {
-            "objects": {
-                "Shovable": shovable,
-                "Approach": approach,
-                "Location": location,
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("shove", "TaxShove", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_turn_lever(robot, lever, goal_position):
-    call_method(robot, 12000, "set_grasped_object", {"object": lever})
-    context = {
-        "skill": {
-            "objects": {
-                "Lever": lever,
-                "GoalPosition": goal_position
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [500, 1000, 500, 50, 50, 50],
-                "dX_d": [0.05, 0.5],
-                "ddX_d": [0.5, 1],
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
             }
         },
         "user": {
-            "env_X": [0.01, 1]
-        },
-        "control": {
-            "control_mode": 0
+            "env_X": [0.02, 0.04]
         }
     }
-    t = Task(robot)
-    t.add_skill("turn_lever", "TaxTurnLever", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_move(robot, goal_pose):
-    context = {
+    button_press_context = {
+        "skill": {
+            "ignore_settling": True,
+            "objects": {
+                "Button": "iros_button",
+                "Approach": "iros_button_approach"
+            },
+            "f_push": 5,
+            "approach_speed": [0.5, 1],
+            "approach_acc": [1, 4],
+            "press_speed": [0.1, 0.5],
+            "press_acc": [1, 1.0],
+            "duration": 0,
+            "ROI_x": [-0.2, 0.2, -0.2, 0.2, -0.2, 0.2],
+            "ROI_phi": [0, 0, 0, 0, 0, 0]
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
+         },
+        "user": {
+            "env_X": [0.01, 0.04]
+        }
+    }
+    move5_context = {
         "skill": {
             "objects": {
-                "GoalPose": goal_pose
+                "GoalPose": "iros_idle_pose"
             },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "finger_width": -1,
-                "finger_speed": -1,
-                "t_settle": 0.5,
-                "T_T_EE_g_offset": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-            }
+            "speed": [0.3, 0.5],
+            "acc": [1, 1]
         },
         "control": {
-            "control_mode": 0
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 200, 200, 200]
+            }
         }
     }
-    t = Task(robot)
-    t.add_skill("move", "TaxMove", context)
-    t.start()
-    result = t.wait()
+
+    iros1.add_skill("grab_key", "TaxGrab", grab_context)
+    iros1.add_skill("insertion", "TaxInsertion", insertion_context)
+    iros1.add_skill("turn_key", "TaxTurn", turn_context)
+    iros1.add_skill("turn_back_key", "TaxTurn", turn_back_context)
+    iros1.add_skill("extraction", "TaxExtraction", extraction_context)
+    iros1.add_skill("place_key", "TaxPlace", place_context)
+    iros1.add_skill("move_to_button", "TaxMove", move4_context)
+    iros1.add_skill("press_button", "TaxPressButton", button_press_context)
+    iros1.add_skill("move_to_idle", "TaxMove", move5_context)
+
+    iros1.start(True)
+    result = iros1.wait()
+
     print(result)
+    print("Execution time: " + str(time.time() - t_0))
+
+    cost = dict()
+
+    for skill, r in result["result"]["task_result"]["skill_results"].items():
+        cost[skill] = r["cost"]["time"]
+
+    return cost
 
 
-def test_carry(robot, goal_pose, carriable):
-    call_method(robot, 12000, "set_grasped_object", {"object": carriable})
-    context = {
+def iros_task_loop():
+    cost_avg = dict()
+    for i in range(10):
+        cost = iros_task()
+        for skill, c in cost.items():
+            if skill not in cost_avg:
+                cost_avg[skill] = []
+            cost_avg[skill].append(c)
+
+    with open('iros_data.csv', 'w') as f:
+        write = csv.writer(f)
+        write.writerow(cost_avg.keys())
+        table = []
+        i = 0
+        for skill, c in cost_avg.items():
+            table.append(c)
+            i += 1
+
+        table_np = np.asarray(table)
+        table = table_np.transpose().tolist()
+        write.writerows(table)
+
+
+def test_draw(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "test_draw_pen"})
+    draw_context = {
         "skill": {
             "objects": {
-                "GoalPose": goal_pose,
-                "Carriable": carriable
+                "Pen": "test_draw_pen",
+                "Surface": "test_draw_surface"
             },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            }
+            "approach_speed": [0.2, 0.5],
+            "approach_acc": [0.5, 1],
+            "contact_speed": [0.05, 0.5],
+            "contact_acc": [0.5, 1],
+            "draw_speed": [0.2, 0.5],
+            "draw_acc": [0.5, 1],
+            "file_mode": True,
+            "path_file": "painting.txt",
+            "f_draw": 10,
+            "surface_distance": 0.05,
+            "port_src": 8888
         },
         "control": {
-            "control_mode": 0
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [1500, 1500, 1500, 150, 150, 150]
+            },
+            "nullspace_control": {
+                "K_theta": [20, 20, 15, 10, 7, 5, 2],
+                "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+                "active": True
+            }
+        },
+        "user": {
+            "F_ext_contact": [8, 5]
         }
     }
     t = Task(robot)
-    t.add_skill("carry", "TaxCarry", context)
+    t.add_skill("draw", "Draw", draw_context)
     t.start()
     result = t.wait()
-    print(result)
 
 
-def test_slide(robot, goal_pose, slidable, surface):
-    call_method(robot, 12000, "set_grasped_object", {"object": slidable})
-    context = {
+def test_crank(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "test_crank_crank"})
+    crank_context = {
         "skill": {
             "objects": {
-                "GoalPose": goal_pose,
-                "Slidable": slidable,
-                "Surface": surface
+                "Crank": "test_crank_crank",
+                "Center": "test_crank_center"
             },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 0, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "f_slide": 10
-            }
+            "crank_speed": [0.01, 0.5],
+            "crank_acc": [0.5, 1],
+            "radius": 0.1,
+            "n_turns": 2,
+            "clockwise": False
         },
         "control": {
-            "control_mode": 0
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [1500, 1500, 1500, 150, 150, 150]
+            },
+            "nullspace_control": {
+                "K_theta": [20, 20, 15, 10, 7, 5, 2],
+                "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+                "active": True
+            }
         }
     }
     t = Task(robot)
-    t.add_skill("slide", "TaxSlide", context)
+    t.add_skill("crank", "Crank", crank_context)
     t.start()
     result = t.wait()
-    print(result)
-
-
-def test_swipe(robot, approach, swipe_start, swipe_end, retract, stylus):
-    call_method(robot, 12000, "set_grasped_object", {"object": stylus})
-    context = {
-        "skill": {
-            "objects": {
-                "Approach": approach,
-                "SwipeStart": swipe_start,
-                "SwipeEnd": swipe_end,
-                "Retract": retract,
-                "Stylus": stylus
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            },
-            "p1": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            },
-            "p2": {
-                "K_x": [1000, 1000, 0, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "f_swipe": 10
-            },
-            "p3": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("swipe", "TaxSwipe", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_turn(robot, goal_orientation, turnable):
-    call_method(robot, 12000, "set_grasped_object", {"object": turnable})
-    context = {
-        "skill": {
-            "objects": {
-                "GoalOrientation": goal_orientation,
-                "Turnable": turnable
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("turn", "TaxTurn", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_bend(robot, goal_pose, bendable):
-    call_method(robot, 12000, "set_grasped_object", {"object": bendable})
-    context = {
-        "skill": {
-            "objects": {
-                "GoalPose": goal_pose,
-                "Bendable": bendable
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("bend", "TaxBend", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_hold(robot):
-    context = {
-        "skill": {
-            "time_max": 10,
-            "p0": {
-                "K_x": [2000, 2000, 2000, 200, 200, 200],
-                "t_hold": 5
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("hold", "TaxHold", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_hammer(robot, approach, hammerable, hammer):
-    call_method(robot, 12000, "set_grasped_object", {"object": hammer})
-    context = {
-        "skill": {
-            "objects": {
-                "Approach": approach,
-                "Hammerable": hammerable,
-                "Hammer": hammer
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            },
-            "p1": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "f_hammer": 10
-            },
-            "p2": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1]
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("hammer", "TaxHammer", context)
-    t.start()
-    result = t.wait()
-    print(result)
-
-
-def test_task(robot):
-    slidable = "skill_test_slide_slidable"
-    goal_pose = "skill_test_slide_goal_pose"
-    surface = "skill_test_slide_surface"
-    call_method(robot, 12000, "set_grasped_object", {"object": slidable})
-    context_slide = {
-        "skill": {
-            "objects": {
-                "GoalPose": goal_pose,
-                "Slidable": slidable,
-                "Surface": surface
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 0, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "f_slide": 10
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    shovable = "skill_test_shove_shovable"
-    approach = "skill_test_shove_approach"
-    location = "skill_test_shove_location"
-    context_shove = {
-        "skill": {
-            "objects": {
-                "Shovable": shovable,
-                "Approach": approach,
-                "Location": location,
-            },
-            "time_max": 10,
-            "p0": {
-                "K_x": [1000, 1000, 1000, 100, 100, 100],
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-            },
-            "p1": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1000, 1000, 1000, 100, 100, 100]
-            }
-        },
-        "control": {
-            "control_mode": 0
-        }
-    }
-    t = Task(robot)
-    t.add_skill("slide", "TaxSlide", context_slide)
-    t.add_skill("shove", "TaxShove", context_shove)
-    t.start(queue=True)
-    result = t.wait()
-    print(result)
