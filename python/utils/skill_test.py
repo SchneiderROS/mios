@@ -700,3 +700,35 @@ def test_draw(robot="collective-panda-008.local"):
     t.add_skill("draw", "Draw", draw_context)
     t.start()
     result = t.wait()
+
+
+def test_crank(robot="collective-panda-008.local"):
+    call_method(robot, 12000, "set_grasped_object", {"object": "test_crank_crank"})
+    crank_context = {
+        "skill": {
+            "objects": {
+                "Crank": "test_crank_crank",
+                "Center": "test_crank_center"
+            },
+            "crank_speed": [0.01, 0.5],
+            "crank_acc": [0.5, 1],
+            "radius": 0.1,
+            "n_turns": 2,
+            "clockwise": False
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [1500, 1500, 1500, 150, 150, 150]
+            },
+            "nullspace_control": {
+                "K_theta": [20, 20, 15, 10, 7, 5, 2],
+                "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+                "active": True
+            }
+        }
+    }
+    t = Task(robot)
+    t.add_skill("crank", "Crank", crank_context)
+    t.start()
+    result = t.wait()

@@ -10,6 +10,7 @@ public:
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
     double radius;
     double n_turns;
+    bool clockwise;
 
     Eigen::Matrix<double,2,1> crank_speed;
     Eigen::Matrix<double,2,1> crank_acc;
@@ -32,6 +33,7 @@ private:
     bool check_local_err_conditions(const Percept &p) override;
 
 private:
+
 
 };
 
