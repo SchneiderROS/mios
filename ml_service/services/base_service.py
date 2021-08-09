@@ -115,7 +115,7 @@ class BaseService(metaclass=ABCMeta):
                     self.knowledge = self.knowledge_manager.get_similar_knowledge(
                         self.problem_definition.get_task_identifier(), knowledge_source["scope"])
                 elif knowledge_type == "predicted":
-                    self.knowledge = self.knowledge_manager.get_predicted_knowledge(self.problem_definition.task_type,
+                    self.knowledge = self.knowledge_manager.get_predicted_knowledge(self.problem_definition.skill_class,
                                                                                     self.knowledge_source["scope"],
                                                                                     self.problem_definition.identity)
                     print("#########################################")
@@ -132,7 +132,7 @@ class BaseService(metaclass=ABCMeta):
                             self.knowledge = kb.get_similar_knowledge(self.problem_definition.get_task_identifier(),
                                                                       knowledge_source["scope"])
                         elif knowledge_type == "predicted":
-                            self.knowledge = kb.get_predicted_knowledge(self.problem_definition.task_type,
+                            self.knowledge = kb.get_predicted_knowledge(self.problem_definition.skill_class,
                                                                         self.knowledge_source["scope"],
                                                                         self.problem_definition.identity)
                         else:
@@ -205,7 +205,7 @@ class BaseService(metaclass=ABCMeta):
                     except socket.timeout:
                         logger.error("base_service: global Database is not reachable!")
 
-        self.DBclient.update("ml_results", self.problem_definition.task_type, {"_id": self.database_results_id},
+        self.DBclient.update("ml_results", self.problem_definition.skill_class, {"_id": self.database_results_id},
                              ml_data[0])
         return result
 

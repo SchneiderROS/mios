@@ -1,7 +1,7 @@
 from utils.experiment_wizard import *
 from services.svm import SVMConfiguration
 from services.cmaes import CMAESConfiguration
-from utils.udp_client import call_method
+from utils.ws_client import call_method
 from utils.database import delete_local_results
 from utils.database import delete_local_knowledge
 from utils.database import backup_results
@@ -101,7 +101,7 @@ def benchmark_collective(agents: list, unique_tag: str, n_iter: int = 1):
 
 
 def experiment_single(agent: str,  unique_tag: str, n_iter: int = 1):
-    call_method(agent, 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method(agent, 12000, "set_grasped_object", {"object": "generic_insertable"})
     pd = insertion("generic_insertable", "generic_container", "generic_container_approach")
     delete_local_results([agent], "ml_results", pd.skill_class, ["collective_experiment_single", unique_tag])
     tags = ["collective_experiment_single", "task_" + str(task_map[agent]), unique_tag]
@@ -117,7 +117,7 @@ def experiment_single(agent: str,  unique_tag: str, n_iter: int = 1):
 def experiment_collective(agents: list, unique_tag: str, n_iter: int = 1):
 
     for a in agents:
-        call_method(a, 12002, "set_grasped_object", {"object": "generic_insertable"})
+        call_method(a, 12000, "set_grasped_object", {"object": "generic_insertable"})
 
     service_config = SVMConfiguration()
     service_config.exploration_mode = True
@@ -429,7 +429,7 @@ def command_collective(cmd: str, external_network: bool = True):
         agent = a
         if external_network is True:
             agent = a + ".local"
-        threads.append(Thread(target=call_method, args=(agent, 12002, cmd,)))
+        threads.append(Thread(target=call_method, args=(agent, 12000, cmd,)))
         threads[-1].start()
 
     for t in threads:
@@ -437,11 +437,11 @@ def command_collective(cmd: str, external_network: bool = True):
 
 
 def teach_generic_insertable(agent: str):
-    call_method(agent, 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method(agent, 12000, "set_grasped_object", {"object": "generic_insertable"})
     input("Press Enter to teach the approach pose.")
-    call_method(agent, 12002, "teach_object", {"object": "generic_approach"})
+    call_method(agent, 12000, "teach_object", {"object": "generic_approach"})
     input("Press Enter to teach the container pose.")
-    call_method(agent, 12002, "teach_object", {"object": "generic_container"})
+    call_method(agent, 12000, "teach_object", {"object": "generic_container"})
 
 
 def benchmark_single_batchwise(agent: str,  unique_tag: str, n_tasks: int, n_iter: int = 1):
@@ -501,7 +501,7 @@ def experiment_single_batchwise_similar(agent: str,  unique_tag: str, n_tasks: i
     delete_local_results([database], "collective_data", "insertion", ["collective_experiment_single_batchwise_similar"])
     delete_local_knowledge([agent], "local_knowledge", "insertion", ["experiment_batchwise_similar"])
 
-    call_method(agent, 12002, "set_grasped_object", {"object": "generic_insertable"})
+    call_method(agent, 12000, "set_grasped_object", {"object": "generic_insertable"})
 
     task_set = []
 

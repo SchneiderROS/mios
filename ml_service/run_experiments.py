@@ -14,7 +14,7 @@ from definitions.templates import place
 from definitions.templates import grab
 from services.cmaes import CMAESConfiguration
 from services.svm import SVMConfiguration
-from utils.udp_client import call_method
+from utils.ws_client import call_method
 from utils.database import delete_local_results
 from utils.database import delete_local_knowledge
 from utils.database import backup_results
