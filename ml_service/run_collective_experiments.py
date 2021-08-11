@@ -103,13 +103,13 @@ def benchmark_collective(agents: list, unique_tag: str, n_iter: int = 1):
 def experiment_single(agent: str,  unique_tag: str, n_iter: int = 1):
     call_method(agent, 12000, "set_grasped_object", {"object": "generic_insertable"})
     pd = insertion("generic_insertable", "generic_container", "generic_container_approach")
-    delete_local_results([agent], "ml_results", pd.skill_class, ["collective_experiment_single", unique_tag])
+    # delete_local_results([agent], "ml_results", pd.skill_class, ["collective_experiment_single", unique_tag])
     tags = ["collective_experiment_single", "task_" + str(task_map[agent]), unique_tag]
     service_config = SVMConfiguration()
     service_config.exploration_mode = True
     service_config.batch_width = base_batch_size_experiment
     service_config.n_trials = n_trials_experiment
-    start_experiment(agent, [agent], pd, service_config, n_iter, tags=tags, keep_record=False)
+    start_experiment(agent, [agent], pd, service_config, n_iter, tags=tags, keep_record=True)
 
     backup_results(agent, database, pd.skill_class, ["collective_experiment_single", unique_tag], "collective_data")
 
