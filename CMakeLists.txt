@@ -95,8 +95,8 @@ target_compile_options(${PROJECT_NAME}_project_warnings
     -Wnull-dereference
     -Wdouble-promotion
     -Wformat=2
-    -Wreturn-type
-    -Wuninitialized
+    -Werror=return-type
+    -Werror=uninitialized
     )
 
 if(ONLY_COVERAGE OR ENABLE_COVERAGE)
