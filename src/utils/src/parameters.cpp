@@ -826,6 +826,10 @@ bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
     if(p.find("objects")!=p.end()){
         read_skill_objects(p["objects"]);
     }
+    if(p.find("objects_modifier")!=p.end()){
+        std::cout<<p["objects_modifier"]<<std::endl;
+        read_skill_objects_modifier(p["objects_modifier"]);
+    }
     std::string level_pre;
     if(!msrm_utils::read_json_param(p,"condition_level_pre",level_pre)){
         spdlog::error("Could not read condition_level_pre.");
@@ -901,6 +905,13 @@ void SkillParameters::read_skill_objects(const nlohmann::json &p){
     }
 }
 
+void SkillParameters::read_skill_objects_modifier(const nlohmann::json &p){
+    for(const auto& o : p.items()){
+        spdlog::debug("SkillParameters:read_skill_objects_modifier: o.key: " + o.key() + ", o.value: "+o.value().dump());
+        objects_modifier.insert(std::make_pair(o.key(),o.value()));
+    }
+}
+
 nlohmann::json SkillParameters::get_default_values(){
     nlohmann::json default_values;
     default_values["time_max"]=0;;
@@ -912,10 +923,11 @@ nlohmann::json SkillParameters::get_default_values(){
     default_values["data_length"]=0;
     default_values["log_name"]="";
     default_values["objects"]={};
-    default_values["condition_level_pre"]="Specification";
-    default_values["condition_level_success"]="Specification";
-    default_values["condition_level_error"]="Specification";
-    default_values["condition_level_exit"]="Specification";
+    default_values["objects_modifier"]={};
+    default_values["condition_level_pre"]="Model";
+    default_values["condition_level_success"]="Model";
+    default_values["condition_level_error"]="Model";
+    default_values["condition_level_exit"]="Model";
     return default_values;
 }
 
@@ -928,6 +940,7 @@ nlohmann::json SkillParameters::to_json() const{
     json_object["data_length"]=data_length;
     json_object["log_name"]=log_name;
     json_object["objects"]={};
+    json_object["objects_modifier"]={};
 
     json_object["ROI_x"]=msrm_utils::from_eigen<double,6,1>(ROI_x);
     json_object["ROI_phi"]=msrm_utils::from_eigen<double,6,1>(ROI_phi);

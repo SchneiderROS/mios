@@ -124,6 +124,7 @@ public:
      */
 
     bool ground_objects();
+    bool modify_objects();
 
     /**
      * Returns a const reference to the indicated skill object.
@@ -278,7 +279,7 @@ private:
     std::unordered_map<std::string,std::shared_ptr<ManipulationPrimitive> > m_mp_graph;
     std::string m_init_mp;
 
-    std::unordered_map<std::string,Object*> m_grounded_objects;
+    std::unordered_map<std::string,Object> m_grounded_objects;
     const std::set<ControlMode> m_control_modes;
     std::chrono::high_resolution_clock::time_point m_time_start;
 
