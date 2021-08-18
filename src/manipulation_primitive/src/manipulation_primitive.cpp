@@ -85,6 +85,14 @@ bool ManipulationPrimitive::compose_command(){
     std::set<CommandPattern> actuator_command_pattern;
     for(auto& s : m_strategies){
         std::set<CommandPattern> strategy_command_pattern = s.second.strategy->get_command_pattern();
+        if(strategy_command_pattern.size()==0){
+            spdlog::error("No command patterns for strategy " + s.first + " are available.");
+            return false;
+        }
+        if(strategy_command_pattern.find(CommandPatternIdle)!=strategy_command_pattern.end()){
+            actuator_command_pattern.insert(CommandPatternIdle);
+            continue;
+        }
         if(strategy_command_pattern.find(CommandPatternCartesianPose)!=strategy_command_pattern.end()){
             if(!TF_T_EE_d_set){
                 m_cmd.TF_T_EE_d=s.second.cmd.TF_T_EE_d;
