@@ -5,8 +5,8 @@
 cmake_minimum_required(VERSION 3.16...3.20)
 
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 18)
-set(PROJECT_VERSION_PATCH 4)
+set(PROJECT_VERSION_MINOR 20)
+set(PROJECT_VERSION_PATCH 3)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 configure_file (
@@ -95,8 +95,8 @@ target_compile_options(${PROJECT_NAME}_project_warnings
     -Wnull-dereference
     -Wdouble-promotion
     -Wformat=2
-    -Wreturn-type
-    -Wuninitialized
+    -Werror=return-type
+    -Werror=uninitialized
     )
 
 if(ONLY_COVERAGE OR ENABLE_COVERAGE)
