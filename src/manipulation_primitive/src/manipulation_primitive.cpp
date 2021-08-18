@@ -88,6 +88,10 @@ bool ManipulationPrimitive::compose_command(){
             spdlog::error("No command patterns for strategy " + s.first + " are available.");
             return false;
         }
+        if(strategy_command_pattern.find(CommandPatternIdle)!=strategy_command_pattern.end()){
+            actuator_command_pattern.insert(CommandPatternIdle);
+            continue;
+        }
         if(strategy_command_pattern.find(CommandPatternCartesianPose)!=strategy_command_pattern.end()){
             if(!TF_T_EE_d_set){
                 m_cmd.TF_T_EE_d=s.second.cmd.TF_T_EE_d;
