@@ -531,3 +531,88 @@ class ShoveTest(BaseTest):
         teach_object(self.robot, args["Approach"])
         input("Press enter to teach the direction.")
         teach_object(self.robot, args["Direction"])
+
+
+class TurnTest(BaseTest):
+    def __init__(self, robot: str, record_performance: bool = True):
+        super().__init__(robot, "turn")
+        f = open(self.path_to_default_context + "turn.json")
+        default_context = json.load(f)
+        reset_default_contexts = dict()
+        f = open(self.path_to_default_context + "turn.json")
+        reset_default_contexts["turn_back"] = json.load(f)
+        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+    def run(self, args: dict, result_uuid: str = None, result_trial: int = None):
+        context = self.default_context
+        if result_uuid is not None and result_trial is not None:
+            context = download_result(self.robot, "ml_results", self.skill_class, result_uuid, result_trial)
+        context["skill"]["objects"] = {
+            "Turnable": args["Turnable"],
+            "GoalOrientation": args["GoalOrientation"]
+        }
+
+        t = Task(self.robot)
+        t.add_skill(self.skill_class, "TaxTurn", context)
+        t.start()
+        result = t.wait()
+
+        if self.record_performance is True:
+            upload_result(self.db_host, self.skill_class, args["Turnable"], result)
+
+    def reset(self, args: dict):
+        t = Task(self.robot)
+        context = self.reset_default_contexts["turn_back"]
+        context["skill"]["objects"]["GoalOrientation"] = args["GoalOrientation"]
+        t.add_skill("turn_back", "TaxTurn", context)
+        t.start()
+        t.wait()
+
+    def teach(self, args: dict):
+        input("Press enter to teach the turnable.")
+        teach_object(self.robot, args["Turnable"])
+        input("Press enter to teach the goal orientation.")
+        teach_object(self.robot, args["GoalOrientation"])
+
+
+class IndentationTest(BaseTest):
+    def __init__(self, robot: str, record_performance: bool = True):
+        super().__init__(robot, "indentation")
+        f = open(self.path_to_default_context + "indentation.json")
+        default_context = json.load(f)
+        reset_default_contexts = dict()
+        f = open(self.path_to_default_context + "move_joint.json")
+        reset_default_contexts["move"] = json.load(f)
+        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+    def run(self, args: dict, result_uuid: str = None, result_trial: int = None):
+        context = self.default_context
+        if result_uuid is not None and result_trial is not None:
+            context = download_result(self.robot, "ml_results", self.skill_class, result_uuid, result_trial)
+        context["skill"]["objects"] = {
+            "Surface": args["Surface"],
+            "Approach": args["Approach"]
+        }
+
+        t = Task(self.robot)
+        t.add_skill(self.skill_class, "TaxIndentation", context)
+        t.start()
+        result = t.wait()
+
+        if self.record_performance is True:
+            upload_result(self.db_host, self.skill_class, args["Surface"], result)
+
+    def reset(self, args: dict):
+        t = Task(self.robot)
+        context = self.reset_default_contexts["move"]
+        context["skill"]["objects"]["goal_pose"] = args["goal_pose"]
+        t.add_skill("move", "MoveToPoseJoint", context)
+        t.start()
+        t.wait()
+
+    def teach(self, args: dict):
+        input("Press enter to teach the Surface.")
+        teach_object(self.robot, args["Surface"])
+        input("Press enter to teach the approach pose.")
+        teach_object(self.robot, args["Approach"])
+

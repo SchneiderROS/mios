@@ -63,7 +63,7 @@ class BaseTest(ABC):
             print(context["skills"][skill]["skill"]["objects_modifier"])
 
     @abc.abstractmethod
-    def run(self, args: dict, result_uuid: str = None, result_trial: int = None):
+    def run(self, args: dict, cost_function: str, result_uuid: str = None, result_trial: int = None):
         raise NotImplementedError
 
     @abc.abstractmethod
