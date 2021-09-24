@@ -2,13 +2,20 @@ from skill_tests import *
 from test_base import start_experiment
 
 
+def insertion_test_cylinder_20():
+    t = InsertionTest("collective-panda-007")
+    start_experiment(t,
+                     {"Insertable": "cylinder_20", "Container": "cylinder_20_hole", "Approach": "cylinder_20_approach"},
+                     {"Extractable": "cylinder_20", "Container": "cylinder_20_hole",
+                      "ExtractTo": "cylinder_20_approach", "GoalPose": "cylinder_20_approach"}, 50, "time")
+
+
 def insertion_test_cylinder_30():
     t = InsertionTest("collective-panda-008")
     start_experiment(t,
                      {"Insertable": "cylinder_30", "Container": "cylinder_30_hole", "Approach": "cylinder_30_approach"},
                      {"Extractable": "cylinder_30", "Container": "cylinder_30_hole",
-                      "ExtractTo": "cylinder_30_approach", "GoalPose": "cylinder_30_approach"}, 10,
-                     "114a59f4-1327-4e4d-98da-2bcc214ff926", 75)
+                      "ExtractTo": "cylinder_30_approach", "GoalPose": "cylinder_30_approach"}, 50, "time")
 
 
 def insertion_test_cylinder_50():
@@ -20,12 +27,28 @@ def insertion_test_cylinder_50():
                      "0f3ed537-2a69-401c-8476-06b0c3993b0a", 89)
 
 
+def insertion_test_abus_e30():
+    t = InsertionTest("collective-panda-002")
+    start_experiment(t,
+                     {"Insertable": "key_abus_e30", "Container": "lock_abus_e30", "Approach": "lock_abus_e30_approach"},
+                     {"Extractable": "key_abus_e30", "Container": "lock_abus_e30",
+                      "ExtractTo": "lock_abus_e30_approach", "GoalPose": "lock_abus_e30_approach"}, 50, "time")
+
+
+def extraction_test_cylinder_20():
+    t = ExtractionTest("collective-panda-007")
+    start_experiment(t, {"Extractable": "cylinder_20", "Container": "cylinder_20_hole",
+                         "ExtractTo": "cylinder_20_approach"},
+                     {"Insertable": "cylinder_20", "Container": "cylinder_20_hole", "Approach": "cylinder_20_approach",
+                      "GoalPose": "cylinder_20_approach"}, 50, "time")
+
+
 def extraction_test_cylinder_30():
     t = ExtractionTest("collective-panda-008")
     start_experiment(t, {"Extractable": "cylinder_30", "Container": "cylinder_30_hole",
                          "ExtractTo": "cylinder_30_approach"},
                      {"Insertable": "cylinder_30", "Container": "cylinder_30_hole", "Approach": "cylinder_30_approach",
-                      "GoalPose": "cylinder_30_approach"}, 10)
+                      "GoalPose": "cylinder_30_approach"}, 50, "time")
 
 
 def extraction_test_cylinder_50():
@@ -34,6 +57,14 @@ def extraction_test_cylinder_50():
                          "ExtractTo": "cylinder_50_approach"},
                      {"Insertable": "cylinder_50", "Container": "cylinder_50_hole", "Approach": "cylinder_50_approach",
                       "GoalPose": "cylinder_50_approach"}, 10)
+
+
+def extraction_test_key_abus_e30():
+    t = ExtractionTest("collective-panda-002")
+    start_experiment(t, {"Extractable": "key_abus_e30", "Container": "lock_abus_e30",
+                         "ExtractTo": "lock_abus_e30_approach"},
+                     {"Insertable": "key_abus_e30", "Container": "lock_abus_e30", "Approach": "lock_abus_e30_approach",
+                      "GoalPose": "lock_abus_e30_approach"}, 50, "time")
 
 
 def push_test_scale():

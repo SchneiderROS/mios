@@ -33,7 +33,7 @@ class InsertionTest(BaseTest):
 
         self.initialize(default_context, reset_default_contexts, object_modifier, record_performance)
 
-    def run(self, args: dict, result_uuid: str = None, result_trial: int = None):
+    def run(self, args: dict, cost_function: str, result_uuid: str = None, result_trial: int = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Insertable"]})
         context = self.default_context
         if result_uuid is not None and result_trial is not None:
@@ -46,11 +46,12 @@ class InsertionTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxInsertion", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 
         if self.record_performance is True:
-            upload_result(self.db_host, self.skill_class, args["Insertable"], result)
+            upload_result(self.db_host, self.skill_class, args["Insertable"], cost_function, result)
 
     def reset(self, args: dict):
         # call_method(self.robot, 12000, "set_grasped_object", {"object": args["Extractable"]})
@@ -84,12 +85,12 @@ class ExtractionTest(BaseTest):
         default_context = json.load(f)
         reset_default_contexts = dict()
         f = open(self.path_to_default_context + "insertion.json")
-        reset_default_contexts["extraction"] = json.load(f)
+        reset_default_contexts["insertion"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move_joint"] = json.load(f)
         self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
 
-    def run(self, args: dict, result_uuid: str = None, result_trial: int = None):
+    def run(self, args: dict, cost_function: str, result_uuid: str = None, result_trial: int = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Extractable"]})
         context = self.default_context
         if result_uuid is not None and result_trial is not None:
@@ -106,11 +107,12 @@ class ExtractionTest(BaseTest):
         result = t.wait()
 
         if self.record_performance is True:
-            upload_result(self.db_host, self.skill_class, args["Extractable"], result)
+            upload_result(self.db_host, self.skill_class, args["Extractable"], cost_function, result)
 
     def reset(self, args: dict):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Insertable"]})
         t = Task(self.robot)
+        print(self.reset_default_contexts)
         context = self.reset_default_contexts["move_joint"]
         context["skill"]["objects"]["goal_pose"] = args["GoalPose"]
         t.add_skill("move", "MoveToPoseJoint", context)

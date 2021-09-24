@@ -75,8 +75,9 @@ class BaseTest(ABC):
         raise NotImplementedError
 
 
-def start_experiment(skill_test: BaseTest, run_args: dict, reset_args: dict, n_iter: int, result_id: str = None,
-                     result_trial: int = None):
+def start_experiment(skill_test: BaseTest, run_args: dict, reset_args: dict, n_iter: int, cost_function:str,
+                     result_id: str = None, result_trial: int = None):
     for i in range(n_iter):
-        skill_test.run(run_args, result_id, result_trial)
+        print("Running iteration " + str(i))
+        skill_test.run(run_args, cost_function, result_id, result_trial)
         skill_test.reset(reset_args)

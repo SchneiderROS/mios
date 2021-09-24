@@ -21,6 +21,14 @@ class Task:
         self.skill_names = []
         self.skill_types = []
         self.skill_context = dict()
+        self.context = {
+            "parameters": {
+                "skill_names": [],
+                "skill_types": [],
+                "as_queue": False
+            },
+            "skills": self.skill_context
+        }
 
         self.robot = robot
         self.task_uuid = "INVALID"
@@ -31,16 +39,14 @@ class Task:
         self.skill_types.append(skill_class)
         self.skill_context[name] = context
 
+        self.context["parameters"]["skill_names"] = self.skill_names
+        self.context["parameters"]["skill_types"] = self.skill_types
+        self.context["skills"] = self.skill_context
+
     def start(self, queue: bool = False):
         self.t_0 = time.time()
-        response = start_task(self.robot, "GenericTask", parameters={
-            "parameters": {
-                "skill_names": self.skill_names,
-                "skill_types": self.skill_types,
-                "as_queue": queue
-            },
-            "skills": self.skill_context
-        })
+        self.context["parameters"]["as_queue"] = queue
+        response = start_task(self.robot, "GenericTask", parameters=self.context)
         self.task_uuid = response["result"]["task_uuid"]
 
     def wait(self):
@@ -58,36 +64,31 @@ def teach_object(robot: str, obj: str):
     call_method(robot, 12000, "teach_object", {"object": obj})
 
 
-def upload_result(host: str, skill: str, tag: str, result: dict):
+def upload_result(host: str, skill_class: str, skill_instance: str, cost_function: str, result: dict):
     db_result = {
-        "cost": {
-            "time": result["result"]["task_result"]["skill_results"][skill]["cost"]["time"],
-            "contact_forces": result["result"]["task_result"]["skill_results"][skill]["cost"]["contact_forces"],
-            "distance": result["result"]["task_result"]["skill_results"][skill]["cost"]["distance"],
-            "effort_avg": result["result"]["task_result"]["skill_results"][skill]["cost"]["effort_avg"],
-            "effort_total": result["result"]["task_result"]["skill_results"][skill]["cost"]["effort_total"],
-            "custom": result["result"]["task_result"]["skill_results"][skill]["cost"]["custom"]
-        },
+        "cost": result["result"]["task_result"]["skill_results"][skill_class]["cost"][cost_function],
         "success": result["result"]["task_result"]["success"]
     }
 
     client = MongoClient('mongodb://' + host + ':27017')
     performance_data = client.taxonomy.performance
-    skill_performance = performance_data.find_one({'name': skill})
+    skill_performance = performance_data.find_one({'name': skill_class})
     found = False
     if skill_performance is None:
         skill_performance = dict()
         skill_performance["results"] = dict()
-        skill_performance["name"] = skill
+        skill_performance["name"] = skill_class
     else:
         found = True
 
-    if tag not in skill_performance["results"]:
-        skill_performance["results"][tag] = []
-    skill_performance["results"][tag].append(db_result)
+    if skill_instance not in skill_performance["results"]:
+        skill_performance["results"][skill_instance] = dict()
+    if cost_function not in skill_performance["results"][skill_instance]:
+        skill_performance["results"][skill_instance][cost_function] = []
+    skill_performance["results"][skill_instance][cost_function].append(db_result)
 
     if found is True:
-        performance_data.delete_many({'name': skill})
+        performance_data.delete_many({'name': skill_class})
 
     performance_data.insert_one(skill_performance)
 
@@ -238,3 +239,24 @@ def create_result_table(host: str, db: str):
         for si in skills[s].keys():
             row = [s, si, skills[s][si]["robustness"], skills[s][si]["cost"]]
             writer.writerow(row)
+
+
+def read_data(host: str, skill_class: str, skill_instance: str, cost_function: str):
+    client = MongoClient('mongodb://' + host + ':27017')
+    doc = client.taxonomy.performance.find_one({"name": skill_class})
+    results = doc["results"][skill_instance][cost_function]
+    success_rate = 0
+    n_total_results = len(results)
+    n_success_results = 0
+    cost = 0
+    for r in results:
+        if r["success"] is True:
+            success_rate += 1
+            n_success_results += 1
+        cost += r["cost"]
+
+    success_rate /= n_total_results
+    cost /= n_success_results
+
+    print("Success rate: " + str(success_rate) + ", cost: " + str(cost))
+

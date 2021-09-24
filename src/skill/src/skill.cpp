@@ -475,12 +475,23 @@ void Skill::terminate_parallels(){
 }
 
 SkillCost Skill::measure_cost(const Percept &p){
-    m_cost_contact_forces_sum += p.proprioception.K_F_ext_K.norm();
+    SkillCost cost;
+    bool contact_t=false;
+    bool contact_r=false;
+    if(p.proprioception.K_F_ext_K.block<3,1>(0,0).norm()>m_memory->read_parameters()->user.F_ext_contact(0)){
+        m_cost_contact_forces_sum += p.proprioception.K_F_ext_K.block<3,1>(0,0).norm();
+        contact_t=true;
+    }
+    if(p.proprioception.K_F_ext_K.block<3,1>(3,0).norm()>m_memory->read_parameters()->user.F_ext_contact(1)){
+        m_cost_contact_forces_sum += p.proprioception.K_F_ext_K.block<3,1>(3,0).norm();
+        contact_r=true;
+    }
+    if(contact_t || contact_r){
+        cost.contact_forces = m_cost_contact_forces_sum / (std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_memory->get_live_context()->t_skill).count() + 1);
+    }
     m_cost_effort_avg_sum += p.proprioception.tau_j.norm();
 
-    SkillCost cost;
     cost.time = std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_memory->get_live_context()->t_skill).count()/1000.0;
-    cost.contact_forces = m_cost_contact_forces_sum / (std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_memory->get_live_context()->t_skill).count() + 1);
     cost.effort_avg = m_cost_effort_avg_sum / (std::chrono::duration_cast<std::chrono::milliseconds>(p.time-m_memory->get_live_context()->t_skill).count() +1);
     cost.effort_total += p.proprioception.tau_j.norm();
     cost.distance += p.proprioception.dq.norm()*0.001;
