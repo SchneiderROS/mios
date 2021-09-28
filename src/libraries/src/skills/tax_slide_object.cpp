@@ -83,9 +83,16 @@ bool TaxSlideObject::check_local_err_conditions(const Percept &p){
     if(m_memory->get_live_context()->grasped_object->name!=get_object("Slidable")->name){
         return true;
     }
-//    if(p.proprioception.TF_F_ext_K(2)<m_memory->read_parameters()->user.F_ext_contact(0)){
-//        return false;
-//    }
+    if(!m_in_contact && p.proprioception.TF_F_ext_K(2)>m_memory->read_parameters()->user.F_ext_contact(0)){
+        m_in_contact=true;
+    }
+    if(!m_in_contact && p.proprioception.TF_F_ext_K(2)<m_memory->read_parameters()->user.F_ext_contact(0)){
+        return false;
+    }
+    if(m_in_contact && p.proprioception.TF_F_ext_K(2)<m_memory->read_parameters()->user.F_ext_contact(0)){
+        std::cout<<p.proprioception.TF_F_ext_K(2)<<std::endl;
+        return true;
+    }
     return false;
 }
 

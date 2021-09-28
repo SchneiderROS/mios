@@ -67,28 +67,35 @@ def extraction_test_key_abus_e30():
                       "GoalPose": "lock_abus_e30_approach"}, 50, "time")
 
 
-def push_test_scale():
-    t = PushTest("collective-panda-008")
+def push_surface_test_scale():
+    t = PushSurfaceTest("collective-panda-008")
     start_experiment(t, {"Surface": "push_scale", "Approach": "push_scale_approach"},
-                     {"GoalPose": "push_scale_approach"}, 10)
+                     {"GoalPose": "push_scale_approach"}, 50, "desired_force")
 
 
 def press_button_test_userstop():
     t = PressButtonTest("collective-panda-008")
     start_experiment(t, {"Button": "press_userstop_button", "Approach": "press_userstop_approach"},
-                     {"GoalPose": "press_userstop_approach"}, 1)
+                     {"GoalPose": "press_userstop_approach"}, 50, "time")
+
+
+def press_button_test_enter():
+    t = PressButtonTest("collective-panda-008")
+    start_experiment(t, {"Button": "tip_enter", "Approach": "tip_enter_approach"},
+                     {"GoalPose": "tip_enter_approach"}, 50, "time")
 
 
 def slide_object_test_mouse():
     t = SlideObjectTest("collective-panda-008")
-    start_experiment(t, {"Slidable": "slide_mouse", "Surface": "slide_mouse_surface", "GoalPose": "slide_mouse_goal"},
-                     {"Slidable": "slide_mouse", "GoalPose": "slide_mouse_above", "Surface": "slide_mouse_surface"}, 1)
+    start_experiment(t, {"Slidable": "mouse", "Surface": "paper", "GoalPose": "slide_goal"},
+                     {"Slidable": "mouse", "GoalPose": "paper", "Surface": "paper"},
+                     50, "time")
 
 
 def tip_test_enter():
     t = TipTest("collective-panda-008")
-    start_experiment(t, {"Tippable": "tip_enter_key", "Approach": "tip_enter_approach"},
-                     {"GoalPose": "tip_enter_approach"}, 1)
+    start_experiment(t, {"Tippable": "tip_enter", "Approach": "tip_enter_approach"},
+                     {"GoalPose": "tip_enter_approach"}, 50, "time")
 
 
 def grab_test_item():
@@ -108,9 +115,14 @@ def move_test():
     start_experiment(t, {"GoalPose": "move_goal"}, {"GoalPose": "move_start"}, 1)
 
 
+def turn_key_test():
+    t = TurnTest("collective-panda-008")
+    start_experiment(t, {"Turnable": "task_board_key", "GoalOrientation": "turn_key_goal"},
+                     {"Turnable": "task_board_key", "GoalOrientation": "turn_key_start"}, 50, "time")
+
 def drag_box_test():
     t = DragTest("collective-panda-008")
-    start_experiment(t, {"Draggable": "drag_box", "GoalPose": "drag_box_goal"}, {}, 1)
+    start_experiment(t, {"Draggable": "blue_box", "GoalPose": "slide_goal"}, {"GoalPose": "drag_start"}, 50, "time")
 
 
 def shove_lid_test():

@@ -29,5 +29,7 @@ private:
 
 private:
 
+    bool m_in_contact;
+
 };
 }

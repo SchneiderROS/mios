@@ -73,7 +73,7 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxTip::get_paramet
 }
 
 TaxTip::TaxTip(const std::string& name, Memory* memory, Portal* portal):Skill("TaxTip",{"Tippable", "Approach"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
-
+    m_memory->remove_event("tippable_pressed");
 }
 
 Eigen::Matrix<double,3,3> TaxTip::get_O_R_T_0(const Percept &p) const{
@@ -157,8 +157,24 @@ bool TaxTip::check_local_pre_conditions(const Percept &p){
 
 bool TaxTip::check_local_suc_conditions(const Percept &p){
     std::shared_ptr<SkillParametersTaxTip> skill_params = get_parameters<SkillParametersTaxTip>();
-    if(p.proprioception.TF_F_ext_K(2)>skill_params->p1.f_tip){
-        return true;
+//    if(p.proprioception.TF_F_ext_K(2)>skill_params->p1.f_tip){
+//        return true;
+//    }
+    const Event* e = m_memory->get_event("tippable_pressed");
+    if(!get_result().success){
+        if(e!=nullptr){
+            bool button_state;
+            nlohmann::json content=e->get_content();
+            if(content.find("tippable_state")==content.end()){
+                spdlog::error("TaxTip: The event tippable_pressed has invalid content. Must be of the form {\"tippable_state\": <bool>}");
+                return false;
+            }
+            content["tippable_state"].get_to(button_state);
+            if(!button_state){
+                return true;
+            }
+
+        }
     }
     return false;
 }
@@ -178,6 +194,9 @@ bool TaxTip::check_local_err_conditions(const Percept &p){
     Eigen::Matrix<double,3,1> dist = p.proprioception.T_T_EE.block<3,1>(0,3)-get_object_pose_T("Tippable").block<3,1>(0,3);
     if(dist(0) < ROI_x(0) || dist(0) > ROI_x(1) || dist(1) < ROI_x(2) || dist(1) > ROI_x(3) || dist(2) < ROI_x(4) || dist(2) > ROI_x(5)){
         return true;
+    }
+    if(get_active_mp()->get_name()=="retract"){
+        return !get_result().success && get_active_mp()->get_strategy_interface("move")->finished();
     }
     return false;
 }

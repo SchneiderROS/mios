@@ -72,8 +72,6 @@ franka::Finishable *CartTorqueControllerPipeline::step(const Percept &p, const A
     m_cntr_mux.step();
     m_panda_cmd.tau_J={m_cntr_mux.y.tau_J_d_checked(0),m_cntr_mux.y.tau_J_d_checked(1),m_cntr_mux.y.tau_J_d_checked(2),m_cntr_mux.y.tau_J_d_checked(3),m_cntr_mux.y.tau_J_d_checked(4),m_cntr_mux.y.tau_J_d_checked(5),m_cntr_mux.y.tau_J_d_checked(6)};
 
-
-
     return &m_panda_cmd;
 }
 
@@ -89,6 +87,7 @@ bool CartTorqueControllerPipeline::is_valid_command(const franka::Finishable* co
 void CartTorqueControllerPipeline::update_percept(Percept::Controller &p){
     p.TF_T_EE_d=m_cntr_aic.u.TF_T_EE_d;
     p.TF_F_d=m_cntr_force.u.TF_F_d_K;
+    p.TF_F_active=m_cntr_force.p.active.cast<bool>();
     p.K_x=m_cntr_aic.l.K_x;
     p.K_theta=m_cntr_nullsp_q.l.K_theta;
 }

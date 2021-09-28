@@ -100,7 +100,7 @@ bool SkillParametersTaxPressButton::from_json(const nlohmann::json& parameters){
 }
 
 std::map<std::string, std::set<std::string> > SkillParametersTaxPressButton::get_parameter_list(){
-    return {{"p0",{"K_x","dX_d","ddX_d"}},{"p1",{"K_x","dX_d","ddX_d"}},{"p2",{"K_x","f_push","duration"}},{"p3",{"K_x","dX_d","ddX_d"}}};
+    return {{"p0",{"K_x","dX_d","ddX_d"}},{"p1",{"K_x","dX_d","ddX_d"}},{"p2",{"K_x","f_push"}},{"p3",{"K_x","f_push","duration"}},{"p4",{"K_x","dX_d","ddX_d"}}};
 }
 
 TaxPressButton::TaxPressButton(const std::string& name, Memory* memory, Portal *portal):Skill("TaxPressButton",{"Button","Approach"},name,memory,portal,{ControlMode::mCartTorque}),
@@ -230,7 +230,6 @@ bool TaxPressButton::check_local_pre_conditions(const Percept &p){
 
 bool TaxPressButton::check_local_suc_conditions(const Percept &p){
     if(get_parameters<SkillParametersTaxPressButton>()->condition_level_success==SkillConditionLevel::sclModel){
-        std::cout<<"TEST"<<std::endl;
         if(fabs(p.proprioception.TF_dX_EE(2))<0.1 && p.proprioception.TF_F_ext_K(2)>m_memory->read_parameters()->user.F_ext_contact(0)){
             if(!m_press_started  && !get_result().success){
                 m_press_t_0=std::chrono::high_resolution_clock::now();
