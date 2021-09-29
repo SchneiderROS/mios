@@ -101,8 +101,8 @@ def tip_test_enter():
 def grab_test_item():
     t = GrabTest("collective-panda-008")
     start_experiment(t, {"Approach": "grab_item_approach", "Grabbable": "grab_item", "Retract": "grab_item_retract"},
-                     {"Approach": "grab_item_approach", "Placeable": "grab_item", "Retract": "grab_item_retract",
-                      "Surface": "grab_item"}, 1)
+                     {"Approach": "grab_item_retract", "Placeable": "grab_item", "Retract": "grab_item_approach",
+                      "Surface": "grab_item"}, 50, "time")
 
 
 def carry_test_item():
