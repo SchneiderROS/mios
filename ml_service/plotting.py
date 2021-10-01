@@ -40,23 +40,18 @@ def average_experiment(host: str, task_type: str, database: str, tags: list, age
     plt.show()
 
 
-def plot_experiment(host: str, task_type: str, database: str, tags: list):
+def plot_experiment(host: str, skill_class: str, database: str, tags: list, max_cost: int, cost_function: str):
     p = DataProcessor()
-    legend = []
 
-    for i in range(10):
-        try:
-            tags_tmp = tags.copy()
-            tags_tmp.append("n" + str(i+1))
-
-            result = get_experiment_data(host, task_type, results_db=database, filter={"meta.tags": {"$all": tags_tmp}})
-            plt.plot(p.get_monotonically_decreasing_cost(result.get_cost_per_trial()))
-            legend.append("n" + str(i + 1))
-        except DataNotFoundError as e:
-            print("Data not found for tags: " + str(tags_tmp))
-            pass
-
-    plt.legend(legend)
+    results = get_multiple_experiment_data(host, skill_class, results_db=database, filter={"meta.tags": {"$all": tags}})
+    cost, confidence = p.get_average_cost_over_time(results, False, True)
+    plt.fill_between(np.linspace(0, len(cost), len(cost)), cost - confidence, cost + confidence, alpha=0.2)
+    plt.plot(cost, linewidth=2)
+    plt.plot([0, len(cost)], [max_cost, max_cost], color="black", linestyle="dashed")
+    plt.plot(cost)
+    plt.ylim([0, max_cost * 2])
+    plt.ylabel(cost_function)
+    plt.xlabel("Time [s]")
     plt.show()
 
 
