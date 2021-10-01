@@ -38,7 +38,10 @@ class Result:
         time = []
         t_0 = self.trials[0]["t_0"]
         for t in self.trials:
-            success.append(t["q_metric"]["success"])
+            if "q_metric" not in t:
+                success.append(t["success"])
+            else:
+                success.append(t["q_metric"]["success"])
             time.append(t["t_1"] - t_0)
         return success, time
 
@@ -85,7 +88,10 @@ class Result:
                 if agent is not None:
                     if agent == t["agent"]:
                         if cost_type is None:
-                            cost.append(t["q_metric"]["final_cost"])
+                            if "q_metric" not in t:
+                                cost.append(t["cost"])
+                            else:
+                                cost.append(t["q_metric"]["final_cost"])
                         else:
                             cost.append(t["q_metric"]["cost"][cost_type])
                         time.append(t["t_1"] - t_0)
@@ -93,7 +99,10 @@ class Result:
                         continue
                 else:
                     if cost_type is None:
-                        cost.append(t["q_metric"]["final_cost"])
+                        if "q_metric" not in t:
+                            cost.append(t["cost"])
+                        else:
+                            cost.append(t["q_metric"]["final_cost"])
                     else:
                         cost.append(t["q_metric"]["cost"][cost_type])
                     time.append(t["t_1"] - t_0)
