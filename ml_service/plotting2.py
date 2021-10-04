@@ -62,6 +62,33 @@ skills = [
         "cost_thr": 10
     },
     {
+        "skill_class": "insert_object",
+        "task": "key_old",
+        "host": "localhost",
+        "database": "transfer_base_v2",
+        "tags": ["insertion", "key_old"],
+        "max_cost": 20,
+        "cost_thr": 10
+    },
+    {
+        "skill_class": "insert_object",
+        "task": "key_pad",
+        "host": "localhost",
+        "database": "transfer_base_v2",
+        "tags": ["insertion", "key_pad"],
+        "max_cost": 20,
+        "cost_thr": 10
+    },
+    {
+        "skill_class": "insert_object",
+        "task": "key_hatch",
+        "host": "localhost",
+        "database": "transfer_base_v2",
+        "tags": ["insertion", "key_hatch"],
+        "max_cost": 20,
+        "cost_thr": 10
+    },
+    {
         "skill_class": "extraction",
         "task": "key",
         "host": "localhost",
@@ -212,5 +239,65 @@ def plot_experiments(config: list, cost_function: str, n_rows: int, n_cols: int,
     fig_casr.set_size_inches(16, 9)
     fig_cost.savefig("results_cost.png", bbox_inches='tight', dpi=300)
     fig_casr.savefig("results_casr.png", bbox_inches='tight', dpi=300)
+
+    plt.show()
+
+
+def plot_experiment(host: str, skill_class: str, database: str, tags: list, max_cost: int):
+    p = DataProcessor()
+    max_time = 1500
+    fig, axes = plt.subplots(2, 1, sharex=True, sharey=False, gridspec_kw={'hspace': 0, 'wspace': 0})
+
+    axes[0].set_xlim(0, 1500)
+    axes[0].set_xlim(0, 1500)
+    axes[0].set_ylim(0, max_cost)
+    axes[1].set_ylim(0, 1500)
+    axes[0].grid()
+    axes[1].grid()
+    axes[0].tick_params(axis="both", which="both", length=0)
+    axes[1].tick_params(axis="both", which="both", length=0)
+    axes[0].set_title(skill_class, y=1.0, pad=-14)
+    axes[1].set_title(skill_class, y=1.0, pad=-14)
+
+    try:
+        results = get_multiple_experiment_data(host, skill_class, results_db=database,
+                                               filter={"meta.tags": {"$all": tags}})
+    except (DataNotFoundError, DataError):
+        print("Data for skill class " + skill_class + " and tags " + str(tags) + " does not exist on " +
+              host + " in database " + database)
+        return False
+    cost2, _ = p.get_average_cost(results, True)
+    print(cost2)
+    print(np.where(cost2 == 0))
+    cost, confidence_cost = p.get_average_cost_over_time(results, 1500, True)
+    cost = cost[0:1500] * max_cost / 2
+    confidence_cost = confidence_cost[0:1500] * max_cost / 2
+    casr, confidence_casr = p.get_average_success_over_time(results)
+    casr = casr[0:1500]
+    confidence_casr = confidence_casr[0:1500]
+
+    for k in range(1, len(casr)):
+        casr[k] += casr[k - 1]
+
+    axes[0].plot(cost, linestyle="dashed", zorder=2, linewidth=4)
+    axes[0].fill_between(np.linspace(0, len(cost), len(cost)), cost - confidence_cost,
+                                 cost + confidence_cost, alpha=0.2, color="blue")
+    axes[1].plot([0, len(casr)], [0, len(casr)], color="black", linestyle="dashed")
+    axes[1].plot(casr, linestyle="dashed", zorder=2, linewidth=4)
+    axes[1].fill_between(np.linspace(0, len(casr), len(casr)), casr - confidence_casr,
+                                 casr + confidence_casr, alpha=0.2)
+    legend_cost = [skill_class]
+    legend_casr = ["Optimal CASR", skill_class]
+
+    axes[0].legend(legend_cost, fontsize='x-small', loc=1)
+    axes[1].legend(legend_casr, fontsize='x-small', loc='upper left')
+
+    ticks = numpy.linspace(2, max_cost, 5)
+    axes[0].set_yticks(ticks)
+    axes[0].set_yticklabels(list(map(str, ticks)))
+    ticks = numpy.linspace(250, max_time, 6)
+    axes[1].set_xticks(ticks)
+    axes[1].set_xticklabels(list(map(str, ticks)))
+    axes[1].tick_params(axis='both', which='major', labelsize=12)
 
     plt.show()
