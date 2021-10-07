@@ -25,6 +25,14 @@ def learn_insertion(robot: str, approach: str, insertable: str, container: str, 
     learn_task(robot, pd, sc, tags)
 
 
+def learn_extraction(robot: str, extract_to: str, extractable: str, container: str, tags: list):
+    pd = ExtractionFactory(robot, ContactForcesMetric("insertion", {"contact_forces": 60}),
+                          {"Extractable": extractable, "Container": container,
+                           "ExtractTo": extract_to}).get_problem_definition(extractable)
+    sc = SVMLearner().get_configuration()
+    learn_task(robot, pd, sc, tags)
+
+
 def learn_tip(robot: str, approach: str, tippable: str, tags: list):
     pd = TipFactory(robot, ContactForcesMetric("tip", {"contact_forces": 60}),
                           {"Tippable": tippable, "Approach": approach}).get_problem_definition(tippable)

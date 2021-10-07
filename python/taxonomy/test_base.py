@@ -63,7 +63,7 @@ class BaseTest(ABC):
             print(context["skills"][skill]["skill"]["objects_modifier"])
 
     @abc.abstractmethod
-    def run(self, args: dict, cost_function: str, result_uuid: str = None, result_trial: int = None):
+    def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -74,10 +74,14 @@ class BaseTest(ABC):
     def teach(self, args: dict):
         raise NotImplementedError
 
+    def pre_run(self):
+        pass
+
 
 def start_experiment(skill_test: BaseTest, run_args: dict, reset_args: dict, n_iter: int, cost_function:str,
-                     result_id: str = None, result_trial: int = None):
+                     host: str = None, database: str = None, task: str = None):
+    skill_test.pre_run()
     for i in range(n_iter):
         print("Running iteration " + str(i))
-        skill_test.run(run_args, cost_function, result_id, result_trial)
+        skill_test.run(run_args, cost_function, host, database, task)
         skill_test.reset(reset_args)

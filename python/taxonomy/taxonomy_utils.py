@@ -116,6 +116,32 @@ def download_result(host: str, db: str, skill_class: str, uuid: str, trial: int)
     return context
 
 
+def download_result2(host: str, db: str, skill_class: str, task: str, cost_function: str):
+    client = MongoClient('mongodb://' + host + ':27017')
+    result_db = client[db]
+    skill_collection = result_db[skill_class]
+    results = skill_collection.find_one({"task": task, "cost_function": cost_function})
+    return results["config"]
+
+
+def copy_result(host_src: str, db_src: str, skill_class: str, uuid: str, trial: int, host_dst: str, db_dst: str,
+                task: str, cost_function: str):
+    client = MongoClient('mongodb://' + host_src + ':27017')
+    result_db = client[db_src]
+    skill_collection = result_db[skill_class]
+    results = skill_collection.find_one({"meta.uuid": uuid})
+    trial = results["n" + str(trial)]
+    results_dst = {
+        "meta": results["meta"],
+        "trial": trial,
+        "task": task,
+        "cost_function": cost_function
+    }
+
+    client_dst = MongoClient('mongodb://' + host_dst + ':27017')
+    client_dst[db_dst][skill_class].insert_one(results_dst)
+
+
 def download_best_result(host: str, db: str, skill_class: str, skill_instance: str, cost_function: str):
     client = MongoClient('mongodb://' + host + ':27017')
     result_db = client[db]

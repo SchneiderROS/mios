@@ -133,6 +133,93 @@ class InsertionFactory(ProblemDefinitionFactory):
         return True
 
 
+class ExtractionFactory(ProblemDefinitionFactory):
+    def __init__(self, robot: str, cost_function: CostFunctionFactory, objects: dict):
+        super().__init__(robot, "extraction", [("TaxExtraction", "extraction", "extraction")],
+                         [("MoveToPoseJoint", "move", "move_joint"), ("TaxInsertion", "insertion", "insertion")],
+                         [("MoveToPoseJoint", "move", "move_joint"), ("TaxInsertion", "insertion", "insertion")],
+                         [], cost_function, objects)
+
+    def get_limits(self):
+        limits = {
+            "p0_dx_d": (0, 0.3),
+            "p0_dphi_d": (0, 1),
+            "p0_ddx_d": (0, 1),
+            "p0_ddphi_d": (0, 4),
+            "p0_K_x": (0, 2000),
+            "p0_K_y": (0, 2000),
+            "p0_K_z": (0, 2000),
+            "p0_K_phi": (0, 200),
+            "p0_K_chi": (0, 200),
+            "p0_K_psi": (0, 200),
+            "p0_wiggle_a_x": (0, 10),
+            "p0_wiggle_a_y": (0, 10),
+            "p0_wiggle_a_phi": (0, 2),
+            "p0_wiggle_a_chi": (0, 2),
+            "p0_wiggle_f_x": (0, 3),
+            "p0_wiggle_f_y": (0, 3),
+            "p0_wiggle_f_phi": (0, 1),
+            "p0_wiggle_f_chi": (0, 1)
+        }
+        return limits
+
+    def get_mapping(self):
+        context_mapping = {
+            "p0_dx_d": ["skills.extraction.skill.p0.dX_d-1"],
+            "p0_dphi_d": ["skills.extraction.skill.p0.dX_d-2"],
+            "p0_ddx_d": ["skills.extraction.skill.p0.ddX_d-1"],
+            "p0_ddphi_d": ["skills.extraction.skill.p0.ddX_d-2"],
+            "p0_K_x": ["skills.extraction.skill.p0.K_x-1"],
+            "p0_K_y": ["skills.extraction.skill.p0.K_x-2"],
+            "p0_K_z": ["skills.extraction.skill.p0.K_x-3"],
+            "p0_K_phi": ["skills.extraction.skill.p0.K_x-4"],
+            "p0_K_chi": ["skills.extraction.skill.p0.K_x-5"],
+            "p0_K_psi": ["skills.extraction.skill.p0.K_x-6"],
+            "p0_wiggle_a_x": ["skills.extraction.skill.p0.search_a-1"],
+            "p0_wiggle_a_y": ["skills.extraction.skill.p0.search_a-2"],
+            "p0_wiggle_a_phi": ["skills.extraction.skill.p0.search_a-4"],
+            "p0_wiggle_a_chi": ["skills.extraction.skill.p0.search_a-5"],
+            "p0_wiggle_f_x": ["skills.extraction.skill.p0.search_f-1"],
+            "p0_wiggle_f_y": ["skills.extraction.skill.p0.search_f-2"],
+            "p0_wiggle_f_phi": ["skills.extraction.skill.p0.search_f-4"],
+            "p0_wiggle_f_chi": ["skills.extraction.skill.p0.search_f-5"]
+        }
+        return context_mapping
+
+    def get_initial_values(self):
+        x_0 = dict()
+        for p in self.limits:
+            x_0[p] = 0.1
+
+        return x_0
+
+    def ground_skills(self):
+        self.learn_context["skills"]["extraction"]["skill"]["objects"]["ExtractTo"] = self.objects["ExtractTo"]
+        self.learn_context["skills"]["extraction"]["skill"]["objects"]["Container"] = self.objects["Container"]
+        self.learn_context["skills"]["extraction"]["skill"]["objects"]["Extractable"] = self.objects["Extractable"]
+        self.setup_instructions[0]["parameters"]["skills"]["move"]["skill"]["objects"]["goal_pose"] = self.objects[
+            "ExtractTo"]
+        self.setup_instructions[0]["parameters"]["skills"]["insertion"]["skill"]["objects"]["Approach"] = \
+            self.objects["ExtractTo"]
+        self.setup_instructions[0]["parameters"]["skills"]["insertion"]["skill"]["objects"]["Container"] = \
+            self.objects["Container"]
+        self.setup_instructions[0]["parameters"]["skills"]["insertion"]["skill"]["objects"]["Insertable"] = \
+            self.objects["Extractable"]
+        self.reset_instructions[0]["parameters"]["skills"]["insertion"]["skill"]["objects"]["Approach"] = \
+            self.objects["ExtractTo"]
+        self.reset_instructions[0]["parameters"]["skills"]["insertion"]["skill"]["objects"]["Container"] = \
+            self.objects["Container"]
+        self.reset_instructions[0]["parameters"]["skills"]["insertion"]["skill"]["objects"]["Insertable"] = \
+            self.objects["Extractable"]
+        self.reset_instructions[0]["parameters"]["skills"]["move"]["skill"]["objects"]["goal_pose"] = self.objects[
+            "ExtractTo"]
+
+    def run_setup(self) -> bool:
+        result = call_method(self.robot, 12000, "set_grasped_object", {"object": self.objects["Extractable"]})
+        return True
+
+
+
 class TipFactory(ProblemDefinitionFactory):
     def __init__(self, robot: str, cost_function: CostFunctionFactory, objects: dict):
         super().__init__(robot, "tip", [("TaxTip", "tip", "tip")],
