@@ -74,6 +74,29 @@ def agent_learning(tags, hosts = ["collective-panda-002.local"]):
         plot.plot_learning_over_task(agent_times_cum, agent)
 
 
+def ler_explanation2(host: str, db: str, tags: list):
+    skill_class = "insert_object"
+    min_length = 1500
+    p = DataProcessor()
+    # first leaning curve
+    results_a = get_multiple_experiment_data(host, skill_class, results_db=db, filter={"meta.tags": tags})[0]
+    cost, time = results_a.get_cost_per_time()
+    cost = [c * 10 for c in cost]
+
+    plt.plot(time, cost, color="#4264ff", label="Cost function", linewidth=0.85)
+    cost_dec = p.get_monotonically_decreasing_cost(cost)
+    plt.plot(time, cost_dec, color="#052fff", label="Monotonically decreasing cost function")
+
+    plt.xlim(0, 1500)
+    plt.ylim(0, 10)
+    plt.ylabel("Cost")
+    plt.xlabel("Time [s]")
+    plt.legend(loc=1)
+    plt.gcf().set_size_inches(9, 5)
+    plt.savefig("cost_explain.png", bbox_inches='tight', dpi=600)  # , pad_inches = 0
+    plt.show()
+
+
 def ler_explanation(host, tags_a, tags_b):
     task_type = "insert_object"
     database_a = "results_tl_base"
