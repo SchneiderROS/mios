@@ -141,6 +141,7 @@ class DataProcessor:
 
     def get_average_cost_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None) -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs_over_time(results, min_length, decreasing, agent))
+        print(np.std(cost))
         confidence = 0.95
         interval = []
         for i in range(cost.shape[1]):

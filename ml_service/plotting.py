@@ -1185,3 +1185,7 @@ def live_plotting():
     live_plot(robots,tags)
 
 
+def print_std(host: str, task_type: str, database: str, tags: list):
+    p = DataProcessor()
+    results = get_multiple_experiment_data(host, task_type, results_db=database, filter={"meta.tags": {"$all": tags}})
+    cost = p.get_average_cost_over_time(results, 1500, True)

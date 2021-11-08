@@ -275,12 +275,15 @@ def read_data(host: str, skill_class: str, skill_instance: str, cost_function: s
     n_total_results = len(results)
     n_success_results = 0
     cost = 0
+    cost2 = []
     for r in results:
         if r["success"] is True:
             success_rate += 1
             n_success_results += 1
-        cost += r["cost"]
+            cost += r["cost"]
+            cost2.append(r["cost"])
 
+    print(np.std(cost2))
     success_rate /= n_total_results
     cost /= n_success_results
 
