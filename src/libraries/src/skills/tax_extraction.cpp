@@ -132,7 +132,10 @@ std::shared_ptr<ManipulationPrimitive> TaxExtraction::create_wiggle_mp(const Per
 
     mp->create_strategy<TwistStrategy>("pull",1);
     Eigen::Matrix<double,6,1> dX_d;
-    dX_d<<0,0,-skill_params->p0.dX_d(0),0,0,0;
+    Eigen::Matrix<double,3,1> dir=get_object_pose_T("ExtractTo").block<3,1>(0,3)-p.proprioception.T_T_EE.block<3,1>(0,3);
+    dir/=dir.norm();
+    dX_d<<dir*skill_params->p0.dX_d(0),0,0,0;
+//    dX_d<<0,0,-skill_params->p0.dX_d(0),0,0,0;
     mp->get_strategy<TwistStrategy>("pull")->set_TF_dX_d(dX_d,skill_params->p0.ddX_d);
 
 //    mp->create_strategy<FFStrategy>("pull",1);

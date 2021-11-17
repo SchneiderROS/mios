@@ -72,7 +72,7 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxTip::get_paramet
     return {{"p0",{"K_x","dX_d","ddX_d"}},{"p1",{"K_x","dX_d","ddX_d","f_tip"}},{"p2",{"K_x","dX_d","ddX_d"}}};
 }
 
-TaxTip::TaxTip(const std::string& name, Memory* memory, Portal* portal):Skill("TaxTip",{"Tippable", "Approach"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
+TaxTip::TaxTip(const std::string& name, Memory* memory, Portal* portal):Skill("TaxTip",{"Tippable", "Approach","Tipped"},name,memory,portal,{ControlMode::mCartTorque,ControlMode::mCartVelocity}){
     m_memory->remove_event("tippable_pressed");
 }
 
@@ -160,20 +160,32 @@ bool TaxTip::check_local_suc_conditions(const Percept &p){
 //    if(p.proprioception.TF_F_ext_K(2)>skill_params->p1.f_tip){
 //        return true;
 //    }
-    const Event* e = m_memory->get_event("tippable_pressed");
-    if(!get_result().success){
-        if(e!=nullptr){
-            bool button_state;
-            nlohmann::json content=e->get_content();
-            if(content.find("tippable_state")==content.end()){
-                spdlog::error("TaxTip: The event tippable_pressed has invalid content. Must be of the form {\"tippable_state\": <bool>}");
-                return false;
-            }
-            content["tippable_state"].get_to(button_state);
-            if(!button_state){
+    if(get_parameters<SkillParametersTaxTip>()->condition_level_success==SkillConditionLevel::sclModel){
+        if(fabs(p.proprioception.TF_dX_EE(2))<0.1 && p.proprioception.TF_F_ext_K(2)>m_memory->read_parameters()->user.F_ext_contact(0)){
                 return true;
-            }
+        }
+    }
+    if(get_parameters<SkillParametersTaxTip>()->condition_level_success==SkillConditionLevel::sclSpecification){
+        if(fabs((p.proprioception.T_T_EE(2,3)-get_object_pose_T("Tipped")(2,3)))<m_memory->read_parameters()->user.env_X(2)){
+                return true;
+        }
+    }
+    if(get_parameters<SkillParametersTaxTip>()->condition_level_success==SkillConditionLevel::sclExternal){
+        const Event* e = m_memory->get_event("tippable_pressed");
+        if(!get_result().success){
+            if(e!=nullptr){
+                bool button_state;
+                nlohmann::json content=e->get_content();
+                if(content.find("tippable_state")==content.end()){
+                    spdlog::error("TaxTip: The event tippable_pressed has invalid content. Must be of the form {\"tippable_state\": <bool>}");
+                    return false;
+                }
+                content["tippable_state"].get_to(button_state);
+                if(!button_state){
+                    return true;
+                }
 
+            }
         }
     }
     return false;

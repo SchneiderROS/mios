@@ -2,118 +2,111 @@ from skill_tests import *
 from test_base import start_experiment
 
 
-def insertion_test_cylinder_20():
-    t = InsertionTest("collective-panda-007")
+def insertion_test(robot: str, insertable: str, container: str, approach: str, cf: str):
+    t = InsertionTest(robot)
     start_experiment(t,
-                     {"Insertable": "cylinder_20", "Container": "cylinder_20_hole", "Approach": "cylinder_20_approach"},
-                     {"Extractable": "cylinder_20", "Container": "cylinder_20_hole",
-                      "ExtractTo": "cylinder_20_approach", "GoalPose": "cylinder_20_approach"}, 50, "time")
+                     {"Insertable": insertable, "Container": container, "Approach": approach},
+                     {"Extractable": insertable, "Container": container,
+                      "ExtractTo": approach, "GoalPose": approach}, 50, cf,
+                     "collective-control-001", "skill_data", insertable)
 
 
-def insertion_test_cylinder_30():
-    t = InsertionTest("collective-panda-008")
-    start_experiment(t,
-                     {"Insertable": "cylinder_30", "Container": "cylinder_30_hole", "Approach": "cylinder_30_approach"},
-                     {"Extractable": "cylinder_30", "Container": "cylinder_30_hole",
-                      "ExtractTo": "cylinder_30_approach", "GoalPose": "cylinder_30_approach"}, 50, "time",
-                     "collective-control-001", "skill_data", "cylinder_30")
+def extraction_test(robot: str, extractable: str, container: str, extract_to: str, cf: str):
+    t = ExtractionTest(robot)
+    start_experiment(t, {"Extractable": extractable, "Container": container,
+                         "ExtractTo": extract_to},
+                     {"Insertable": extractable, "Container": container,
+                      "Approach": extract_to,
+                      "GoalPose": extract_to}, 50, cf,
+                     "collective-control-001", "skill_data", extractable)
 
 
-def insertion_test_cylinder_30_contact():
-    t = InsertionTest("collective-panda-008")
-    start_experiment(t,
-                     {"Insertable": "cylinder_30", "Container": "cylinder_30_hole", "Approach": "cylinder_30_approach"},
-                     {"Extractable": "cylinder_30", "Container": "cylinder_30_hole",
-                      "ExtractTo": "cylinder_30_approach", "GoalPose": "cylinder_30_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "cylinder_30")
+def press_button_test(robot: str, button: str, pressed: str, approach: str, cf: str):
+    t = PressButtonTest(robot)
+    start_experiment(t, {"Button": button, "Approach": approach, "Pressed": pressed},
+                     {"GoalPose": approach}, 50, cf, "collective-control-001", "skill_data",
+                     button)
 
 
-def insertion_test_cylinder_50():
-    t = InsertionTest("collective-panda-008")
-    start_experiment(t,
-                     {"Insertable": "cylinder_50", "Container": "cylinder_50_hole", "Approach": "cylinder_50_approach"},
-                     {"Extractable": "cylinder_50", "Container": "cylinder_50_hole",
-                      "ExtractTo": "cylinder_50_approach", "GoalPose": "cylinder_50_approach"}, 10,
-                     "0f3ed537-2a69-401c-8476-06b0c3993b0a", 89)
+def tip_test(robot: str, tippable: str, tipped: str, approach: str, cf: str):
+    t = TipTest(robot)
+    start_experiment(t, {"Tippable": tippable, "Approach": approach, "Tipped": tipped},
+                     {"GoalPose": approach}, 50, cf,
+                     "collective-control-001", "skill_data", tippable)
 
 
-def insertion_test_abus_e30():
-    t = InsertionTest("collective-panda-002")
-    start_experiment(t,
-                     {"Insertable": "key_abus_e30", "Container": "lock_abus_e30", "Approach": "lock_abus_e30_approach"},
-                     {"Extractable": "key_abus_e30", "Container": "lock_abus_e30",
-                      "ExtractTo": "lock_abus_e30_approach", "GoalPose": "lock_abus_e30_approach"}, 50, "time",
-                     "collective-control-001", "skill_data", "key_abus_e30")
+def drag_test(robot: str, draggable: str, goal_pose: str, start_pose: str, cf: str):
+    t = DragTest(robot)
+    start_experiment(t, {"Draggable": draggable, "GoalPose": goal_pose}, {"GoalPose": start_pose}, 50, cf,
+                     "collective-control-001", "skill_data", draggable)
 
 
-def insertion_test_abus_e30_contact():
-    t = InsertionTest("collective-panda-002")
-    start_experiment(t,
-                     {"Insertable": "key_abus_e30", "Container": "lock_abus_e30", "Approach": "lock_abus_e30_approach"},
-                     {"Extractable": "key_abus_e30", "Container": "lock_abus_e30",
-                      "ExtractTo": "lock_abus_e30_approach", "GoalPose": "lock_abus_e30_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "key_abus_e30")
+def slide_object_test(robot: str, slidable: str, surface: str, goal_pose: str, start_pose: str, cf: str):
+    t = SlideObjectTest(robot)
+    start_experiment(t, {"Slidable": slidable, "Surface": surface, "GoalPose": goal_pose},
+                     {"Slidable": slidable, "GoalPose": start_pose, "Surface": surface},
+                     50, cf, "collective-control-001", "skill_data", surface)
 
 
-def insertion_test_eth_plug():
-    t = InsertionTest("collective-panda-002")
-    start_experiment(t,
-                     {"Insertable": "eth_plug", "Container": "eth_plug_container", "Approach": "eth_plug_approach"},
-                     {"Extractable": "eth_plug", "Container": "eth_plug_container",
-                      "ExtractTo": "eth_plug_approach", "GoalPose": "eth_plug_approach"}, 50, "time",
-                     "collective-control-001", "skill_data", "key_abus_e30")
+def grab_test(robot: str, grabbable: str, approach: str, retract: str, cf: str):
+    t = GrabTest(robot)
+    start_experiment(t, {"Approach": approach, "Grabbable": grabbable, "Retract": retract},
+                     {"Approach": retract, "Placeable": grabbable, "Retract": approach,
+                      "Surface": grabbable}, 50, cf, "collective-control-001", "skill_data", grabbable)
 
 
-def insertion_test_eth_plug_contact():
-    t = InsertionTest("collective-panda-002")
-    start_experiment(t,
-                     {"Insertable": "eth_plug", "Container": "eth_plug_container", "Approach": "eth_plug_approach"},
-                     {"Extractable": "eth_plug", "Container": "eth_plug_container",
-                      "ExtractTo": "eth_plug_approach", "GoalPose": "eth_plug_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "key_abus_e30")
+def place_test(robot: str, placeable: str, approach: str, retract: str, cf: str):
+    t = PlaceTest(robot)
+    start_experiment(t, {"Approach": approach, "Placeable": placeable, "Retract": retract,
+                         "Surface": placeable},
+                     {"Approach": retract, "Grabbable": placeable, "Retract": approach},
+                     50, cf, "collective-control-001", "skill_data", placeable)
 
 
-def extraction_test_cylinder_20():
-    t = ExtractionTest("collective-panda-007")
-    start_experiment(t, {"Extractable": "cylinder_20", "Container": "cylinder_20_hole",
-                         "ExtractTo": "cylinder_20_approach"},
-                     {"Insertable": "cylinder_20", "Container": "cylinder_20_hole", "Approach": "cylinder_20_approach",
-                      "GoalPose": "cylinder_20_approach"}, 50, "time")
+def shove_test(robot: str, shovable: str, approach: str, direction: str, cf: str, surface: str):
+    t = ShoveTest(robot)
+    start_experiment(t, {"Shovable": shovable, "Approach": approach, "Direction": direction, "Surface": surface},
+                     {"GoalPose": approach}, 50, cf,
+                     "collective-control-001", "skill_data", surface)
 
 
-def extraction_test_cylinder_30():
-    t = ExtractionTest("collective-panda-008")
-    start_experiment(t, {"Extractable": "cylinder_30", "Container": "cylinder_30_hole",
-                         "ExtractTo": "cylinder_30_approach"},
-                     {"Insertable": "cylinder_30", "Container": "cylinder_30_hole", "Approach": "cylinder_30_approach",
-                      "GoalPose": "cylinder_30_approach"}, 50, "time",
-                     "collective-control-001", "skill_data", "cylinder_30")
+def cut_test(robot: str, knife: str, approach: str, start: str, end: str, retract: str, cf: str, surface: str):
+    t = CutTest(robot)
+    start_experiment(t, {"Knife": knife, "Approach": approach, "CutStart": start,
+                         "CutEnd": end, "Retract": retract, "Surface": surface},
+                     {"Approach": approach}, 50, cf,
+                     "collective-control-001", "skill_data", surface)
 
 
-def extraction_test_cylinder_30_contact():
-    t = ExtractionTest("collective-panda-008")
-    start_experiment(t, {"Extractable": "cylinder_30", "Container": "cylinder_30_hole",
-                         "ExtractTo": "cylinder_30_approach"},
-                     {"Insertable": "cylinder_30", "Container": "cylinder_30_hole",
-                      "Approach": "cylinder_30_approach",
-                      "GoalPose": "cylinder_30_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "cylinder_30")
+def turn_lever_test(robot: str, lever: str, start: str, goal: str, cf: str):
+    t = TurnLeverTest(robot)
+    start_experiment(t, {"Lever": lever, "StartPose": start, "GoalPosition": goal},
+                     {"Lever": lever, "StartPose": goal, "GoalPosition": start}, 50,
+                     cf, "collective-control-001", "skill_data", lever)
 
 
-def extraction_test_cylinder_50():
-    t = ExtractionTest("collective-panda-008")
-    start_experiment(t, {"Extractable": "cylinder_50", "Container": "cylinder_50_hole",
-                         "ExtractTo": "cylinder_50_approach"},
-                     {"Insertable": "cylinder_50", "Container": "cylinder_50_hole", "Approach": "cylinder_50_approach",
-                      "GoalPose": "cylinder_50_approach"}, 10)
+def bend_test(robot: str, bendable: str, goal: str, start: str, cf: str):
+    t = BendTest(robot)
+    start_experiment(t, {"Bendable": bendable, "GoalPose": goal},
+                     {"Bendable": bendable, "GoalPose": start}, 50,
+                     cf, "collective-control-001", "skill_data", bendable)
 
 
-def extraction_test_key_abus_e30():
-    t = ExtractionTest("collective-panda-002")
-    start_experiment(t, {"Extractable": "key_abus_e30", "Container": "lock_abus_e30",
-                         "ExtractTo": "lock_abus_e30_approach"},
-                     {"Insertable": "key_abus_e30", "Container": "lock_abus_e30", "Approach": "lock_abus_e30_approach",
-                      "GoalPose": "lock_abus_e30_approach"}, 50, "time")
+def turn_test(robot: str, turnable: str, goal: str, start: str, cf: str):
+    t = TurnTest(robot)
+    start_experiment(t, {"Turnable": turnable, "GoalOrientation": goal},
+                     {"Turnable": turnable, "GoalOrientation": start}, 50, cf,
+                     "collective-control-001", "skill_data", turnable)
+
+
+def swipe_test(robot: str, stylus: str, approach: str, start: str, end: str, retract: str, surface: str, cf: str):
+    t = SwipeTest(robot)
+    start_experiment(t, {"Stylus": stylus, "Approach": approach, "SwipeStart": start,
+                         "SwipeEnd": end, "Retract": retract},
+                     {"Stylus": stylus, "Approach": retract, "SwipeStart": end,
+                      "SwipeEnd": start, "Retract": approach}, 50, cf,
+                     "collective-control-001", "skill_data", surface)
+
 
 
 def push_surface_test_scale():
@@ -136,42 +129,6 @@ def press_button_test_enter():
                      {"GoalPose": "tip_enter_approach"}, 50, "time")
 
 
-def slide_object_test_mouse():
-    t = SlideObjectTest("collective-panda-008")
-    start_experiment(t, {"Slidable": "mouse", "Surface": "paper", "GoalPose": "slide_goal"},
-                     {"Slidable": "mouse", "GoalPose": "paper", "Surface": "paper"},
-                     50, "contact_forces", "collective-control-001", "skill_data", "mouse")
-
-
-def tip_test_enter():
-    t = TipTest("collective-panda-007")
-    start_experiment(t, {"Tippable": "enter_key", "Approach": "enter_key_approach"},
-                     {"GoalPose": "enter_key_approach"}, 50, "time",
-                     "collective-control-001", "skill_data", "enter_key")
-
-
-def tip_test_enter_contact():
-    t = TipTest("collective-panda-007")
-    start_experiment(t, {"Tippable": "enter_key", "Approach": "enter_key_approach"},
-                     {"GoalPose": "enter_key_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "enter_key")
-
-
-def grab_test_item():
-    t = GrabTest("collective-panda-008")
-    start_experiment(t, {"Approach": "grab_item_approach", "Grabbable": "grab_item", "Retract": "grab_item_retract"},
-                     {"Approach": "grab_item_retract", "Placeable": "grab_item", "Retract": "grab_item_approach",
-                      "Surface": "grab_item"}, 50, "time", "collective-control-001", "skill_data", "item")
-
-
-def place_test_item():
-    t = PlaceTest("collective-panda-008")
-    start_experiment(t, {"Approach": "grab_item_retract", "Placeable": "grab_item", "Retract": "grab_item_approach",
-                         "Surface": "grab_item"},
-                     {"Approach": "grab_item_approach", "Grabbable": "grab_item", "Retract": "grab_item_retract"},
-                     50, "time", "collective-control-001", "skill_data", "item")
-
-
 def slide_open_test():
     t = SlideOpenTest("collective-panda-008")
     start_experiment(t, {"Approach": "slide_open_approach", "Container": "slide_open_lid",
@@ -190,54 +147,7 @@ def move_test():
                      "skill_data", "move")
 
 
-def turn_key_test():
-    t = TurnTest("collective-panda-008")
-    start_experiment(t, {"Turnable": "task_board_key", "GoalOrientation": "turn_key_goal"},
-                     {"Turnable": "task_board_key", "GoalOrientation": "turn_key_start"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "key")
 
-def drag_box_test():
-    t = DragTest("collective-panda-008")
-    start_experiment(t, {"Draggable": "blue_box", "GoalPose": "drag_goal"}, {"GoalPose": "drag_start"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "blue_box")
-
-
-def shove_tape_test():
-    t = ShoveTest("collective-panda-008")
-    start_experiment(t, {"Shovable": "shove_tape", "Approach": "shove_tape_approach", "Direction": "shove_tape_direction"},
-                     {"GoalPose": "shove_tape_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "tape")
-
-
-def swipe_phone_test():
-    t = SwipeTest("collective-panda-008")
-    start_experiment(t, {"Stylus": "swipe_stylus", "Approach": "swipe_approach", "SwipeStart": "swipe_start",
-                         "SwipeEnd": "swipe_end", "Retract": "swipe_retract"},
-                     {"Stylus": "swipe_stylus", "Approach": "swipe_retract", "SwipeStart": "swipe_end",
-                      "SwipeEnd": "swipe_start", "Retract": "swipe_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "phone")
-
-
-def turn_lever_test():
-    t = TurnLeverTest("collective-panda-007")
-    start_experiment(t, {"Lever": "red_lever", "StartPose": "turn_lever_start", "GoalPosition": "turn_lever_goal"},
-                     {"Lever": "red_lever", "StartPose": "turn_lever_goal", "GoalPosition": "turn_lever_start"}, 50,
-                     "time", "collective-control-001", "skill_data", "red_lever")
-
-
-def turn_lever_test_contact():
-    t = TurnLeverTest("collective-panda-007")
-    start_experiment(t, {"Lever": "red_lever", "StartPose": "turn_lever_start", "GoalPosition": "turn_lever_goal"},
-                     {"Lever": "red_lever", "StartPose": "turn_lever_goal", "GoalPosition": "turn_lever_start"}, 50,
-                     "contact_forces", "collective-control-001", "skill_data", "red_lever")
-
-
-def cut_paper_test():
-    t = CutTest("collective-panda-008")
-    start_experiment(t, {"Knife": "cutter_knife", "Approach": "cut_approach", "CutStart": "cut_start",
-                         "CutEnd": "cut_end", "Retract": "cut_retract"},
-                     {"Approach": "cut_approach"}, 50, "contact_forces",
-                     "collective-control-001", "skill_data", "paper")
 
 
 def screw_user_stop_test():
@@ -257,11 +167,7 @@ def screw_out_user_stop_test():
                      "collective-control-001", "skill_data", "screw_out_user_stop")
 
 
-def bend_test():
-    t = BendTest("collective-panda-002")
-    start_experiment(t, {"Bendable": "wood", "GoalPose": "bend_goal"},
-                     {"Bendable": "wood", "GoalPose": "bend_start"}, 50,
-                     "time", "collective-control-001", "skill_data", "wood")
+
 
 
 def bend_test_contact():

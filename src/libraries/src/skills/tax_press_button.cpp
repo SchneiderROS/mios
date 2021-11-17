@@ -103,7 +103,7 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxPressButton::get
     return {{"p0",{"K_x","dX_d","ddX_d"}},{"p1",{"K_x","dX_d","ddX_d"}},{"p2",{"K_x","f_push"}},{"p3",{"K_x","f_push","duration"}},{"p4",{"K_x","dX_d","ddX_d"}}};
 }
 
-TaxPressButton::TaxPressButton(const std::string& name, Memory* memory, Portal *portal):Skill("TaxPressButton",{"Button","Approach"},name,memory,portal,{ControlMode::mCartTorque}),
+TaxPressButton::TaxPressButton(const std::string& name, Memory* memory, Portal *portal):Skill("TaxPressButton",{"Button","Approach","Pressed"},name,memory,portal,{ControlMode::mCartTorque}),
     m_press_started(false){
     m_memory->remove_event("button_press");
 }
@@ -138,7 +138,7 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > TaxPressButton::graph_tra
         }
     }
     if(get_active_mp()->get_name()=="push_down"){
-        if(m_press_started){
+        if(m_press_started || get_result().success){
             return create_push_mp(p);
         }else{
             return {};
@@ -183,7 +183,7 @@ std::shared_ptr<ManipulationPrimitive> TaxPressButton::create_contact_mp(const P
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxPressButton::create_push_down_mp(const Percept &p){
-    spdlog::trace("TaxPressButton::create_push_mp()");
+    spdlog::trace("TaxPressButton::create_push_down_mp()");
     std::shared_ptr<SkillParametersTaxPressButton> skill_params = get_parameters<SkillParametersTaxPressButton>();
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("push_down",p);
     mp->create_strategy<FFStrategy>("push_down",1);
@@ -241,7 +241,7 @@ bool TaxPressButton::check_local_suc_conditions(const Percept &p){
         }
     }
     if(get_parameters<SkillParametersTaxPressButton>()->condition_level_success==SkillConditionLevel::sclSpecification){
-        if(fabs((p.proprioception.T_T_EE(2,3)-get_object_pose_T("Button")(2,3)))<m_memory->read_parameters()->user.env_X(0)){
+        if(p.proprioception.T_T_EE(2,3)>get_object_pose_T("Pressed")(2,3)){
             if(!m_press_started && !get_result().success){
                 m_press_t_0=std::chrono::high_resolution_clock::now();
                 m_press_started=true;
@@ -285,7 +285,7 @@ bool TaxPressButton::check_local_err_conditions(const Percept &p){
     }
     if(get_parameters<SkillParametersTaxPressButton>()->condition_level_error==SkillConditionLevel::sclSpecification){
         if(m_press_started && !get_result().success){
-            if(!(fabs(p.proprioception.TF_dX_EE(2))<0.1 && fabs(p.proprioception.TF_F_ext_K(2))>m_memory->read_parameters()->user.F_ext_contact(0))){
+            if(p.proprioception.T_T_EE(2,3)<get_object_pose_T("Pressed")(2,3)){
                 return true;
             }
         }

@@ -19,20 +19,20 @@ class InsertionTest(BaseTest):
             "insertion": {
                 "Approach": {
                     "T_T_OB": {
-                        "x": (-0.003, 0.003),
-                        "y": (-0.003, 0.003)
+                        "x": (-0.001, 0.001),
+                        "y": (-0.001, 0.001)
                     }
                 },
                 "Container": {
                     "T_T_OB": {
-                        "x": (-0.003, 0.003),
-                        "y": (-0.003, 0.003)
+                        "x": (-0.001, 0.001),
+                        "y": (-0.001, 0.001)
                     }
                 }
             }
         }
 
-        self.initialize(default_context, reset_default_contexts, record_performance)
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Insertable"]})
@@ -89,7 +89,25 @@ class ExtractionTest(BaseTest):
         reset_default_contexts["insertion"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move_joint"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+        object_modifier = {
+            "extraction": {
+                "ExtractTo": {
+                    "T_T_OB": {
+                        "x": (-0.003, 0.003),
+                        "y": (-0.003, 0.003)
+                    }
+                },
+                "Container": {
+                    "T_T_OB": {
+                        "x": (-0.003, 0.003),
+                        "y": (-0.003, 0.003)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Extractable"]})
@@ -187,21 +205,47 @@ class PressButtonTest(BaseTest):
         reset_default_contexts = dict()
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move_joint"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance)
+
+        object_modifier = {
+            "press_button": {
+                "Approach": {
+                    "T_T_OB": {
+                        "x": (-0.01, 0.01),
+                        "y": (-0.01, 0.01)
+                    }
+                },
+                "Button": {
+                    "T_T_OB": {
+                        "x": (-0.01, 0.01),
+                        "y": (-0.01, 0.01)
+                    }
+                },
+                "Pressed": {
+                    "T_T_OB": {
+                        "x": (-0.01, 0.01),
+                        "y": (-0.01, 0.01)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
-        s = ServerProxy("http://collective-control-001:8000", allow_none=True)
-        s.subscribe_to_event("button_press", self.robot, "12000")
+        # s = ServerProxy("http://collective-control-001:8000", allow_none=True)
+        # s.subscribe_to_event("button_press", self.robot, "12000")
         context = self.default_context
         if host is not None and database is not None and task is not None:
             context = download_result2(host, database, self.skill_class, task, cost_function)
         context["skill"]["objects"] = {
             "Button": args["Button"],
-            "Approach": args["Approach"]
+            "Approach": args["Approach"],
+            "Pressed": args["Pressed"]
         }
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxPressButton", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 
@@ -219,8 +263,10 @@ class PressButtonTest(BaseTest):
     def teach(self, args: dict):
         input("Press enter to teach the approach pose.")
         teach_object(self.robot, args["Approach"])
-        input("Press enter to teach the pressed button pose.")
+        input("Press enter to teach the button pose.")
         teach_object(self.robot, args["Button"])
+        input("Press enter to teach the pressed button pose.")
+        teach_object(self.robot, args["Pressed"])
 
 
 class SlideObjectTest(BaseTest):
@@ -256,7 +302,7 @@ class SlideObjectTest(BaseTest):
         print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
 
         if self.record_performance is True:
-            upload_result(self.db_host, self.skill_class, args["Slidable"], cost_function, result)
+            upload_result(self.db_host, self.skill_class, args["Surface"], cost_function, result)
 
     def reset(self, args: dict):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Slidable"]})
@@ -279,6 +325,8 @@ class SlideObjectTest(BaseTest):
         teach_object(self.robot, args["Slidable"])
         input("Press enter to teach the surface.")
         teach_object(self.robot, args["Surface"])
+        input("Press enter to teach the start pose.")
+        teach_object(self.robot, args["StartPose"])
         input("Press enter to teach the goal pose.")
         teach_object(self.robot, args["GoalPose"])
 
@@ -291,7 +339,30 @@ class TipTest(BaseTest):
         reset_default_contexts = dict()
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move_joint"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance)
+
+        object_modifier = {
+            "tip": {
+                "Approach": {
+                    "T_T_OB": {
+                        "x": (-0.001, 0.001),
+                        "y": (-0.001, 0.001)
+                    }
+                },
+                "Tippable": {
+                    "T_T_OB": {
+                        "x": (-0.001, 0.001),
+                        "y": (-0.001, 0.001)
+                    }
+                },
+                "Tipped": {
+                    "T_T_OB": {
+                        "x": (-0.001, 0.001),
+                        "y": (-0.001, 0.001)
+                    }
+                }
+            }
+        }
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def pre_run(self):
         s = ServerProxy("http://collective-control-001:8000", allow_none=True)
@@ -304,11 +375,13 @@ class TipTest(BaseTest):
             context = download_result2(host, database, self.skill_class, task, cost_function)
         context["skill"]["objects"] = {
             "Tippable": args["Tippable"],
+            "Tipped": args["Tipped"],
             "Approach": args["Approach"]
         }
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxTip", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 
@@ -326,8 +399,10 @@ class TipTest(BaseTest):
     def teach(self, args: dict):
         input("Press enter to teach the approach pose.")
         teach_object(self.robot, args["Approach"])
-        input("Press enter to teach the tipped pose.")
+        input("Press enter to teach the tippable pose.")
         teach_object(self.robot, args["Tippable"])
+        input("Press enter to teach the tipped pose.")
+        teach_object(self.robot, args["Tipped"])
 
 
 class GrabTest(BaseTest):
@@ -340,7 +415,34 @@ class GrabTest(BaseTest):
         reset_default_contexts["place"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance)
+
+        object_modifier = {
+            "grab": {
+                "Grabbable": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "Approach": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "Retract": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         context = self.default_context
@@ -354,6 +456,7 @@ class GrabTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxGrab", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
         print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
@@ -394,7 +497,34 @@ class PlaceTest(BaseTest):
         reset_default_contexts["grab"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance)
+
+        object_modifier = {
+            "place": {
+                "Surface": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "Approach": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "Retract": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Placeable"]})
@@ -410,6 +540,7 @@ class PlaceTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxPlace", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
         print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
@@ -566,6 +697,8 @@ class DragTest(BaseTest):
     def teach(self, args: dict):
         input("Press enter to teach the draggable.")
         teach_object(self.robot, args["Draggable"])
+        input("Press enter to teach the start pose.")
+        teach_object(self.robot, args["StartPose"])
         input("Press enter to teach the goal pose.")
         teach_object(self.robot, args["GoalPose"])
 
@@ -597,7 +730,7 @@ class ShoveTest(BaseTest):
         print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
 
         if self.record_performance is True:
-            upload_result(self.db_host, self.skill_class, args["Shovable"], cost_function, result)
+            upload_result(self.db_host, self.skill_class, args["Surface"], cost_function, result)
 
     def reset(self, args: dict):
         t = Task(self.robot)
@@ -606,7 +739,6 @@ class ShoveTest(BaseTest):
         t.add_skill("move", "MoveToPoseJoint", context)
         t.start()
         t.wait()
-        input("Press enter to continue")
 
     def teach(self, args: dict):
         input("Press enter to teach the shovable.")
@@ -625,7 +757,20 @@ class TurnTest(BaseTest):
         reset_default_contexts = dict()
         f = open(self.path_to_default_context + "turn.json")
         reset_default_contexts["turn_back"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+        object_modifier = {
+            "turn": {
+                "GoalOrientation": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Turnable"]})
@@ -639,6 +784,7 @@ class TurnTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxTurn", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
         print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
@@ -663,6 +809,8 @@ class TurnTest(BaseTest):
     def teach(self, args: dict):
         input("Press enter to teach the turnable.")
         teach_object(self.robot, args["Turnable"])
+        input("Press enter to teach the start orientation.")
+        teach_object(self.robot, args["StartOrientation"])
         input("Press enter to teach the goal orientation.")
         teach_object(self.robot, args["GoalOrientation"])
 
@@ -817,7 +965,41 @@ class SwipeTest(BaseTest):
         reset_default_contexts = dict()
         f = open(self.path_to_default_context + "swipe.json")
         reset_default_contexts["swipe"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+        object_modifier = {
+            "swipe": {
+                "Approach": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "SwipeStart": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "SwipeEnd": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "Retract": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Stylus"]})
@@ -834,6 +1016,7 @@ class SwipeTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxSwipe", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 
@@ -919,7 +1102,18 @@ class TurnLeverTest(BaseTest):
         reset_default_contexts["turn_back"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+        object_modifier = {
+            "turn_lever": {
+                "GoalPosition": {
+                    "T_T_OB": {
+                        "y": (-0.01, 0.01),
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Lever"]})
@@ -933,6 +1127,7 @@ class TurnLeverTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxTurnLever", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 
@@ -996,11 +1191,11 @@ class CutTest(BaseTest):
         t.start()
         result = t.wait()
 
-        ask_for_result(result)
+        #ask_for_result(result)
         print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
 
         if self.record_performance is True:
-            upload_result(self.db_host, self.skill_class, args["Knife"], cost_function, result)
+            upload_result(self.db_host, self.skill_class, args["Surface"], cost_function, result)
 
     def reset(self, args: dict):
         t = Task(self.robot)
@@ -1247,7 +1442,18 @@ class BendTest(BaseTest):
         reset_default_contexts["bend"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+        object_modifier = {
+            "bend": {
+                "GoalPose": {
+                    "T_T_OB": {
+                        "x": (-0.01, 0.01),
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         call_method(self.robot, 12000, "set_grasped_object", {"object": args["Bendable"]})
@@ -1261,6 +1467,7 @@ class BendTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxBend", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 

@@ -81,7 +81,7 @@ std::shared_ptr<ManipulationPrimitive> TaxShove::get_initial_mp(const Percept& p
 std::optional<std::shared_ptr<ManipulationPrimitive> > TaxShove::graph_transition(const Percept &p){
     if(get_active_mp()->get_name()=="approach"){
         if(get_active_mp()->get_strategy_interface("move")->finished()){
-            return create_contact_mp(p);
+            return create_shove_mp(p);
         }else{
             return {};
         }

@@ -24,8 +24,10 @@ class BaseTest(ABC):
         self.record_performance = record_performance
         self.object_modifier = object_modifier
 
-    def apply_object_modifiers(self, context):
+    def apply_object_modifiers(self, context) -> bool:
         print("#################################MOD########################")
+        if self.object_modifier is None:
+            return True
         valid_modifiers = {"O_T_OB", "T_T_OB"}
         for skill in self.object_modifier:
             if skill not in context["skills"]:
