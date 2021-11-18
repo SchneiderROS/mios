@@ -867,7 +867,34 @@ class SlideOpenTest(BaseTest):
         reset_default_contexts["move_up"] = json.load(f)
         f = open(self.path_to_default_context + "move_joint.json")
         reset_default_contexts["move_joint"] = json.load(f)
-        self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
+
+        object_modifier = {
+            "slide_open": {
+                "Container": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "Approach": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                },
+                "GoalPose": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance, object_modifier)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
         context = self.default_context
@@ -881,6 +908,7 @@ class SlideOpenTest(BaseTest):
 
         t = Task(self.robot)
         t.add_skill(self.skill_class, "TaxSlideOpen", context)
+        self.apply_object_modifiers(t.context)
         t.start()
         result = t.wait()
 
@@ -901,7 +929,7 @@ class SlideOpenTest(BaseTest):
         t.add_skill("move", "MoveToPoseJoint", context)
         t.start()
         t.wait()
-        input("Press enter to continue")
+        #input("Press enter to continue")
 
     def teach(self, args: dict):
         input("Press enter to teach the approach pose.")
@@ -1273,10 +1301,10 @@ class DisplaceTest(BaseTest):
         teach_object(self.robot, args["GoalPose"])
 
 
-class ScrewTest(BaseTest):
+class ScrewInTest(BaseTest):
     def __init__(self, robot: str, record_performance: bool = True):
-        super().__init__(robot, "screw")
-        f = open(self.path_to_default_context + "screw.json")
+        super().__init__(robot, "screw_in")
+        f = open(self.path_to_default_context + "screw_in.json")
         default_context = json.load(f)
         reset_default_contexts = dict()
         f = open(self.path_to_default_context + "move_joint.json")
@@ -1284,7 +1312,7 @@ class ScrewTest(BaseTest):
         self.initialize(default_context, reset_default_contexts, record_performance=record_performance)
 
     def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
-        call_method(self.robot, 12002, "set_grasped_object", {"object": args["Screwdriver"]})
+        call_method(self.robot, 12000, "set_grasped_object", {"object": args["Screwdriver"]})
         context = self.default_context
         if host is not None and database is not None and task is not None:
             context = download_result2(host, database, self.skill_class, task, cost_function)
@@ -1315,9 +1343,9 @@ class ScrewTest(BaseTest):
         input("Press enter to continue.")
 
     def teach(self, args: dict):
-        call_method(self.robot, 12002, "set_grasped_object", {"object": args["Screwdriver"]})
         input("Press enter to teach the screwdriver.")
         teach_object(self.robot, args["Screwdriver"])
+        call_method(self.robot, 12000, "set_grasped_object", {"object": args["Screwdriver"]})
         input("Press enter to teach the approach pose.")
         teach_object(self.robot, args["Approach"])
         input("Press enter to teach the screw pose.")
@@ -1501,3 +1529,68 @@ class BendTest(BaseTest):
         teach_object(self.robot, args["StartPose"])
         input("Press enter to teach the goal pose.")
         teach_object(self.robot, args["GoalPose"])
+
+
+class CrankTest(BaseTest):
+    def __init__(self, robot: str, record_performance: bool = True):
+        super().__init__(robot, "crank")
+        f = open(self.path_to_default_context + "crank.json")
+        default_context = json.load(f)
+        reset_default_contexts = dict()
+        f = open(self.path_to_default_context + "move_joint.json")
+        reset_default_contexts["move"] = json.load(f)
+
+        object_modifier = {
+            "crank": {
+                "Center": {
+                    "T_T_OB": {
+                        "x": (-0.005, 0.005),
+                        "y": (-0.005, 0.005),
+                        "z": (-0.005, 0.005)
+                    }
+                }
+            }
+        }
+
+        self.initialize(default_context, reset_default_contexts, record_performance)
+
+    def run(self, args: dict, cost_function: str, host: str = None, database: str = None, task: str = None):
+        call_method(self.robot, 12000, "set_grasped_object", {"object": args["Crank"]})
+        context = self.default_context
+        if host is not None and database is not None and task is not None:
+            context = download_result2(host, database, self.skill_class, task, cost_function)
+        context["skill"]["objects"] = {
+            "Center": args["Center"],
+            "Crank": args["Crank"]
+        }
+
+        t = Task(self.robot)
+        t.add_skill(self.skill_class, "Crank", context)
+        self.apply_object_modifiers(t.context)
+        t.start()
+        result = t.wait()
+
+        ask_for_result(result)
+        print(result["result"]["task_result"]["skill_results"][self.skill_class]["cost"][cost_function])
+
+        if self.record_performance is True:
+            upload_result(self.db_host, self.skill_class, args["Crank"], cost_function, result)
+
+    def reset(self, args: dict):
+        input("Press enter to continue")
+        t = Task(self.robot)
+        context = self.reset_default_contexts["move"]
+        context["skill"]["objects"] = {
+            "goal_pose": args["GoalPose"]
+        }
+        t.add_skill("move", "MoveToPoseJoint", context)
+        t.start()
+        t.wait()
+
+    def teach(self, args: dict):
+        input("Press enter to teach the crank.")
+        teach_object(self.robot, args["Crank"])
+        input("Press enter to teach the start pose.")
+        teach_object(self.robot, args["StartPose"])
+        input("Press enter to teach the center.")
+        teach_object(self.robot, args["Center"])

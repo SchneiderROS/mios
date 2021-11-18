@@ -108,32 +108,24 @@ def swipe_test(robot: str, stylus: str, approach: str, start: str, end: str, ret
                      "collective-control-001", "skill_data", surface)
 
 
-
-def push_surface_test_scale():
-    t = PushSurfaceTest("collective-panda-008")
-    start_experiment(t, {"Surface": "push_scale", "Approach": "push_scale_approach"},
-                     {"GoalPose": "push_scale_approach"}, 50, "desired_force", "collective-control-001", "skill_data",
-                     "scale")
-
-
-def press_button_test_pedal():
-    t = PressButtonTest("collective-panda-007")
-    start_experiment(t, {"Button": "button", "Approach": "button_approach"},
-                     {"GoalPose": "button_approach"}, 50, "contact_forces", "collective-control-001", "skill_data",
-                     "pedal")
+def slide_open_test(robot: str, container: str, approach: str, goal: str, cf: str):
+    t = SlideOpenTest(robot)
+    start_experiment(t, {"Approach": approach, "Container": container,
+                         "GoalPose": goal}, {"Approach": approach}, 50, cf,
+                     "collective-control-001", "skill_data", container)
 
 
-def press_button_test_enter():
-    t = PressButtonTest("collective-panda-008")
-    start_experiment(t, {"Button": "tip_enter", "Approach": "tip_enter_approach"},
-                     {"GoalPose": "tip_enter_approach"}, 50, "time")
+def crank_test(robot: str, crank: str, center: str, start: str, cf: str):
+    t = SlideOpenTest(robot)
+    start_experiment(t, {"Crank": crank, "Center": center}, {"GoalPose": start}, 50, cf,
+                     "collective-control-001", "skill_data", container)
 
 
-def slide_open_test():
-    t = SlideOpenTest("collective-panda-008")
-    start_experiment(t, {"Approach": "slide_open_approach", "Container": "slide_open_lid",
-                         "GoalPose": "slide_open_goal"}, {"Approach": "slide_open_approach"}, 50, "time",
-                     "collective-control-001", "skill_data", "battery_case")
+def push_surface_test(robot: str, surface: str, approach: str, cf: str):
+    t = PushSurfaceTest(robot)
+    start_experiment(t, {"Surface": surface, "Approach": approach},
+                     {"GoalPose": approach}, 50, cf, "collective-control-001", "skill_data",
+                     surface)
 
 
 def carry_test_item():
@@ -145,9 +137,6 @@ def move_test():
     t = MoveTest("collective-panda-008")
     start_experiment(t, {"GoalPose": "move_goal"}, {"GoalPose": "move_start"}, 50, "time", "collective-control-001",
                      "skill_data", "move")
-
-
-
 
 
 def screw_user_stop_test():
@@ -165,13 +154,3 @@ def screw_out_user_stop_test():
                          "GoalPosition": "screw_out_goal"},
                      {"Retract": "screw_out_retract"}, 1, "time",
                      "collective-control-001", "skill_data", "screw_out_user_stop")
-
-
-
-
-
-def bend_test_contact():
-    t = BendTest("collective-panda-002")
-    start_experiment(t, {"Bendable": "wood", "GoalPose": "bend_goal"},
-                     {"Bendable": "wood", "GoalPose": "bend_start"}, 50,
-                     "contact_forces", "collective-control-001", "skill_data", "wood")

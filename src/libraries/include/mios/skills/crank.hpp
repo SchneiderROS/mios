@@ -8,12 +8,14 @@ class SkillParametersCrank: public SkillParameters{
 public:
     bool from_json(const nlohmann::json &parameters) override;
     std::map<std::string, std::set<std::string> > get_parameter_list() override;
-    double radius;
-    double n_turns;
-    bool clockwise;
-
-    Eigen::Matrix<double,2,1> crank_speed;
-    Eigen::Matrix<double,2,1> crank_acc;
+    struct P0{
+        Eigen::Matrix<double,6,1> K_x;
+        Eigen::Matrix<double,2,1> dX_d;
+        Eigen::Matrix<double,2,1> ddX_d;
+        double radius;
+        double n_turns;
+        bool clockwise;
+    }p0;
 
 };
 
