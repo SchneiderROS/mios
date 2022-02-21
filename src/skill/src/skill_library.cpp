@@ -50,6 +50,7 @@
 #include "mios/skills/tax_press_button.hpp"
 #include "mios/skills/tax_turn.hpp"
 #include "mios/skills/tax_slide_open.hpp"
+#include "mios/skills/tax_push.hpp"
 #include "mios/skills/draw.hpp"
 #include "mios/skills/crank.hpp"
 #include "mios/skills/tax_cut.hpp"
@@ -110,6 +111,7 @@ SkillLibrary::SkillLibrary(){
     m_skill_parameters.insert(std::make_pair("TaxScrew",std::make_shared<SkillParametersTaxScrew>()));
     m_skill_parameters.insert(std::make_pair("TaxWrench",std::make_shared<SkillParametersTaxWrench>()));
     m_skill_parameters.insert(std::make_pair("TaxScrewOut",std::make_shared<SkillParametersTaxScrewOut>()));
+    m_skill_parameters.insert(std::make_pair("TaxPush",std::make_shared<SkillParametersTaxPush>()));
 }
 
 const std::unordered_map<std::string,std::shared_ptr<Skill> >* SkillLibrary::get_skills() const{
