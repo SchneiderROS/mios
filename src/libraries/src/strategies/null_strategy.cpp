@@ -2,6 +2,10 @@
 
 namespace mios {
 
+NullStrategy::NullStrategy():PrimitiveStrategy({CommandPatternIdle}){
+
+}
+
 void NullStrategy::initialize([[maybe_unused]] const Percept &p_0){
 
 }
