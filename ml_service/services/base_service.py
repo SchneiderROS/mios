@@ -143,6 +143,11 @@ class BaseService(metaclass=ABCMeta):
                         logger.error("base_service: global Database is not reachable!")
                     except ConnectionRefusedError:
                         pass
+            elif knowledge_source["parameters"]:
+                self.knowledge = dict()
+                self.knowledge["parameters"] = knowledge_source["parameters"]
+                self.knowledge["meta"] = dict()
+                self.knowledge["meta"]["confidence"] = 0.04
             else:
                 logger.error("base_service::initialize(): Unknown knowledge mode " + str(knowledge_source["mode"]))
 

@@ -147,15 +147,54 @@ def transfer_video(robot: str):
     containers.reverse()
     approaches.reverse()
     aboves.reverse()
+
+    knowledge_parameters = {
+        "p0_offset_x": 0.00140444240646354,
+        "p0_offset_y": 0.00264740434345461,
+        "p0_offset_phi": -1.51937200954519,
+        "p0_offset_chi": -0.385589798231194,
+        "p1_dx_d": 0.0694536112655875,
+        "p1_dphi_d": 0.165282008467206,
+        "p1_ddx_d": 0.340845275082904,
+        "p1_ddphi_d": 0.259455095050753,
+        "p1_K_x": 1163.00980283344,
+        "p1_K_phi": 1624.16826815006,
+        "p2_dx_d": 0.0797539698958545,
+        "p2_dphi_d": 0.324427062148954,
+        "p2_ddx_d": 0.0546693868423317,
+        "p2_ddphi_d": 0.65033811624599,
+        "p2_wiggle_a_x": 5,
+        "p2_wiggle_a_y": 5,
+        "p2_wiggle_a_phi": 3,
+        "p2_wiggle_a_chi": 3,
+        "p2_wiggle_f_x": 1.71423072724224,
+        "p2_wiggle_f_y": 0.911976394336351,
+        "p2_wiggle_f_phi": 1,
+        "p2_wiggle_f_chi": 0.637993625800583,
+        "p2_wiggle_phi_x": 3.8573608540209,
+        "p2_wiggle_phi_y": 1.85088673858876,
+        "p2_wiggle_phi_phi": 2.99169007335287,
+        "p2_wiggle_phi_chi": 2.47250387188342,
+        "p2_K_x": 1253.98806400288,
+        "p2_K_y": 887.199718856526,
+        "p2_K_z": 1299.36711041056,
+        "p2_K_phi": 151.872556530053,
+        "p2_K_chi": 50.9881343485834,
+        "p2_K_psi": 107.99768198157,
+        "p2_f_push_x": 0,
+        "p2_f_push_y": 0,
+        "p2_f_push_z": 15
+    }
+
     for i in range(len(insertables)):
-        if i == 0:
-            knowledge = None
-        else:
-            knowledge = {"type": "similar", "mode": "specific", "kb_location": "collective-panda-008",
+        # if i == 0:
+        #     knowledge = None
+        # else:
+        knowledge = {"type": "similar", "mode": "parameters", "kb_location": "collective-panda-008",
                          "kb_db": "ml_results", "kb_task_type": "insertion", "scope":
-                             ["insertion", "cylinder_40", "n1", "video_prior"]}
+                             ["insertion", "cylinder_40", "n1", "video_prior"], "parameters": knowledge_parameters}
         transfer_video_grab_insertable(robot, insertables[i], containers[i], approaches[i], aboves[i])
-        learn_insertixon(robot, approaches[i], insertables[i], containers[i], ["transfer_video"],
+        learn_insertion(robot, approaches[i], insertables[i], containers[i], ["transfer_video"],
                        knowledge , wait=False)
         s = ServerProxy("http://" + robot + ":8000", allow_none=True)
         input("Press Enter to stop learning.")
