@@ -24,7 +24,6 @@ def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service:
         if keep_record is True and len(client.read("ml_results", problem_def.skill_class, {"meta.tags": {"$all": problem_def.tags}})) != 0:
             print("Continue at n" + str(i+1))
             continue
-        print(learner)
         s = ServerProxy("http://" + learner + ":8000", allow_none=True)
         # if knowledge is not None:
         #     if "scope" not in knowledge:
