@@ -1752,9 +1752,9 @@ def live_plotting(tags=["demo_learning"]):
     from plotting.live_plotter import live_plot
     # lp = LivePlotter([],[])
     # lp.start_plot()
-    robots = ["collective-panda-004", "collective-panda-002",
+    robots = ["collective-panda-002", "collective-panda-004",
               "collective-panda-003", "collective-panda-008"]
-
+    tags = ["demo"]
     live_plot(robots, tags)
 
 
