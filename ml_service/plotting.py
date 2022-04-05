@@ -1748,7 +1748,7 @@ def plot_iros_learning(host="collective-control-001.local"):
     plt.show()
 
 
-def live_plotting():
+def live_plotting(tags=["demo_learning"]):
     from plotting.live_plotter import live_plot
     # lp = LivePlotter([],[])
     # lp.start_plot()
