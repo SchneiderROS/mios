@@ -31,9 +31,8 @@ def live_plot(robots, tags):
     current_data_sets = []
     for i in range(len(robots)):
         axes[i].grid()
-        idx = robots[i].find(".")
-
-        axes[i].set_title(robots[i][idx-9:idx])
+        idx = robots[i].find("-")
+        axes[i].set_title(robots[i][idx+1:])
         axes[i].set_xlabel("time [s]")
         axes[i].set_ylabel("execution time [s]")
         axes[i].set_ylim([0, 5])
