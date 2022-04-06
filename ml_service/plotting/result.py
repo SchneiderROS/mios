@@ -10,7 +10,8 @@ class Result:
         n_trials = len(data_tmp) - 2
         self.trials = []
         for i in range(n_trials):
-            self.trials.append(data_tmp["n" + str(i+1)])
+            if data_tmp["n" + str(i+1)]["t_1"] is not None:
+                self.trials.append(data_tmp["n" + str(i+1)])
         self.meta_data = data_tmp["meta"]
         if data_tmp.get("final_results",False):
             self.total_time = data_tmp["final_results"]["time"]
