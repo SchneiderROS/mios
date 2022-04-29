@@ -84,6 +84,7 @@ def learn_task(robot:str, problem_definition: ProblemDefinition, service_config:
 
 def grab_insertable(robot:str):
     call_method(robot, 12000, "release_object")
+    call_method(robot, 12000, "home_gripper")
     path_to_default_context = os.getcwd() + "/../python/taxonomy/default_contexts/"
     t1 = Task(robot)
     t2 = Task(robot)
@@ -431,18 +432,18 @@ def demo_part_3():
     #input("Press Enter to stop learning. part 1")
     try:
         time.sleep(45)
-        print("start knowledge sharing")
+        # print("start knowledge sharing")
         indexes = list(range(len(learning_services)))
         random.shuffle(indexes)
         count = 0
         for i in indexes:
             learning_services[i].stop_service()
-            print("stopping ",i)
+            # print("stopping ",i)
             if count == 0:
-                time.sleep(random.randint(12, 15))
+                time.sleep(random.randint(20, 25))
                 count += 1
             else:
-                time.sleep(random.randint(5,15))
+                time.sleep(random.randint(10,15))
             while learning_services[i].is_busy() is True:
                 time.sleep(1)
 
