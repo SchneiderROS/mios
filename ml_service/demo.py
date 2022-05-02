@@ -11,6 +11,8 @@ from definitions.templates import *
 from definitions.cost_functions import *
 from definitions.service_configs import *
 
+from utils.taxonomy_utils import download_best_result
+
 import random
 
 robots = [ 
@@ -417,7 +419,7 @@ def demo_part_3():
     print("all insertables grabbed.")
     input("continue")
     tag = "demo_learning"
-    knowledge_1 = {"mode": "none", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
+    knowledge_1 = {"mode": "global", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
     knowledge_2 = {"mode": "local", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
     learning_services = []
     threads_1 = []
@@ -440,10 +442,10 @@ def demo_part_3():
             learning_services[i].stop_service()
             # print("stopping ",i)
             if count == 0:
-                time.sleep(random.randint(20, 25))
+                time.sleep(random.randint(10, 15))
                 count += 1
             else:
-                time.sleep(random.randint(10,15))
+                time.sleep(random.randint(8,15))
             while learning_services[i].is_busy() is True:
                 time.sleep(1)
 
@@ -490,6 +492,12 @@ def demo_part_3():
 
 
 def demo_part_4():
+    tag = "demo_learning"
+    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
+    
+    
+
+
     call_method(robots[0], 12000, "set_grasped_object", {"object": "generic_insertable"})
     result = start_task(robots[0], "MoveToJointPose", {
         "parameters": {
@@ -543,6 +551,8 @@ def demo_part_4():
             "env_X": [0.002, 0.002, 0.002, 0.02, 0.02, 0.02]
         }
     }
+
+    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
     extraction_context = {
         "skill": {
             "objects": {
@@ -600,7 +610,7 @@ def demo_part_4():
         },
         "control": {
             "control_mode": 0
-        }
+       }
     }
 
     t = Task(robots[0])
