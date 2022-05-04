@@ -11,6 +11,8 @@ from definitions.templates import *
 from definitions.cost_functions import *
 from definitions.service_configs import *
 
+from utils.taxonomy_utils import download_best_result
+
 import random
 
 robots = [ 
@@ -84,6 +86,7 @@ def learn_task(robot:str, problem_definition: ProblemDefinition, service_config:
 
 def grab_insertable(robot:str):
     call_method(robot, 12000, "release_object")
+    call_method(robot, 12000, "home_gripper")
     path_to_default_context = os.getcwd() + "/../python/taxonomy/default_contexts/"
     t1 = Task(robot)
     t2 = Task(robot)
@@ -416,7 +419,7 @@ def demo_part_3():
     print("all insertables grabbed.")
     input("continue")
     tag = "demo_learning"
-    knowledge_1 = {"mode": "none", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
+    knowledge_1 = {"mode": "global", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
     knowledge_2 = {"mode": "local", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
     learning_services = []
     threads_1 = []
@@ -431,18 +434,18 @@ def demo_part_3():
     #input("Press Enter to stop learning. part 1")
     try:
         time.sleep(45)
-        print("start knowledge sharing")
+        # print("start knowledge sharing")
         indexes = list(range(len(learning_services)))
         random.shuffle(indexes)
         count = 0
         for i in indexes:
             learning_services[i].stop_service()
-            print("stopping ",i)
+            # print("stopping ",i)
             if count == 0:
-                time.sleep(random.randint(12, 15))
+                time.sleep(random.randint(10, 15))
                 count += 1
             else:
-                time.sleep(random.randint(5,15))
+                time.sleep(random.randint(8,15))
             while learning_services[i].is_busy() is True:
                 time.sleep(1)
 
@@ -489,6 +492,12 @@ def demo_part_3():
 
 
 def demo_part_4():
+    tag = "demo_learning"
+    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
+    
+    
+
+
     call_method(robots[0], 12000, "set_grasped_object", {"object": "generic_insertable"})
     result = start_task(robots[0], "MoveToJointPose", {
         "parameters": {
@@ -542,6 +551,8 @@ def demo_part_4():
             "env_X": [0.002, 0.002, 0.002, 0.02, 0.02, 0.02]
         }
     }
+
+    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
     extraction_context = {
         "skill": {
             "objects": {
@@ -599,7 +610,7 @@ def demo_part_4():
         },
         "control": {
             "control_mode": 0
-        }
+       }
     }
 
     t = Task(robots[0])
