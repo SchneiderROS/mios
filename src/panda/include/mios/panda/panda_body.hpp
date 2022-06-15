@@ -48,6 +48,8 @@ public:
     bool stop_gripper();
     bool home_gripper() const;
     bool is_hand_active();
+    bool activate_fci();
+    bool deactivate_fci();
 
 public:
     ControlReturnType control(std::function<franka::Torques(const franka::RobotState &, franka::Duration)> controller_callback);

@@ -33,7 +33,7 @@ bool PandaBody::initialize(){
         bool tokenForceTimeout = false;
         try{
             pybind11::module desk_client = pybind11::module::import("desk_client");
-            pybind11::object py_result = desk_client.attr("take_control")(ip.value(), "franka", "frankaRSI");
+            pybind11::object py_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
             tokenForceTimeout = py_result.cast<bool>();
             spdlog::warn("Please verify that you are in control of the robot: Press the Button with the cyrcle on the Pilot! "+std::to_string(tokenForceTimeout));
             std::this_thread::sleep_for(std::chrono::milliseconds(30000));
@@ -42,7 +42,6 @@ bool PandaBody::initialize(){
             spdlog::warn("Cannot take control of the robot, error when calling the python desk client.");
             continue;
         }
-        
         m_memory->set_default_parameters();
         if(!m_memory->read_parameters()->system.spoc_in_control){
             spdlog::warn("Cannot take control over the robot (single point of control). Check desk_client.");
@@ -52,15 +51,7 @@ bool PandaBody::initialize(){
                 return false;
             }
         }
-        try{
-            pybind11::module desk_client = pybind11::module::import("desk_client");
-            pybind11::object py_result = desk_client.attr("activate_fci")(ip.value(), "franka", "frankaRSI");
-        }catch(const pybind11::error_already_set& e){
-            spdlog::debug(e.what());
-            spdlog::warn("Cannot activate FCI, error when calling the python desk client.");
-            continue;
-        }
-        spdlog::debug("Successfully activated FCI");
+        activate_fci();
         break;
 
     }
@@ -83,6 +74,32 @@ bool PandaBody::initialize(){
     }
     if(!set_robot_parameters()){
         spdlog::warn("Could not set robot parameters in current mode.");
+    }
+    return true;
+}
+
+bool PandaBody::activate_fci(){
+    spdlog::trace("PandaBody::activate_fci()");
+    try{
+        pybind11::module desk_client = pybind11::module::import("desk_client");
+        pybind11::object py_result = desk_client.attr("activate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+    }catch(const pybind11::error_already_set& e){
+        spdlog::debug(e.what());
+        spdlog::warn("Cannot activate FCI, error when calling the python desk client.");
+        return false;
+    }
+    return true;
+}
+
+bool PandaBody::deactivate_fci(){
+    spdlog::trace("PandaBody::deactivate_fci()");
+    try{
+        pybind11::module desk_client = pybind11::module::import("desk_client");
+        pybind11::object py_result = desk_client.attr("deactivate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+    }catch(const pybind11::error_already_set& e){
+        spdlog::debug(e.what());
+        spdlog::warn("Cannot deactivate FCI, error when calling the python desk client.");
+        return false;
     }
     return true;
 }
@@ -695,6 +712,7 @@ bool PandaBody::start_desk_task(const std::string &task,const std::optional<std:
     spdlog::trace("PandaBody::start_desk_task");
     disconnect_from_gripper();
     disconnect_from_robot();
+    deactivate_fci();
 
     bool result;
     try{
@@ -710,7 +728,7 @@ bool PandaBody::start_desk_task(const std::string &task,const std::optional<std:
     if(result){
         wait_for_desk_task(ip,user,password);
     }
-
+    activate_fci();
     if(!this->connect_to_robot(get_robot_ip(ip))){
         return false;
     }
@@ -722,6 +740,7 @@ bool PandaBody::start_desk_task(const std::string &task,const std::optional<std:
 
 bool PandaBody::stop_desk_task(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     spdlog::trace("PandaBody::stop_desk_task");
+    deactivate_fci();
     nlohmann::json response;
     bool result;
     try{
@@ -733,12 +752,14 @@ bool PandaBody::stop_desk_task(const std::optional<std::string> &ip, const std::
         spdlog::warn("Cannot stop desk task, error when calling the python desk client.");
         result=false;
     }
+    activate_fci();
     return result;
 }
 
 void PandaBody::wait_for_desk_task(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     spdlog::trace("PandaBody::wait_for_desk_task");
     bool result;
+    deactivate_fci();
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
         while(true){
@@ -756,13 +777,14 @@ void PandaBody::wait_for_desk_task(const std::optional<std::string> &ip, const s
         result=false;
         return;
     }
+    activate_fci();
 }
 
 bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     spdlog::trace("PandaBody::shutdown_robot");
     disconnect_from_gripper();
     disconnect_from_robot();
-
+    deactivate_fci();
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
@@ -779,6 +801,7 @@ bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::
 bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     spdlog::trace("PandaBody::unlock_brakes");
     bool result;
+    deactivate_fci();
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
         pybind11::object py_result = desk_client.attr("unlock_brakes")(ip.value(), user, password);
@@ -788,12 +811,13 @@ bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::s
         spdlog::warn("Cannot unlock brakes, error when calling the python desk client.");
         result=false;
     }
-
+    activate_fci();
     return result;
 }
 
 bool PandaBody::lock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
-spdlog::trace("PandaBody::lock_brakes");
+    spdlog::trace("PandaBody::lock_brakes");
+    deactivate_fci();
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
@@ -804,6 +828,7 @@ spdlog::trace("PandaBody::lock_brakes");
         spdlog::warn("Cannot lock brakes, error when calling the python desk client.");
         result=false;
     }
+    activate_fci();
     return result;
 }
 
@@ -811,7 +836,7 @@ bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const st
     spdlog::trace("PandaBody::move_to_pack_pose");
     disconnect_from_gripper();
     disconnect_from_robot();
-
+    deactivate_fci();
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
@@ -822,7 +847,7 @@ bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const st
         spdlog::warn("Cannot move to pack pose, error when calling the python desk client.");
         result=false;
     }
-
+    activate_fci();
     if(!this->connect_to_robot(get_robot_ip(ip))){
         return false;
     }
