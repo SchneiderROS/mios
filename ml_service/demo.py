@@ -21,7 +21,7 @@ robots = [
             "collective-panda-002",
             "collective-panda-003",
             "collective-panda-004", 
-            "collective-panda-008",
+            "collective-panda-008"
             #"collective-panda-009"
             ]
 
@@ -408,16 +408,16 @@ def demo_part_3():
     n_trials_experiment = 180
     agents = robots[1:]
     threads = []
-    for a in agents:
-        threads.append(
-            Thread(target=grab_insertable, args=(a,))
-        )
-        threads[-1].start()
-    print("grabbing insertables...")
-    for t in threads:
-        t.join()
-    print("all insertables grabbed.")
-    input("continue")
+    #for a in agents:
+    #    threads.append(
+    #        Thread(target=grab_insertable, args=(a,))
+    #    )
+    #    threads[-1].start()
+    #print("grabbing insertables...")
+    #for t in threads:
+    #    t.join()
+    #print("all insertables grabbed.")
+    #input("continue")
     tag = "demo_learning"
     knowledge_1 = {"mode": "global", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
     knowledge_2 = {"mode": "local", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
@@ -433,19 +433,21 @@ def demo_part_3():
 
     #input("Press Enter to stop learning. part 1")
     try:
-        time.sleep(45)
+        time.sleep(60)
         # print("start knowledge sharing")
         indexes = list(range(len(learning_services)))
         random.shuffle(indexes)
         count = 0
         for i in indexes:
-            learning_services[i].stop_service()
+            
             # print("stopping ",i)
             if count == 0:
                 time.sleep(random.randint(10, 15))
                 count += 1
             else:
-                time.sleep(random.randint(8,15))
+                time.sleep(random.randint(15,20))
+
+            learning_services[i].stop_service()
             while learning_services[i].is_busy() is True:
                 time.sleep(1)
 
@@ -477,6 +479,20 @@ def demo_part_3():
         while s.is_busy() is True:
             time.sleep(1)
 
+    # path_to_default_context = os.getcwd() + "/../python/taxonomy/default_contexts/"
+    # f = open(path_to_default_context + "extraction.json")
+    # extraction_context = json.load(f)
+    # extraction_context["skill"]["objects"]["Extractable"] = "generic_insertable"
+    # extraction_context["skill"]["objects"]["Container"] = "generic_container"
+    # extraction_context["skill"]["objects"]["ExtractTo"] = "generic_container_approach"
+    # tasks = []
+    # for r in agents:
+    #     tasks.append(Task(r))
+    #     tasks[-1].add_skill("extraction", "TaxExtraction", extraction_context)
+    #     tasks[-1].start(False)
+    # for t in tasks:
+    #     t.wait()
+
 #        pd = insertion("generic_insertable", "generic_container", "generic_container_approach")
 #        tags = [tag, a, "automatica_demo"]
 #        threads.append(
@@ -493,7 +509,7 @@ def demo_part_3():
 
 def demo_part_4():
     tag = "demo_learning"
-    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
+    #insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
     
     
 
@@ -552,7 +568,7 @@ def demo_part_4():
         }
     }
 
-    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
+    #insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
     extraction_context = {
         "skill": {
             "objects": {
