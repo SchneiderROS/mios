@@ -24,7 +24,7 @@ from socketserver import ThreadingMixIn
 
 
 robots = [ 
-            "10.14.55.109", #"collective-panda-prime", 
+            "collective-panda-prime", 
             #"collective-panda-001", 
             "collective-panda-002",
             "collective-panda-003",
@@ -258,9 +258,17 @@ def run_demo_looped():
         command_collective("stop_task")
         place_insertable(robots[0])
         move_collective("default_pose")
-        
         pass
 
+def stop_services():
+    learning_services = []
+    for a in robots:
+        learning_services.append(ServerProxy("http://" + a + ":8000", allow_none=True))
+    for s in learning_services:
+        s.stop_service()
+    for s in learning_services:
+        while s.is_busy() is True:
+            time.sleep(1)
 
 def demo_part_1():
     #for r in robots:
@@ -568,7 +576,7 @@ def demo_part_2_looped():
 
     stop_task(ip_master)
 
-def demo_part_3_looped():
+def demo_part_3():
     #publisher.push_status(robots[0],"IdleTask")
     #for r in robots[1:]:
     #    publisher.push_status(r, "learning")
@@ -602,7 +610,7 @@ def demo_part_3_looped():
 
     #input("Press Enter to stop learning. part 1")
     try:
-        time.sleep(60)
+        time.sleep(45)
         # print("start knowledge sharing")
         indexes = list(range(len(learning_services)))
         random.shuffle(indexes)
@@ -674,7 +682,98 @@ def demo_part_3_looped():
 #        s = ServerProxy("http://" + a + ":8000", allow_none=True)
 #        s.stop_service()
 #        stop_task(a)
+def demo_part_3_looped():
+    #publisher.push_status(robots[0],"IdleTask")
+    #for r in robots[1:]:
+    #    publisher.push_status(r, "learning")
 
+    base_batch_size_experiment = 5
+    n_trials_experiment = 180
+    agents = robots[1:]
+    threads = []
+    #for a in agents:
+    #    threads.append(
+    #        Thread(target=grab_insertable, args=(a,))
+    #    )
+    #    threads[-1].start()
+    #print("grabbing insertables...")
+    #for t in threads:
+    #    t.join()
+    #print("all insertables grabbed.")
+    #input("continue")
+    tag = "demo_learning"
+    knowledge_1 = {"mode": "global", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
+    knowledge_2 = {"mode": "local", "type": "similar", "kb_location": robots[0], "kb_tags": [tag], "scope":[tag]}
+    learning_services = []
+    threads_1 = []
+    threads_2 = []
+    for a in agents:
+        threads_1.append(
+            Thread(target=learn_insertion, args=(a, "generic_container_approach", "generic_insertable", "generic_container", ["demo2"],
+                       knowledge_1 , False, )))
+        threads_1[-1].start()
+        learning_services.append(ServerProxy("http://" + a + ":8000", allow_none=True))
+
+    #input("Press Enter to stop learning. part 1")
+    try:
+        time.sleep(120)
+        # print("start knowledge sharing")
+        indexes = list(range(len(learning_services)))
+        random.shuffle(indexes)
+        count = 0
+        for i in indexes:
+            
+            # print("stopping ",i)
+            if count == 0:
+                time.sleep(random.randint(10, 15))
+                count += 1
+            else:
+                time.sleep(random.randint(15,20))
+
+            learning_services[i].stop_service()
+            while learning_services[i].is_busy() is True:
+                time.sleep(1)
+
+            threads_2.append(
+                Thread(target=learn_insertion, args=(agents[i], "generic_container_approach", "generic_insertable", "generic_container", ["demo2"],
+                        knowledge_2 , False, )))
+            threads_2[-1].start()
+    except KeyboardInterrupt:
+        pass
+
+    time.sleep(45)
+    for s in learning_services:
+        s.stop_service()
+    for s in learning_services:
+        while s.is_busy() is True:
+            time.sleep(1)
+
+    # path_to_default_context = os.getcwd() + "/../python/taxonomy/default_contexts/"
+    # f = open(path_to_default_context + "extraction.json")
+    # extraction_context = json.load(f)
+    # extraction_context["skill"]["objects"]["Extractable"] = "generic_insertable"
+    # extraction_context["skill"]["objects"]["Container"] = "generic_container"
+    # extraction_context["skill"]["objects"]["ExtractTo"] = "generic_container_approach"
+    # tasks = []
+    # for r in agents:
+    #     tasks.append(Task(r))
+    #     tasks[-1].add_skill("extraction", "TaxExtraction", extraction_context)
+    #     tasks[-1].start(False)
+    # for t in tasks:
+    #     t.wait()
+
+#        pd = insertion("generic_insertable", "generic_container", "generic_container_approach")
+#        tags = [tag, a, "automatica_demo"]
+#        threads.append(
+#            Thread(target=start_single_experiment, args=(a, [a], pd, service_config, 1, tags, knowledge, False,)))
+#        threads[-1].start()
+#        j += 1#
+#
+#    input("Press key to stop.")
+#    for a in agents:
+#        s = ServerProxy("http://" + a + ":8000", allow_none=True)
+#        s.stop_service()
+#        stop_task(a)
 
 def demo_part_4():
     tag = "demo_learning"
@@ -738,7 +837,8 @@ def demo_part_4():
     }
 
     #insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
-    insertion_context = download_best_result("collective-panda-002","ml_results","insertion","generic_insertable",[])
+    insertion_context = download_best_result("collective-panda-prime","ml_results","insertion","generic_insertable",[])
+    print(insertion_context)
 
     extraction_context = {
         "skill": {
@@ -774,45 +874,43 @@ def demo_part_4():
     t.add_skill("insertion", "TaxInsertion", insertion_context)
     t.add_skill("extraction", "TaxExtraction", extraction_context)
     t.start()
-    t.wait()
+    insertion_result = t.wait()
 
     result = start_task(robots[0], "MoveToJointPose", {
-        "parameters": {
-            "pose": "telepresence_init",
-            "speed": 1,
-            "acc": 2
-        }
-    })
+            "parameters": {
+                "pose": "telepresence_init",
+                "speed": 1,
+                "acc": 2
+            }
+        })
     wait_for_task(robots[0], result["result"]["task_uuid"])
 
-    wiggle_context = {
-        "skill": {
-            "dX_fourier_a_a": [0, 0.05, 0.05, 0, 0, 0],
-            "dX_fourier_a_phi": [0, 0.0, 0.0, 0, 0, 0],
-            "dX_fourier_a_f": [0, 0.5, 1, 0, 0, 0],
-            "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
-            "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
-            "use_EE": True,
-            "time_max": 5
-        },
-        "control": {
-            "control_mode": 0
-       }
-    }
-
-    t = Task(robots[0])
-    t.add_skill("fail", "GenericWiggleMotion", wiggle_context)
-    t.start(False)
+    if insertion_result["result"]["task_result"]["success"]:
+        wiggle_context = {
+            "skill": {
+                "dX_fourier_a_a": [0, 0.05, 0.05, 0, 0, 0],
+                "dX_fourier_a_phi": [0, 0.0, 0.0, 0, 0, 0],
+                "dX_fourier_a_f": [0, 0.5, 1, 0, 0, 0],
+                "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
+                "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
+                "use_EE": True,
+                "time_max": 5
+            },
+            "control": {
+                "control_mode": 0
+        }
+        }
+        t = Task(robots[0])
+        t.add_skill("fail", "GenericWiggleMotion", wiggle_context)
+        t.start(False)
     
-    result = t.wait()
+        result = t.wait()
     
-    #place_insertable_collective()
-    place_insertable(robots[0])
-    #command_collective("release_object")
     move_collective("default_pose")
     delete_local_results(robots, "ml_results","insertion",["demo2"])
     #command_collective("home_gripper")
-    
+
+
 def stop_service_collective():
     learning_services = []
     for r in robots:
