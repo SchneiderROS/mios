@@ -8,7 +8,7 @@ import os
 
 def learn_task(robot:str, problem_definition: ProblemDefinition, service_config: ServiceConfiguration, tags: list,
                n_iterations: int = 10, keep_record: bool = False, knowledge = None, wait: bool = False):
-    start_experiment(robot, [robot], problem_definition, service_config, 10, knowledge=knowledge, tags=tags,
+    start_experiment(robot, [robot], problem_definition, service_config, n_iterations, knowledge=knowledge, tags=tags,
                      keep_record=False, wait=wait)
 
 
@@ -70,6 +70,36 @@ def learn_bend(robot: str, start_pose: str, goal_pose: str, bendable: str, tags:
                           {"Bendable": bendable, "StartPose": start_pose, "GoalPose": goal_pose}).get_problem_definition(bendable)
     sc = SVMLearner().get_configuration()
     learn_task(robot, pd, sc, tags)
+
+def horizontal_learning_experiment():
+    from threading import Thread
+    robots = [  "collective-panda-prime",
+                "collective-panda-002",
+                "collective-panda-003",
+                "collective-panda-004",
+                "collective-panda-008"]
+    insertables = ["key_door","key_abus_e30","key_padlock","cylinder_30","HDMI_plug"]
+    containers = [k+"_contaienr" for k in insertables]
+    approaches = [k+"_contaienr_approach" for k in insertables]
+    n_immigrants_vector = [0, 2, 4, 6, 8]
+    knowledge_source = {"kb_location": robots[0]}
+    tags = ["horizontal_learning"]
+    for n_immigrant in n_immigrants_vector:
+        threads = []
+        tags.append("n_immigrants="+str(n_immigrant))
+        for i in range(len(robots)):
+            pd = InsertionFactory([robots[i]], TimeMetric("insertion", {"time": 5}),
+                                {"Insertable": insertables[i], "Container": containers[i],
+                                "Approach": approaches[i]}).get_problem_definition(insertables[i])
+            sc = SVMLearner().get_configuration()
+            sc.n_immigrant = n_immigrant
+            print(sc)
+            threads.append(Thread(target=learn_task, args=(robots[i], pd, sc, tags, 10, True, knowledge_source, True)))
+            threads[-1].start()
+        for t in threads:
+            t.join()
+        tags.pop(-1)
+        
 
 def transfer_video_grab_insertable(robot: str, insertable: str, container: str, approach: str, above: str):
     # call_method(robot, 12000, "release_object")
@@ -224,6 +254,6 @@ def transfer_video_teach(robot:str, insertable:str):
     call_method(robot, 12000, "grasp", {"width":0,"speed":1,"force":100,"epsilon_outer":1})
     call_method(robot, 12000, "set_grasped_object", {"object": insertable})
     input("Teach approach [with object]")
-    call_method(robot, 12000, "teach_object", {"object": insertable+"_contaienr_approach"})
+    call_method(robot, 12000, "teach_object", {"object": insertable+"_container_approach"})
     input("Teach container [with object]")
-    call_method(robot, 12000, "teach_object", {"object": insertable+"_contaienr"})        
+    call_method(robot, 12000, "teach_object", {"object": insertable+"_container"})        

@@ -426,38 +426,81 @@ class KnowledgeManager:
             self.data_storage[agent] = []
         if len(self.data_storage[agent]) >= keep_size:
             self.data_storage[agent].pop(0)
-        self.data_storage[agent].append((theta, cost))
+        self.data_storage[agent].append((theta, cost, []))
+        self.data_storage[agent] = sorted(self.data_storage[agent], key=lambda t: (t[1]) )  # sort according to cost
+        
+    
+    def reset_data_storage(self):
+        self.data_storage = dict()
 
-    def request_trials(self, n_trials: int):
-        logger.debug("request trials" + str(n_trials))
-        n_available = 0
-        n_per_agent = int(np.floor(n_trials / len(self.data_storage)))
-        for a in self.data_storage.keys():
-            n_available += len(self.data_storage[a])
-            if len(self.data_storage[a]) < n_per_agent:
-                return False
-
-        if n_available < n_trials:
-            logger.error("Number of requested trials is larger than number of available trials.")
+    def request_trials(self, agent:str, n_trials: int):
+        if n_trials<1:
+            logger.debug("KnowledgeManager.request_trials: requested less than 1 trial -> return False")
             return False
 
+        data_storage_keys = random.shuffle(list(self.data_storage.keys()))
+        try:
+            data_storage_keys.pop(data_storage_keys.index(agent))
+        except ValueError:
+            pass 
 
-        trials = []
-        n_rest = n_trials % len(self.data_storage)
-        cnt_rest = 0
-        for a in self.data_storage.keys():
-            if cnt_rest < n_rest:
-                mod_rest = 1
-            else:
-                mod_rest = 0
-            cnt_rest += 1
-            trials_per_agent = self.data_storage[a].copy()
-            random.shuffle(trials_per_agent)
-            trials_per_agent = trials_per_agent[:n_per_agent + mod_rest]
-            for t in trials_per_agent:
-                trials.append(t)
-
+        trials=[]
+        n_available_trials = 0
+        for a in len(data_storage_keys):
+            for t in self.data_storage[data_storage_keys[a]]:
+                if agent in t[3]:
+                    continue
+                n_available_trials += 1
+        
+        if n_available_trials < n_trials:  # we dont have enougth trials -> take everything
+            for a in len(data_storage_keys):
+                for t in self.data_storage[data_storage_keys[a]]:
+                    if agent not in t[3]:  # if trials wasn't already sent to agent
+                        trials.append(t[:2])
+                        t[2].append(agent)  # save agent name for this trial
+        else:
+            index = 0  # go throu the data_storage and add one trial from every agent, repeat afterwards
+            while(n_trials > len(trials)):
+                for t in self.data_storage[data_storage_keys[index]]:
+                    index += 1
+                    if index >= len(data_storage_keys): 
+                        index = 0
+                    if agent not in t[3]:  # if trials wasn't already sent to agent
+                        trials.append(t[:2])
+                        t[2].append(agent)  # save agent name for this trial
+                        break  # break after one trial is found and recheck
         return trials
+
+    # def request_trials(self, agent:str, n_trials: int):
+    #     logger.debug("request trials" + str(n_trials))
+    #     n_available = 0
+    #     n_per_agent = int(np.floor(n_trials / len(self.data_storage)))
+    #     for a in self.data_storage.keys():
+    #         n_available += len(self.data_storage[a])
+    #         if len(self.data_storage[a]) < n_per_agent:
+    #             return False
+
+    #     if n_available < n_trials:
+    #         logger.error("Number of requested trials is larger than number of available trials.")
+    #         return False
+
+
+    #     trials = []
+    #     n_rest = n_trials % len(self.data_storage)
+    #     cnt_rest = 0
+    #     for a in self.data_storage.keys():
+    #         if cnt_rest < n_rest:
+    #             mod_rest = 1
+    #         else:
+    #             mod_rest = 0
+    #         cnt_rest += 1
+    #         trials_per_agent = self.data_storage[a].copy()
+    #         random.shuffle(trials_per_agent)
+    #         trials_per_agent = trials_per_agent[:n_per_agent + mod_rest]
+    #         for t in trials_per_agent:
+    #             trials.append(t)
+
+    #     return trials
 
     def push_trial_2(self, theta: list, cost: float, task_parameter: float):
         theta.append(task_parameter)

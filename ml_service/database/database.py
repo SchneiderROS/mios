@@ -99,8 +99,8 @@ class Database():
     def push_trial(self, agent: str, theta: list, cost: float, keep_size: int):
         self.knowledge_manager.push_trial(agent, theta, cost, keep_size)
 
-    def request_trials(self, n_trials: int):
-        return self.knowledge_manager.request_trials(n_trials)
+    def request_trials(self, agent: str, n_trials: int):
+        return self.knowledge_manager.request_trials(agent, n_trials)
 
     def push_trial_2(self, theta, cost, task_parameter):
         self.knowledge_manager.push_trial_2(theta, cost, task_parameter)

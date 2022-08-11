@@ -158,12 +158,26 @@ class SVMService(BaseService):
         else:
             kb = ServerProxy("http://" + self.knowledge_source["kb_location"] + ":8001")
 
-        x_set_external = x_set[len(x_set) - self.configuration.n_immigrant:]
-        x_set = x_set[:len(x_set) - self.configuration.n_immigrant]
-        print(len(x_set) + len(x_set_external))
+        if kb is not None:
+            new_set = kb.request_trials(self.configuration.n_immigrant)
+            if len(new_set) > 0:
+                x_set_external = x_set[len(x_set) - len(new_set):]
+                x_set = x_set[:len(x_set) - len(new_set)]
+                print(len(x_set) + len(x_set_external))
+                print("LEN new_set: " + str(len(new_set)))
+                print("LEN x_set_external: " + str(len(x_set_external)))
+
+                for i in range(len(new_set)):   # checking for non_sharable parts of the parameter vector which would be not overwritten (don't used as default)
+                    for j in range(len(new_set[i])):
+                        if self.problem_definition.domain.vector_mapping[j] in self.problem_definition.domain.non_shareables:
+                            print("Not sharing: " + self.problem_definition.domain.vector_mapping[j])
+                            new_set[i][j] = x_set_external[i][j]
+                for i in new_set:
+                    x_set.append(i[0])
+                    #costs.append((i[1],))    # we evaluate the cost on this robot again.
 
         for x in x_set:
-            uuid = self.push_trial(x)
+            uuid = self.push_trial(x)  # evalutae the trials (->engine->mios)
             trial_uuids[uuid] = x
 
         costs = []
@@ -177,45 +191,15 @@ class SVMService(BaseService):
             else:
                 self.success_ratio += result.q_metric.success
                 costs.append((result.q_metric.final_cost,))
-            if kb is not None:
-                theta = []
-                for i in range(len(trial_uuids[uuid])):
-                    theta.append(float(trial_uuids[uuid][i]))
-                kb.push_trial(self.host_name, theta, float(result.q_metric.final_cost), self.configuration.batch_width)
-                # kb.push_trial_2(theta, float(result.final_cost), self.problem_definition.cost_function.geometry_factor)
+            if result.q_metric.success:
+                if kb is not None:
+                    theta = []
+                    for i in range(len(trial_uuids[uuid])):
+                        theta.append(float(trial_uuids[uuid][i]))
+                    kb.push_trial(self.host_name, theta, float(result.q_metric.final_cost), self.configuration.batch_width)
+                    # kb.push_trial_2(theta, float(result.final_cost), self.problem_definition.cost_function.geometry_factor)
 
         self.success_ratio /= float(len(trial_uuids))
-
-        if kb is not None:
-            while True:
-                new_set = kb.request_trials(self.configuration.n_immigrant)
-                # x_set_external_tmp = []
-                # for i in range(len(x_set_external)):
-                #     x_set_external_tmp.append([])
-                #     for j in range(len(x_set_external[i])):
-                #         x_set_external_tmp[i].append(float(x_set_external[i][j]))
-                # cost_external = kb.request_online_evaluation(x_set_external_tmp, self.problem_definition.cost_function.geometry_factor)
-                if new_set is False:
-                    print("Not enought yet")
-                    time.sleep(1)
-                    continue
-                else:
-                    break
-            print("LEN new_set: " + str(len(new_set)))
-            print("LEN x_set_external: " + str(len(x_set_external)))
-            for i in new_set:
-                x_set.append(i[0])
-                costs.append((i[1],))
-            # for i in range(len(x_set_external)):
-            #     x_set.append(x_set_external[i])
-            #     costs.append((cost_external[i],))
-            for i in range(len(new_set)):
-                for j in range(len(new_set[i])):
-                    print("###################################")
-                    print(self.problem_definition.domain.non_shareables)
-                    if self.problem_definition.domain.vector_mapping[j] in self.problem_definition.domain.non_shareables:
-                        print("Not sharing: " + self.problem_definition.domain.vector_mapping[j])
-                        new_set[i][j] = x_set_external[i][j]
 
         costs_tmp = []
         for c in costs:
