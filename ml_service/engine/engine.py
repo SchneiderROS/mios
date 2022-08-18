@@ -19,7 +19,7 @@ logger = logging.getLogger("ml_service")
 
 
 class Trial:
-    def __init__(self, task_context: dict, reset_instructions: list, theta: dict, log: bool = True, external: bool = False):
+    def __init__(self, task_context: dict, reset_instructions: list, theta: dict, log: bool = True):
         self.task_context = task_context
         self.reset_instructions = reset_instructions
         self.theta = theta
@@ -35,8 +35,6 @@ class Trial:
 
         self.trial_number = 0
         self.log = log
-
-        self.external = external
 
     def is_valid(self):
         if "name" not in self.task_context:
@@ -447,8 +445,7 @@ class Engine:
             "t_0": trial.t_0,
             "t_1": trial.t_1,
             "t_delta": trial.t_delta,
-            "agent": trial.agent,
-            "external": trial.external
+            "agent": trial.agent
         }
         logger.debug("Engine::write_task_result.data: " + str(data))
         self.database_results_collection.update_one({'_id': self.database_results_id},

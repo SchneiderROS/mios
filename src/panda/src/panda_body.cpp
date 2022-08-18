@@ -26,9 +26,9 @@ bool PandaBody::initialize(){
     m_hand=m_memory->read_parameters()->system.gripper;
     
     std::optional<std::string> ip;
+    if(m_has_arm){
     //request control and activate FCI
-    for(int count=0; count < 3; count++){
-        spdlog::debug("PandaBody::initialize()  Requesting control, acitvating FCI (count="+std::to_string(count+1)+"/3).");
+        spdlog::debug("PandaBody::initialize()  Requesting control, acitvating FCI");
         ip = PandaBody::ping_robot(m_memory->get_parameters()->system.robot_ip);
         bool tokenForceTimeout = false;
         try{
@@ -40,21 +40,15 @@ bool PandaBody::initialize(){
         }catch(const pybind11::error_already_set& e){
             spdlog::debug(e.what());
             spdlog::warn("Cannot take control of the robot, error when calling the python desk client.");
-            continue;
         }
         m_memory->set_default_parameters();
         if(!m_memory->read_parameters()->system.spoc_in_control){
             spdlog::warn("Cannot take control over the robot (single point of control). Check desk_client.");
-            if(count<2){
-                continue;
-            }else{
-                return false;
+            return false;
             }
-        }
         activate_fci();
-        break;
-
     }
+
     m_memory->get_parameters()->system.robot_ip = get_robot_ip(ip.value()).value_or("127.0.0.1");
     if(!connect_to_robot(m_memory->read_parameters()->system.robot_ip)){
         return false;
