@@ -6,6 +6,7 @@ import time
 
 from sklearn.svm import SVC
 from sklearn import mixture
+from sklearn.model_selection import KFold, cross_val_score
 
 from deap import creator
 
@@ -376,11 +377,14 @@ class SVMService(BaseService):
             tt = 0
             if self.neglect_samples > 0:
                 print("sucess:",self.success,"\n","svm_samples:",self.svm_samples)
-            if len(np.unique(self.success)) > 1:  # number of classes has to be greater than 1
-                clf = SVC(C=100000)
-                clf.fit(self.svm_samples, self.success)
-                temp = np.abs(clf.decision_function(self.svm_samples))
-            # print(clf.decision_function(self.svm_samples))
+            
+            k_fold = KFold(n_splits=5)
+            for train, test in k_fold.split(self.svm_samples):
+                if len(np.unique(self.success)) > 1:  # number of classes has to be greater than 1
+                    clf = SVC(C=100000)
+                    clf.fit(self.svm_samples, self.success)
+                    temp = np.abs(clf.decision_function(self.svm_samples))
+            print("descision_function: ",clf.decision_function(self.svm_samples))
 
             if tt < temp.min():
                 tt = temp.min()
