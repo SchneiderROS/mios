@@ -129,7 +129,6 @@ class Result:
             return []
         for i in range(len(actual_episode_length)):
             episode_from, episode_to = sum(actual_episode_length[:i]), sum(actual_episode_length[:i+1])
-            print("from ",episode_from, "  to ",episode_to)
             cost.append(np.min(np.asarray(cost_raw[episode_from:episode_to])))
         return cost
 

@@ -199,11 +199,10 @@ class BaseService(metaclass=ABCMeta):
 
         knowledge = self.knowledge_manager.get_knowledge_by_identity(self.DBclient,
                                                                     self.problem_definition.get_task_identifier())
-        print("################################################")
-        print(knowledge)
-        self.knowledge_manager.store_knowledge(self.DBclient, knowledge, self.knowledge_source["scope"])
+        print("Learning completed")
 
         if self.knowledge_source is not None:
+            self.knowledge_manager.store_knowledge(self.DBclient, knowledge, self.knowledge_source.get("scope",[]))
             if self.knowledge_source.get("mode", "local") == "global":
                 logger.debug("base_service.learn_task: store ml_results to global database at " + str(
                     "http://" + self.knowledge_source["kb_location"] + ":8001"))
@@ -213,6 +212,8 @@ class BaseService(metaclass=ABCMeta):
                         kb.process_knowledge(self.problem_definition.get_task_identifier())
                     except socket.timeout:
                         logger.error("base_service: global Database is not reachable!")
+        else:
+            self.knowledge_manager.store_knowledge(self.DBclient, knowledge, [])
 
         self.DBclient.update("ml_results", self.problem_definition.skill_class, {"_id": self.database_results_id},
                              ml_data[0])
@@ -223,7 +224,7 @@ class BaseService(metaclass=ABCMeta):
         if self.engine is not None:
             self.engine.stop()
 
-    def push_trial(self, x, external: bool = False) -> str:
+    def push_trial(self, x, external: str = False) -> str:
         for i in range(len(x)):
             if x[i] > 1:
                 x[i] = 1

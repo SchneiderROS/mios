@@ -152,7 +152,6 @@ class DataProcessor:
     
     def get_average_cost_over_trials(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None, specification: str = "all") -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent, specification=specification))
-        print(cost)
         confidence = 0.95
         interval = []
         for i in range(cost.shape[1]):
@@ -163,7 +162,6 @@ class DataProcessor:
     
     def get_average_cost_over_batch(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None) -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent))
-        print(cost)
         confidence = 0.95
         interval = []
         for i in range(cost.shape[1]):

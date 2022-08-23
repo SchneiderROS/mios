@@ -9,7 +9,7 @@ import os
 def learn_task(robot:str, problem_definition: ProblemDefinition, service_config: ServiceConfiguration, tags: list,
                n_iterations: int = 10, keep_record: bool = False, knowledge = None, wait: bool = False):
     start_experiment(robot, [robot], problem_definition, service_config, n_iterations, knowledge=knowledge, tags=tags,
-                     keep_record=False, wait=wait)
+                     keep_record=keep_record, wait=wait)
 def learn_single_task(robot:str, problem_definition: ProblemDefinition, service_config: ServiceConfiguration, tags: list,
                current_number_iterations: int=0, keep_record: bool = False, knowledge = None, wait: bool = False):
     start_single_experiment(robot, [robot], problem_definition, service_config, current_number_iterations, tags, knowledge, keep_record)
@@ -23,12 +23,12 @@ def test_learning():
 
 
 def learn_insertion(robot: str, approach: str, insertable: str, container: str, tags: list, knowledge=None,
-                    wait: bool=True):
+                    wait: bool=True, n_iterations = 10):
     pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                           {"Insertable": insertable, "Container": container,
                            "Approach": approach}).get_problem_definition(insertable)
     sc = SVMLearner().get_configuration()
-    learn_task(robot, pd, sc, tags, knowledge=knowledge)
+    learn_task(robot, pd, sc, tags, knowledge=knowledge, n_iterations=n_iterations)
 
 
 def learn_extraction(robot: str, extract_to: str, extractable: str, container: str, tags: list):

@@ -1,3 +1,4 @@
+from lib2to3.pytree import Node
 import logging
 from threading import Thread
 from threading import Lock
@@ -148,12 +149,12 @@ class Interface:
                 response["current_task"] = "INVALID"
         return response
 
-
     def wait_for_service(self):
         logger.debug("Interface::wait_for_service")
         while self.is_busy():
             time.sleep(1)
-
+        if self.service == None:
+            return None
         result = self.service.result
         del self.service
         self.service = None

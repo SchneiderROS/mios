@@ -146,11 +146,10 @@ class SVMService(BaseService):
 
     def _run_trial_par(self, x_set: list):
         """ create array of rpc params for input """
-        self.cnt_trial = 0
         print("Evaluating batch " + str(self.cnt_batch))
         self.cnt_batch += 1
 
-        self.cnt_trial += 1
+        self.cnt_trial += self.configuration.batch_width
 
         trial_uuids = dict()
 
@@ -162,7 +161,7 @@ class SVMService(BaseService):
 
         x_set_external = []
         if kb is not None:
-            new_set = kb.request_trials(self.host_name, self.configuration.n_immigrant)
+            new_set = kb.request_trials(self.host_name, self.configuration.n_immigrant)  # new_set: list of tuples: [(Theta, Cost, Origin), ...]
             if len(new_set) > 0:
                 x_set_external = x_set[len(x_set) - len(new_set):]
                 x_set = x_set[:len(x_set) - len(new_set)]
@@ -181,11 +180,12 @@ class SVMService(BaseService):
         else:
             print("no external trials")
 
+        new_set.reverse()
         x_set.reverse() # so the external trials come first
         for i in range(len(x_set)):
             external = False
             if i<len(x_set_external):  # mark the first trials as external 
-                external=True
+                external=new_set[i][2]  # agent name of trial origin
             uuid = self.push_trial(x_set[i], external=external)  # evalutae the trials (->engine->mios)
             trial_uuids[uuid] = x_set[i]
 
@@ -329,11 +329,12 @@ class SVMService(BaseService):
 
                     if prediction==1:
                         #raw_input("es passiert was!")
+                        #print("accepted")
                         self.action_list_norm.append(action_norm)
                         i += 1
 
                     else:
-                        # print " rejected"
+                        #print(" rejected")
                         counter += 1
                         continue
                 else:
@@ -363,6 +364,7 @@ class SVMService(BaseService):
         return x
 
     def _trainSVM(self):
+        self.svmCounter = sum(self.success)
         if self.svmCounter >= 5:
             if self.bad_gmm_prediciton >= self.configuration.batch_width:
                 self.neglect_samples = len(self.rewards) - self.configuration.batch_width  # neglect everything bevor last (bad) batch when calculating self.mean
@@ -374,26 +376,42 @@ class SVMService(BaseService):
 
             # self.classifier.fit(self.svm_samples,self.success)
 
-            tt = 0
-            if self.neglect_samples > 0:
-                print("sucess:",self.success,"\n","svm_samples:",self.svm_samples)
+            #if self.neglect_samples > 0:
+            #    print("sucess:",self.success,"\n","svm_samples:",self.svm_samples)
             
-            k_fold = KFold(n_splits=5)
-            for train, test in k_fold.split(self.svm_samples):
-                if len(np.unique(self.success)) > 1:  # number of classes has to be greater than 1
-                    clf = SVC(C=100000)
-                    clf.fit(self.svm_samples, self.success)
-                    temp = np.abs(clf.decision_function(self.svm_samples))
-            print("descision_function: ",clf.decision_function(self.svm_samples))
+            ## Kfold active:
+            #k_fold = KFold(n_splits=5)
+            #best_score = 0
+            #tt = 0
+            #for train, test in k_fold.split(self.svm_samples):
+            #    if len(np.unique(np.asarray(self.success)[train])) > 1:  # number of classes has to be greater than 1
+            #        clf = SVC(C=100000)
+            #        clf.fit(np.asarray(self.svm_samples)[train], np.asarray(self.success)[train])
+            #        score = clf.score(np.asarray(self.svm_samples)[test],np.asarray(self.success)[test])
+            #        print("score = ",score)
+            #        print("descision_function: ", clf.decision_function(self.svm_samples))
+            #        if score > best_score:  # takes best score
+            #            best_score = score
+            #            temp = np.mean(np.abs(clf.decision_function(self.svm_samples)))
+            #            if tt < temp:  # takes best decision function mean
+            #                tt = temp
+            #                self.classifier = clf
+            #                self.classifierActive = True
 
-            if tt < temp.min():
-                tt = temp.min()
-                self.classifier = clf
 
-            # self._plotData()
+            ## Kfold inactive:
+            if len(np.unique(np.asarray(self.success))) > 1:
+                clf = SVC(C=100000)
+                clf.fit(self.svm_samples, self.success)
+                self.classifierActive = True
+                temp = np.mean(np.abs(clf.decision_function(self.svm_samples)))
+                tt = 0
+                if tt < temp:
+                    tt = temp
+                    self.classifier = clf
 
-            self.classifierActive = True
 
+            print("SVM active = ",self.classifierActive)
             if self.svmCounter >= 15 and len(self.gmm_samples) > 2:    # gmm_samples > mean
 
                 for x in self.classifier.support_vectors_:

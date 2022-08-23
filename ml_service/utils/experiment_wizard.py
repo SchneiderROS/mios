@@ -1,4 +1,3 @@
-from pydoc import doc
 from xmlrpc.client import ServerProxy
 import copy
 import time
@@ -23,6 +22,7 @@ def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service:
         if "n" + str(i) in problem_def.tags:
             problem_def.tags.remove("n" + str(i))
         problem_def.tags.append("n" + str(i+1))
+        print("starting with ", problem_def.tags)
         if keep_record is True and len(client.read("ml_results", problem_def.skill_class, {"meta.tags": {"$all": problem_def.tags}})) != 0:
             print("Continue at n" + str(i+1))
             continue
@@ -34,9 +34,11 @@ def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service:
         #         knowledge["scope"].remove("n" + str(i))
         #     knowledge["scope"].append("n" + str(i+1))
         uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge)
-        if wait is True:
-            s.wait_for_service()
-        # backup_result(agent, "collective-control-001.local", problem_def.skill_class, uuid)
+        while s.is_busy():
+            time.sleep(10)
+        #if wait is True:
+        #    s.wait_for_service()
+        print(problem_def.tags, " finished.")
 
 
 def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, service: ServiceConfiguration, iter: int = 1,

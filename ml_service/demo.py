@@ -136,7 +136,7 @@ def learn_task(robot:str, problem_definition: ProblemDefinition, service_config:
     start_experiment(robot, [robot], problem_definition, service_config, 10, knowledge=knowledge, tags=tags,
                      keep_record=False, wait=wait)
 
-def grab_insertable(robot:str):
+def grab_insertable(robot:str, insertable = "generic_insertable"):
     print("current object grasped: ",call_method(robot,12000,"get_state")["result"]['grasped_object'] )
     if call_method(robot,12000,"get_state")["result"]['grasped_object'] == 'NullObject':
         call_method(robot, 12000, "release_object")
@@ -153,11 +153,11 @@ def grab_insertable(robot:str):
     move_context["skill"]["objects"]["goal_pose"] = "generic_container_above"
     f = open(path_to_default_context + "move_cart.json")
     move_fine_context = json.load(f)
-    move_fine_context["skill"]["objects"]["GoalPose"] = "generic_insertable"
+    move_fine_context["skill"]["objects"]["GoalPose"] = insertable
 
     f = open(path_to_default_context + "extraction.json")
     extraction_context = json.load(f)
-    extraction_context["skill"]["objects"]["Extractable"] = "generic_insertable"
+    extraction_context["skill"]["objects"]["Extractable"] = insertable
     extraction_context["skill"]["objects"]["Container"] = "generic_container"
     extraction_context["skill"]["objects"]["ExtractTo"] = "generic_container_approach"
 
@@ -180,7 +180,7 @@ def grab_insertable(robot:str):
                 continue
         success_moving = False
         result = call_method(robot,12000,"grasp",{"width":0,"force":100,"epsilon_outer":1,"speed":100}) #call_method(robot, 12000, "grasp_object", {"object": "generic_insertable"})
-        call_method(robot,12000,"set_grasped_object",{"object":"generic_insertable"})
+        call_method(robot,12000,"set_grasped_object",{"object":insertable})
         #call_method(robot, 12000,"set_grasped_object", {"object": "generic_insertable"})
         success_grasping  = result["result"]["result"]
         if not success_grasping:

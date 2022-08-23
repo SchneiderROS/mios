@@ -26,7 +26,7 @@ class KnowledgeManager:
         self.predictor = None
         self.validation_per = 0.2
         self.n_retrain = 10  # how many times the generalizer is retrained before prediction
-        self.data_storage = dict()
+        self.data_storage = dict()  # {"<name of origin>": Tuple(Theta, Cost, list(already requested by agents))}
         self.k_neighbors = KNeighborsRegressor(n_neighbors=6)
         self.mlp1 = MLPRegressor(hidden_layer_sizes=(14,), max_iter=400)
         self.mlp2 = MLPRegressor(hidden_layer_sizes=(14,), max_iter=400)
@@ -421,13 +421,18 @@ class KnowledgeManager:
         return l
 
     def push_trial(self, agent: str, theta: list, cost: float, keep_size: int):
+        '''
+        the trial (theta) will be stored in self.data_storage under key "<agent>" {"<name of origin>": Tuple(Theta, Cost, list(already requested by agents))}
+        the stored trials will not exceed keep_size
+        always the trial which was used by the most agents will be poped
+        '''
         logger.debug("push_trial: store trial from"+agent)
         if agent not in self.data_storage:
             self.data_storage[agent] = []
         if len(self.data_storage[agent]) >= keep_size:  # delte the trial that was requested the most already
             index = -1
             requested_from_n_others = 0
-            for i in range(len(self.data_storage[agent])):
+            for i in range(len(self.data_storage[agent])):  # pop the trial which was already requested by the most other agents
                 if len(self.data_storage[agent][i])>requested_from_n_others:
                     index = i
                     requested_from_n_others = len(self.data_storage[agent][i])
@@ -437,6 +442,13 @@ class KnowledgeManager:
         
 
     def request_trials(self, agent:str, n_trials: int):
+        '''
+        self.data_storage: {"<name of origin>": Tuple(Theta, Cost, list(already requested by agents))}
+        
+        sends back a list of tuples: [Tuple(Theta, Cost, Origin)]   where origin is the agent where the trial originated
+        the list will be of size n_trials
+
+        '''
         print("knowledge_manager.request_trials: These agent uploaded successfull trials: ", list(self.data_storage.keys()))
         if n_trials<1:
             logger.debug("KnowledgeManager.request_trials: requested less than 1 trial -> return False")
@@ -462,7 +474,7 @@ class KnowledgeManager:
             for a in range(len(data_storage_keys)):
                 for t in self.data_storage[data_storage_keys[a]]:
                     if agent not in t[2]:  # if trials wasn't already sent to agent
-                        trials.append(t[:2])
+                        trials.append((t[0],t[1],data_storage_keys[a]))
                         t[2].append(agent)  # save agent name for this trial
         else:
             index = 0  # go throu the data_storage and add one trial from every agent, repeat afterwards
@@ -472,7 +484,7 @@ class KnowledgeManager:
                     if index >= len(data_storage_keys): 
                         index = 0
                     if agent not in t[2]:  # if trials wasn't already sent to agent
-                        trials.append(t[:2])
+                        trials.append((t[0],t[1],data_storage_keys[index]))
                         t[2].append(agent)  # save agent name for this trial
                         break  # break after one trial is found and recheck
         print("knowledge_manager.request_trials: Sending ",len(trials), " trials to ", agent)
