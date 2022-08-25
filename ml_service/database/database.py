@@ -121,5 +121,5 @@ class Database():
     def clear_memory(self):
         self.knowledge_manager.clear_memory()
     
-    def wait_for_batch(self):
-        return self.knowledge_manager.wait_for_batch()
+    def wait_for_batch(self, agent:str, batch:int):
+        return self.knowledge_manager.wait_for_batch(agent, batch)
