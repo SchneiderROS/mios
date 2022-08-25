@@ -158,8 +158,12 @@ class SVMService(BaseService):
         """ create array of rpc params for input """
         print("Evaluating batch " + str(self.cnt_batch))
 
-        while self.kb.wait_for_collective(self.host_name, int(self.cnt_batch)):
-            time.sleep(5)
+        if self.configuration.batch_synchronisation:
+            if self.kb is not None:
+                while self.kb.wait_for_collective(self.host_name, int(self.cnt_batch)):
+                    time.sleep(5)
+            else:
+                logger.error("SVM: Batch synchronisation is ON but no kb_location was set.")
         self.cnt_batch += 1
 
         self.cnt_trial += self.configuration.batch_width
@@ -183,11 +187,12 @@ class SVMService(BaseService):
                             new_set[i][j] = x_set_external[i][j]
                 for i in new_set:
                     x_set.append(i[0])
-                    #costs.append((i[1],))    # we evaluate the cost on this robot again.
+                    #costs.append((i[1],))    # we evaluate the cost on this robot again
+                new_set.reverse()
         else:
             print("no external trials")
 
-        new_set.reverse()
+        
         x_set.reverse() # so the external trials come first
         for i in range(len(x_set)):
             external = False

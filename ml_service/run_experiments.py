@@ -130,6 +130,8 @@ def horizontal_learning_experiment():
                 pd = InsertionFactory([robots[i]], TimeMetric("insertion", {"time": 5}),
                                     {"Insertable": insertables[i], "Container": containers[i],
                                     "Approach": approaches[i]}).get_problem_definition(insertables[i])
+                if insertables[i] == "HDMI_plug":  # increase the limits for HDMI_plug
+                    pd.domain.limits["p2_f_push_z"] = (0, 25)
                 sc = SVMLearner().get_configuration()
                 sc.n_immigrant = n_immigrant
                 sc.batch_synchronisation = True

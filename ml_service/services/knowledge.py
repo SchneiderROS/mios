@@ -14,9 +14,9 @@ class Knowledge():
         self.uuid = None
         self.prediction = False  # bool, wether this knowledge was predicted or not
         self.prediction_error = None
-        self.identity = [1]
+        self.identity = [1]  # task identity
         self.skill_class = None
-        self.source = []
+        self.source = []  # uuid(s) of the source ml_results
         self.expected_cost = None
         self.time = None
         self.tags = []  #actual tags of the knowledge itself
@@ -91,6 +91,18 @@ class Knowledge():
             self.equal_tags = input.get("equal_tags", [])
             self.equal_start = input.get("equal_start", False)
             self.cost_function = input.get("cost_function", [])
+
+    def check_consistency(self):
+        if self.mode == "global":
+            if type(self.kb_location) != str:
+                logger.error("knowledge mode is \""+self.mode+"\" but no kb_location was set.")
+        if self.mode == "global" or self.mode == "local":
+            if self.type is None:
+                logger.error("knowledge mode is \""+self.mode+"\" but knowledge type was not set. Default is local")
+        if (self.equal_start and (type(self.kb_location) != str)) or (self.equal_start and not self.equal_tags):
+            logger.error("All agents should start with the same batch (equal start is True), but no location or tags are specified")
+
+
 
 
 
