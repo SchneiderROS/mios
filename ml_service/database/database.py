@@ -41,6 +41,8 @@ class Database():
         self.rpc_server.register_function(self.push_trial_2, "push_trial_2")
         self.rpc_server.register_function(self.request_online_evaluation, "request_online_evaluation")
         self.rpc_server.register_function(self.clear_memory, "clear_memory")
+        self.rpc_server.register_function(self.get_result,"get_result")
+        self.rpc_server.register_function(self.wait_for_batch, "wait_for_collective")
         logger.debug("databse.start_server: starting rpc server with global database at port " + str(self.port))
         # self.rpc_server.serve_forever()
         self.stop = False
@@ -63,8 +65,16 @@ class Database():
                          "tags": result["meta"]["tags"],
                          "optimum_weights": result["meta"]["cost_function"]["optimum_weights"],
                          "geometry_factor": result["meta"]["cost_function"]["geometry_factor"]}
-
         return task_id
+    
+    def get_result(self, db, collection, filter):
+        logger.debug("Database.get_result")
+        results = self.db_client.read(db, collection, filter)
+        if len(results) == 0:
+            return False
+        if len(results) > 1:
+            return False
+        return results[0]
 
     def get_predicted_knowledge(self, task_identity: dict):
         """return knowledge from single task found on database"""
@@ -110,3 +120,6 @@ class Database():
 
     def clear_memory(self):
         self.knowledge_manager.clear_memory()
+    
+    def wait_for_batch(self):
+        return self.knowledge_manager.wait_for_batch()

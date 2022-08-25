@@ -1,8 +1,10 @@
+from itertools import count
 from definitions.templates import *
 from definitions.cost_functions import *
 from definitions.service_configs import *
 from utils.experiment_wizard import *
 from utils.taxonomy_utils import *
+from services.knowledge import Knowledge
 import os
 
 
@@ -73,6 +75,36 @@ def learn_bend(robot: str, start_pose: str, goal_pose: str, bendable: str, tags:
     sc = SVMLearner().get_configuration()
     learn_task(robot, pd, sc, tags)
 
+def simple_learning():
+    knowledge = Knowledge()
+    knowledge.kb_location = "collective-panda-004"
+    knowledge.equal_start = True
+    knowledge.equal_tags = ["simple_learning2", "n10", "with_Kfold","renamed"]
+    learn_insertion("collective-panda-004","cylinder_30_container_approach","cylinder_30","cylinder_30_container", ["simple_learning2","with_Kfold"], knowledge.to_dict(), True, 20)
+
+def check():
+    client = MongoDBClient("collective-panda-004")
+    docs = client.read("ml_results","insertion",{"meta.tags":["simple_learning2"]})
+    print("found ", len(docs), " results")
+    thetas = []
+    suc = []
+    count_different_thetas = 0
+    for doc in docs:
+        for i in range(1,11):
+            if len(suc) < 11:
+                suc.append(doc["n"+str(i)]["q_metric"]["success"])
+            elif doc["n"+str(i)]["q_metric"]["success"] != suc[i-1]:
+                print("different success at n"+str(i))
+            if doc["n"+str(i)]["theta"] not in thetas:
+                count_different_thetas += 1
+                print(count_different_thetas)
+                thetas.append(doc["n"+str(i)]["theta"])
+
+def delete_results(robot:str, tags:list):
+    client = MongoDBClient(robot)
+    client.remove("ml_results", "insertion", {"meta.tags":tags})
+
+
 def horizontal_learning_experiment():
     from threading import Thread
     robots = [  "collective-panda-prime",
@@ -84,8 +116,12 @@ def horizontal_learning_experiment():
     containers = [k+"_container" for k in insertables]
     approaches = [k+"_container_approach" for k in insertables]
     n_immigrants_vector = [2, 4, 6, 8, 0]
-    knowledge_source = {"kb_location": robots[0]}
+    knowledge_source = Knowledge()
+    knowledge_source.kb_location = "collective-control-001"
     tags = ["horizontal_learning_2"]
+    # delete results with same tags:
+    for r in robots:
+        delete_results(r,tags)
     for n_current_iter in range(10):
         for n_immigrant in n_immigrants_vector:
             threads = []
@@ -97,12 +133,12 @@ def horizontal_learning_experiment():
                 sc = SVMLearner().get_configuration()
                 sc.n_immigrant = n_immigrant
                 print(sc.to_dict())
-                threads.append(Thread(target=learn_single_task, args=(robots[i], pd, sc, tags, int(n_current_iter), True, knowledge_source, True)))
+                threads.append(Thread(target=learn_single_task, args=(robots[i], pd, sc, tags, int(n_current_iter), True, knowledge_source.to_dict(), True)))
                 threads[-1].start()
             for t in threads:
                 t.join()
             tags.pop(-1)
-            kb = ServerProxy("http://" + knowledge_source["kb_location"] + ":8001", allow_none=True)
+            kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
             kb.clear_memory()
     print("\nfinished :)\n")
 

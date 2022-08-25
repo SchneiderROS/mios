@@ -3,6 +3,7 @@ import numpy as np
 import copy
 import time
 import random
+from services.knowledge import Knowledge
 from mongodb_client.mongodb_client import MongoDBClient
 from knowledge_processor.knowledge_processor_v2 import KnowledgeProcessor
 from knowledge_processor.kg_random_forest import KGRandomForest
@@ -27,6 +28,8 @@ class KnowledgeManager:
         self.validation_per = 0.2
         self.n_retrain = 10  # how many times the generalizer is retrained before prediction
         self.data_storage = dict()  # {"<name of origin>": Tuple(Theta, Cost, list(already requested by agents))}
+        self.batch_count = dict()
+
         self.k_neighbors = KNeighborsRegressor(n_neighbors=6)
         self.mlp1 = MLPRegressor(hidden_layer_sizes=(14,), max_iter=400)
         self.mlp2 = MLPRegressor(hidden_layer_sizes=(14,), max_iter=400)
@@ -139,8 +142,7 @@ class KnowledgeManager:
 
         successful_trials, vector_mapping, mean_optimum_weights, confidence = self.get_successful_trials(doc)
         self.knowledge_processor = KnowledgeProcessor(vector_mapping, task_identity, mean_optimum_weights, confidence)
-        knowledge = self.knowledge_processor.process_knowledge(successful_trials)
-        return knowledge
+        return self.knowledge_processor.process_knowledge(successful_trials)
 
     def process_knowledge_local(self, db_client, task_identity: dict, data_db: str = "ml_results") -> str("_id"):
         """process raw data from trials to knowledge; working from and on the database"""
@@ -207,24 +209,24 @@ class KnowledgeManager:
             "meta.scope": scope,
             "meta.skill_class": skill_class
         }
-
+        knowledge = Knowledge()
         doc = self.collect_knowledge(self.DBclient, knowledge_db, skill_class, knowledge_filter)
 
         if not doc:
             logger.error("KnowledgeManager: Cannot predict for identity " + str(identity) + ". No knowledge on " + str(
                 knowledge_db) + " for skill class " + skill_class + " and scope " + str(scope) + ".")
-            return False
+            return knowledge.to_dict()
         # check if knowledge fits together:
         vector_mapping = doc[0]["parameters"].keys()
         for d in doc:
             if vector_mapping != d["parameters"].keys():
                 logger.error(
                     "KnowledgeManager.predict_knowledge: found knowledge doesnt fit together: different vector mappings!")
-                return False
+                return knowledge.to_dict()
         if len(doc) * (1 - self.validation_per) < 5:  # if no predictions can be made: use similar knowledge
             logger.error("KnowledgeManager: Cannot predict for identity " + str(identity) + ". Not enough knowledge on " + str(
                 knowledge_db) + " for skill class " + skill_class + " and scope " + str(scope) + ".")
-            return False
+            return knowledge.to_dict()
 
         # get best predictor:
         if predictor is None:
@@ -307,21 +309,19 @@ class KnowledgeManager:
         parameter_dict = {}
         for key_name, parameter in zip(vector_mapping, prediction):
             parameter_dict[key_name] = float(parameter)  # use python float because of rpc restrictions
-        meta = dict()
-        meta["expected_cost"] = float(expected_cost[0])
-        meta["prediction_error"] = best_error
+
+        knowledge.expected_cost = float(expected_cost[0])
+        knowledge.prediction_error = best_error
         # confidence gives no good results when predicting
         # meta["confidence"] = float(best_error / np.sqrt(len(training_data_x_normalized)))  # divided by root of n_parameters because max error is root(n_parameters)
-        meta["identity"] = identity
-        meta["skill_class"] = skill_class
-        meta["scope"] = scope
-        meta["time"] = time.ctime()
-        meta["prediction"] = True
+        knowledge.identity = identity
+        knowledge.skill_class = skill_class
+        knowledge.scope = scope
+        knowledge.time= time.ctime()
+        knowledge.prediction = True
+        knowledge.parameters = parameter_dict
 
-        knowledge = {"parameters": parameter_dict,
-                     "meta": meta}
-
-        return knowledge
+        return knowledge.to_dict()
 
     def get_similar_knowledge(self, task_identifier: dict, scope: dict, knowledge_db: str = "local_knowledge",
                               data_db: str = "ml_results"):
@@ -333,17 +333,19 @@ class KnowledgeManager:
         knowledge_filter = {"meta.scope": scope,
                             "meta.skill_class": task_identifier["skill_class"]
                             }
-
+        knowledge = Knowledge()
         docs = self.DBclient.read(knowledge_db, collection, knowledge_filter)
         if len(docs) >= 1:
             logger.debug("knowledge_processor.get_similar_knowledge(): found knowledge on task identity" + str(
                 task_identifier) + " at " + str(knowledge_db) + "." + str(collection))
             # take most similar knowledge according to cost function ("optimum_weights"):
-            return self.get_most_similar_task(docs, identity)
+
+            knowledge.from_dict(self.get_most_similar_task(docs, identity))
+            return knowledge.to_dict()
         logger.debug("knowledge_manager.get_similar_knowledge(): can\'t find knowledge for " +
                      str(task_identifier) + " under scope " + str(scope) + " at " + str(collection))
 
-        return False
+        return knowledge.to_dict()
 
     def get_successful_trials(self, doc):
         metainfo = []
@@ -572,6 +574,20 @@ class KnowledgeManager:
         self.trial_data_x.clear()
         self.trial_data_y.clear()
         self.data_storage.clear()
+    
+    def wait_for_batch(self, agent:str, batch:int):
+        '''
+        for synchronisation of the collective so everyone is on the same batch (svm.py)
+        all agent upload their finished batch number and check if all others have also finised this batch number
+        if not -> return True
+        '''
+        self.batch_count[agent] = batch
+        wait = False
+        for r in self.batch_count.keys():
+            if self.batch_count[r] != batch:
+                wait = True
+        return wait
+
 
     def train_mlp1(self, x, y):
         if self.lock_mlp1.acquire(False) is False:

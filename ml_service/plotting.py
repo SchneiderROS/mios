@@ -1837,7 +1837,7 @@ def plot_horizontal_learning():
     robots = ["collective-panda-002","collective-panda-003","collective-panda-004","collective-panda-008","collective-panda-prime"]
     p = DataProcessor()
 
-    tags = ["horizontal_learning"]
+    tags = ["horizontal_learning_2"]
     experiments = ["n_immigrants="+str(n) for n in [0,2,4,6,8]]
     colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"][:len(experiments)]
     legend_handles1 = []
@@ -1904,7 +1904,7 @@ def plot_simple_learning():
     robots = ["collective-panda-004"]
     p = DataProcessor()
 
-    tags = ["simple_learning"]
+    tags = ["simple_learning2"]
     experiments = ["with_Kfold", "without_Kfold"]
     colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"][:len(experiments)]
     legend_handles1 = []
@@ -1941,7 +1941,7 @@ def plot_simple_learning():
 
             axes1[r].set_ylim(0, 2.4)
             axes1[r].set_xlim(1, len(mean_cost))
-            axes1[r].grid()
+            axes1[r].grid("on")
             axes1[r].tick_params(axis="both", which="both", length=0)
             xticks = [i*10 for i in range(1,(int(len(mean_cost)/10)) +1)]
             xticks.insert(0,1)

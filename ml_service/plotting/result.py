@@ -28,8 +28,8 @@ class Result:
             self.total_time = 0
         self.starting_time = data_tmp["meta"]["t_0"]
 
-        if "init_knowledge" in data_tmp["meta"] and data_tmp["meta"]["init_knowledge"]["content"]:
-            self.knowledge = data_tmp["meta"]["init_knowledge"]["content"]["parameters"]
+        if "init_knowledge" in data_tmp["meta"]:
+            self.knowledge = data_tmp["meta"]["init_knowledge"]["parameters"]
         else:
             self.knowledge = None
 

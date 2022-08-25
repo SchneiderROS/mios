@@ -2,6 +2,8 @@ from abc import ABCMeta
 from abc import abstractmethod
 import time
 
+from services.knowledge import Knowledge
+
 
 class KnowledgeProcessorBase(metaclass=ABCMeta):
     def __init__(self, vector_mapping, task_identfier, mean_optimum_weights = None, confidence = None):
@@ -22,18 +24,14 @@ class KnowledgeProcessorBase(metaclass=ABCMeta):
         for key_name, parameter in zip(self.vector_mapping, centroid):
             parameter_dict[key_name] = float(parameter)  # use python float because of rpc restrictions
 
-        meta = dict()
-        meta["expected_cost"] = expected_cost
-        meta["identity"] = self.task_identfier["identity"]
-        meta["skill_class"] = self.task_identfier["skill_class"]
-        meta["tags"] = self.task_identfier["tags"]
-        meta["time"] = time.ctime()
-        meta["confidence"] = self.confidence
-
-        knowledge = {"parameters":parameter_dict, 
-                     "meta": meta
-                     }
-        return knowledge
+        knowledge = Knowledge()
+        knowledge.expected_cost = expected_cost
+        knowledge.identity = self.task_identfier["identity"]
+        knowledge.skill_class = self.task_identfier["skill_class"]
+        knowledge.tags = self.task_identfier["tags"]
+        knowledge.time = time.ctime()
+        knowledge.confidence = self.confidence
+        return knowledge.to_dict()
 
     def get_raw_data(self, d):
         successful_trials = []

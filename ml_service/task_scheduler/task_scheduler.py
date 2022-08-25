@@ -9,8 +9,8 @@ import time
 
 logger = logging.getLogger("ml_service")
 
-
-class Task:
+# not used anymore I think
+class Task:  
     def __init__(self, problem_definition: ProblemDefinition, service_configuration: ServiceConfiguration, agents: list, service_url, knowledge_mode: str, knowledge_type: str):
         self.problem_definition = problem_definition
         self.service_configuration = service_configuration

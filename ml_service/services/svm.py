@@ -104,10 +104,17 @@ class SVMService(BaseService):
         self.episodes=int(self.configuration.n_trials/self.configuration.batch_width)
 
         self.limits = self.problem_definition.domain.limits
-
+        self.kb = None
         self.engine.register_stop_condition(self._is_learned)
 
     def _learn_task(self):
+        if self.knowledge:
+            if self.knowledge.kb_location is not None:
+                print("kb_location = ",self.knowledge.kb_location)
+                self.kb = ServerProxy("http://" + self.knowledge.kb_location + ":8001")
+        else:
+            self.kb = None
+
         self.mat_bounds = []
         self.numberOfParameters = len(self.limits)
         for p in self.limits.keys():
@@ -147,21 +154,18 @@ class SVMService(BaseService):
     def _run_trial_par(self, x_set: list):
         """ create array of rpc params for input """
         print("Evaluating batch " + str(self.cnt_batch))
+
+        while self.kb.wait_for_collective(self.host_name, int(self.cnt_batch)):
+            time.sleep(5)
         self.cnt_batch += 1
 
         self.cnt_trial += self.configuration.batch_width
 
         trial_uuids = dict()
 
-        if self.knowledge_source is None:
-            kb = None
-        else:
-            print("kb_location = ",self.knowledge_source["kb_location"])
-            kb = ServerProxy("http://" + self.knowledge_source["kb_location"] + ":8001")
-
         x_set_external = []
-        if kb is not None:
-            new_set = kb.request_trials(self.host_name, self.configuration.n_immigrant)  # new_set: list of tuples: [(Theta, Cost, Origin), ...]
+        if self.kb is not None:
+            new_set = self.kb.request_trials(self.host_name, self.configuration.n_immigrant)  # new_set: list of tuples: [(Theta, Cost, Origin), ...]
             if len(new_set) > 0:
                 x_set_external = x_set[len(x_set) - len(new_set):]
                 x_set = x_set[:len(x_set) - len(new_set)]
@@ -203,11 +207,11 @@ class SVMService(BaseService):
 
             print("result.q_metric.success: ",result.q_metric.success)
             if result.q_metric.success:
-                if kb is not None:
+                if self.kb is not None:
                     theta = []
                     for i in range(len(trial_uuids[uuid])):
                         theta.append(float(trial_uuids[uuid][i]))
-                    kb.push_trial(self.host_name, theta, float(result.q_metric.final_cost), self.configuration.batch_width)
+                    self.kb.push_trial(self.host_name, theta, float(result.q_metric.final_cost), self.configuration.batch_width)
                     # kb.push_trial_2(theta, float(result.final_cost), self.problem_definition.cost_function.geometry_factor)
 
         self.success_ratio /= float(len(trial_uuids))
@@ -274,17 +278,31 @@ class SVMService(BaseService):
         i = 0
         counter = 0
         if index == 0:  # when first run use knowledge if available
+
             if self.centroid is not None:
                 if not self.confidence:
                     self.confidence = 0.1
                 self.action_list_norm.append([float(param) for param in self.centroid])  # add centroid ("knowledge") to action list
                 for i in range(1,self.configuration.batch_width):  # fill up batch with random trials around centroid
                     random_trial = np.random.normal(0, self.confidence, self.numberOfParameters) + self.centroid
-                    self.action_list_norm.append(list(random_trial))       
+                    self.action_list_norm.append(list(random_trial))   
             else:
                 temp_param_norm_samples = lhs(self.numberOfParameters, samples=self.configuration.batch_width)
                 for t in temp_param_norm_samples:
                     self.action_list_norm.append(t)
+            if self.knowledge.equal_start:
+                logger.debug("svm._setSamples: searching for first batch to set equal starting conditions.")
+                result = self.kb.get_result("ml_results", self.problem_definition.skill_class, {"meta.tags": self.knowledge.equal_tags})
+                if result:
+                    if len(result.keys()) < (self.configuration.batch_width+2):
+                        print("found result has no full batch size")
+                        return
+                    self.action_list_norm = []
+                    for i in range(1,self.configuration.batch_width+1):
+                        self.action_list_norm.append(self.problem_definition.domain.normalize(np.asarray(self.get_params(result["n"+str(i)]["theta"]))))
+                    self.action_list_norm.reverse()
+                else:
+                    logger.debug("svm._setSamples: no equal starting batch size was found")
         else:
             while i < self.configuration.batch_width:
                 if counter>=1000:
@@ -379,37 +397,36 @@ class SVMService(BaseService):
             #if self.neglect_samples > 0:
             #    print("sucess:",self.success,"\n","svm_samples:",self.svm_samples)
             
-            ## Kfold active:
-            #k_fold = KFold(n_splits=5)
-            #best_score = 0
-            #tt = 0
-            #for train, test in k_fold.split(self.svm_samples):
-            #    if len(np.unique(np.asarray(self.success)[train])) > 1:  # number of classes has to be greater than 1
-            #        clf = SVC(C=100000)
-            #        clf.fit(np.asarray(self.svm_samples)[train], np.asarray(self.success)[train])
-            #        score = clf.score(np.asarray(self.svm_samples)[test],np.asarray(self.success)[test])
-            #        print("score = ",score)
-            #        print("descision_function: ", clf.decision_function(self.svm_samples))
-            #        if score > best_score:  # takes best score
-            #            best_score = score
-            #            temp = np.mean(np.abs(clf.decision_function(self.svm_samples)))
-            #            if tt < temp:  # takes best decision function mean
-            #                tt = temp
-            #                self.classifier = clf
-            #                self.classifierActive = True
+            # Kfold active:
+            k_fold = KFold(n_splits=5)
+            best_score = 0
+            tt = 0
+            for train, test in k_fold.split(self.svm_samples):
+                if len(np.unique(np.asarray(self.success)[train])) > 1:  # number of classes has to be greater than 1
+                    clf = SVC(C=100000)
+                    clf.fit(np.asarray(self.svm_samples)[train], np.asarray(self.success)[train])
+                    score = clf.score(np.asarray(self.svm_samples)[test],np.asarray(self.success)[test])
+                    print("score = ",score)
+                    print("descision_function: ", clf.decision_function(self.svm_samples))
+                    if score > best_score:  # takes best score
+                        best_score = score
+                        temp = np.mean(np.abs(clf.decision_function(self.svm_samples)))
+                        if tt < temp:  # takes best decision function mean
+                            tt = temp
+                            self.classifier = clf
+                            self.classifierActive = True
 
 
             ## Kfold inactive:
-            if len(np.unique(np.asarray(self.success))) > 1:
-                clf = SVC(C=100000)
-                clf.fit(self.svm_samples, self.success)
-                self.classifierActive = True
-                temp = np.mean(np.abs(clf.decision_function(self.svm_samples)))
-                tt = 0
-                if tt < temp:
-                    tt = temp
-                    self.classifier = clf
-
+            #if len(np.unique(np.asarray(self.success))) > 1:
+            #    clf = SVC(C=100000)
+            #    clf.fit(self.svm_samples, self.success)
+            #    self.classifierActive = True
+            #    temp = np.mean(np.abs(clf.decision_function(self.svm_samples)))
+            #    tt = 0
+            #    if tt < temp:
+            #        tt = temp
+            #        self.classifier = clf
 
             print("SVM active = ",self.classifierActive)
             if self.svmCounter >= 15 and len(self.gmm_samples) > 2:    # gmm_samples > mean
