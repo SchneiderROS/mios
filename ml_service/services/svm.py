@@ -3,6 +3,7 @@ import numpy as np
 import random
 import deap
 import time
+from socket import timeout
 
 from sklearn.svm import SVC
 from sklearn import mixture
@@ -172,7 +173,12 @@ class SVMService(BaseService):
 
         x_set_external = []
         if self.kb is not None:
-            new_set = self.kb.request_trials(self.host_name, self.configuration.n_immigrant)  # new_set: list of tuples: [(Theta, Cost, Origin), ...]
+            while True:
+                try:
+                    new_set = self.kb.request_trials(self.host_name, self.configuration.n_immigrant)  # new_set: list of tuples: [(Theta, Cost, Origin), ...]
+                    break
+                except timeout:
+                    time.sleep(random.randint(5,10))
             if len(new_set) > 0:
                 x_set_external = x_set[len(x_set) - len(new_set):]
                 x_set = x_set[:len(x_set) - len(new_set)]
@@ -219,7 +225,12 @@ class SVMService(BaseService):
                     theta = []
                     for i in range(len(trial_uuids[uuid])):
                         theta.append(float(trial_uuids[uuid][i]))
-                    self.kb.push_trial(self.host_name, theta, float(result.q_metric.final_cost), self.configuration.batch_width)
+                    while True:
+                        try:
+                            self.kb.push_trial(self.host_name, theta, float(result.q_metric.final_cost), self.configuration.batch_width)
+                            break
+                        except timeout:
+                            time.sleep(random.randint(5,10))
                     # kb.push_trial_2(theta, float(result.final_cost), self.problem_definition.cost_function.geometry_factor)
 
         self.success_ratio /= float(len(trial_uuids))
@@ -300,7 +311,12 @@ class SVMService(BaseService):
                     self.action_list_norm.append(t)
             if self.knowledge.equal_start:
                 logger.debug("svm._setSamples: searching for first batch to set equal starting conditions.")
-                result = self.kb.get_result("ml_results", self.problem_definition.skill_class, {"meta.tags": self.knowledge.equal_tags})
+                while True:
+                    try:
+                        result = self.kb.get_result("ml_results", self.problem_definition.skill_class, {"meta.tags": self.knowledge.equal_tags})
+                        break
+                    except timeout:
+                        time.sleep(random.randint(5,10))
                 if result:
                     if len(result.keys()) < (self.configuration.batch_width+2):
                         print("found result has no full batch size")
