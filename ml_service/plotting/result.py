@@ -12,11 +12,17 @@ class Result:
         print(self.tags)
         del data_tmp["_id"]
         n_trials = len(data_tmp) - 2
+
+        self.starting_time = data_tmp["meta"]["t_0"]
         self.trials = []
+        self.times = []
+        self.costs = []        
         for i in range(n_trials):
             try:
                 if data_tmp["n" + str(i+1)]["t_1"] is not None:
                     self.trials.append(data_tmp["n" + str(i+1)])
+                    self.times.append(data["n" + str(i+1)]["t_0"] - self.starting_time)
+                    self.costs.append(data["n" + str(i+1)]["q_metric"]["final_cost"])
             except KeyError:
                 continue
         self.meta_data = data_tmp["meta"]
@@ -26,7 +32,7 @@ class Result:
         else: 
             self.total_trials = 0
             self.total_time = 0
-        self.starting_time = data_tmp["meta"]["t_0"]
+
 
         if "init_knowledge" in data_tmp["meta"]:
             self.knowledge = data_tmp["meta"]["init_knowledge"]["parameters"]

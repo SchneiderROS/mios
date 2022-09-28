@@ -132,17 +132,18 @@ class BaseService(metaclass=ABCMeta):
             elif self.knowledge.type == "all":
                 self.initial_knowledge_list = self.knowledge_manager.get_knowledge(self.problem_definition.get_task_identifier(), self.knowledge.scope)
                 for i in range(len(self.initial_knowledge_list)):
-                    self.initial_knowledge_list[i] = Knowledge().from_dict(self.initial_knowledge_list[i])
-                    self.initial_knowledge_list[i].update()
+                        knowlege = Knowledge()
+                        knowlege.from_dict(self.initial_knowledge_list[i])
+                        self.initial_knowledge_list[i] = knowlege
+                        self.initial_knowledge_list[i].update()
                 if len(self.initial_knowledge_list)>0:
                     self.knowledge.parameters = self.initial_knowledge_list[0].parameters
             else:
                 logger.error("base_service: dont understand knowledge type"+str(self.knowledge.type))
         elif self.knowledge.mode == "global":
             logger.debug("base_service::initialize(): get global knowlege")
-            logger.debug("base_service::initialize(): contacting database at http://" + knowledge_source[
-                    "kb_location"] + ":8001")
-            with ServerProxy("http://" + knowledge_source["kb_location"] + ":8001") as kb:
+            logger.debug("base_service::initialize(): contacting database at http://" + self.knowledge.kb_location + ":8001")
+            with ServerProxy("http://" + self.knowledge.kb_location + ":8001") as kb:
                 try:
                     if self.knowledge.type == "similar":
                         self.knowledge.from_dict(kb.get_similar_knowledge(self.problem_definition.get_task_identifier(),
@@ -156,7 +157,9 @@ class BaseService(metaclass=ABCMeta):
                     elif self.knowledge.type == "all":
                         self.initial_knowledge_list = kb.get_knowledge(self.problem_definition.get_task_identifier(), self.knowledge.scope)
                         for i in range(len(self.initial_knowledge_list)):
-                            self.initial_knowledge_list[i] = Knowledge().from_dict(self.initial_knowledge_list[i])
+                            knowlege = Knowledge()
+                            knowlege.from_dict(self.initial_knowledge_list[i])
+                            self.initial_knowledge_list[i] = knowlege
                             self.initial_knowledge_list[i].update()
                         if len(self.initial_knowledge_list)>0:
                             self.knowledge.parameters = self.initial_knowledge_list[0].parameters
@@ -167,7 +170,7 @@ class BaseService(metaclass=ABCMeta):
                 except ConnectionRefusedError:
                     pass
         else:
-            logger.error("base_service::initialize(): Unknown knowledge mode " + str(knowledge_source["mode"]))
+            logger.error("base_service::initialize(): Unknown knowledge mode " + str(self.knowledge.mode))
 
         if self.knowledge.parameters:
             self.centroid = []
@@ -214,31 +217,33 @@ class BaseService(metaclass=ABCMeta):
         ml_data[0]["meta"]["init_knowledge"] = self.knowledge.to_dict()
         ml_data[0]["final_results"]["confidence"] = self.confidence
 
-        new_knowledge = self.knowledge_manager.get_knowledge_by_identity(self.DBclient,
-                                                                    self.problem_definition.get_task_identifier())
-        new_knowledge["meta"]["tags"] = self.problem_definition.tags
-        new_knowledge["meta"]["uuid"] = self.problem_definition.uuid
-        new_knowledge["meta"]["kb_location"] = self.knowledge.kb_location
-        new_knowledge["meta"]["type"] = self.knowledge.type
-        new_knowledge["meta"]["mode"] = self.knowledge.mode
-        if not new_knowledge["parameters"]:
-            logger.error("base_service.learn_task: New produced knowledge does have parameters!")
-        print("Learning completed")
+        new_knowledge = self.knowledge_manager.get_knowledge_by_id(self.DBclient,
+                                                                    self.problem_definition.get_task_identifier(), ml_data[0]["_id"])
+        if new_knowledge:
+            new_knowledge["meta"]["tags"] = self.problem_definition.tags
+            new_knowledge["meta"]["uuid"] = self.problem_definition.uuid
+            new_knowledge["meta"]["kb_location"] = self.knowledge.kb_location
+            new_knowledge["meta"]["type"] = self.knowledge.type
+            new_knowledge["meta"]["mode"] = self.knowledge.mode
+            if not new_knowledge["parameters"]:
+                logger.error("base_service.learn_task: New produced knowledge does have parameters!")
+            print("Learning completed")
 
-        if self.knowledge.mode is not None:
-            self.knowledge_manager.store_knowledge(self.DBclient, new_knowledge, self.problem_definition.tags)   #store knowledge with problem_definition tags
-            if self.knowledge.mode == "global":
-                logger.debug("base_service.learn_task: store ml_results to global database at " + str(
-                    "http://" + self.knowledge.kb_location + ":8001"))
-                with ServerProxy("http://" + self.knowledge.kb_location + ":8001", allow_none=True) as kb:
-                    try:
-                        kb.store_result(ml_data[0])
-                        kb.process_knowledge(self.problem_definition.get_task_identifier())
-                    except socket.timeout:
-                        logger.error("base_service: global Database is not reachable!")
+            if self.knowledge.mode is not None:
+                self.knowledge_manager.store_knowledge(self.DBclient, new_knowledge, self.problem_definition.tags)   #store knowledge with problem_definition tags
+                if self.knowledge.mode == "global":
+                    logger.debug("base_service.learn_task: store ml_results to global database at " + str(
+                        "http://" + self.knowledge.kb_location + ":8001"))
+                    with ServerProxy("http://" + self.knowledge.kb_location + ":8001", allow_none=True) as kb:
+                        try:
+                            task_id = kb.store_result(ml_data[0])
+                            kb.process_knowledge(self.problem_definition.get_task_identifier(), task_id)
+                        except socket.timeout:
+                            logger.error("base_service: global Database is not reachable!")
+            else:
+                self.knowledge_manager.store_knowledge(self.DBclient, new_knowledge, self.problem_definition.tags)
         else:
-            self.knowledge_manager.store_knowledge(self.DBclient, new_knowledge, self.problem_definition.tags)
-
+            logger.debug("Base_service.learn_task(): No knowledge could be created from ml_results.")
         self.DBclient.update("ml_results", self.problem_definition.skill_class, {"_id": self.database_results_id},
                              ml_data[0])
         return result

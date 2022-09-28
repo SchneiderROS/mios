@@ -31,15 +31,15 @@ class MongoDBClient():
                 if isinstance(search_param[key],str):
                     search_param[key] = objectid.ObjectId(search_param[key])
         retry_count = 0
-        while not findings:
-            for f in col.find(filter=search_param):
-                f["_id"] = str(f["_id"])
-                findings.append(f)
-            if retry_count >= self.max_retry:
-                break
-            else:
-                retry_count += 1
-                time.sleep(0.5)
+        #while not findings:
+        for f in col.find(filter=search_param):
+            f["_id"] = str(f["_id"])
+            findings.append(f)
+        #if retry_count >= self.max_retry:
+        #    break
+        #else:
+        #    retry_count += 1
+        #    time.sleep(0.5)
         return findings
 
     def write(self, db: str, collection: str, document: dict or list) -> objectid.ObjectId or list:

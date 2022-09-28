@@ -62,10 +62,10 @@ class Database():
         else:
             logger.error("Database.store_result: Received result is not of type dict or list! " + str(type(result)))
             return False
-        task_identity = {"skill_class": result["meta"]["skill_class"],
-                         "tags": result["meta"]["tags"],
-                         "optimum_weights": result["meta"]["cost_function"]["optimum_weights"],
-                         "geometry_factor": result["meta"]["cost_function"]["geometry_factor"]}
+        #task_identity = {"skill_class": result["meta"]["skill_class"],
+        #                 "tags": result["meta"]["tags"],
+        #                 "optimum_weights": result["meta"]["cost_function"]["optimum_weights"],
+        #                 "geometry_factor": result["meta"]["cost_function"]["geometry_factor"]}
         return task_id
     
     def get_result(self, db, collection, filter):
@@ -97,14 +97,18 @@ class Database():
         knowledge = self.knowledge_manager.get_knowledge(task_identity, scope, knowledge_db=self.task_knowledge_db_name)
         return knowledge
 
-    def process_knowledge(self, task_identity: dict):
+    def process_knowledge(self, task_identity: dict, id: str  = None):
         """process raw ml data on the database to knowledge and saves it on the database"""
-        knowledge = self.knowledge_manager.get_knowledge_by_identity(self.db_client, task_identity,
+        logger.debug("Database.process_knowledge: "+str(task_identity)+",  id="+str(id))
+        if id is None:
+            knowledge = self.knowledge_manager.get_knowledge_by_identity(self.db_client, task_identity,
                                                                      self.results_db_name, self.task_knowledge_db_name)
+        else: 
+            knowledge = self.knowledge_manager.get_knowledge_by_id(self.db_client, task_identity, id, self.results_db_name, self.task_knowledge_db_name)
         if knowledge is False:
             logger.error("Database.process_knowledge: Cant process knowledge!")
         else:
-            self.knowledge_manager.store_knowledge(self.db_client, knowledge, "global_knowledge")
+            self.knowledge_manager.store_knowledge(self.db_client, knowledge, knowledge["meta"]["tags"], "global_knowledge")
         del knowledge["_id"]
         return knowledge
 
@@ -115,7 +119,7 @@ class Database():
     def push_trial(self, agent: str, theta: list, cost: float, keep_size: int = 25):
         self.knowledge_manager.push_trial(agent, theta, cost, keep_size)
 
-    def request_trials(self, agent: str, n_trials: int, similarity: dict):
+    def request_trials(self, agent: str, n_trials: int, similarity: dict = {}):
         return self.knowledge_manager.request_trials(agent, n_trials, similarity)
 
     def push_trial_2(self, theta, cost, task_parameter):

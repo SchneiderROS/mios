@@ -67,6 +67,7 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
         #    knowledge_tmp["scope"].remove("n" + str(iter))
         #knowledge_tmp["scope"].append("n" + str(iter+1))
         print(knowledge_tmp)
+    print("start task on ", agents, " with knowledge scope = ",knowledge_tmp["meta"]["scope"])
     uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge_tmp)
     if wait:
         while s.is_busy():

@@ -139,7 +139,7 @@ class DataProcessor:
             interval.append(h)
         return np.average(success, 0), np.asarray(interval)
 
-    def get_average_cost_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None) -> Tuple[np.ndarray, np.ndarray]:
+    def get_average_cost_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None, specification: str = "all") -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs_over_time(results, min_length, decreasing, agent))
         print(np.std(cost))
         confidence = 0.95
@@ -149,6 +149,39 @@ class DataProcessor:
             h = se * scipy.stats.t.ppf((1 + confidence) / 2., cost.shape[0] - 1)
             interval.append(h)
         return np.average(cost, 0), np.asarray(interval)
+    
+    def get_average_cost_over_agerage_time(self, results: list, min_length: int = False):
+        pass
+    
+    def get_average_cost_over_timestemp(self, results: list, min_length: int = False, cutoff = False) -> Tuple[np.ndarray, np.ndarray]:
+        cost = []
+        time = []
+        starting_time = []
+        mean_cutoff_index = []
+        for r in results:
+            print("min_length: ",min_length, " actual length:",len(r.costs))
+            cost.append(self.get_monotonically_decreasing_cost(r.costs[:min_length]))
+            if len(cost[-1]) < min_length:
+                cost[-1].extend([cost[-1][-1]] * (min_length - len(cost[-1])))
+            time.append(r.times[:min_length])
+            if len(time[-1]) < min_length:
+                time[-1].extend([time[-1][-1]] * (min_length - len(time[-1])))
+            starting_time.append(r.starting_time)
+            mean_cutoff_index.append(next((x for x in range(len(cost[-1])) if cost[-1][x]<cutoff), len(cost[-1])-1))
+        cost =  np.asarray(cost)
+        time =  np.asarray(time)    
+        confidence = 0.95
+        interval_cost = []
+        interval_time = []
+        for i in range(cost.shape[1]):
+            se = scipy.stats.sem(cost[:, i])
+            h = se * scipy.stats.t.ppf((1 + confidence) / 2., cost.shape[0] - 1)
+            interval_cost.append(h)
+
+            se = scipy.stats.sem(time[:, i])
+            h = se * scipy.stats.t.ppf((1 + confidence) / 2., time.shape[0] - 1)
+            interval_time.append(h)
+        return np.average(cost, 0), np.asarray(interval_cost), np.average(time, 0), np.asarray(interval_time), np.average(starting_time, 0), int(np.ceil(np.mean(mean_cutoff_index)))+1
     
     def get_average_cost_over_trials(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None, specification: str = "all") -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent, specification=specification))
@@ -277,3 +310,13 @@ class DataProcessor:
         for i in range(len(cost_space)):
             difference.append(abs(curve1[i] - curve2[i]))
         print(difference)
+
+    def get_cost_of_successes(self, results: list):
+        successes = []
+        for result in results:
+            result_successes = []
+            for trial in result.trials:
+                if trial["q_metric"]["success"]:
+                    result_successes.append(trial["q_metric"]["final_cost"])
+            successes.append(result_successes)
+        return successes

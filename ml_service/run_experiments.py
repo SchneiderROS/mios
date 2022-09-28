@@ -80,19 +80,24 @@ def learn_bend(robot: str, start_pose: str, goal_pose: str, bendable: str, tags:
     learn_task(robot, pd, sc, tags)
 
 
-def learn_multiple_tasks(robot: str, task_instances: list, service_config: ServiceConfiguration, knowledge_configuration: Knowledge, tags: list, iteration = 0):
+def learn_multiple_tasks(robot: str, task_instances: list, service_config: ServiceConfiguration, knowledge_configuration: Knowledge, tags: list, iteration = 0, finish_threshold = {}):
     for insertable in task_instances:
         container = insertable+"_container"
         approach = container+"_approach"
+        move_joint(robot, container+"_above")
         if not grasp_insertable(robot, insertable, container, approach, container+"_above"):
             print("cannot grasp "+insertable+". Contiuing with next Task.")
             continue
         pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                                     {"Insertable": insertable, "Container": container,
                                     "Approach": approach}).get_problem_definition(insertable)
+        if insertable in finish_threshold:
+            #pd.cost_function.finish_thr = finish_threshold[insertable]
+            service_config.finish_cost = finish_threshold[insertable]
         if insertable == "HDMI_plug":  # increase the limits for HDMI_plug
             pd.domain.limits["p2_f_push_z"] = (0, 25)
         learn_single_task(robot, pd, service_config, tags, iteration, False, knowledge_configuration, True)
+        print("finished learning ", pd.tags, "\nplacing...")
         place_insertable(robot, insertable, container, approach, container+"_above")
 
 
@@ -100,57 +105,81 @@ def delete_results(robot:str, tags:list):
     client = MongoDBClient(robot)
     client.remove("ml_results", "insertion", {"meta.tags":tags})
 
+def check_pose(robot,pose):
+    error = []
+    call_method(robot,12000,"home_gripper")
+    move_joint(robot,pose+"_container_above")
+    call_method(robot,12000,"home_gripper")
+    move_joint(robot,pose+"_container_approach")
+    move(robot, pose,[0,0,0])
+    result = call_method(robot, 12000, "grasp_object",{"object":pose})
+    if not result["result"]["result"]:
+        print(pose, "not working")
+        call_method(robot, 12000, "home_gripper")
+        error.append(pose)
+    else:
+        call_method(robot,12000,"release_object")
+    move(robot,pose+"_container_approach",[0,0,0.06])
+    move_joint(robot,pose+"_container_above")
+    return error
+
 def check_poses(robot_dict):
     error = []
     for robot in robot_dict.keys():
         for pose in robot_dict[robot]:
-            move_joint(robot,pose+"_container_above")
-            move_joint(robot,pose+"_container_approach")
-            move(robot, pose,[0,0,0])
-            result = call_method(robot, 12000, "grasp_object",{"object":pose})
-            if not result["result"]["result"]:
-                print(pose, "not working")
-                call_method(robot, 12000, "home_gripper")
-                error.append(pose)
-            else:
-                call_method(robot,12000,"release_object")
-            move(robot,pose+"_container_approach",[0,0,0])
-            move_joint(robot,pose+"_container_above")
+            error.append(check_pose(robot,pose))
     return error            
 
 def collective_experiment():
     '''
     ToDo: Teach other tasks (all cylinders, USB-C, Keys for 003 and 008)
     '''
-    robots = {  "collective-panda-prime": ["key_door"],
-                "collective-panda-002": ["key_abus_e30"],
-                "collective-panda-003": ["key_padlock","key_2"],
-                "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"],
-                "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+    robots = {  #"collective-panda-prime": ["key_door"],
+                #"collective-panda-002": ["key_abus_e30"],
+                #"collective-panda-003": ["key_padlock", "key_2"], #
+                "collective-panda-004": [  "cylinder_20"  ,"cylinder_50"], #  "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10",
+                #"collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
              }
-
-    sc = SVMLearner(12,3,0,True,False, 0.9,True).get_configuration()
-
-    return "error: ", check_poses(robots)
-    
-    tags = ["collective_learning_test"]
-    for n_current_iter in range(1):
+    cutoff = {  "key_door":0.25,
+                "key_abus_e30": 0.25,
+                "key_padlock": 0.25,
+                "key_2": 0.25,
+                "cylinder_40": 0.45,
+                "cylinder_10": 0.5,
+                "cylinder_20": 0.3,
+                "cylinder_30": 0.4,
+                "cylinder_50": 0.35,
+                "cylinder_60": 0.55,
+                "HDMI_plug": 0.3,
+                "key_padlock_2": 0.25,
+                "key_hatch": 0.25,
+                "key_old": 0.25
+                }
+    sc = SVMLearner(130,10,0,True,False, 0.9,True).get_configuration()
+    #return check_poses(robots)
+    tags = ["collective_learning_alt"]
+    for n_current_iter in range(0,11):
+    #for n_current_iter in [3]:
+        #check_poses(robots)
         threads = []
         print("Number of iteration: ", n_current_iter+1,"/10")
+        knowledge_source = Knowledge()
+        knowledge_source.kb_location = "collective-dev-001"
+        knowledge_source.mode = "global"
+        knowledge_source.scope.extend(tags)
+        knowledge_source.scope.append("n"+str(n_current_iter+1))
+        knowledge_source.type = "all"
         for robot in robots.keys():
-            knowledge_source = Knowledge()
-            knowledge_source.kb_location = "collective-dev-001"
-            knowledge_source.mode = "global"
-            knowledge_source.scope.extend(tags)
-            knowledge_source.scope.append("n"+str(n_current_iter+1))
-            knowledge_source.type = "all"
-            threads.append(Thread(target=learn_multiple_tasks, args=(robot, robots[robot], sc, knowledge_source, tags, n_current_iter)))
+            threads.append(Thread(target=learn_multiple_tasks, args=(robot, robots[robot], sc, knowledge_source.to_dict(), tags, n_current_iter, cutoff)))
             threads[-1].start()
         for t in threads:
             t.join()
         kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         kb.clear_memory()
-    delete_experiment_data(robots,tags)
+        knowledge_source.scope = []
+        knowledge_source.tags = []
+        del knowledge_source
+    #delete_experiment_data(robots,tags)
     #delete_global_knowledge("collective-dev-001","global_knowledge_db","insertion",tags)
 
 

@@ -34,6 +34,7 @@ class SVMConfiguration(ServiceConfiguration):
         self.batch_synchronisation = False
         self.request_probability = 0.0
         self.request_probability_decrease = False
+        self.finish_cost = 0
 
     def __del__(self):
         print("DESTRUCTOR")
@@ -47,7 +48,8 @@ class SVMConfiguration(ServiceConfiguration):
             "n_immigrant": self.n_immigrant,
             "batch_synchronisation": self.batch_synchronisation,
             "request_probability": self.request_probability,
-            "request_probability_decrease": self.request_probability_decrease
+            "request_probability_decrease": self.request_probability_decrease,
+            "finish_cost": self.finish_cost
         }
         return config
 
@@ -60,6 +62,7 @@ class SVMConfiguration(ServiceConfiguration):
         self.batch_synchronisation = config_dict["batch_synchronisation"]
         self.request_probability = config_dict["request_probability"]
         self.request_probability_decrease =config_dict["request_probability_decrease"]
+        self.finish_cost = config_dict["finish_cost"]
 
 
 class SVMService(BaseService):
@@ -142,6 +145,8 @@ class SVMService(BaseService):
         for i in range(0, int(self.configuration.n_trials / self.configuration.batch_width)):
             if self.keep_running is False:
                 break
+            if self.minCost < self.configuration.finish_cost:
+                break
             self._setSamples(self.cnt_batch)#done
             self._run_trial_par(self.action_list_norm)#td
             self._trainSVM()#td
@@ -206,7 +211,7 @@ class SVMService(BaseService):
 
         
         x_set.reverse() # so the external trials come first
-        print("\n\n request_probability",self.configuration.request_probability)
+        
         costs = []
         self.success_ratio = 0
         if self.cnt_batch==0 and len(self.initial_knowledge_list)>0:
@@ -222,9 +227,13 @@ class SVMService(BaseService):
                     theta = self.problem_definition.domain.normalize(np.asarray(theta))
                 except IndexError:
                     external = False
-                    theta = x_set[i] 
-                trial_uuids[uuid] = theta
+                    theta = x_set[i]
+                try:
+                    x_set[i] = theta
+                except IndexError:
+                    x_set.append(theta)
                 uuid = self.push_trial(theta, external=external)
+                trial_uuids[uuid] = theta
                 ##same as below:
                 result = self.wait_for_result(uuid)
                 if result.q_metric.final_cost is None:
@@ -241,21 +250,24 @@ class SVMService(BaseService):
                     self.external_success[external].append(int(result.q_metric.success))
                     self.similarity_estimate[external] = float(np.mean(self.external_success[external]))
                     if self.configuration.request_probability_decrease:  # calculate request probability
-                        max_sim = max([self.similarity_estimate.values()])
+                        max_sim = max(self.similarity_estimate.values())
                         if self.request_probability > 0.5:
                             self.request_probability = self.request_probability * 0.96  # takes 17 external trial for request_probabiltiy of 1 to fall under 0.45
                         else:
-                            if np.mean(self.internal_success)/max_sim > 1:  # internal trials are better than external
+                            if max_sim > 0:
+                                if np.mean(self.internal_success)/max_sim > 1:  # internal trials are better than external
+                                    self.request_probability = self.request_probability * 0.96
+                                else:  #external trials are better
+                                    self.request_probability = self.request_probability * 1.04
+                            else:
                                 self.request_probability = self.request_probability * 0.96
-                            else:  #external trials are better
-                                self.request_probability = self.request_probability * 1.04
                 else:
                     self.internal_success.append(result.q_metric.success)
-                if self.configuration.request_probability_decrease:
-                    max_sim = max([self.similarity_estimate.values()])
-                    self.request_probability = np.tanh(max_sim*2.5)  # map the best similarity (0..1) to request probability
-                    if self.request_probability<0.1:
-                        self.request_probability = 0.1
+                #if self.configuration.request_probability_decrease:
+                #    max_sim = max(self.similarity_estimate.values())
+                #    self.request_probability = np.tanh(max_sim*2.5)  # map the best similarity (0..1) to request probability
+                if self.request_probability<0.1:
+                    self.request_probability = 0.05
                 if result.q_metric.success:
                     if self.kb is not None:
                         theta = []
@@ -272,12 +284,14 @@ class SVMService(BaseService):
                 external = False
                 if i<len(x_set_external):  # mark the first trials as external (if n_immigrants is used, wont happen for request_probability)
                     external=new_set[i][2]  # agent name of trial origin
+                print("\n\n request_probability",self.request_probability)
                 if self.configuration.request_probability > 0:
                     if random.random() < self.configuration.request_probability:
                         print("requesting 1 trial with ", self.similarity_estimate, " \nfrom ",self.task_identity_name)
                         try:
                             new_trial = self.kb.request_trials(str(self.task_identity_name), 1, self.similarity_estimate)[0]  # take first Tuple of the list
-                            uuid = self.push_trial(new_trial[0], external=new_trial[2])
+                            external = new_trial[2]
+                            uuid = self.push_trial(new_trial[0], external=external)
                         except IndexError:
                             print("request_trial was returning 0 trials")
                             uuid = self.push_trial(x_set[i], external=external)
@@ -302,14 +316,17 @@ class SVMService(BaseService):
                     self.external_success[external].append(int(result.q_metric.success))
                     self.similarity_estimate[external] = float(np.mean(self.external_success[external]))
                     if self.configuration.request_probability_decrease:  # calculate request probability
-                        max_sim = max([self.similarity_estimate.values()])
+                        max_sim = max(self.similarity_estimate.values())
                         if self.request_probability > 0.5:
                             self.request_probability = self.request_probability * 0.96  # takes 17 external trial for request_probabiltiy of 1 to fall under 0.45
                         else:
-                            if np.mean(self.internal_success)/max_sim > 1:  # internal trials are better than external
+                            if max_sim > 0:
+                                if np.mean(self.internal_success)/max_sim > 1:  # internal trials are better than external
+                                    self.request_probability = self.request_probability * 0.96
+                                else:  #external trials are better
+                                    self.request_probability = self.request_probability * 1.04
+                            else: 
                                 self.request_probability = self.request_probability * 0.96
-                            else:  #external trials are better
-                                self.request_probability = self.request_probability * 1.04
                 else:
                     self.internal_success.append(result.q_metric.success)
                 if result.q_metric.success:
