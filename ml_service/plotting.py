@@ -1947,11 +1947,11 @@ def plot_collective_experiment():
                 "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
              }
     if tags[0] == "collective_learning_alt":
-        robots = {  "collective-panda-prime.local": ["key_door"],
-                    "collective-panda-002.local": ["key_abus_e30"],
-                    "collective-panda-003.local": ["key_padlock", "key_2"], #
-                    "collective-panda-004.local": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"  ,"cylinder_50"], ##  
-                    "collective-panda-008.local": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock", "key_2"], #
+                    "collective-panda-004": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"  ,"cylinder_50"], #, "cylinder_20"  ,"cylinder_50"], #  
+                    "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
                 }
     # cutoff = {  "key_door":0.25,
     #             "key_abus_e30": 0.25,
