@@ -157,7 +157,7 @@ def collective_experiment():
     sc = SVMLearner(130,10,0,True,False, 0.9,True).get_configuration()
     #return check_poses(robots)
     tags = ["collective_learning_alt"]
-    for n_current_iter in range(3,11):
+    for n_current_iter in range(5,11):
     #for n_current_iter in [3]:
         #check_poses(robots)
         threads = []

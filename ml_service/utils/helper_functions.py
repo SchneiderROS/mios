@@ -4,9 +4,27 @@ import os
 from unittest.util import _count_diff_all_purpose
 import numpy as np
 
+import socket
 from utils.ws_client import call_method
 from mongodb_client.mongodb_client import MongoDBClient
 from utils.taxonomy_utils import Task
+
+
+def get_ip(hostname: str):
+    print("hostname: ",hostname)
+    return socket.gethostbyname(hostname)
+
+def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0):
+    for robot in robots:
+        mongo_client = MongoDBClient(robot)
+        documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+        ids = []
+        for d in documents:
+            if len(d) > min_size:
+                ids.append(d["_id"])
+        
+        for id in ids:
+            mongo_client.remove(db, task_class, {"_id":id})
 
 def move(robot, location, offset):
     context = {
@@ -31,6 +49,7 @@ def move(robot, location, offset):
     t.add_skill("move", "TaxMove", context)
     t.start()
     result = t.wait()
+    return result
     #print("Result: " + str(result))
 
 def move_joint(robot, location):
@@ -93,13 +112,16 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
             insertion_context["skill"]["p2"]["f_push"] = [0, 0, 20, 0, 0, 0]
         insertion_context["skill"]["time_max"] = 15
 
-        f = open(path_to_default_context + "move_joint.json")
-        move_context = json.load(f)
-        move_context["skill"]["objects"]["goal_pose"] = approach
-        move_context["skill"]["time_max"] = 10
-        t0.add_skill("move", "MoveToPoseJoint", move_context)
-        t0.start()
-        result = t0.wait()
+        result = False
+        while result == False:
+            f = open(path_to_default_context + "move_joint.json")
+            t0 = Task(robot)
+            move_context = json.load(f)
+            move_context["skill"]["objects"]["goal_pose"] = approach
+            move_context["skill"]["time_max"] = 10
+            t0.add_skill("move", "MoveToPoseJoint", move_context)
+            t0.start()
+            result = t0.wait()["result"]["task_result"]["success"]
 
         t1.add_skill("insertion", "TaxInsertion", insertion_context)
         t1.start()

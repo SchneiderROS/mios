@@ -94,6 +94,25 @@ def upload_result(host: str, skill_class: str, skill_instance: str, cost_functio
     performance_data.insert_one(skill_performance)
 
 
+def download_knowldge_to_context(host: str, db: str, skill_class: str, tags: list, context, context_map):
+    client = MongoClient('mongodb://' + host + ':27017')
+    result_db = client[db]
+    skill_collection = result_db[skill_class]
+    results = skill_collection.find({"meta.tags": {"$all": tags}})
+    theta = results[0]["parameters"]
+    
+    for p in theta.keys():
+        mapping = context_map[p]
+        for m in mapping:
+            mapping_arr = m.split(".")
+            param_arr = mapping_arr[-1].split("-")
+            if len(param_arr) == 2:
+                context["skill"][mapping_arr[3]][param_arr[0]][int(param_arr[1]) - 1] = theta[p]
+            else:
+                context["skill"][mapping_arr[3]][param_arr[0]] = theta[p]
+
+    return context
+
 def download_result(host: str, db: str, skill_class: str, uuid: str, trial: int):
     client = MongoClient('mongodb://' + host + ':27017')
     result_db = client[db]
@@ -151,6 +170,31 @@ def download_best_result(host: str, db: str, skill_class: str, skill_instance: s
     trials, context_map, default_context = get_successful_trials(results)
     clusters = find_cluster(trials)
     successful_trials = clusters[0]
+    for i in range(len(clusters)):
+        if len(clusters[i]) > len(successful_trials):
+            successful_trials = clusters[i]
+    context = default_context["skills"][skill_class]
+
+    for p in successful_trials[0]["theta"].keys():
+        mapping = context_map[p]
+        for m in mapping:
+            mapping_arr = m.split(".")
+            param_arr = mapping_arr[-1].split("-")
+            if len(param_arr) == 2:
+                context["skill"][mapping_arr[3]][param_arr[0]][int(param_arr[1]) - 1] = successful_trials[0]["theta"][p]
+            else:
+                context["skill"][mapping_arr[3]][param_arr[0]] = successful_trials[0]["theta"][p]
+    return context
+
+def download_best_result_tags(host: str, db: str, skill_class: str,  tags: list):
+    client = MongoClient('mongodb://' + host + ':27017')
+    result_db = client[db]
+    skill_collection = result_db[skill_class]
+    results = skill_collection.find({"meta.tags": {"$all":tags}})
+    trials, context_map, default_context = get_successful_trials(results)
+    clusters = find_cluster(trials)
+    trials.sort(key=lambda t: t["q_metric"]["final_cost"])
+    successful_trials = clusters[0]  # trials
 
     context = default_context["skills"][skill_class]
 
@@ -163,7 +207,6 @@ def download_best_result(host: str, db: str, skill_class: str, skill_instance: s
                 context["skill"][mapping_arr[3]][param_arr[0]][int(param_arr[1]) - 1] = successful_trials[0]["theta"][p]
             else:
                 context["skill"][mapping_arr[3]][param_arr[0]] = successful_trials[0]["theta"][p]
-
     return context
 
 def download_best_result_2(host: str, db: str, skill_class: str, skill_instance: str, cost_function: str):

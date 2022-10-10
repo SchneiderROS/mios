@@ -509,7 +509,11 @@ bool Core::refresh_percept(std::optional<Eigen::Matrix<double,3,3> > O_R_TF, boo
         }
         if(!m_panda_body.get_gripper_state(gripper_state)){
             spdlog::debug("Core::refresh_percept.failed_to_acquire_gripper_state");
-            return false;
+            spdlog::debug("reconnecting to Gripper");
+            m_panda_body.connect_to_gripper(m_memory.get_parameters()->system.robot_ip);
+            if(!m_panda_body.get_gripper_state(gripper_state)){
+                return false;
+            }
         }
 
     }
