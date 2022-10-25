@@ -132,10 +132,10 @@ class BaseService(metaclass=ABCMeta):
             elif self.knowledge.type == "all":
                 self.initial_knowledge_list = self.knowledge_manager.get_knowledge(self.problem_definition.get_task_identifier(), self.knowledge.scope)
                 for i in range(len(self.initial_knowledge_list)):
-                        knowlege = Knowledge()
-                        knowlege.from_dict(self.initial_knowledge_list[i])
-                        self.initial_knowledge_list[i] = knowlege
-                        self.initial_knowledge_list[i].update()
+                    knowlege = Knowledge()
+                    knowlege.from_dict(self.initial_knowledge_list[i])
+                    self.initial_knowledge_list[i] = knowlege
+                    self.initial_knowledge_list[i].update()
                 if len(self.initial_knowledge_list)>0:
                     self.knowledge.parameters = self.initial_knowledge_list[0].parameters
             else:

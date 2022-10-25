@@ -31,9 +31,10 @@ def run_demo():
     input("Start part II")
     demo_part_2()
     input("Start part III")
-    demo_part_3()
+    learning_time = demo_part_3()
+    print(learning_time)
     input("Start IV")
-    demo_part_4()
+    demo_part_4(learning_time)
 
 def demo_part_1():
     approach = robots[robots_list[0]][0] + "_container_approach"
@@ -187,6 +188,7 @@ def demo_part_2():
     stop_task(ip_master)
 
 def demo_part_3():
+    learning_time = time.time()
     sc = SVMLearner(130,10,0,True,False, 0.9,True).get_configuration()
     tags = ["demo_collective"]
     threads = []
@@ -196,23 +198,20 @@ def demo_part_3():
     knowledge_source.scope = []
     knowledge_source.scope.extend(tags)
     knowledge_source.type = "all"
-    try:
-        for robot in robots.keys():
-            if robot == "collective-panda-prime":
-                continue
-            threads.append(Thread(target=learn_multiple_tasks, args=(robot, robots[robot], sc, knowledge_source.to_dict(), tags, 0, )))
-            threads[-1].start()
-        for t in threads:
-            t.join()
-    except KeyboardInterrupt:
-        pass
+    for robot in robots.keys():
+        if robot == "collective-panda-prime":
+            continue
+        threads.append(Thread(target=learn_multiple_tasks, args=(robot, robots[robot], sc, knowledge_source.to_dict(), tags, 0, )))
+        threads[-1].start()
+    input("Press any key to stop learning.")
     stop_service_collective()
-    for t in threads:
-        t.join()
-    
+    learning_time = time.time() - learning_time
+    print(learning_time)
     delete_experiment_data(robots, ["demo_collective"])
+    delete_experiment_data(robots_list[1:], ["demo_collective"])
+    return learning_time
 
-def demo_part_4():
+def demo_part_4(learning_time = 121):
     approach = robots[robots_list[0]][0] + "_container_approach"
     container = robots[robots_list[0]][0] + "_container"
 
@@ -248,17 +247,26 @@ def demo_part_4():
     tags = ["demo_collective","key_door"]
     #tags = ["demo_learning"]
     threads = []
-    knowledge_source = Knowledge()
-    knowledge_source.kb_location = robots_list[0]  # "collective-dev-001"  #"collective-panda-prime" 
-    knowledge_source.mode = "local"
-    knowledge_source.scope = []
-    knowledge_source.scope.extend(tags)
-    knowledge_source.type = "all"
     pd = InsertionFactory([robots_list[0]], TimeMetric("insertion", {"time": 5}),
                                     {"Insertable": robots[robots_list[0]][0], "Container": container,
                                     "Approach": approach}).get_problem_definition(robots[robots_list[0]][0])
-
-    learn_single_task(robots_list[0], pd, sc, tags, 0, False, knowledge_source.to_dict(), False)
+    print(learning_time)
+    if learning_time > 120:
+        knowledge_source = Knowledge()
+        knowledge_source.kb_location = robots_list[0]  # "collective-dev-001"  #"collective-panda-prime" 
+        knowledge_source.mode = "local"
+        knowledge_source.scope = []
+        knowledge_source.scope.extend(tags)
+        knowledge_source.type = "all"
+        learn_single_task(robots_list[0], pd, sc, tags, 0, False, knowledge_source.to_dict(), False)
+    else:
+        knowledge_source = Knowledge()
+        knowledge_source.kb_location = robots_list[0]  # "collective-dev-001"  #"collective-panda-prime" 
+        knowledge_source.mode = "global"
+        knowledge_source.scope = ["demo_collective"]
+        knowledge_source.scope.extend(["key_abus_e30"])
+        knowledge_source.type = "all"
+        learn_single_task(robots_list[0], pd, sc, tags, 0, False, knowledge_source.to_dict(), False)
     input("Press any key to stop learning.")
     
     stop_service_collective()
@@ -281,7 +289,6 @@ def demo_part_4():
             if r["n"+str(i)]["q_metric"]["success"]:
                 success = True
     if success:
-        print("here4")
         wiggle_context = {
             "skill": {
                 "dX_fourier_a_a": [0, 0.05, 0.05, 0, 0, 0],
@@ -301,6 +308,9 @@ def demo_part_4():
         t.start(False)
         result = t.wait()
     delete_experiment_data(robots_list, ["demo_collective"])
+    delete_experiment_data([robots_list[0]], ["demo_collective"],db="global_knowledge")
+    time.sleep(5)
+    place_insertable("collective-panda-prime","key_door","key_door_container","key_door_container_approach","key_door_container_above")
 
 def stop_service_collective():
     learning_services = []

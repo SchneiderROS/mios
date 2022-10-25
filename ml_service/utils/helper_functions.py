@@ -3,6 +3,7 @@ from math import dist
 import os
 from unittest.util import _count_diff_all_purpose
 import numpy as np
+import time
 
 import socket
 from utils.ws_client import call_method
@@ -130,6 +131,7 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
         if result["result"]["task_result"]["success"] == True:
             if not call_method(robot, 12000, "release_object")["result"]["result"]:
                 call_method(robot,12000,"home_gripper")
+                time.sleep(10)
             if above is None:
                 move(robot, approach, [0,0,0.1])
             else:
@@ -140,6 +142,7 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
             if check_location(robot, insertable):
                 if not call_method(robot, 12000, "release_object")["result"]["result"]:
                     call_method(robot,12000,"home_gripper")
+                    time.sleep(10)
                 if above is None:
                     move(robot, approach, [0,0,0.1])
                 else:
@@ -153,7 +156,7 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
 def grasp_insertable(robot:str, insertable = "generic_insertable", container = "generic_container", approach = "generic_container_approach", above = None):
     count = 0
     while True:
-        print("current object grasped: ", call_method(robot,12000,"get_state")["result"]['grasped_object'] )
+        #print("current object grasped: ", call_method(robot,12000,"get_state")["result"]['grasped_object'] )
         if call_method(robot,12000,"get_state")["result"]['grasped_object'] == 'NullObject':
             call_method(robot, 12000, "release_object")
         else:
@@ -201,7 +204,7 @@ def grasp_insertable(robot:str, insertable = "generic_insertable", container = "
             success_grasping  = result["result"]["result"]
             if not success_grasping:
                 call_method(robot, 12000, "release_object")
-                print(robot, " grasping success = ", success_grasping)
+                print(robot, " grasping success for ", insertable," = ", success_grasping)
             if grasp_count > 3:
                 break
             grasp_count += 1

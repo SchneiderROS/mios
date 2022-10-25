@@ -1,3 +1,4 @@
+from threading import currentThread
 from plotting.result import Result
 import numpy as np
 import scipy.stats
@@ -58,7 +59,7 @@ class DataProcessor:
                 success_over_time[i].extend([success_over_time[i][-1]] * (min_length - len(success_over_time[i])))
         return success_over_time
 
-    def get_collection_of_costs(self, results: list, decreasing: bool = False, episode_length: int = 1, agent:str=None, specification: str = "all", cost_type:str=None) -> list:
+    def get_collection_of_costs(self, results: list, decreasing: bool = False, episode_length: int = 1, agent:str=None, specification: str = "all", cost_type:str=None, equal_length:bool = True) -> list:
         costs = []
         for r in results:
             if decreasing is True:
@@ -68,9 +69,10 @@ class DataProcessor:
 
         n_trials = self.find_maximum_length(costs)
 
-        for c in costs:
-            if len(c) < n_trials:
-                c.extend([c[-1]] * (n_trials - len(c)))
+        if equal_length:
+            for c in costs:
+                if len(c) < n_trials:
+                    c.extend([c[-1]] * (n_trials - len(c)))
         return costs
 
     def get_collection_of_costs_over_time(self, results: list, min_length: int = False, decreasing: bool = False, agent=None) -> list:
@@ -192,6 +194,24 @@ class DataProcessor:
             h = se * scipy.stats.t.ppf((1 + confidence) / 2., cost.shape[0] - 1)
             interval.append(h)
         return np.average(cost, 0), np.asarray(interval)
+    
+    def get_average_n_trials(self, results: list, episode_length: int = 1, agent=None, specification:str="all", cutoff:float = False):
+        cost_collection = np.asarray(self.get_collection_of_costs(results, False, episode_length, agent, specification=specification, equal_length=False))
+        confidence = 0.95
+        interval = []
+        data = []
+        for costs in cost_collection:
+            if cutoff:
+                index = len(costs)
+                for i in range(len(costs)):
+                    if costs[i] < cutoff:
+                        index = i
+                        break
+                costs = costs[:index+1]
+            data.append(len(costs))
+        print(data)
+        interval = scipy.stats.t.interval(alpha=0.95, df=len(data)-1, loc=np.mean(data), scale=scipy.stats.sem(data))
+        return np.mean(data), interval
     
     def get_average_cost_over_batch(self, results: list, decreasing: bool = False, episode_length: int = 1, agent=None) -> Tuple[np.ndarray, np.ndarray]:
         cost = np.asarray(self.get_collection_of_costs(results, decreasing, episode_length, agent))

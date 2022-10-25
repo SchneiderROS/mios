@@ -95,7 +95,7 @@ def learn_multiple_tasks(robot: str, task_instances: list, service_config: Servi
             service_config.finish_cost = finish_threshold[insertable]
         if insertable == "HDMI_plug":  # increase the limits for HDMI_plug
             pd.domain.limits["p2_f_push_z"] = (0, 25)
-        #learn_single_task(robot, pd, service_config, tags, iteration, False, knowledge_configuration, True)
+        learn_single_task(robot, pd, service_config, tags, iteration, False, knowledge_configuration, True)
         print("finished learning ", pd.tags, "\nplacing...")
         place_insertable(robot, insertable, container, approach, container+"_above")
 
@@ -133,11 +133,11 @@ def collective_experiment():
     '''
     ToDo: Teach other tasks (all cylinders, USB-C, Keys for 003 and 008)
     '''
-    robots = {  #"collective-panda-prime": ["key_door"],
-                #"collective-panda-002": ["key_abus_e30"],
-                #"collective-panda-003": ["key_padlock", "key_2"], #
-                "collective-panda-004": [  "cylinder_50"], #  "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20",
-                #"collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
+    robots = {  "collective-panda-prime": ["key_door"],
+                "collective-panda-002": ["key_abus_e30"],
+                "collective-panda-003": ["key_padlock", "key_2"], #
+                "collective-panda-004": ["cylinder_30", "cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20", "cylinder_50"], #  
+                "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
              }
     cutoff = {  "key_door":0.25,
                 "key_abus_e30": 0.25,
@@ -157,11 +157,11 @@ def collective_experiment():
     sc = SVMLearner(130,10,0,True,False, 0.9,True).get_configuration()
     #return check_poses(robots)
     tags = ["collective_learning_alt"]
-    for n_current_iter in range(7,11):
-    #for n_current_iter in [3]:
+    for n_current_iter in range(15,17):
+    #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
-        print("Number of iteration: ", n_current_iter+1,"/10")
+        print("Number of iteration: ", n_current_iter+1,"/25")
         knowledge_source = Knowledge()
         knowledge_source.kb_location = "collective-dev-001"
         knowledge_source.mode = "global"
@@ -174,6 +174,86 @@ def collective_experiment():
             threads[-1].start()
         for t in threads:
             t.join()
+        # check for completness:
+        client = MongoDBClient(knowledge_source.kb_location)
+        for robot in robots.keys():
+            for task in robots[robot]:
+                if not client.read("global_knowledge", "insertion",{"meta.tags":["collective_learning_alt", "n"+str(n_current_iter+1), task]}):
+                    print("task ",task, " wasn finished properly")
+                    return task
+        kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
+        kb.clear_memory()
+        knowledge_source.scope = []
+        knowledge_source.tags = []
+        del knowledge_source
+
+def collective_experiment_parallel():
+    '''
+    ToDo: Teach other tasks (all cylinders, USB-C, Keys for 003 and 008)
+    '''
+    robots = {  "collective-panda-prime": ["key_door"],
+                "collective-panda-002": ["key_abus_e30"],
+                "collective-panda-003": ["key_padlock", "key_2"], #
+                "collective-panda-004": ["cylinder_30", "cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20", "cylinder_50"], #  
+                "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
+             }
+    cutoff = {  "key_door":0.25,
+                "key_abus_e30": 0.25,
+                "key_padlock": 0.25,
+                "key_2": 0.25,
+                "cylinder_40": 0.45,
+                "cylinder_10": 0.5,
+                "cylinder_20": 0.35,
+                "cylinder_30": 0.4,
+                "cylinder_50": 0.35,
+                "cylinder_60": 0.55,
+                "HDMI_plug": 0.3,
+                "key_padlock_2": 0.25,
+                "key_hatch": 0.25,
+                "key_old": 0.25
+                }
+    sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
+    #return check_poses(robots)
+    tags = ["collective_learning_parallel"]
+    for n_current_iter in range(2,17):
+    #for n_current_iter in [7]:
+        #check_poses(robots)
+        threads = []
+        print("Number of iteration: ", n_current_iter+1,"/25")
+        knowledge_source = Knowledge()
+        #knowledge_source.kb_location = "collective-dev-001"
+        knowledge_source.mode = "local"
+        knowledge_source.scope = []
+        knowledge_source.scope.extend(tags)
+        knowledge_source.scope.append("n"+str(n_current_iter+1))
+        knowledge_source.type = "all"
+        for robot in robots.keys():
+            threads.append(Thread(target=learn_multiple_tasks, args=(robot, robots[robot], sc, knowledge_source.to_dict(), tags, n_current_iter, cutoff)))
+            threads[-1].start()
+        for t in threads:
+            t.join()
+        # check for completness:
+        time.sleep(5)
+        for robot in robots.keys():
+            client = MongoDBClient(robot)
+            for task in robots[robot]:
+                filter = []
+                filter.extend(tags)
+                filter.append("n"+str(n_current_iter+1))
+                filter.append(task)
+                print("search for results:", filter)
+                if not client.read("local_knowledge", "insertion",{"meta.tags":filter}):
+                    print("task ",task, " has not created knowledge")
+                    data = client.read("ml_results","insertion",{"meta.tags":filter})
+                    if len(data) > 1:
+                        print("several ml_service entries found...")
+                        return task
+                    if len(data) < 1:
+                        print("no data found on ml_results")
+                        return task
+                    if len(data[0]) < 132:
+                        print("task ",task, " was aborded to early")
+                    return task
         kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         kb.clear_memory()
         knowledge_source.scope = []

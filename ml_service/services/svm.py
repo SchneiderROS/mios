@@ -266,7 +266,7 @@ class SVMService(BaseService):
                 #if self.configuration.request_probability_decrease:
                 #    max_sim = max(self.similarity_estimate.values())
                 #    self.request_probability = np.tanh(max_sim*2.5)  # map the best similarity (0..1) to request probability
-                if self.request_probability<0.1:
+                if self.request_probability<0.01 and self.request_probability>0:
                     self.request_probability = 0.05
                 if result.q_metric.success:
                     if self.kb is not None:
