@@ -9,7 +9,7 @@
 
 namespace mios {
 
-TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_keep_running(false),m_thread_running(false),m_frequency(5){
+TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_keep_running(false),m_thread_running(false),m_frequency(200){
     start_sending();
 }
 
@@ -112,8 +112,13 @@ void TelemetryUDP::sending_loop(){
     while(m_keep_running){
         m_time_1 = std::chrono::high_resolution_clock::now();
         // get current perception
-
         const Percept* p = m_core->get_percept();
+        m_time_duration = m_time_1 - p->time;
+        if(m_time_duration>= m_frequency){
+            m_core->refresh_percept({});
+            p = m_core->get_percept();
+        }
+        m_time_2 = std::chrono::high_resolution_clock::now();
         m_mtx_subscriber.lock();
         for(auto sub : m_subscribers){
             // build message for every subscriber
@@ -180,9 +185,14 @@ void TelemetryUDP::sending_loop(){
         }
         m_mtx_subscriber.unlock();
         m_time_2 = std::chrono::high_resolution_clock::now();
-        m_time_duration = m_time_2 - m_time_1;
+        //m_time_duration = m_time_2 - m_time_1;
         // wait
-        std::this_thread::sleep_for(std::chrono::milliseconds(m_frequency) - m_time_duration);
+        std::this_thread::sleep_until(m_time_1+m_frequency);
+        /*
+        if(m_time_duration<m_frequency){
+            std::this_thread::sleep_for(m_frequency - m_time_duration);  //std::chrono::milliseconds(m_frequency)
+        }
+        */
     }
 }
 

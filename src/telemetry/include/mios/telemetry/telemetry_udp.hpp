@@ -60,7 +60,7 @@ private:
     bool m_thread_running;
     std::mutex m_mtx_subscriber;
 
-    unsigned m_frequency;  //ms
+    std::chrono::milliseconds m_frequency;  //ms
     std::chrono::time_point<std::chrono::high_resolution_clock> m_time_1;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_time_2;
     std::chrono::duration<double, std::milli> m_time_duration;
