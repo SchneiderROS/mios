@@ -215,7 +215,7 @@ def collective_experiment_parallel():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["collective_learning_parallel"]
-    for n_current_iter in range(2,17):
+    for n_current_iter in range(7,17):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
@@ -254,8 +254,8 @@ def collective_experiment_parallel():
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
                     return task
-        kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
-        kb.clear_memory()
+        #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
+        #kb.clear_memory()
         knowledge_source.scope = []
         knowledge_source.tags = []
         del knowledge_source

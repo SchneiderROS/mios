@@ -109,6 +109,8 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
             insertion_context["skill"]["p2"]["f_push"] = [0, 0, 25, 0, 0, 0]
         elif insertable == "cylinder_10" or insertable == "cylinder_20" or insertable == "cylinder_30" or insertable[:3] == "key":
             insertion_context["skill"]["p2"]["f_push"] = [0, 0, 15, 0, 0, 0]
+        elif insertable == "key_door":
+            insertion_context["skill"]["p2"]["f_push"] = [0, 0, 25, 0, 0, 0]
         else:
             insertion_context["skill"]["p2"]["f_push"] = [0, 0, 20, 0, 0, 0]
         insertion_context["skill"]["time_max"] = 15
@@ -203,7 +205,7 @@ def grasp_insertable(robot:str, insertable = "generic_insertable", container = "
             #call_method(robot,12000,"set_grasped_object",{"object":insertable})
             success_grasping  = result["result"]["result"]
             if not success_grasping:
-                call_method(robot, 12000, "release_object")
+                call_method(robot, 12000, "move_gripper",{"width":1,"speed":1,"force":50})
                 print(robot, " grasping success for ", insertable," = ", success_grasping)
             if grasp_count > 3:
                 break
