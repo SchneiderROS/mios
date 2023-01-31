@@ -317,16 +317,16 @@ class SVMService(BaseService):
                     self.similarity_estimate[external] = float(np.mean(self.external_success[external]))
                     if self.configuration.request_probability_decrease:  # calculate request probability
                         max_sim = max(self.similarity_estimate.values())
-                        if self.request_probability > 0.5:
-                            self.request_probability = self.request_probability * 0.96  # takes 17 external trial for request_probabiltiy of 1 to fall under 0.45
+                        if self.request_probability > (self.configuration.request_probability/2):
+                            self.request_probability = self.request_probability * 0.93  
                         else:
                             if max_sim > 0:
                                 if np.mean(self.internal_success)/max_sim > 1:  # internal trials are better than external
-                                    self.request_probability = self.request_probability * 0.96
+                                    self.request_probability = self.request_probability * 0.93
                                 else:  #external trials are better
                                     self.request_probability = self.request_probability * 1.04
                             else: 
-                                self.request_probability = self.request_probability * 0.96
+                                self.request_probability = self.request_probability * 0.93
                 else:
                     self.internal_success.append(result.q_metric.success)
                 if result.q_metric.success:

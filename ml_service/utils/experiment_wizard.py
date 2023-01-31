@@ -79,6 +79,8 @@ def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion
     for robot in robots:
         mongo_client = MongoDBClient(robot)
         documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+        if len(documents) == 0:
+            print("Not found documents on ", robot)
         ids = []
         for d in documents:
             if len(d) > min_size:

@@ -2107,14 +2107,18 @@ def plot_collective_experiment_time():
     plt.show()
 
 def plot_collective_experiment():
-    tags = ["collective_learning_alt"]
+    tags = ["collective_learning_04_alt"]
+    tags = ["collective_learning_04_ext_alt"]
+    #tags = ["collective_learning_bugfix_alt"]
+    #tags = ["collective_learning_alt"]
     #tags = ["collective_learning_parallel"]
     #tags = ["collective_learning"]
 
+    #default, collective_learning_04_alt
     robots = {  "collective-panda-prime.local": ["key_door"],
                 "collective-panda-002.local": ["key_abus_e30"],
                 "collective-panda-003.local": ["key_padlock","key_2"],
-                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"],
+                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
                 "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
              }
     if tags[0] == "collective_learning_alt" or tags[0] == "collective_learning_parallel":
@@ -2124,6 +2128,28 @@ def plot_collective_experiment():
                     "collective-panda-004": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"  ,"cylinder_50"], #
                     "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
         }
+    if tags[0] == "collective_learning_04_ext_alt":
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock", "key_2"], #
+                    "collective-panda-004": [ "cylinder_40", "cylinder_20"  ,"cylinder_60"], #
+                    "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"],
+                    "collective-panda-005": ["cylinder_30","cylinder_10","cylinder_50"]
+             }
+    if tags[0] == "collective_learning_bugfix":
+        robots = {  "collective-panda-prime.local": ["key_door"],
+                "collective-panda-002.local": ["key_abus_e30"],
+                "collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_60"], #, "cylinder_50"
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    if tags[0] == "collective_learning_bugfix_alt":
+        robots = {  "collective-panda-prime.local": ["key_door"],
+                "collective-panda-002.local": ["key_abus_e30"],
+                "collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"], #, "cylinder_50"
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
     cutoff = {  "key_door":0.25,
                 "key_abus_e30": 0.25,
                 "key_padlock": 0.25,
@@ -2156,6 +2182,7 @@ def plot_collective_experiment():
     xticks_labels = []
     count_agents = 0
     count_bars = 0
+    count_time_overall = []
     for r in range(len(robot_addr)):
         task_count = 0
         title=False
@@ -2169,6 +2196,7 @@ def plot_collective_experiment():
             results = get_multiple_experiment_data(robot_addr[r], "insertion", filter={"meta.tags": filters})
             indexes2pop = []
             tag_set = set()
+            average_time = 0
             for i in range(len(results)):
                 if len(results[i].costs) < 9:
                     indexes2pop.append(i)
@@ -2176,10 +2204,14 @@ def plot_collective_experiment():
                 if results[i] in tag_set:
                     indexes2pop.append(i)
                 tag_set.add(str(results[i].tags))
+                average_time += results[i].total_time
             if indexes2pop:
                 indexes2pop.reverse()
                 for i in indexes2pop:
                     results.pop(i)
+
+            average_time = average_time / len(results)
+            count_time_overall.append(average_time)
             mean_length, interval = p.get_average_n_trials(results, cutoff=cutoff[e])
             print(mean_length, interval)
             print("r=",r)
@@ -2208,8 +2240,115 @@ def plot_collective_experiment():
     fig1.tight_layout()
     plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
     print("trials overall = ",sum(count_trials_overall))
+    print("time overall = ", int(max(count_time_overall)/60)+1, ",min")
     plt.show()
 
+def plot_single_robot_experiment():
+    tags = ["single_robot_learning_trans"]
+    #tags = ["collective_learning_bugfix_alt"]
+    #tags = ["collective_learning_alt"]
+    #tags = ["collective_learning_parallel"]
+    #tags = ["collective_learning"]
+
+    #default, collective_learning_04_alt
+    robots = {  #"collective-panda-prime.local": ["key_door"],
+                #"collective-panda-002.local": ["key_abus_e30"],
+                #"collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    cutoff = {  "key_door":0.25,
+                "key_abus_e30": 0.25,
+                "key_padlock": 0.25,
+                "key_2": 0.25,
+                "cylinder_40": 0.45,
+                "cylinder_10": 0.5,
+                "cylinder_20": 0.35,
+                "cylinder_30": 0.4,
+                "cylinder_50": 0.35,
+                "cylinder_60": 0.55,
+                "HDMI_plug": 0.3,
+                "key_padlock_2": 0.25,
+                "key_hatch": 0.25,
+                "key_old": 0.25
+                }
+    robot_addr = list(robots.keys())
+    n_tasks = sum([len(tasks) for tasks in robots.values()])
+    p = DataProcessor()
+    experiments = ["collective_experiment"]
+    colors = ["blue", "red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "coral", "brown", "lightgrey", "beige","lavender"]  # [:len(n_tasks)]
+    legend_handles1 = []
+    legend_handles2 = []
+
+    fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    count = 0
+    robot_count = 0
+    
+    count_trials_overall = []
+    count_time_overall = []
+    xticks = []
+    xticks_labels = []
+    count_agents = 0
+    count_bars = 0
+    for r in range(len(robot_addr)):
+        task_count = 0
+        title=False
+        last_time = False
+        for e in robots[robot_addr[r]]:
+            filters = []
+            filters.extend(tags)
+            filters.append(e)
+            print("tags = ", filters)
+
+            results = get_multiple_experiment_data(robot_addr[r], "insertion", filter={"meta.tags": filters})
+
+
+            indexes2pop = []
+            tag_set = set()
+            average_time = 0
+            for i in range(len(results)):
+                if len(results[i].costs) < 9:
+                    indexes2pop.append(i)
+                    continue
+                if results[i] in tag_set:
+                    indexes2pop.append(i)
+                tag_set.add(str(results[i].tags))
+                average_time += results[i].total_time
+            if indexes2pop:
+                indexes2pop.reverse()
+                for i in indexes2pop:
+                    results.pop(i)
+            average_time = average_time / len(results)
+            count_time_overall.append(average_time)
+            
+            mean_length, interval = p.get_average_n_trials(results, cutoff=cutoff[e])
+            print(mean_length, interval)
+            print("r=",r)
+            width = 0.1
+            
+            #x = r + (1+index-len(robots[robot_addr[r]])/2)*width
+            x = count_agents/10 + count_bars*width #(1+index-len(robots[robot_addr[r]])/2)*width
+            print("task number: ",count_bars)
+            axes1.bar(x, mean_length, width, yerr=interval[1]-mean_length, color=colors[count_bars])
+            count_trials_overall.append(mean_length)
+            axes1.set_ylim(0, 130)
+            # axes1[count].set_xlim(1, len(mean_cost))
+            # axes1[count].grid()
+            # axes1[count].tick_params(axis="both", which="both", length=0)
+            xticks.append(x)
+            xticks_labels.append(e)
+            axes1.set_xticks(xticks)
+            axes1.set_xticklabels(xticks_labels, rotation=45, ha='right')
+            
+            #axes1[count].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes1.set_xlabel("Tasks by Agents")
+            axes1.set_ylabel("mean cost [1]")
+            count_bars += 1
+    fig1.tight_layout()
+    plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    print("trials overall = ",sum(count_trials_overall))
+    print("time overall = ", int(sum(count_time_overall)/60)+1, ",min")
+    plt.show()
 
 def success_cost():
     robots = {  "collective-panda-prime": ["key_door"],
