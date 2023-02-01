@@ -19,6 +19,8 @@ def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion
     for robot in robots:
         mongo_client = MongoDBClient(robot)
         documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+        if len(documents) == 0:
+            print("Not found documents on ", robot)
         ids = []
         for d in documents:
             if len(d) > min_size:
@@ -109,16 +111,21 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
 
         insertion_context["skill"]["p2"]["search_a"]= [10, 10, 0, 2, 2, 0]
         insertion_context["skill"]["p2"]["search_f"] = [1, 0.75, 0, 1, 0.75, 0]
-        if insertable == "HDMI_plug" or insertable == "cylinder_50":
-            insertion_context["skill"]["p2"]["f_push"] = [0, 0, 25, 0, 0, 0]
-        elif insertable == "cylinder_10" or insertable == "cylinder_20" or insertable == "cylinder_30" or insertable[:3] == "key":
-            insertion_context["skill"]["p2"]["f_push"] = [0, 0, 15, 0, 0, 0]
-        elif insertable == "key_door":
-            insertion_context["skill"]["p2"]["f_push"] = [0, 0, 25, 0, 0, 0]
+        if robot[:18] != "collective-dev-002":
+            if insertable == "HDMI_plug" or insertable == "cylinder_50":
+                insertion_context["skill"]["p2"]["f_push"] = [0, 0, 13, 0, 0, 0]
+            elif insertable == "cylinder_10" or insertable == "cylinder_20" or insertable == "cylinder_30" or insertable[:3] == "key":
+                insertion_context["skill"]["p2"]["f_push"] = [0, 0, 15, 0, 0, 0]
+            elif insertable == "cylinder_40":
+                insertion_context["skill"]["p2"]["f_push"] = [0, 0, 7, 0, 0, 0]
+            elif insertable == "key_door":
+                insertion_context["skill"]["p2"]["f_push"] = [0, 0, 25, 0, 0, 0]
+            else:
+                insertion_context["skill"]["p2"]["f_push"] = [0, 0, 20, 0, 0, 0]
         else:
-            insertion_context["skill"]["p2"]["f_push"] = [0, 0, 20, 0, 0, 0]
+            if insertable == "cylinder_10" or insertable == "cylinder_20" or insertable == "cylinder_30" or insertable[:3] == "key":
+                insertion_context["skill"]["p2"]["f_push"] = [0, 0, 25, 0, 0, 0]
         insertion_context["skill"]["time_max"] = 15
-
         result = False
         while result == False:
             f = open(path_to_default_context + "move_joint.json")

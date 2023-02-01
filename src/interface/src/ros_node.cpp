@@ -45,10 +45,12 @@ RosNode::RosNode(Core *core, TaskEngine *task_engine, Portal *portal, Memory* me
 }
 
 void RosNode::start(){
+    spdlog::debug("RosNode::start()");
     m_spinner.start();
 }
 
 void RosNode::stop(){
+    spdlog::debug("RosNode::stop()");
     m_spinner.stop();
 }
 

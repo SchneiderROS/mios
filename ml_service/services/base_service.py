@@ -156,6 +156,7 @@ class BaseService(metaclass=ABCMeta):
                         )
                     elif self.knowledge.type == "all":
                         self.initial_knowledge_list = kb.get_knowledge(self.problem_definition.get_task_identifier(), self.knowledge.scope)
+                        logger.debug("base_service::initialize(): get all knowledge. Found "+str(len(self.initial_knowledge_list)))
                         for i in range(len(self.initial_knowledge_list)):
                             knowlege = Knowledge()
                             knowlege.from_dict(self.initial_knowledge_list[i])

@@ -28,9 +28,8 @@ bool PandaBody::initialize(){
     std::optional<std::string> ip;
     if(m_has_arm){
     //request control and activate FCI
-        spdlog::debug("PandaBody::initialize()  Requesting control, acitvating FCI");
-        ip = PandaBody::ping_robot(m_memory->get_parameters()->system.robot_ip);
-        
+        spdlog::debug("PandaBody::initialize()");
+        ip = PandaBody::ping_robot(m_memory->get_parameters()->system.robot_ip);     
     }
 
     m_memory->get_parameters()->system.robot_ip = ip.value_or("127.0.0.1");
@@ -61,6 +60,9 @@ bool PandaBody::activate_fci(){
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
         pybind11::object py_result = desk_client.attr("activate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+        if(!py_result.cast<bool>()){
+            spdlog::error("Cannot activate FCI through Desk client.");
+        }
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
         spdlog::warn("Cannot activate FCI, error when calling the python desk client.");
@@ -74,6 +76,10 @@ bool PandaBody::deactivate_fci(){
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
         pybind11::object py_result = desk_client.attr("deactivate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+        if(!py_result.cast<bool>()){
+            spdlog::error("Cannot deactivate FCI through Desk client.");
+        }
+
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
         spdlog::warn("Cannot deactivate FCI, error when calling the python desk client.");
@@ -86,6 +92,7 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
     spdlog::trace("PandaBody::ping_robot("+last_ip.value()+")");
     std::optional<std::string> new_ip={};
     spdlog::debug("PandaBody: ping_robot("+last_ip.value_or("127.0.0.1")+")");
+    //check given IP:
     if(last_ip.has_value()){
         if(mirmi_utils::ping(last_ip.value().c_str())==false){
             spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
@@ -96,6 +103,7 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
             }
         }
     }
+    // search for robot IP:
     if(!new_ip.has_value()){
         std::map<std::string,std::string> ifaces = mirmi_utils::get_subnets();
         std::string address;
@@ -274,27 +282,35 @@ bool PandaBody::pre_run_checks() const{
 
 bool PandaBody::is_robot(const std::string &ip){
     spdlog::trace("PandaBody::is_robot()");
-    bool tokenForceTimeout = false;
+    int tokenForceTimeout = false;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
         pybind11::object py_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
-        tokenForceTimeout = py_result.cast<bool>();
-        spdlog::warn("Please verify that you are in control of the robot: Press the Button with the cyrcle on the Pilot! " + std::to_string(tokenForceTimeout));
-        // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
+        tokenForceTimeout = py_result.cast<int>();
+        if(tokenForceTimeout>1){
+            spdlog::warn("Please verify that you are in control of the robot: Press the Button with the cyrcle on the Pilot! \n You have " + std::to_string(tokenForceTimeout) + "Seconds.");
+            std::this_thread::sleep_for(std::chrono::seconds(tokenForceTimeout));
+        }
+        if(tokenForceTimeout==1){
+            spdlog::debug("PandaBody: MIOS is in control of DESK-Interface of robot at "+ip);
+        }
+        if(tokenForceTimeout<0){
+            spdlog::error("PandaBody::is_robot(): Not able to aquire control over DESK client. Bad http response");
+        }
     }
     catch (const pybind11::error_already_set &e){
         spdlog::debug(e.what());
         spdlog::warn("Cannot take control of the robot, error when calling the python desk client.");
     }
     m_memory->set_default_parameters();
-    if (!m_memory->read_parameters()->system.spoc_in_control){
+    if(!m_memory->read_parameters()->system.spoc_in_control){
         spdlog::warn("Cannot take control over the robot (single point of control). Check desk_client.");
         return false;
     }
     if(!activate_fci()){
         return false;   
     }
-
+/*
     try{
         std::unique_ptr<franka::Robot> robot =  std::make_unique<franka::Robot>(ip);
         return true;
@@ -307,6 +323,8 @@ bool PandaBody::is_robot(const std::string &ip){
         spdlog::error("Panda: Detected incompatible version on robot at IP "+ip);
         return false;
     }
+*/
+    return true;
 }
 
 std::optional<std::string> PandaBody::find_robot(){
