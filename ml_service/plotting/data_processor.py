@@ -209,7 +209,7 @@ class DataProcessor:
                         break
                 costs = costs[:index+1]
             data.append(len(costs))
-        print(data)
+        print(data, "\n number of experiments: ", len(data))
         interval = scipy.stats.t.interval(alpha=0.95, df=len(data)-1, loc=np.mean(data), scale=scipy.stats.sem(data))
         return np.mean(data), interval
     

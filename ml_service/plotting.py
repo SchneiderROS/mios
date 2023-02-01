@@ -2198,6 +2198,9 @@ def plot_collective_experiment():
             tag_set = set()
             average_time = 0
             for i in range(len(results)):
+                #if i < 4:  #  just for extended experiment bcause cylinder 10 was not working for the first 4 runs
+                #    indexes2pop.append(i)
+                #    continue
                 if len(results[i].costs) < 9:
                     indexes2pop.append(i)
                     continue
@@ -2214,7 +2217,7 @@ def plot_collective_experiment():
             count_time_overall.append(average_time)
             mean_length, interval = p.get_average_n_trials(results, cutoff=cutoff[e])
             print(mean_length, interval)
-            print("r=",r)
+            print("robot_number=",r)
             index = robots[robot_addr[r]].index(e)
             width = 0.1
             
@@ -2244,19 +2247,23 @@ def plot_collective_experiment():
     plt.show()
 
 def plot_single_robot_experiment():
-    tags = ["single_robot_learning_trans"]
-    #tags = ["collective_learning_bugfix_alt"]
-    #tags = ["collective_learning_alt"]
-    #tags = ["collective_learning_parallel"]
-    #tags = ["collective_learning"]
+    tags = ["single_robot_learning_without"]
+    #tags = ["single_robot_learning_trans"]
 
     #default, collective_learning_04_alt
-    robots = {  #"collective-panda-prime.local": ["key_door"],
-                #"collective-panda-002.local": ["key_abus_e30"],
-                #"collective-panda-003.local": ["key_padlock","key_2"],
-                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
-                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+    robots = {  "collective-panda-prime": ["key_door"],
+                "collective-panda-002": ["key_abus_e30"],
+                "collective-panda-003": ["key_padlock","key_2"],
+                "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+                "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
              }
+    if tags == "single_robot_learning_without":
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock","key_2"],
+                    "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+                    "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+                }
     cutoff = {  "key_door":0.25,
                 "key_abus_e30": 0.25,
                 "key_padlock": 0.25,
@@ -2290,6 +2297,8 @@ def plot_single_robot_experiment():
     xticks_labels = []
     count_agents = 0
     count_bars = 0
+
+    outsource = {"collective-panda-005": ["cylinder_10", "cylinder_30", "cylinder_50"]}
     for r in range(len(robot_addr)):
         task_count = 0
         title=False
@@ -2301,7 +2310,8 @@ def plot_single_robot_experiment():
             print("tags = ", filters)
 
             results = get_multiple_experiment_data(robot_addr[r], "insertion", filter={"meta.tags": filters})
-
+            if r in outsource.keys():
+                results.extend(get_multiple_experiment_data("collective-panda-005", "insertion", filter={"meta.tags": filters}))
 
             indexes2pop = []
             tag_set = set()

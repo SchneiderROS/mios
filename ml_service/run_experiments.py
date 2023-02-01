@@ -285,12 +285,12 @@ def collective_experiment_parallel():
                 "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
              }
     #default sequence
-    robots = {  "collective-panda-prime": ["key_door"],
-                "collective-panda-002": ["key_abus_e30"],
-                "collective-panda-003": ["key_padlock","key_2"],
-                "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
-                "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
-            }
+    #robots = {  "collective-panda-prime": ["key_door"],
+    #            "collective-panda-002": ["key_abus_e30"],
+    #            "collective-panda-003": ["key_padlock","key_2"],
+    #            "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+    #            "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+    #        }
     cutoff = {  "key_door":0.25,
                 "key_abus_e30": 0.25,
                 "key_padlock": 0.25,
@@ -309,7 +309,7 @@ def collective_experiment_parallel():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["collective_learning_parallel"]
-    for n_current_iter in range(7,20):
+    for n_current_iter in range(11,25):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
@@ -359,7 +359,8 @@ def single_robot_learning():
     robots = {  "collective-panda-prime": ["key_door"],
                 "collective-panda-002": ["key_abus_e30"],
                 "collective-panda-003": ["key_padlock","key_2"],
-                "collective-panda-004": [ "cylinder_50"], #"cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30",   , "cylinder_60"
+                "collective-panda-004": [ "cylinder_60", "cylinder_40" "cylinder_20"], #
+                "collective-panda-005": ["cylinder_10", "cylinder_30", "cylinder_50"],
                 "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
             }
     cutoff = {  "key_door":0.25,
@@ -380,11 +381,11 @@ def single_robot_learning():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["single_robot_learning_without"]
-    for n_current_iter in range(2,6):
+    for n_current_iter in range(3,25):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
-        print("Number of iteration: ", n_current_iter+1,"/5")
+        print("Number of iteration: ", n_current_iter+1,"/25")
         knowledge_source = Knowledge()
         #knowledge_source.kb_location = "collective-dev-001"
         knowledge_source.mode = None
@@ -452,10 +453,10 @@ def single_robot_learning_trans():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["single_robot_learning_trans"]
-    for n_current_iter in range(11,20):
+    for n_current_iter in range(11,25):
     #for n_current_iter in [7]:
         #check_poses(robots)
-        print("Number of iteration: ", n_current_iter+1,"/5")
+        print("Number of iteration: ", n_current_iter+1,"/25")
         knowledge_source = Knowledge()
         knowledge_source.kb_location = "collective-dev-001"
         knowledge_source.mode = "global"

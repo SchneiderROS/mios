@@ -164,7 +164,9 @@ def place_insertable(robot, insertable="generic_insertable", container="generic_
 
 def grasp_insertable(robot:str, insertable = "generic_insertable", container = "generic_container", approach = "generic_container_approach", above = None):
     count = 0
+    alternation = -1
     while True:
+        alternation=alternation*(-1)
         #print("current object grasped: ", call_method(robot,12000,"get_state")["result"]['grasped_object'] )
         if call_method(robot,12000,"get_state")["result"]['grasped_object'] == 'NullObject':
             call_method(robot, 12000, "release_object")
@@ -208,6 +210,7 @@ def grasp_insertable(robot:str, insertable = "generic_insertable", container = "
                 if count > 2:
                     break
             success_moving = False
+            move(robot, insertable, [0,0,0.001*grasp_count*alternation])
             result = call_method(robot, 12000, "grasp_object", {"object": insertable}) # call_method(robot,12000,"grasp",{"width":0,"force":100,"epsilon_outer":1,"speed":100}) #
             #call_method(robot,12000,"set_grasped_object",{"object":insertable})
             success_grasping  = result["result"]["result"]
