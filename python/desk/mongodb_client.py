@@ -1,10 +1,7 @@
 import pymongo
 from bson import objectid
 from pymongo import MongoClient
-import logging
 import time
-
-logger = logging.getLogger("ml_service")
 
 
 class MongoDBClient():
@@ -13,7 +10,6 @@ class MongoDBClient():
     def __init__(self, host: str='localhost', port: int=27017, max_retry: int=3):
         self.client = MongoClient(host, port)
         self.max_retry = max_retry
-        logger.info("MongoDB is initialized at " + host + ":" + str(port))
 
     def read(self, db: str, collection: str, search_param: dict) -> list:
         db_connection = self.client[db]
@@ -31,15 +27,15 @@ class MongoDBClient():
                 if isinstance(search_param[key],str):
                     search_param[key] = objectid.ObjectId(search_param[key])
         retry_count = 0
-        #while not findings:
-        for f in col.find(filter=search_param):
-            f["_id"] = str(f["_id"])
-            findings.append(f)
-        #if retry_count >= self.max_retry:
-        #    break
-        #else:
-        #    retry_count += 1
-        #    time.sleep(0.5)
+        while not findings:
+            for f in col.find(filter=search_param):
+                f["_id"] = str(f["_id"])
+                findings.append(f)
+            if retry_count >= self.max_retry:
+                break
+            else:
+                retry_count += 1
+                time.sleep(0.5)
         return findings
 
     def write(self, db: str, collection: str, document: dict or list) -> objectid.ObjectId or list:
@@ -54,8 +50,7 @@ class MongoDBClient():
         elif isinstance(document, dict):
             document_ids = self._write_single(db, collection, document)
         else:
-            logger.error("Document type is not dict or list, but " + str(type(document)))
-            logger.info("Cannot insert document into Database.")
+            print("Document type is not dict or list, but " + str(type(document)))
             return False
         return document_ids
 
@@ -68,8 +63,7 @@ class MongoDBClient():
                     document["_id"] = objectid.ObjectId(document["_id"])
             return str(col.insert_one(document).inserted_id)
         else:
-            logger.error("Document type is not dict, but " + str(type(document)))
-            logger.info("Cannot insert document into Database.")
+            print("Document type is not dict, but " + str(type(document)))
             return False
 
     def remove(self, db: str, collection: str, search_param: dict) -> bool:
@@ -102,10 +96,10 @@ class MongoDBClient():
                 new_param_set = {"$set": new_param}
                 col.update_one(search_param, new_param_set)
             else:
-                logger.error("new parameter for update are not dict, but " + str(type(new_param)))
+                print("new parameter for update are not dict, but " + str(type(new_param)))
                 return False
         else:
-            logger.error("search parameter for update are not dict, but " + str(type(new_param)))
+            print("search parameter for update are not dict, but " + str(type(new_param)))
             return False
         return True
 

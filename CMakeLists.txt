@@ -8,6 +8,7 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 22)
 set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+#set(CMAKE_FIND_DEBUG_MODE 1)
 
 configure_file (
     "${CMAKE_SOURCE_DIR}/include/commons/config.hpp.in"
@@ -144,7 +145,8 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_warnings ALIAS ${PROJECT_NA
 add_library(${PROJECT_NAME}::${PROJECT_NAME}_project_deps ALIAS ${PROJECT_NAME}_project_deps)
 
 find_package(spdlog REQUIRED)
-find_package(Boost REQUIRED)
+#find_package(Boost REQUIRED)
+message("Boost Version:\t ${Boost_VERSION}")
 
 target_link_libraries(${PROJECT_NAME}_project_deps
     INTERFACE

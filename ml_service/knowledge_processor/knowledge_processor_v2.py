@@ -8,10 +8,10 @@ logger = logging.getLogger("ml_service")
 
 
 class KnowledgeProcessor(KnowledgeProcessorBase):
-    def __init__(self, vector_mapping, task_identity, mean_optimum_weights=None, confidence=None):
-        super().__init__(vector_mapping, task_identity, mean_optimum_weights, confidence)
+    def __init__(self, vector_mapping, task_identity, scope, mean_optimum_weights=None, confidence=None):
+        super().__init__(vector_mapping, task_identity, scope,  mean_optimum_weights, confidence)
 
-    def process_knowledge(self, successful_trials) -> dict or None:
+    def _process_knowledge(self, successful_trials: list) -> dict or None:
         '''process raw data from trials to knowledge; working from and on the database'''
         clusters = self.find_cluster(successful_trials)
         # use best cluster:
@@ -37,11 +37,11 @@ class KnowledgeProcessor(KnowledgeProcessorBase):
         logger.debug("knowledge_processor: knowledge successful processed")
         return self.wrap_information(centroid, expected_cost)
 
-    def find_cluster(self, data):
+    def find_cluster(self, data: list):
         def distance_to(a, b):
             '''distance between 2 multidimensional points'''
             return np.sqrt(sum((np.array(a) - np.array(b)) ** 2))
-
+        logger.debug("knowledge_processor.find_cluster()")
         data = copy.deepcopy(data)
         logger.debug("ClusterProcessor: start working")
         clusters = []
@@ -57,8 +57,9 @@ class KnowledgeProcessor(KnowledgeProcessorBase):
                 mean_gradient = 0
                 if len(cluster) >= 2:
                     for trial in cluster[1:]:
-                        mean_gradient += (trial["q_metric"]["final_cost"] - cluster[0]["q_metric"]["final_cost"]) / distance_to(
-                            self.dict_to_list(trial["theta"]), self.dict_to_list(cluster[0]["theta"]))
+                        if distance_to( self.dict_to_list(trial["theta"]), self.dict_to_list(cluster[0]["theta"])) != 0:
+                            mean_gradient += (trial["q_metric"]["final_cost"] - cluster[0]["q_metric"]["final_cost"]) / distance_to(
+                                self.dict_to_list(trial["theta"]), self.dict_to_list(cluster[0]["theta"]))
                     mean_gradient = mean_gradient / len(cluster[1:])
 
                 dist = distance_to(self.dict_to_list(d_trial["theta"]), self.dict_to_list(cluster[0]["theta"]))

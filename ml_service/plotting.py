@@ -1,5 +1,9 @@
+from ast import Num
+from asyncio import FastChildWatcher
+from cProfile import label
 from math import isclose
 import numpy as np
+import copy
 from plotting.data_acquisition import *
 from plotting.data_processor import DataProcessor
 from plotting.data_processor import DataError
@@ -1748,13 +1752,9 @@ def plot_iros_learning(host="collective-control-001.local"):
     plt.show()
 
 
-def live_plotting():
+def live_plotting(tags=["demo_learning"], robots = ["collective-panda-002", "collective-panda-004",
+              "collective-panda-003", "collective-panda-008"]):
     from plotting.live_plotter import live_plot
-    # lp = LivePlotter([],[])
-    # lp.start_plot()
-    robots = ["collective-panda-001.local", "collective-panda-002.local",
-              "collective-panda-003.local", "collective-panda-009.local"]
-    tags = ["live_plotting_test"]
     live_plot(robots, tags)
 
 
@@ -1834,3 +1834,630 @@ def get_mean_over_window(x: np.ndarray, width: float = 200) -> (np.ndarray, np.n
 
     print(x_mean)
     return np.asarray(x_mean), np.asarray(x_std)
+
+def plot_horizontal_learning():
+    robots = ["collective-panda-002","collective-panda-003","collective-panda-004","collective-panda-008","collective-panda-prime"]
+    p = DataProcessor()
+
+    tags = ["horizontal_learning_2"]
+    experiments = ["n_immigrants="+str(n) for n in [0,2,4,6,8]]
+    colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"][:len(experiments)]
+    legend_handles1 = []
+    legend_handles2 = []
+    fig1, axes1 = plt.subplots(len(robots), 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    fig2, axes2 = plt.subplots(len(robots), 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
+    fig3, axes3 = plt.subplots(len(robots), len(experiments), num=3)
+    for r in range(len(robots)):
+        for e in range(len(experiments)):
+            filters = []
+            filters.extend(tags)
+            filters.append(experiments[e])
+            print("tags = ", filters)
+            results = get_multiple_experiment_data(robots[r], "insertion", filter={"meta.tags": {"$all": filters}})
+            indexes2pop = []
+            for i in range(len(results)):
+                if len(results[i].trials) < 130:
+                    print("no complete set. ",len(results[i].trials))
+                    print(results[i].tags)
+                    indexes2pop.append(i)
+            indexes2pop.reverse()
+            for i in indexes2pop:
+                results.pop(i)
+            #print("number of experiments = ", len(results))
+            #statistic:
+            statistic_dict = {}
+            for agent in robots:
+                statistic_dict[agent] = 0
+            successes = []
+            for res in results:
+                for trial in res.trials:
+                    if trial["q_metric"]["success"]:
+                        successes.append(trial)
+            for s in successes:
+                if not s["external"]:
+                    s["external"] = robots[r]
+                statistic_dict[s["external"]] += 1
+            pie_label = []
+            pie_sizes = []
+            for key in statistic_dict.keys():
+                statistic_dict[key] = statistic_dict[key] / len(successes)
+                if key == robots[r]:
+                    pie_label.append("self")
+                elif key[-3:] == "ime":
+                    pie_label.append(key[-5:])
+                else:
+                    pie_label.append(key[-3:])
+                pie_sizes.append(statistic_dict[key])
+            print(statistic_dict)
+
+            axes3[r,e].pie(pie_sizes, labels=pie_label, autopct='%1.1f%%')
+            axes3[r,e].set_title(results[0].tags[1] + "\n" + experiments[e])
+
+            
+            # monocally decreasing cost:
+            mean_cost, confidence = p.get_average_cost_over_trials(results, True, 1, specification="all")
+            axes1[r].fill_between(np.linspace(1, len(mean_cost), len(mean_cost)), mean_cost - confidence, mean_cost + confidence * 5, alpha=0.2, color=colors[e])
+            legend_handle1, = axes1[r].plot([i+1 for i in range(len(mean_cost))], mean_cost, linewidth=2, color=colors[e], label=experiments[e])
+            legend_handles1.append(legend_handle1)
+
+            axes1[r].set_ylim(0, 2.4)
+            axes1[r].set_xlim(1, len(mean_cost))
+            axes1[r].grid()
+            axes1[r].tick_params(axis="both", which="both", length=0)
+            xticks = [i*10 for i in range(1,(int(len(mean_cost)/10)) +1)]
+            xticks.insert(0,1)
+            axes1[r].set_xticks(xticks)
+            axes1[r].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes1[r].set_xlabel("Trial [1]")
+            if r == 0:
+                axes1[r].set_ylabel("Cost [1]")
+                axes1[r].legend(legend_handles1, experiments, loc='upper right')#, experiments)
+            
+            # batchwise plot:
+            mean_cost, confidence = p.get_average_cost_over_trials(results, False, 10, specification="all")
+            axes2[r].fill_between(np.linspace(1, len(mean_cost), len(mean_cost)), mean_cost - confidence, mean_cost + confidence * 5, alpha=0.2, color=colors[e])
+            legend_handle2, = axes2[r].plot([i+1 for i in range(len(mean_cost))], mean_cost, linewidth=2, color=colors[e], label=experiments[e])
+            legend_handles2.append(legend_handle2)
+
+            axes2[r].set_ylim(0, 2.4)
+            axes2[r].set_xlim(1, len(mean_cost))
+            axes2[r].grid()
+            axes2[r].tick_params(axis="both", which="both", length=0)
+            axes2[r].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes2[r].set_xlabel("Trial [1]")
+            if r == 0:
+                axes2[r].set_ylabel("Cost [1]")
+                axes2[r].legend(legend_handles2, experiments, loc='upper right')#, experiments)
+    fig3.tight_layout()
+    fig2.tight_layout()
+    fig1.tight_layout()
+    plt.show()
+
+
+
+def plot_collective_experiment_time():
+    import time
+
+    tags = ["collective_learning_alt"]
+
+    robots = {  "collective-panda-prime.local": ["key_door"],
+                "collective-panda-002.local": ["key_abus_e30"],
+                "collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"],
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    if tags[0] == "collective_learning_alt":
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock", "key_2"], #
+                    "collective-panda-004": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"  ,"cylinder_50"], #, "cylinder_20"  ,"cylinder_50"], #  
+                    "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
+                }
+    # cutoff = {  "key_door":0.25,
+    #             "key_abus_e30": 0.25,
+    #             "key_padlock": 0.25,
+    #             "key_2": 0.25,
+    #             "cylinder_40": 0.25,
+    #             "cylinder_10": 0.3,
+    #             "cylinder_20": 0.25,
+    #             "cylinder_30": 0.35,
+    #             "cylinder_50": 0.28,
+    #             "cylinder_60": 0.5,
+    #             "HDMI_plug": 0.3,
+    #             "key_padlock_2": 0.25,
+    #             "key_hatch": 0.25,
+    #             "key_old": 0.25
+    #             }
+    cutoff = {  "key_door":0.25,
+                "key_abus_e30": 0.25,
+                "key_padlock": 0.25,
+                "key_2": 0.25,
+                "cylinder_40": 0.45,
+                "cylinder_10": 0.5,
+                "cylinder_20": 0.35,
+                "cylinder_30": 0.4,
+                "cylinder_50": 0.35,
+                "cylinder_60": 0.55,
+                "HDMI_plug": 0.3,
+                "key_padlock_2": 0.25,
+                "key_hatch": 0.25,
+                "key_old": 0.25
+                }
+    n_tasks = sum([len(tasks) for tasks in robots.values()])
+    p = DataProcessor()
+    experiments = ["collective_experiment"]
+    colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"]  # [:len(n_tasks)]
+    legend_handles1 = []
+    legend_handles2 = []
+
+    fig1, axes1 = plt.subplots(n_tasks, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    fig2, axes2 = plt.subplots(len(robots), 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
+    count = 0
+    robot_count = 0
+    robot_addr = list(robots.keys())
+    count_trials_overall = []
+    for r in range(len(robot_addr)):
+        task_count = 0
+        title=False
+        last_time = False
+        for e in robots[robot_addr[r]]:
+            filters = []
+            filters.extend(tags)
+            filters.append(e)
+            print("tags = ", filters)
+
+            results = get_multiple_experiment_data(robot_addr[r], "insertion", filter={"meta.tags": filters})
+            indexes2pop = []
+            tag_set = set()
+            for i in range(len(results)):
+                if len(results[i].costs) < 9:
+                    indexes2pop.append(i)
+                    continue
+                if results[i] in tag_set:
+                    indexes2pop.append(i)
+                tag_set.add(str(results[i].tags))
+            if indexes2pop:
+                indexes2pop.reverse()
+                for i in indexes2pop:
+                    results.pop(i)
+
+            if not last_time:
+                t_0 = results[0].starting_time
+                for res in results:
+                    if t_0 > res.starting_time:
+                        t_0 = res.starting_time
+                    print("t_0= ",t_0, "  starting_time=",res.starting_time)
+            else:
+                t_0 = last_time
+            # monocally decreasing cost:
+            mean_cost, cost_confidence, mean_time, time_confindence, _, cutoff_index = p.get_average_cost_over_timestemp(results, 130,cutoff=cutoff[e])
+            #mean_cost, cost_confidence = p.get_average_cost_over_time(results, 130, True, None, "all")
+            #plot simple decreasing cost for every task
+           # cutoff_index = None
+           # for i in range(len(mean_cost)):
+           #     if mean_cost[i] < cutoff[e] and cutoff_index == None:
+           #         cutoff_index = i
+            print(cutoff_index)
+            if cutoff_index<10:
+                cutoff_index = 10
+            mean_cost = mean_cost[:cutoff_index]
+            cost_confidence = cost_confidence[:cutoff_index]
+            mean_time = mean_time[:cutoff_index]
+            count_trials_overall.append(len(mean_cost))
+            print("mean_cost",len(mean_cost),"\nmean_time", len(mean_time))
+            axes1[count].fill_between(np.linspace(1, len(mean_cost), len(mean_cost)), mean_cost - cost_confidence, mean_cost + cost_confidence, alpha=0.2, color=colors[0])
+            legend_handle1, = axes1[count].plot([i+1 for i in range(len(mean_cost))], mean_cost, linewidth=2, color=colors[0], label=e)
+            legend_handles1.append(legend_handle1)
+
+            axes1[count].set_ylim(0, 2.4)
+            axes1[count].set_xlim(1, len(mean_cost))
+            axes1[count].grid()
+            axes1[count].tick_params(axis="both", which="both", length=0)
+            xticks = [i*10 for i in range(1,(int(len(mean_cost)/10)) +1)]
+            xticks.insert(0,1)
+            axes1[count].set_xticks(xticks)
+            axes1[count].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes1[count].set_xlabel("Trial [1]")
+            if count == 0:
+                axes1[count].set_ylabel("Cost [1]")
+                axes1[count].legend(legend_handles1, tags, loc='upper right')#, experiments)
+            
+            #plot tasks by time they were carried out
+            mean_time = [delta_time + t_0 + 10 for delta_time in mean_time]  # add starting time
+            axes2[robot_count].fill_between(mean_time, mean_cost-cost_confidence,mean_cost+cost_confidence, alpha=0.2, color=colors[task_count])
+            legend_handle2, = axes2[robot_count].plot(mean_time, mean_cost, linewidth=2, color=colors[task_count], label=e)
+            legend_handles2.append(legend_handle2)
+            print(mean_cost)
+            index= next(x for x in range(len(mean_cost)) if mean_cost[x]<=np.mean(mean_cost))
+            if e == "key_padlock_2":
+                #texthandle = axes2[robot_count].text(mean_time[0]+100,1.5,"xi="+str(len(mean_cost)))
+                axes2[robot_count].annotate("xi="+str(len(mean_cost)), xy=(mean_time[index],mean_cost[index]), xytext=(mean_time[0]+100,1.5),arrowprops=dict(facecolor=colors[task_count], shrink=0.05),)
+            elif e == "key_hatch":
+                #texthandle = axes2[robot_count].text(mean_time[0]+200,1,"xi="+str(len(mean_cost)))
+                axes2[robot_count].annotate("xi="+str(len(mean_cost)), xy=(mean_time[index],mean_cost[index]), xytext=(mean_time[0]+200,1),arrowprops=dict(facecolor=colors[task_count], shrink=0.05),)
+            elif e == "key_old":
+                #texthandle = axes2[robot_count].text(mean_time[0]+300,0.5,"xi="+str(len(mean_cost)))
+                axes2[robot_count].annotate("xi="+str(len(mean_cost)), xy=(mean_time[index],mean_cost[index]), xytext=(mean_time[0]+300,0.5),arrowprops=dict(facecolor=colors[task_count], shrink=0.05),)
+            elif e == "key_padlock":
+                #texthandle = axes2[robot_count].text(mean_time[0]+100,1.5,"xi="+str(len(mean_cost)))
+                axes2[robot_count].annotate("xi="+str(len(mean_cost)), xy=(mean_time[index],mean_cost[index]), xytext=(mean_time[0]+100,1.5),arrowprops=dict(facecolor=colors[task_count], shrink=0.05),)
+            elif e == "key_2":
+                #texthandle = axes2[robot_count].text(mean_time[0]+200,1,"xi="+str(len(mean_cost)))
+                axes2[robot_count].annotate("xi="+str(len(mean_cost)), xy=(mean_time[index],mean_cost[index]), xytext=(mean_time[0]+200,1),arrowprops=dict(facecolor=colors[task_count], shrink=0.05),)
+            else:
+                #texthandle = axes2[robot_count].text(mean_time[0],1,"xi="+str(len(mean_cost)))
+                axes2[robot_count].annotate("xi="+str(len(mean_cost)), xy=(mean_time[index],mean_cost[index]) )
+            axes2[robot_count].set_ylim(0, 2.4)
+            #axes2[robot_count].set_xlim(1, len(mean_cost))
+            if not title:
+                axes2[robot_count].grid("on")
+                axes2[robot_count].set_title(robot_addr[r], y=1.0, pad=-14)
+                axes2[robot_count].set_xlabel("time")
+                title=True     
+            last_time = mean_time[-1] # results[0].starting_time + results[0].total_time
+            task_count += 1
+            count += 1
+        axes2[robot_count].legend(loc='upper right')#, experiments)
+        robot_count += 1
+
+    fig1.tight_layout()
+    fig2.tight_layout()
+    plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    print("trials overall = ",sum(count_trials_overall))
+    plt.show()
+
+def plot_collective_experiment():
+    tags = ["collective_learning_04_alt"]
+    tags = ["collective_learning_04_ext_alt"]
+    #tags = ["collective_learning_bugfix_alt"]
+    #tags = ["collective_learning_alt"]
+    #tags = ["collective_learning_parallel"]
+    #tags = ["collective_learning"]
+
+    #default, collective_learning_04_alt
+    robots = {  "collective-panda-prime.local": ["key_door"],
+                "collective-panda-002.local": ["key_abus_e30"],
+                "collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    if tags[0] == "collective_learning_alt" or tags[0] == "collective_learning_parallel":
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock", "key_2"], #
+                    "collective-panda-004": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"  ,"cylinder_50"], #
+                    "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+        }
+    if tags[0] == "collective_learning_04_ext_alt":
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock", "key_2"], #
+                    "collective-panda-004": [ "cylinder_40", "cylinder_20"  ,"cylinder_60"], #
+                    "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"],
+                    "collective-panda-005": ["cylinder_30","cylinder_10","cylinder_50"]
+             }
+    if tags[0] == "collective_learning_bugfix":
+        robots = {  "collective-panda-prime.local": ["key_door"],
+                "collective-panda-002.local": ["key_abus_e30"],
+                "collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_60"], #, "cylinder_50"
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    if tags[0] == "collective_learning_bugfix_alt":
+        robots = {  "collective-panda-prime.local": ["key_door"],
+                "collective-panda-002.local": ["key_abus_e30"],
+                "collective-panda-003.local": ["key_padlock","key_2"],
+                "collective-panda-004.local": [ "cylinder_30","cylinder_60", "cylinder_40", "cylinder_10", "cylinder_20"], #, "cylinder_50"
+                "collective-panda-008.local": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    cutoff = {  "key_door":0.25,
+                "key_abus_e30": 0.25,
+                "key_padlock": 0.25,
+                "key_2": 0.25,
+                "cylinder_40": 0.45,
+                "cylinder_10": 0.5,
+                "cylinder_20": 0.35,
+                "cylinder_30": 0.4,
+                "cylinder_50": 0.35,
+                "cylinder_60": 0.55,
+                "HDMI_plug": 0.3,
+                "key_padlock_2": 0.25,
+                "key_hatch": 0.25,
+                "key_old": 0.25
+                }
+    robot_addr = list(robots.keys())
+    n_tasks = sum([len(tasks) for tasks in robots.values()])
+    p = DataProcessor()
+    experiments = ["collective_experiment"]
+    colors = ["blue", "red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"]  # [:len(n_tasks)]
+    legend_handles1 = []
+    legend_handles2 = []
+
+    fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    count = 0
+    robot_count = 0
+    
+    count_trials_overall = []
+    xticks = []
+    xticks_labels = []
+    count_agents = 0
+    count_bars = 0
+    count_time_overall = []
+    for r in range(len(robot_addr)):
+        task_count = 0
+        title=False
+        last_time = False
+        for e in robots[robot_addr[r]]:
+            filters = []
+            filters.extend(tags)
+            filters.append(e)
+            print("tags = ", filters)
+
+            results = get_multiple_experiment_data(robot_addr[r], "insertion", filter={"meta.tags": filters})
+            indexes2pop = []
+            tag_set = set()
+            average_time = 0
+            for i in range(len(results)):
+                #if i < 4:  #  just for extended experiment bcause cylinder 10 was not working for the first 4 runs
+                #    indexes2pop.append(i)
+                #    continue
+                if len(results[i].costs) < 9:
+                    indexes2pop.append(i)
+                    continue
+                if results[i] in tag_set:
+                    indexes2pop.append(i)
+                tag_set.add(str(results[i].tags))
+                average_time += results[i].total_time
+            if indexes2pop:
+                indexes2pop.reverse()
+                for i in indexes2pop:
+                    results.pop(i)
+
+            average_time = average_time / len(results)
+            count_time_overall.append(average_time)
+            mean_length, interval = p.get_average_n_trials(results, cutoff=cutoff[e])
+            print(mean_length, interval)
+            print("robot_number=",r)
+            index = robots[robot_addr[r]].index(e)
+            width = 0.1
+            
+            #x = r + (1+index-len(robots[robot_addr[r]])/2)*width
+            x = count_agents/10 + count_bars*width #(1+index-len(robots[robot_addr[r]])/2)*width
+
+            axes1.bar(x, mean_length, width, yerr=interval[1]-mean_length, color=colors[index])
+            count_trials_overall.append(mean_length)
+            axes1.set_ylim(0, 130)
+            # axes1[count].set_xlim(1, len(mean_cost))
+            # axes1[count].grid()
+            # axes1[count].tick_params(axis="both", which="both", length=0)
+            xticks.append(x)
+            xticks_labels.append(e)
+            axes1.set_xticks(xticks)
+            axes1.set_xticklabels(xticks_labels, rotation=45, ha='right')
+            
+            #axes1[count].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes1.set_xlabel("Tasks by Agents")
+            axes1.set_ylabel("mean cost [1]")
+            count_bars += 1
+        count_agents += 1
+    fig1.tight_layout()
+    plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    print("trials overall = ",sum(count_trials_overall))
+    print("time overall = ", int(max(count_time_overall)/60)+1, ",min")
+    plt.show()
+
+def plot_single_robot_experiment():
+    tags = ["single_robot_learning_without"]
+    #tags = ["single_robot_learning_trans"]
+
+    #default, collective_learning_04_alt
+    robots = {  "collective-panda-prime": ["key_door"],
+                "collective-panda-002": ["key_abus_e30"],
+                "collective-panda-003": ["key_padlock","key_2"],
+                "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+                "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+             }
+    if tags == "single_robot_learning_without":
+        robots = {  "collective-panda-prime": ["key_door"],
+                    "collective-panda-002": ["key_abus_e30"],
+                    "collective-panda-003": ["key_padlock","key_2"],
+                    "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #
+                    "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
+                }
+    cutoff = {  "key_door":0.25,
+                "key_abus_e30": 0.25,
+                "key_padlock": 0.25,
+                "key_2": 0.25,
+                "cylinder_40": 0.45,
+                "cylinder_10": 0.5,
+                "cylinder_20": 0.35,
+                "cylinder_30": 0.4,
+                "cylinder_50": 0.35,
+                "cylinder_60": 0.55,
+                "HDMI_plug": 0.3,
+                "key_padlock_2": 0.25,
+                "key_hatch": 0.25,
+                "key_old": 0.25
+                }
+    robot_addr = list(robots.keys())
+    n_tasks = sum([len(tasks) for tasks in robots.values()])
+    p = DataProcessor()
+    experiments = ["collective_experiment"]
+    colors = ["blue", "red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "coral", "brown", "lightgrey", "beige","lavender"]  # [:len(n_tasks)]
+    legend_handles1 = []
+    legend_handles2 = []
+
+    fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    count = 0
+    robot_count = 0
+    
+    count_trials_overall = []
+    count_time_overall = []
+    xticks = []
+    xticks_labels = []
+    count_agents = 0
+    count_bars = 0
+
+    outsource = {"collective-panda-005": ["cylinder_10", "cylinder_30", "cylinder_50"]}
+    for r in range(len(robot_addr)):
+        task_count = 0
+        title=False
+        last_time = False
+        for e in robots[robot_addr[r]]:
+            filters = []
+            filters.extend(tags)
+            filters.append(e)
+            print("tags = ", filters)
+
+            results = get_multiple_experiment_data(robot_addr[r], "insertion", filter={"meta.tags": filters})
+            if r in outsource.keys():
+                results.extend(get_multiple_experiment_data("collective-panda-005", "insertion", filter={"meta.tags": filters}))
+
+            indexes2pop = []
+            tag_set = set()
+            average_time = 0
+            for i in range(len(results)):
+                if len(results[i].costs) < 9:
+                    indexes2pop.append(i)
+                    continue
+                if results[i] in tag_set:
+                    indexes2pop.append(i)
+                tag_set.add(str(results[i].tags))
+                average_time += results[i].total_time
+            if indexes2pop:
+                indexes2pop.reverse()
+                for i in indexes2pop:
+                    results.pop(i)
+            average_time = average_time / len(results)
+            count_time_overall.append(average_time)
+            
+            mean_length, interval = p.get_average_n_trials(results, cutoff=cutoff[e])
+            print(mean_length, interval)
+            print("r=",r)
+            width = 0.1
+            
+            #x = r + (1+index-len(robots[robot_addr[r]])/2)*width
+            x = count_agents/10 + count_bars*width #(1+index-len(robots[robot_addr[r]])/2)*width
+            print("task number: ",count_bars)
+            axes1.bar(x, mean_length, width, yerr=interval[1]-mean_length, color=colors[count_bars])
+            count_trials_overall.append(mean_length)
+            axes1.set_ylim(0, 130)
+            # axes1[count].set_xlim(1, len(mean_cost))
+            # axes1[count].grid()
+            # axes1[count].tick_params(axis="both", which="both", length=0)
+            xticks.append(x)
+            xticks_labels.append(e)
+            axes1.set_xticks(xticks)
+            axes1.set_xticklabels(xticks_labels, rotation=45, ha='right')
+            
+            #axes1[count].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes1.set_xlabel("Tasks by Agents")
+            axes1.set_ylabel("mean cost [1]")
+            count_bars += 1
+    fig1.tight_layout()
+    plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    print("trials overall = ",sum(count_trials_overall))
+    print("time overall = ", int(sum(count_time_overall)/60)+1, ",min")
+    plt.show()
+
+def success_cost():
+    robots = {  "collective-panda-prime": ["key_door"],
+                "collective-panda-002": ["key_abus_e30"],
+                "collective-panda-003": ["key_padlock", "key_2"], #
+                "collective-panda-004": ["cylinder_40", "cylinder_10", "cylinder_20", "cylinder_30", "cylinder_50", "cylinder_60"], #  
+                "collective-panda-008": [ "HDMI_plug", "key_padlock_2", "key_hatch", "key_old"] # 
+             }
+    p = DataProcessor()
+    tags = ["collective_learning"]
+    fig2, axes2 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
+    for robot in robots.keys():
+        for insertable in robots[robot]:
+            filter = copy.deepcopy(tags)
+            filter.append(insertable)
+            results = get_multiple_experiment_data(robot, "insertion", filter={"meta.tags": filter})
+            indexes2pop = []
+            for i in range(len(results)):
+                if len(results[i].trials) < 130:
+                    #print(results[i].tags)
+                    indexes2pop.append(i)
+            indexes2pop.reverse()
+            for i in indexes2pop:
+                results.pop(i)
+            successes = [item for sublist in p.get_cost_of_successes(results) for item in sublist]
+            successes.sort()
+            best_cost = successes[0]
+            worst_cost = successes[-1]
+            mean_cost = np.mean(successes)
+            print(filter)
+            print("best_cost: ",best_cost,"\nmean_cost: ",mean_cost,"\nworst_cost", worst_cost)
+
+
+def plot_simple_learning():
+    robots = ["collective-panda-004"]
+    p = DataProcessor()
+
+    tags = ["simple_learning2"]
+    experiments = ["with_Kfold", "without_Kfold"]
+    colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"][:len(experiments)]
+    legend_handles1 = []
+    legend_handles2 = []
+    fig1, axes1 = plt.subplots(len(robots), 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    fig2, axes2 = plt.subplots(len(robots), 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
+    if len(robots) == 1:
+        axes1 = [axes1]
+        axes2 = [axes2]
+    for r in range(len(robots)):
+        for e in range(len(experiments)):
+            filters = []
+            filters.extend(tags)
+            filters.append(experiments[e])
+            print("tags = ", filters)
+            results = get_multiple_experiment_data(robots[r], "insertion", filter={"meta.tags": {"$all": filters}})
+            indexes2pop = []
+            for i in range(len(results)):
+                if len(results[i].trials) < 130:
+                    #print("no complete set. ",len(results[i].trials))
+                    #print(results[i].tags)
+                    indexes2pop.append(i)
+            indexes2pop.reverse()
+            for i in indexes2pop:
+                results.pop(i)
+            print("number of experiments (",experiments[e], ") = ", len(results))
+            #mean_cost, confidence = p.get_average_cost(results, True, 10)
+
+            # monocally decreasing cost:
+            mean_cost, confidence = p.get_average_cost_over_trials(results, True, 1, specification="all")
+            axes1[r].fill_between(np.linspace(1, len(mean_cost), len(mean_cost)), mean_cost - confidence, mean_cost + confidence * 5, alpha=0.2, color=colors[e])
+            legend_handle1, = axes1[r].plot([i+1 for i in range(len(mean_cost))], mean_cost, linewidth=2, color=colors[e], label=experiments[e])
+            legend_handles1.append(legend_handle1)
+
+            axes1[r].set_ylim(0, 2.4)
+            axes1[r].set_xlim(1, len(mean_cost))
+            axes1[r].grid("on")
+            axes1[r].tick_params(axis="both", which="both", length=0)
+            xticks = [i*10 for i in range(1,(int(len(mean_cost)/10)) +1)]
+            xticks.insert(0,1)
+            axes1[r].set_xticks(xticks)
+            axes1[r].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes1[r].set_xlabel("Trial [1]")
+            if r == 0:
+                axes1[r].set_ylabel("Cost [1]")
+                axes1[r].legend(legend_handles1, experiments, loc='upper right')#, experiments)
+            
+            # batchwise plot:
+            mean_cost, confidence = p.get_average_cost_over_trials(results, False, 10, specification="all")
+            axes2[r].fill_between(np.linspace(1, len(mean_cost), len(mean_cost)), mean_cost - confidence, mean_cost + confidence * 5, alpha=0.2, color=colors[e])
+            legend_handle2, = axes2[r].plot([i+1 for i in range(len(mean_cost))], mean_cost, linewidth=2, color=colors[e], label=experiments[e])
+            legend_handles2.append(legend_handle2)
+
+            axes2[r].set_ylim(0, 2.4)
+            axes2[r].set_xlim(1, len(mean_cost))
+            axes2[r].grid()
+            axes2[r].tick_params(axis="both", which="both", length=0)
+            axes2[r].set_title(results[0].tags[1], y=1.0, pad=-14)
+            axes2[r].set_xlabel("Trial [1]")
+            if r == 0:
+                axes2[r].set_ylabel("Cost [1]")
+                axes2[r].legend(legend_handles2, experiments, loc='upper right')#, experiments)
+
+    plt.show()

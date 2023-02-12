@@ -34,8 +34,6 @@ Core::Core(unsigned database_port, unsigned robot_configuration, std::string rob
     spdlog::trace("Core::Core()");
 }
 
-
-
 Core::~Core(){
     spdlog::trace("Core::~Core()");
     terminate();
@@ -49,7 +47,7 @@ bool Core::initialize(){
         return false;
     }
     spdlog::info("Initializing robot...");
-    if(!m_panda_body.initialize(this -> m_robot_arm)){
+    if(!m_panda_body.initialize()){
         spdlog::error("Could not initialize robot.");
         return false;
     }
@@ -476,6 +474,7 @@ bool Core::refresh_percept(std::optional<Eigen::Matrix<double,3,3> > O_R_TF, boo
         return true;
     }
     bool read_successful=false;
+    int count=0;
     if(wait){
         while(!read_successful){
             if(is_busy()){
@@ -496,15 +495,30 @@ bool Core::refresh_percept(std::optional<Eigen::Matrix<double,3,3> > O_R_TF, boo
             }else{
                 break;
             }
+            if(count>6){
+                count = 0;
+                spdlog::debug("reconnecting to Robot and Gripper");
+                m_panda_body.connect_to_robot(m_memory.get_parameters()->system.robot_ip);
+                m_panda_body.connect_to_gripper(m_memory.get_parameters()->system.robot_ip);
+            }
+            count++;
         }
     }else{
         if(!m_panda_body.get_robot_state(robot_state)){
             spdlog::debug("Core::refresh_percept.failed_to_acquire_robot_state");
-            return false;
+            spdlog::debug("reconnecting to Robot");
+            m_panda_body.connect_to_robot(m_memory.get_parameters()->system.robot_ip);
+            if(!m_panda_body.get_robot_state(robot_state)){
+                return false;
+            }
         }
         if(!m_panda_body.get_gripper_state(gripper_state)){
             spdlog::debug("Core::refresh_percept.failed_to_acquire_gripper_state");
-            return false;
+            spdlog::debug("reconnecting to Gripper");
+            m_panda_body.connect_to_gripper(m_memory.get_parameters()->system.robot_ip);
+            if(!m_panda_body.get_gripper_state(gripper_state)){
+                return false;
+            }
         }
 
     }

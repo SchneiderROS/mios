@@ -25,7 +25,7 @@ class Memory;
 class PandaBody{
 public:
     PandaBody(Memory* memory);
-    bool initialize(std::string robot_arm);
+    bool initialize();
     bool connect_to_robot(const std::optional<std::string> &ip);
     bool connect_to_gripper(const std::optional<std::string> &ip);
     void disconnect_from_robot();
@@ -48,6 +48,8 @@ public:
     bool stop_gripper();
     bool home_gripper() const;
     bool is_hand_active();
+    bool activate_fci();
+    bool deactivate_fci();
 
 public:
     ControlReturnType control(std::function<franka::Torques(const franka::RobotState &, franka::Duration)> controller_callback);
@@ -77,6 +79,8 @@ private:
     std::optional<std::string> get_robot_ip(const std::optional<std::string>& last_ip);
     bool is_robot(const std::string& ip);
     std::optional<std::string> find_robot();
+    std::optional<std::string> find_device(const std::string &network_interface);
+    std::optional<std::string> ping_robot(const std::optional<std::string> &last_ip);
     void get_default_robot_state(franka::RobotState& state) const;
     void get_default_gripper_state(franka::GripperState& state) const;
 

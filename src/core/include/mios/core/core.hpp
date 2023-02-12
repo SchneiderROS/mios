@@ -21,9 +21,7 @@
 #include "mios/data_structures/actuator.hpp"
 #include "mios/data_structures/percept.hpp"
 
-// DONE: add left right hand for the robot ROS part
-// TODO: add left right hand for the robot connection part 
-// TODO: add left right hand for the name of the mangoDB part
+
 
 namespace mios {
 

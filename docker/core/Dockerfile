@@ -1,6 +1,7 @@
 FROM ubuntu:20.04
 
 RUN apt-get update
+RUN apt-get install -y libpython3.8
 RUN apt-get install -y --no-install-recommends python3-pip
 RUN pip3 install -U setuptools
 RUN pip3 install -U numpy
@@ -14,7 +15,7 @@ RUN apt-get install -y fping
 COPY mios/ /mios/
 COPY dependencies/ /dependencies/
 
-EXPOSE 12000 12001 12002 8888 8889 
+EXPOSE 12000 12001 12002 8888 8889
 
 ARG default_verbosity_value=info
 ARG default_database_port_value=27017

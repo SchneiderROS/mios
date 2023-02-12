@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 IP="$1"
-user="panda"
+user="collective_dualarm"  #"panda"
 ROOT=$(dirname "$(realpath $0)")
 cd ${ROOT}
 

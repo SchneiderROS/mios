@@ -366,8 +366,11 @@ def test_skill_queue(robot="localhost"):
             "objects": {
                 "GoalPose": "test_pose_1"
             },
-            "speed": [0.1, 0.5],
-            "acc": [0.5, 5]
+            "p0":{
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [2000, 2000, 2000, 250, 250, 250]
+            },
         },
         "control": {
             "control_mode": 0,
@@ -384,8 +387,11 @@ def test_skill_queue(robot="localhost"):
             "objects": {
                 "GoalPose": "test_pose_2"
             },
-            "speed": [0.1, 0.5],
-            "acc": [0.5, 5]
+            "p0":{
+                "dX_d": [0.1, 0.5],
+                "ddX_d": [0.5, 1],
+                "K_x": [2000, 2000, 2000, 250, 250, 250]
+            },
         },
         "control": {
             "control_mode": 0,
@@ -394,7 +400,7 @@ def test_skill_queue(robot="localhost"):
             }
         },
         "frames": {
-            "O_R_T": [1, 0, 0, 0, -1, 0, 0, 0, -1]
+            "O_R_T": [1, 0, 0, 0, 1, 0, 0, 0, -1]
         }
     }
     t = Task(robot)

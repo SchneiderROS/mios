@@ -19,7 +19,7 @@ logger = logging.getLogger("ml_service")
 
 
 class Trial:
-    def __init__(self, task_context: dict, reset_instructions: list, theta: dict, log: bool = True):
+    def __init__(self, task_context: dict, reset_instructions: list, theta: dict, log: bool = True, external = False):
         self.task_context = task_context
         self.reset_instructions = reset_instructions
         self.theta = theta
@@ -35,6 +35,8 @@ class Trial:
 
         self.trial_number = 0
         self.log = log
+
+        self.external = external
 
     def is_valid(self):
         if "name" not in self.task_context:
@@ -158,7 +160,7 @@ class Engine:
 
         while self.keep_running is True:
             try:
-                # logger.debug("Engine::main_loop.get_trial")
+                logger.debug("Engine::main_loop.get_trial")
                 trial = self.queued_trials.get(False)
                 # logger.debug("Engine::main_loop.new_trial: " + trial.trial_uuid)
             except Empty:
@@ -234,6 +236,7 @@ class Engine:
                     self._reset_task(agent, trial)
                     return
             else:
+                self._reset_task(agent, trial)
                 break
 
             theta = np.zeros((1, (len(self.problem_definition.domain.limits))))
@@ -283,8 +286,6 @@ class Engine:
                 logger.error("Result was False after start_task")
                 return False, None
             result, variation_result = self._wait_for_task(agent, task_uuid)
-            variation_result.q_metric = self.problem_definition.calculate_cost(variation_result)
-            print(variation_result.q_metric.final_cost)
             if result is False:
                 logger.error("Result was False after wait_for_task")
                 return False, None
@@ -300,7 +301,8 @@ class Engine:
                 logger.warning("Received a user stop error, trial will be repeated.")
                 time.sleep(1)
                 return False, None
-
+            variation_result.q_metric = self.problem_definition.calculate_cost(variation_result)
+            print(variation_result.q_metric.final_cost)
             break
         logger.debug("Engine::_execute_task.end")
         return cnt_repeat < self.max_trial_repeats and self.keep_running is True, variation_result
@@ -444,7 +446,8 @@ class Engine:
             "t_0": trial.t_0,
             "t_1": trial.t_1,
             "t_delta": trial.t_delta,
-            "agent": trial.agent
+            "agent": trial.agent,
+            "external": trial.external
         }
         logger.debug("Engine::write_task_result.data: " + str(data))
         self.database_results_collection.update_one({'_id': self.database_results_id},

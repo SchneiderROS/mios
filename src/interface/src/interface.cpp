@@ -401,6 +401,8 @@ nlohmann::json CommandInterface::get_state([[maybe_unused]] const nlohmann::json
     }
     response["result"]=result;
     response["error_message"]=error_message;
+    response["current_task"] = m_core->get_task_engine()->get_active_task_id();
+    response["gripper_width"] = p->proprioception.finger_width;
 
     return response;
 }
