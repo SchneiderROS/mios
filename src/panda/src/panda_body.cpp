@@ -300,8 +300,11 @@ bool PandaBody::is_robot(const std::string &ip){
             else{
                 spdlog::error("PandaBody::is_robot(): Not able to aquire control over DESK client. Bad http response");
             }
+            return is_robot(ip);
         }
-        spdlog::debug("PandaBody: MIOS is in control of DESK-Interface of robot at "+ip);
+        else{
+            spdlog::debug("PandaBody: MIOS is in control of DESK-Interface of robot at "+ip);
+        }
         
     }
     catch (const pybind11::error_already_set &e){
