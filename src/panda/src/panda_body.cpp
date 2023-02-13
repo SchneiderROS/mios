@@ -59,7 +59,7 @@ bool PandaBody::activate_fci(){
     spdlog::trace("PandaBody::activate_fci()");
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("activate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+        pybind11::object py_result = desk_client.attr("activate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
         if(!py_result.cast<bool>()){
             spdlog::error("Cannot activate FCI through Desk client.");
         }
@@ -75,7 +75,7 @@ bool PandaBody::deactivate_fci(){
     spdlog::trace("PandaBody::deactivate_fci()");
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("deactivate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+        pybind11::object py_result = desk_client.attr("deactivate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
         if(!py_result.cast<bool>()){
             spdlog::error("Cannot deactivate FCI through Desk client.");
         }
