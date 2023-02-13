@@ -48,6 +48,8 @@ class FrankaAPI:
                 print("desk_client: In control. spoc token: ",self._spoc_token)
             else:
                 print("desk_clinet: Not in control yet. Updating mongodb accordingly.")
+                self.mongodb_client.update(self.db, "parameters", {"name":"system"}, {"spoc_in_control":False})
+                self.mongodb_client.update(self.db, "parameters", {"name":"system"}, {"spoc_token":""})
         return self
 
     def __exit__(self, type, value, traceback):
