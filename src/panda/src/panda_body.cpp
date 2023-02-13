@@ -858,7 +858,7 @@ bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const st
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("pack_pose")(ip.value(), user, password, (m_memory->m_m_memory->m_m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("pack_pose")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
