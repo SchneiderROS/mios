@@ -25,8 +25,10 @@ class FrankaAPI:
         self._token = False
         self._in_control = False
         self.mongodb_client = MongoDBClient()
+        print("desk_client intit")
         self._in_control = self.mongodb_client.read("mios", "parameters", {"name":"system"})[0].get("spoc_in_control", False)
         self._spoc_token = self.mongodb_client.read("mios", "parameters", {"name":"system"})[0].get("spoc_token","")
+        print("finished init")
 
 
     def __enter__(self):
