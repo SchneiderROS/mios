@@ -20,8 +20,9 @@ m_memory(memory){
     m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 }
 
-bool PandaBody::initialize(){
+bool PandaBody::initialize(std::string robot_arm){
     spdlog::trace("PandaBody::initialize()");
+    m_robot_arm = robot_arm;
     m_has_arm=m_memory->read_parameters()->system.has_robot;
     m_hand=m_memory->read_parameters()->system.gripper;
     
@@ -289,7 +290,7 @@ bool PandaBody::is_robot(const std::string &ip){
         spdlog::debug("PandaBody::is_robot("+ip+")" );
         if(!in_control.cast<bool>()){
             spdlog::debug("PandaBody::is_robot("+ip+"): not in control of DESK, aquire control...");
-            pybind11::object py_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
+            pybind11::object py_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, );
             bool wait = py_result.cast<bool>();
             if(wait){
                 spdlog::warn("Please verify that you are in control of the robot: Press the Button with the cyrcle on the Pilot! \n You have " + std::to_string(30) + "Seconds.");

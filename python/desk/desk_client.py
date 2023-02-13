@@ -366,7 +366,7 @@ def reboot(ip, user, pwd):
         print(e)
         print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
 
-def take_control(ip, user, pwd):
+def take_control(ip, user, pwd, db):
     try:
         with FrankaAPI(ip, user, pwd) as api:
             return api.take_control()
@@ -374,7 +374,7 @@ def take_control(ip, user, pwd):
         print(e)
         print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
 
-def release_control(ip, user, pwd):
+def release_control(ip, user, pwd, db):
     try:
         with FrankaAPI(ip, user, pwd) as api:
             api.release_control()
@@ -382,7 +382,7 @@ def release_control(ip, user, pwd):
         print(e)
         print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
 
-def activate_fci(ip, user, pwd):
+def activate_fci(ip, user, pwd, db):
     try:
         with FrankaAPI(ip, user, pwd) as api:
             return api.activate_fci()
@@ -390,7 +390,7 @@ def activate_fci(ip, user, pwd):
         print(e)
         print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
 
-def deactivate_fci(ip, user, pwd):
+def deactivate_fci(ip, user, pwd, db):
     try:
         with FrankaAPI(ip, user, pwd) as api:
             return api.deactivate_fci()
@@ -398,7 +398,7 @@ def deactivate_fci(ip, user, pwd):
         print(e)
         print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
 
-def in_control(ip, user, pwd):
+def in_control(ip, user, pwd, db):
     try:
         with FrankaAPI(ip, user, pwd) as api:
             return api.in_control()
