@@ -145,7 +145,7 @@ class FrankaAPI:
     def encode_password(self, user, password):
         bs = ','.join(
             [str(b) for b in hashlib.sha256((password + '#' + user + '@franka').encode('utf-8')).digest()])
-        return base64.encodestring(bs.encode('utf-8')).decode('utf-8')
+        return base64.encodebytes(bs.encode('utf-8')).decode('utf-8')
 
     def reboot(self):
         self._client.request('POST', '/desk/api/reboot',
