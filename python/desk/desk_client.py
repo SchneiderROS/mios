@@ -17,17 +17,18 @@ from urllib.parse import urlencode, quote_plus
 
 
 class FrankaAPI:
-    def __init__(self, hostname, user, password):
+    def __init__(self, hostname, user, password, db="miosL"):
         self._hostname = hostname
         self._user = user
         self._password = password
         self._spoc_token = False
         self._token = False
         self._in_control = False
+        self.db = db
         self.mongodb_client = MongoDBClient()
         print("desk_client intit")
-        self._in_control = self.mongodb_client.read("mios", "parameters", {"name":"system"})[0].get("spoc_in_control", False)
-        self._spoc_token = self.mongodb_client.read("mios", "parameters", {"name":"system"})[0].get("spoc_token","")
+        self._in_control = self.mongodb_client.read(self.db, "parameters", {"name":"system"})[0].get("spoc_in_control", False)
+        self._spoc_token = self.mongodb_client.read(self.db, "parameters", {"name":"system"})[0].get("spoc_token","")
         print("finished init")
 
 
@@ -44,7 +45,7 @@ class FrankaAPI:
         if not self._in_control:
             print("desk_client: Not in control yet.")
         else:
-            self._spoc_token = self.mongodb_client.read("mios", "parameters", {"name":"system"})[0]["spoc_token"]
+            self._spoc_token = self.mongodb_client.read(self.db, "parameters", {"name":"system"})[0]["spoc_token"]
             if self.in_control():
                 print("desk_client: In control. spoc token: ",self._spoc_token)
             else:
@@ -161,11 +162,11 @@ class FrankaAPI:
         response_status = response.status
         print("till here!!!!!!")
         if response_status == 200:
-            self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_token":self._spoc_token})
-            self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_in_control":True})
+            self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_token":self._spoc_token})
+            self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":True})
             return True
         else:
-            self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_in_control":False})
+            self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":False})
             return False
 
     def take_control(self):
@@ -185,8 +186,8 @@ class FrankaAPI:
                 self._spoc_token = temp["token"]
                 #print(temp["token"])
                 if self.in_control():
-                    self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_token":self._spoc_token})
-                    self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_in_control":True})
+                    self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_token":self._spoc_token})
+                    self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":True})
                     return int(1)
                 else:
                     print("new spoc token doesn't work. Try to force control.")
@@ -214,8 +215,8 @@ class FrankaAPI:
                         #print("3. request:",response_content)
                         response = response["tokenForceTimeout"]
                         self._in_control = True
-                        self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_token":self._spoc_token})
-                        self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_in_control":True})
+                        self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_token":self._spoc_token})
+                        self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":True})
                         print("verify your access to the robot: Press the O-Button!\n You have ",response," Seconds!")
                         return int(response)
 
@@ -234,7 +235,7 @@ class FrankaAPI:
             response_status = response.status
             if response_status == 200:
                 self._in_control = False
-                self.mongodb_client.update("mios","parameters",{"name":"system"},{"spoc_in_control":False})
+                self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":False})
                 return True
             else:
                 return False
