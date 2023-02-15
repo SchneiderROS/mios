@@ -1,5 +1,5 @@
 #!/usr/bin/python3 -u
-from utils.ws_client import *
+from ws_client import *
 import time
 
 
