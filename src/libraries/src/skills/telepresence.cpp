@@ -36,7 +36,7 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
     if(!mirmi_utils::read_json_param(parameters, "host", host)){
         host.reset();
     }
-    if(!mirmi_utils::read_json_param(parameters, "multicast_ip", host)){
+    if(!mirmi_utils::read_json_param(parameters, "multicast_ip", multicast_ip)){
         multicast_ip = "255.0.0.1";
     }
     if(is_master && multicast && multicast_group.size()==0){
