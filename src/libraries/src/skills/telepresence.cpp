@@ -127,7 +127,10 @@ bool SkillParametersTelepresence::from_json(const nlohmann::json &parameters){
     }
 
     if(multicast && is_master){
-        ip_dst="225.0.0.1";
+        if(std::stoi(ip_dst.substr(0,3)) < 224 && std::stoi(ip_dst.substr(0,3)) > 239){
+            ip_dst="225.0.0.1";  //if the multicast group is not defined, set it to "225.0.0.1"
+        }
+        
     }
 
     return true;

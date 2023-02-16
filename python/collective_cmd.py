@@ -3,30 +3,22 @@ import pymongo
 import os
 from threading import Thread
 from utils.ws_client import *
+import time
+
 
 hostnames = ["collective-%03d.rsi.ei.tum.de"%n for n in range(1,25)]
-hostnames.remove("collective-001.rsi.ei.tum.de")
-hostnames.remove("collective-002.rsi.ei.tum.de")
-hostnames.remove("collective-007.rsi.ei.tum.de")
-hostnames.remove("collective-012.rsi.ei.tum.de")
-hostnames.remove("collective-016.rsi.ei.tum.de")
-hostnames.remove("collective-017.rsi.ei.tum.de")
-hostnames.remove("collective-018.rsi.ei.tum.de")
-hostnames.remove("collective-020.rsi.ei.tum.de")
+#hostnames.remove("collective-001.rsi.ei.tum.de")
+#hostnames.remove("collective-002.rsi.ei.tum.de")
+#hostnames.remove("collective-007.rsi.ei.tum.de")
+#hostnames.remove("collective-012.rsi.ei.tum.de")
+#hostnames.remove("collective-016.rsi.ei.tum.de")
+#hostnames.remove("collective-017.rsi.ei.tum.de")
+#hostnames.remove("collective-018.rsi.ei.tum.de")
+#hostnames.remove("collective-020.rsi.ei.tum.de")
 
 hostnames.remove("collective-010.rsi.ei.tum.de")
 
-#hostnames = ["collective-006.rsi.ei.tum.de"]
-#hostnames.remove("collective-006.rsi.ei.tum.de")
-#hostnames.remove("collective-018.rsi.ei.tum.de")
-#hostnames.remove("collective-017.rsi.ei.tum.de")
-#hostnames.remove("collective-020.rsi.ei.tum.de")
-#hostnames.remove("collective-021.rsi.ei.tum.de")
-#hostnames.remove("collective-022.rsi.ei.tum.de")
-#hostnames.remove("collective-023.rsi.ei.tum.de")
-#hostnames.remove("collective-024.rsi.ei.tum.de")
-
-import time
+print(hostnames)
 
 
 class Task:
@@ -201,7 +193,12 @@ def demo_part_2():
     robots = hostnames.copy()
     for host in robots:
         stop_task(host)
-    master = robots.pop(4)
+    master = "008"
+    for host in robots:
+        if host.find(master) != -1:
+            master = host
+            break
+    robots.remove(master)
     print("master is ", master)
     master = get_ip(master)
     result = start_task(master, "MoveToJointPose", {
@@ -277,6 +274,7 @@ def demo_part_2():
     for i in range(0, len(robots)):
         try:
             t = Task(robots[i])
+            telepresence_slave_context["skill"]["host"] = robots[i]
             t.add_skill("telepresence", "Telepresence", telepresence_slave_context)
             print(robots[i])
             t.start()
