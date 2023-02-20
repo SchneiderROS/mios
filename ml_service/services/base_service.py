@@ -47,13 +47,15 @@ class ServiceConfiguration(metaclass=ABCMeta):
 
 
 class BaseService(metaclass=ABCMeta):
-    def __init__(self):
+    def __init__(self, mios_port=12000, mongo_port=27017):
 
         self.engine = None
+        self.mios_port = mios_port
+        self.mongo_port = mongo_port
         self.problem_definition = ProblemDefinition("NullSkill", "NullSkill", Domain(dict(), dict()), dict(), [], [],
                                                     [], None, None)
-        self.knowledge_manager = KnowledgeManager()
-        self.DBclient = MongoDBClient()  # for local ml_data
+        self.knowledge_manager = KnowledgeManager(port=self.mongo_port)
+        self.DBclient = MongoDBClient(port=self.mongo_port)  # for local ml_data
         self.engine_thread = None
         self.configuration = None
         self.keep_running = False
@@ -186,7 +188,7 @@ class BaseService(metaclass=ABCMeta):
         else:
             logger.debug("base_service.initialize(): No Knowledge used as initial centroid!!!")
 
-        self.engine = Engine(agents)
+        self.engine = Engine(agents, mios_port=self.mios_port, mongo_port=self.mongo_port)
         self.database_results_id = self.engine.initialize(self.problem_definition, configuration.exploration_mode)
 
         self._initialize()
@@ -254,7 +256,21 @@ class BaseService(metaclass=ABCMeta):
         if self.engine is not None:
             self.engine.stop()
 
+    def pause(self):
+        self.pause_execution = True
+        if self.engine is not None:
+            self.engine.pause()
+
+    
+    def start(self):
+        self.pause_execution = False
+        if self.engine is not None:
+            self.engine.resume()
+
     def push_trial(self, x, external: str = False) -> str:
+        while self.pause_execution:
+            time.sleep(1)
+
         for i in range(len(x)):
             if x[i] > 1:
                 x[i] = 1

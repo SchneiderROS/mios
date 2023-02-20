@@ -7,9 +7,42 @@ from utils.ws_client import *
 
 import time
 import copy
+hostnames = [
+"10.157.175.221",  #0 ms            collective-001.local    [n/a]           A8:A1:59:B8:22:8B                   [n/a]                               ASRock Incorporation                      
+"10.157.174.166",  #0 ms            collective-002.local    [n/a]           A8:A1:59:B8:25:9A                   [n/a]                               ASRock Incorporation                      
+"10.157.174.167",  #0 ms            collective-003.local    [n/a]           A8:A1:59:B8:24:E8                   [n/a]                               ASRock Incorporation                      
+"10.157.174.168",  #0 ms            collective-004.local    [n/a]           A8:A1:59:B8:25:EC                   [n/a]                               ASRock Incorporation                      
+"10.157.174.89" ,  #0 ms            collective-005.local    [n/a]           A8:A1:59:B8:23:72                   [n/a]                               ASRock Incorporation                      
+"10.157.174.80" ,  #0 ms            collective-006.local    [n/a]           A8:A1:59:B8:23:74                   [n/a]                               ASRock Incorporation                      
+"10.157.174.200",  #0 ms            collective-007.local    [n/a]           A8:A1:59:B2:B1:6E                   [n/a]                               ASRock Incorporation                      
+"10.157.175.129",  #0 ms            collective-008.local    [n/a]           A8:A1:59:B8:22:F4                   [n/a]                               ASRock Incorporation                      
+"10.157.174.36" ,  #0 ms            collective-009.local    [n/a]           A8:A1:59:B8:25:BD                   [n/a]                               ASRock Incorporation                      
+"10.157.175.87",  #0 ms            collective-011.local    [n/a]           A8:A1:59:B8:23:62                   [n/a]                               ASRock Incorporation                      
+"10.157.174.241",  #0 ms            collective-012.local    [n/a]           A8:A1:59:B8:25:DF                   [n/a]                               ASRock Incorporation                      
+"10.157.174.201",  #0 ms            collective-013.local    [n/a]           A8:A1:59:B2:BF:1F                   [n/a]                               ASRock Incorporation                      
+"10.157.174.247",  #0 ms            collective-014.local    [n/a]           A8:A1:59:B2:1C:28                   [n/a]                               ASRock Incorporation                      
+"10.157.174.202",  #0 ms            collective-015.local    [n/a]           A8:A1:59:B8:23:38                   [n/a]                               ASRock Incorporation                      
+"10.157.174.203",  #0 ms            collective-016.local    [n/a]           A8:A1:59:B2:B2:E4                   [n/a]                               ASRock Incorporation                      
+"10.157.174.46",  #0 ms            collective-017.local    [n/a]           A8:A1:59:B8:24:CF                   [n/a]                               ASRock Incorporation                      
+"10.157.174.103",  #0 ms            collective-018.local    [n/a]           A8:A1:59:B8:23:1E                   [n/a]                               ASRock Incorporation                      
+"10.157.174.206",  #0 ms            collective-019.local    [n/a]           A8:A1:59:B8:22:E2                   [n/a]                               ASRock Incorporation                      
+"10.157.174.204",  #0 ms            collective-020.local    [n/a]           A8:A1:59:B8:22:AE                   [n/a]                               ASRock Incorporation                      
+"10.157.175.173",  #0 ms            collective-021.local    [n/a]           A8:A1:59:B8:24:C9                   [n/a]                               ASRock Incorporation                      
+"10.157.174.244",  #0 ms            collective-022.local    [n/a]           A8:A1:59:B8:24:E6                   [n/a]                               ASRock Incorporation                      
+"10.157.174.205",  #0 ms            collective-023.local    [n/a]           A8:A1:59:B8:26:4D                   [n/a]                               ASRock Incorporation                      
+"10.157.175.156",  #0 ms            collective-024.local    [n/a]           A8:A1:59:B8:23:5A                   [n/a]                               ASRock Incorporation                      
+"10.157.174.186",  #0 ms            collective-025.local    [n/a]           A8:A1:59:B8:25:D5                   [n/a]                               ASRock Incorporation                      
+"10.157.174.245",  #0 ms            collective-026.local    [n/a]           A8:A1:59:B2:1C:7A                   [n/a]                               ASRock Incorporation                      
+"10.157.174.249",  #0 ms            collective-027.local    [n/a]           A8:A1:59:B8:23:B9                   [n/a]                               ASRock Incorporation                      
+"10.157.174.255",  #0 ms            collective-028.local    [n/a]           A8:A1:59:B2:AE:FF                   [n/a]                               ASRock Incorporation                      
+"10.157.174.42" ,  #0 ms            collective-029.local    [n/a]           A8:A1:59:B2:AD:9A                   [n/a]                               ASRock Incorporation                      
+"10.157.174.163",  #0 ms            collective-038.local    [n/a]           A8:A1:59:B8:23:9F                   [n/a]                               ASRock Incorporation                      
+"10.157.174.175",  #0 ms            collective-039.local    [n/a]           A8:A1:59:B8:25:70                   [n/a]                               ASRock Incorporation                      
+"10.157.174.52" ,  #0 ms            collective-046.local    [n/a]           A8:A1:59:B8:23:A5                   [n/a]                               ASRock Incorporation                      
+"10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
+#hostnames = ["collective-%03d.rsi.ei.tum.de"%n for n in range(1,50)]
 
-
-hostnames = ["collective-%03d.rsi.ei.tum.de"%n for n in range(1,25)]
+#hostnames = ["collective-%03d.local"%n for n in range(1,50)]
 #hostnames.remove("collective-001.rsi.ei.tum.de")
 #hostnames.remove("collective-002.rsi.ei.tum.de")
 #hostnames.remove("collective-007.rsi.ei.tum.de")
@@ -19,7 +52,10 @@ hostnames = ["collective-%03d.rsi.ei.tum.de"%n for n in range(1,25)]
 #hostnames.remove("collective-018.rsi.ei.tum.de")
 #hostnames.remove("collective-020.rsi.ei.tum.de")
 
-hostnames.remove("collective-010.rsi.ei.tum.de")
+#for host in hostnames:
+#    if host.find("010") != -1:
+#        hostnames.remove(host)
+#hostnames.remove("collective-010.rsi.ei.tum.de")
 
 print(hostnames)
 
@@ -466,3 +502,51 @@ def restart_collective():
     client =ServerProxy("http://collective-009.rsi.ei.tum.de:"+str(8008), allow_none=True)
     client.reboot_robots()
 
+def get_status():
+    for number,host in enumerate(hostnames):
+        print("\ncollective-%03d"%(number+1))
+        result = call_method(host,12000,"get_state")
+        if result is not None:
+            if result["result"]["current_task"] == "IdleTask":
+                if result["result"]["status"] == "Idle":
+                    print(host," -left- everything is good.")
+                elif result["result"]["status"] == "Reflex":
+                    print(host," -left- Non-upright-mounting Reflex.")
+                else:
+                    print(host, " -left- unknown status")
+            else:
+                print(host, " -left- Not in IdleTask")
+        else:
+            print(host, " -left- Not reachable!")
+
+        result = call_method(host,13000,"get_state")
+        if result is not None:
+            if result["result"]["current_task"] == "IdleTask":
+                if result["result"]["status"] == "Idle":
+                    print(host," -right- everything is good.")
+                elif result["result"]["status"] == "Reflex":
+                    print(host," -right- Non-upright-mounting Reflex.")
+                else:
+                    print(host, " -right- unknown status")
+            else:
+                print(host, " -right- Not in IdleTask")
+        else:
+            print(host, " -right- Not reachable!")
+
+
+def hold_pose(robot, duration, port):
+    hold_context = {
+        "skill": {
+            "t_max": duration,
+        },
+        "control": {
+            "control_mode": 0,
+            "cart_imp": {
+                "K_x": [2000, 2000, 2000, 250, 250, 250]
+            }
+        },
+        "user": {"F_ext_max": [100, 50]}
+    }
+    t = Task(robot, port)
+    t.add_skill("hold","HoldPose",hold_context)
+    t.start(queue=False)
