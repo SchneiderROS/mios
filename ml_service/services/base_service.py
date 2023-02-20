@@ -269,7 +269,7 @@ class BaseService(metaclass=ABCMeta):
             self.engine.resume()
 
     def push_trial(self, x, external: str = False) -> str:
-        while self.pause_execution:
+        while self.pause_execution and self.keep_running:
             logger.debug("base_service.push_trial: Paused...")
             time.sleep(1)
 

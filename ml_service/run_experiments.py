@@ -568,6 +568,8 @@ def dualarm_demo():
     tags = ["dualarm_demo"]
     sc = SVMLearner(130,10,0,True,False, 0.4,True).get_configuration()
     for r in robots_dualarm:
+        call_method("collective-"+r,12000,"stop_task")
+        call_method("collective-"+r,13000,"stop_task")
         move_joint("collective-"+r,"hold",13000,False)
         move_joint("collective-"+r,r[:3]+"_left_container_above",12000,False)
 
@@ -575,9 +577,9 @@ def dualarm_demo():
     for r in robots_dualarm:
         services.append(ServerProxy("http://" + "collective-"+r + ":8000", allow_none=True))
         while call_method("collective-"+r,13000,"get_state")["result"]["current_task"] != "IdleTask":
+            print("sleep")
             time.sleep(1)
         hold_pose("collective-"+r,10000,13000)
-
         knowledge_source = Knowledge()
         knowledge_source.kb_location = "collective-004"
         knowledge_source.mode = "global"
@@ -590,14 +592,14 @@ def dualarm_demo():
                                     "Approach": r[:3]+"_left_container_approach"}).get_problem_definition(r[:3]+"_left")
         
         learn_single_task("collective-"+r, pd, sc, tags, 1, False, knowledge_source.to_dict(), False,service_port=8000)
-
-        while True:
-            input("Pause?")
-            for s in services:
-                s.pause_service()
-            input("start again?")
-            for s in services:
-                s.resume_service()
+        print("collective-"+r," started.")
+    while True:
+        input("Pause?")
+        for s in services:
+            s.pause_service()
+        input("start again?")
+        for s in services:
+            s.resume_service()
 
 def stop_dualarm():
     robots_dualarm = [  "001",
@@ -614,6 +616,7 @@ def stop_dualarm():
                         "039.local",
                         "046"]
     for r in robots_dualarm:
+        call_method("collective-"+r,13000,"stop_task")
         print("http://" + "collective-"+r + ":8000")
         s=ServerProxy("http://" + "collective-"+r + ":8000", allow_none=True)
         s.stop_service()

@@ -351,7 +351,7 @@ class Engine:
     def _start_task(self, agent: str, task_context: dict) -> (bool, str):
         task_uuid = "INVALID"
         task_name = task_context["name"]
-        while(self.pause_execution):
+        while(self.pause_execution and self.keep_running):
             time.sleep(1)
         logger.info("Executing task " + task_name + " on agent " + agent + ".")
         # logger.debug("Task context: " + str(task_context))
