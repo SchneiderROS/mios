@@ -65,6 +65,7 @@ class Engine:
         self.meta_data = dict()
 
         self.keep_running = False
+        self.pause_execution = False
         self.max_trial_repeats = 3
 
         self.cnt_trial = 0
