@@ -59,6 +59,7 @@ class BaseService(metaclass=ABCMeta):
         self.engine_thread = None
         self.configuration = None
         self.keep_running = False
+        self.pause_execution = False
         self.centroid = None
         self.result = False
         self.database_results_id = None
@@ -269,6 +270,7 @@ class BaseService(metaclass=ABCMeta):
 
     def push_trial(self, x, external: str = False) -> str:
         while self.pause_execution:
+            logger.debug("base_service.push_trial: Paused...")
             time.sleep(1)
 
         for i in range(len(x)):
