@@ -309,7 +309,7 @@ def collective_experiment_parallel():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["collective_learning_parallel"]
-    for n_current_iter in range(11,25):
+    for n_current_iter in range(20,22):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
@@ -347,7 +347,7 @@ def collective_experiment_parallel():
                         return task
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
-                    return task
+                        return task
         #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         #kb.clear_memory()
         knowledge_source.scope = []
@@ -359,7 +359,7 @@ def single_robot_learning():
     robots = {  "collective-panda-prime": ["key_door"],
                 "collective-panda-002": ["key_abus_e30"],
                 "collective-panda-003": ["key_padlock","key_2"],
-                "collective-panda-004": [ "cylinder_60", "cylinder_40" "cylinder_20"], #
+                "collective-panda-004": [ "cylinder_60", "cylinder_40", "cylinder_20"], #
                 "collective-panda-005": ["cylinder_10", "cylinder_30", "cylinder_50"],
                 "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
             }
@@ -381,7 +381,7 @@ def single_robot_learning():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["single_robot_learning_without"]
-    for n_current_iter in range(3,25):
+    for n_current_iter in range(13,25):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
@@ -419,7 +419,7 @@ def single_robot_learning():
                         return task
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
-                    return task
+                        return task
         #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         #kb.clear_memory()
         knowledge_source.scope = []
@@ -486,12 +486,23 @@ def single_robot_learning_trans():
                         return task
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
-                    return task
+                        return task
         #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         #kb.clear_memory()
         knowledge_source.scope = []
         knowledge_source.tags = []
         del knowledge_source
+
+def run_all():
+    #result = collective_experiment_parallel()
+    #if result:
+    #    return result
+    #result = single_robot_learning()
+    #if result:
+    #    return result
+    result = single_robot_learning_trans()
+    if result:
+        return result
 
 # def collective_experiment(robots):
 #     '''
