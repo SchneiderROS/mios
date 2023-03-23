@@ -562,7 +562,7 @@ def dualarm_demo():
 "10.157.174.200",  #0 ms            collective-007.local    [n/a]           A8:A1:59:B2:B1:6E                   [n/a]                               ASRock Incorporation                      
 "10.157.175.129",  #0 ms            collective-008.local    [n/a]           A8:A1:59:B8:22:F4                   [n/a]                               ASRock Incorporation                      
 "10.157.174.36" ,  #0 ms            collective-009.local 
-"10.157.174.59",                    #collective-010#   [n/a]           A8:A1:59:B8:25:BD                   [n/a]                               ASRock Incorporation                      
+#"10.157.174.59",                    #collective-010#   [n/a]           A8:A1:59:B8:25:BD                   [n/a]                               ASRock Incorporation                      
 "10.157.175.87",  #0 ms            collective-011.local    [n/a]           A8:A1:59:B8:23:62                   [n/a]                               ASRock Incorporation                      
 "10.157.174.241",  #0 ms            collective-012.local    [n/a]           A8:A1:59:B8:25:DF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.201",  #0 ms            collective-013.local    [n/a]           A8:A1:59:B2:BF:1F                   [n/a]                               ASRock Incorporation                      
@@ -581,18 +581,30 @@ def dualarm_demo():
 #"10.157.174.245",  #0 ms            collective-026.local    [n/a]           A8:A1:59:B2:1C:7A                   [n/a]                               ASRock Incorporation                      
 "10.157.174.249",  #0 ms            collective-027.local    [n/a]           A8:A1:59:B8:23:B9                   [n/a]                               ASRock Incorporation                      
 "10.157.174.255",  #0 ms            collective-028.local    [n/a]           A8:A1:59:B2:AE:FF                   [n/a]                               ASRock Incorporation                      
-"10.157.174.42" ,  #0 ms            collective-029.local    [n/a]           A8:A1:59:B2:AD:9A                   [n/a]                               ASRock Incorporation                      
+#"10.157.174.42",   #0 ms            collective-029.local    [n/a]           A8:A1:59:B2:AD:9A                   [n/a]                               ASRock Incorporation                      
 "10.157.174.163",  #0 ms            collective-038.local    [n/a]           A8:A1:59:B8:23:9F                   [n/a]                               ASRock Incorporation                      
 "10.157.174.175",  #0 ms            collective-039.local    [n/a]           A8:A1:59:B8:25:70                   [n/a]                               ASRock Incorporation                      
 "10.157.174.52" ,  #0 ms            collective-046.local    [n/a]           A8:A1:59:B8:23:A5                   [n/a]                               ASRock Incorporation                      
 "10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
 
-    modules = ["001",\
-        "002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017",\
-        "018","019","020","021","022","023","024","025",#"026",\
-            "027","028","029","038","039","046","050",]
+    modules = [ "001",
+                "002",
+                "003","004",
+                "005",
+                "006","007","008","009",
+                #"010",
+                "011",
+                "012",
+                "013","014","015","016","017",
+                "018","019","020","021","022",
+                "023","024","025",
+                 #"026",
+                "027","028",
+                #"029",
+                "038","039","046","050"]
+
     print(len(modules),len(robots_dualarm))
-    tags = ["dualarm_demo"]
+    tags = ["dualarm_demo_2"]
     sc = SVMLearner(130,10,0,True,False, 0.4,True).get_configuration()
     for r,m in zip(robots_dualarm,modules):
         print(r,":  ",m)
@@ -604,7 +616,11 @@ def dualarm_demo():
         call_method(r,12000,"set_grasped_object",{"object":m+"_left"})
 
     services = []
-    for r,m in zip(robots_dualarm,modules):
+    #for r,m in zip(robots_dualarm, modules):
+    for i in range(len(modules)):
+        r = robots_dualarm[i]
+        m = modules[i]
+        print(r,":  ",m)
         services.append(ServerProxy("http://" + r + ":8000", allow_none=True))
         if m != "010":
             while call_method(r,13000,"get_state")["result"]["current_task"] != "IdleTask":
@@ -615,6 +631,7 @@ def dualarm_demo():
             if call_method(r,13000,"get_state")["result"]["status"] == "UserStopped":
                     continue
             hold_pose(r,10000,13000)
+        print(r,":  ",m)
         knowledge_source = Knowledge()
         knowledge_source.kb_location = robots_dualarm[0]
         knowledge_source.mode = "global"
@@ -625,7 +642,7 @@ def dualarm_demo():
         pd = InsertionFactory([r], TimeMetric("insertion", {"time": 5}),
                                     {"Insertable": m+"_left", "Container": m+"_left_container",
                                     "Approach": m+"_left_container_approach"}).get_problem_definition(m+"_left")
-        
+        print(pd.skill_instance)
         learn_single_task(r, pd, sc, tags, 100, False, knowledge_source.to_dict(), False,service_port=8000)
         print(m," started.")
     while True:

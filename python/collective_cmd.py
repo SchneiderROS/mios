@@ -601,16 +601,18 @@ def hold_pose(robot, duration, port):
     t.start(queue=False)
 
 def gear_reset():
-    move("collective-026.local","026_left_container_approach",[0,0,0],12000,True)
-    move("collective-026.local","026_left_container_above",[0,0,0],12000,True)
-    move_joint("collective-026.local","026_left_start",12000,True)
-    move_joint("collective-026.local","026_left_pre")
+    move("10.157.174.245","026_left_container_approach",[0,0,0],12000,True)
+    move("10.157.174.245","026_left_container_above",[0,0,0],12000,True)
+    move_joint("10.157.174.245","026_left_start",12000,True)
+    move_joint("10.157.174.245","026_left_pre")
 
 def gear_insertion():
-    call_method("collective-026.local",12000,"set_grasped_object",{"object":"026_left"})
-    move_joint("collective-026.local","026_left_pre")
-    move_joint("collective-026.local","026_left_start",12000,True)
-    move_joint("collective-026.local","026_left_container_above",12000,True)
+    call_method("10.157.174.245",12000,"set_grasped_object",{"object":"026_left"})
+    move_joint("10.157.174.245","026_left_pre")
+
+    move_joint("10.157.174.245","hold",13000,True)
+    move_joint("10.157.174.245","026_left_start",12000,True)
+    move_joint("10.157.174.245","026_left_container_above",12000,True)
     content = {
         "skill": {
             "objects": {
@@ -655,7 +657,7 @@ def gear_insertion():
             "F_ext_contact": [3.0, 2.0]
         }
     }
-    t = Task("collective-026.local")
+    t = Task("10.157.174.245")
     t.add_skill("insertion", "TaxInsertion", content)
     t.start()
     result = t.wait()
