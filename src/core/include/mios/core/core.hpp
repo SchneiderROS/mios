@@ -29,7 +29,7 @@ class Skill;
 
 class Core{
 public:
-    Core(unsigned database_port, unsigned robot_configuration);
+    Core(unsigned database_port, unsigned robot_configuration, std::string robot_arm);
     ~Core();
 
     bool initialize();
@@ -105,6 +105,7 @@ private:
     bool m_is_ready;
     unsigned m_robot_configuration;
     bool m_blend_skill;
+    std::string m_robot_arm;
     std::mutex m_mtx_is_busy;
     std::mutex m_mtx_FCI;
 
