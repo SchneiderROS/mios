@@ -315,7 +315,7 @@ def collective_experiment_parallel():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["collective_learning_parallel"]
-    for n_current_iter in range(11,25):
+    for n_current_iter in range(20,22):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
@@ -353,7 +353,7 @@ def collective_experiment_parallel():
                         return task
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
-                    return task
+                        return task
         #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         #kb.clear_memory()
         knowledge_source.scope = []
@@ -365,7 +365,7 @@ def single_robot_learning():
     robots = {  "collective-panda-prime": ["key_door"],
                 "collective-panda-002": ["key_abus_e30"],
                 "collective-panda-003": ["key_padlock","key_2"],
-                "collective-panda-004": [ "cylinder_60", "cylinder_40" "cylinder_20"], #
+                "collective-panda-004": [ "cylinder_60", "cylinder_40", "cylinder_20"], #
                 "collective-panda-005": ["cylinder_10", "cylinder_30", "cylinder_50"],
                 "collective-panda-008": ["HDMI_plug", "key_padlock_2", "key_hatch", "key_old"]
             }
@@ -387,7 +387,7 @@ def single_robot_learning():
     sc = SVMLearner(130,10,0,True,False, 0,False).get_configuration()
     #return check_poses(robots)
     tags = ["single_robot_learning_without"]
-    for n_current_iter in range(3,25):
+    for n_current_iter in range(13,25):
     #for n_current_iter in [7]:
         #check_poses(robots)
         threads = []
@@ -425,12 +425,13 @@ def single_robot_learning():
                         return task
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
-                    return task
+                        return task
         #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         #kb.clear_memory()
         knowledge_source.scope = []
         knowledge_source.tags = []
         del knowledge_source
+
 
 def single_robot_learning_trans():
     #default sequence
@@ -491,12 +492,71 @@ def single_robot_learning_trans():
                         return task
                     if len(data[0]) < 132:
                         print("task ",task, " was aborded to early")
-                    return task
+                        return task
         #kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         #kb.clear_memory()
         knowledge_source.scope = []
         knowledge_source.tags = []
         del knowledge_source
+
+def run_all():
+    #result = collective_experiment_parallel()
+    #if result:
+    #    return result
+    #result = single_robot_learning()
+    #if result:
+    #    return result
+    result = single_robot_learning_trans()
+    if result:
+        return result
+
+# def collective_experiment(robots):
+#     '''
+#     ToDo: Teach other tasks (all cylinders, USB-C, Keys for 003 and 008)
+#     '''
+
+#     cutoff = {  "key_door":0.25,
+#                 "key_abus_e30": 0.25,
+#                 "key_padlock": 0.25,
+#                 "key_2": 0.25,
+#                 "cylinder_40": 0.45,
+#                 "cylinder_10": 0.5,
+#                 "cylinder_20": 0.35,
+#                 "cylinder_30": 0.4,
+#                 "cylinder_50": 0.35,
+#                 "cylinder_60": 0.55,
+#                 "HDMI_plug": 0.3,
+#                 "key_padlock_2": 0.25,
+#                 "key_hatch": 0.25,
+#                 "key_old": 0.25
+#                 }
+#     sc = SVMLearner(130,10,0,True,False, 0.9,True).get_configuration()
+#     #return check_poses(robots)
+#     tags = ["collective_learning_alt"]
+#     for n_current_iter in range(2,11):
+#     #for n_current_iter in [3]:
+#         #check_poses(robots)
+#         threads = []
+#         print("Number of iteration: ", n_current_iter+1,"/10")
+#         knowledge_source = Knowledge()
+#         knowledge_source.kb_location = "collective-dev-001"
+#         knowledge_source.mode = "global"
+#         knowledge_source.scope.extend(tags)
+#         knowledge_source.scope.append("n"+str(n_current_iter+1))
+#         knowledge_source.type = "all"
+#         for robot in robots.keys():
+#             threads.append(Thread(target=learn_multiple_tasks, args=(robot, robots[robot], sc, knowledge_source.to_dict(), tags, n_current_iter, cutoff)))
+#             threads[-1].start()
+#         for t in threads:
+#             t.join()
+#         kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
+#         kb.clear_memory()
+#         knowledge_source.scope = []
+#         knowledge_source.tags = []
+#         del knowledge_source
+#     #delete_experiment_data(robots,tags)
+#     #delete_global_knowledge("collective-dev-001","global_knowledge_db","insertion",tags)
+
 
 
 def horizontal_learning_experiment():
@@ -540,14 +600,14 @@ def horizontal_learning_experiment():
             kb.clear_memory()
     print("\nfinished :)\n")
 
-#def stop_services(robots:list =[ "collective-panda-prime","collective-panda-002","collective-panda-003","collective-panda-004","collective-panda-008","collective-panda-005"]):
-#    for r in robots:
-#        s = ServerProxy("http://" + r + ":8000", allow_none=True)
-#        try:
-#            s.stop_service()
-#        except Exception as e:
-#            print("Error with robot ",r)
-#            print(e)
+def stop_services(robots:list =[ "collective-panda-prime","collective-panda-002","collective-panda-003","collective-panda-004","collective-panda-008","collective-panda-005"]):
+    for r in robots:
+        s = ServerProxy("http://" + r + ":8000", allow_none=True)
+        try:
+            s.stop_service()
+        except Exception as e:
+            print("Error with robot ",r)
+            print(e)
 
 
 

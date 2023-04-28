@@ -59,7 +59,7 @@ class Task:
         result = stop_task(self.robot, port=self.port)
         #print("Task execution took " + str(time.time() - self.t_0) + " s.")
         return result
-    
+
 
 def teach_object(robot: str, obj: str):
     call_method(robot, 12000, "teach_object", {"object": obj})
