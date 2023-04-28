@@ -76,7 +76,7 @@ int main(int argc, char** argv){
     }
 
     std::string RosName = (robot_arm == "left")? "miosL" : "miosR";
-    ros::init(argc, argv, RosName, ros::init_options::NoSigintHandler);
+    //ros::init(argc, argv, RosName, ros::init_options::NoSigintHandler);
 
     pybind11::scoped_interpreter guard{};
     mios::Core core(database_port,robot_configuration, robot_arm);
