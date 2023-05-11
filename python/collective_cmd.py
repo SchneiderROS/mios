@@ -18,6 +18,7 @@ hostnames = [
 "10.157.174.200",  #0 ms            collective-007.local    [n/a]           A8:A1:59:B2:B1:6E                   [n/a]                               ASRock Incorporation                      
 "10.157.175.129",  #0 ms            collective-008.local    [n/a]           A8:A1:59:B8:22:F4                   [n/a]                               ASRock Incorporation                      
 "10.157.174.36" ,  #0 ms            collective-009.local    [n/a]           A8:A1:59:B8:25:BD                   [n/a]                               ASRock Incorporation                      
+"10.157.174.59",  #collective-010.local
 "10.157.175.87",  #0 ms            collective-011.local    [n/a]           A8:A1:59:B8:23:62                   [n/a]                               ASRock Incorporation                      
 "10.157.174.241",  #0 ms            collective-012.local    [n/a]           A8:A1:59:B8:25:DF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.201",  #0 ms            collective-013.local    [n/a]           A8:A1:59:B2:BF:1F                   [n/a]                               ASRock Incorporation                      
@@ -27,7 +28,7 @@ hostnames = [
 "10.157.174.46",  #0 ms            collective-017.local    [n/a]           A8:A1:59:B8:24:CF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.103",  #0 ms            collective-018.local    [n/a]           A8:A1:59:B8:23:1E                   [n/a]                               ASRock Incorporation                      
 "10.157.174.206",  #0 ms            collective-019.local    [n/a]           A8:A1:59:B8:22:E2                   [n/a]                               ASRock Incorporation                      
-"10.157.174.204",  #0 ms            collective-020.local    [n/a]           A8:A1:59:B8:22:AE                   [n/a]                               ASRock Incorporation                      
+#"10.157.174.204",  #0 ms            collective-020.local    [n/a]           A8:A1:59:B8:22:AE                   [n/a]                               ASRock Incorporation                      
 "10.157.175.173",  #0 ms            collective-021.local    [n/a]           A8:A1:59:B8:24:C9                   [n/a]                               ASRock Incorporation                      
 "10.157.174.244",  #0 ms            collective-022.local    [n/a]           A8:A1:59:B8:24:E6                   [n/a]                               ASRock Incorporation                      
 "10.157.174.205",  #0 ms            collective-023.local    [n/a]           A8:A1:59:B8:26:4D                   [n/a]                               ASRock Incorporation                      
@@ -37,13 +38,19 @@ hostnames = [
 "10.157.174.249",  #0 ms            collective-027.local    [n/a]           A8:A1:59:B8:23:B9                   [n/a]                               ASRock Incorporation                      
 "10.157.174.255",  #0 ms            collective-028.local    [n/a]           A8:A1:59:B2:AE:FF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.42" ,  #0 ms            collective-029.local    [n/a]           A8:A1:59:B2:AD:9A                   [n/a]                               ASRock Incorporation                      
-"10.157.174.163",  #0 ms            collective-038.local    [n/a]           A8:A1:59:B8:23:9F                   [n/a]                               ASRock Incorporation                      
-"10.157.174.175",  #0 ms            collective-039.local    [n/a]           A8:A1:59:B8:25:70                   [n/a]                               ASRock Incorporation                      
-"10.157.174.52" ,  #0 ms            collective-046.local    [n/a]           A8:A1:59:B8:23:A5                   [n/a]                               ASRock Incorporation                      
+#"10.157.175.236",#collective-030
+"10.157.174.148",#collective-032
+#"10.157.174.160",#collective-034
+#"10.157.174.163",  #0 ms            collective-038.local    [n/a]           A8:A1:59:B8:23:9F                   [n/a]                               ASRock Incorporation                      
+#"10.157.174.175",  #0 ms            collective-039.local    [n/a]           A8:A1:59:B8:25:70                   [n/a]                               ASRock Incorporation                      
+#"10.157.174.52" ,  #0 ms            collective-046.local    [n/a]           A8:A1:59:B8:23:A5                   [n/a]                               ASRock Incorporation                      
 "10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
 modules = ["001",\
         "002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017",\
-        "018","019","020","021","022","023","024","025","026","027","028","029","038","039","046","050",]
+        "018","019",#"020",
+        "021","022","023","024","025","026","027","028","029",#"030",
+        "032",#"034",#"038","039","046",
+        "050",]
 #hostnames = ["collective-%03d.rsi.ei.tum.de"%n for n in range(1,50)]
 
 #hostnames = ["collective-%03d.local"%n for n in range(1,50)]
@@ -563,8 +570,9 @@ def restart_collective():
     client.reboot_robots()
 
 def get_status():
-    for number,host in enumerate(hostnames):
-        print("\ncollective-%03d"%(number+1))
+    for number,host in zip(modules,hostnames):
+        #print("\ncollective-%03d"%(number+1))
+        print("collective-",number)
         result = call_method(host,12000,"get_state")
         if result is not None:
             if result["result"]["current_task"] == "IdleTask":
@@ -677,7 +685,7 @@ def gear_insertion():
 def move_left(pose):
     threads = []
     for r in hostnames:
-        threads.append(Thread(move_joint, args=(r, pose, 12000, True)))
+        threads.append(Thread(target=move_joint, args=(r, pose, 12000, True)))
         threads[-1].start()
 
     for t in threads:
@@ -686,7 +694,7 @@ def move_left(pose):
 def move_right(pose):
     threads = []
     for r in hostnames:
-        threads.append(Thread(move_joint, args=(r, pose, 13000, True)))
+        threads.append(Thread(target=move_joint, args=(r, pose, 13000, True)))
         threads[-1].start()
 
     for t in threads:
@@ -720,3 +728,18 @@ def attention():
     move_all("wink3")
     move_all("wink2")
     move_all("reset")
+
+def move_to_approach_poses():
+    threads = []
+    c = 0
+    for r,n in zip(hostnames,modules):
+        c += 1
+        print(c, ": move collective-",n, " (",r,")")
+        threads.append(Thread(target=move_joint, args=(r,"hold",13000,)))
+        threads[-1].start()
+        threads.append(Thread(target=move_joint, args=(r,n+"_left_container_approach",12000,)))
+        threads[-1].start()
+
+    for t in threads:
+        t.join()
+                       
