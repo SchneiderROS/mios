@@ -1,12 +1,12 @@
 version: "3.8"
 services:
-  miosL:
-    image: "popnut/mios:1.4.0"
+  mios:
+    image: "mirmi/mios:latest"
     restart: always
     environment:
       - verbosity=info
       - database_port=27005
-      - robot_config=1
+      - robot_config=0
       - robot_arm=left
     network_mode: "host"
     cap_add:
@@ -15,7 +15,7 @@ services:
       - "ros"
       - "mongo"
   miosR:
-    image: "popnut/mios:1.4.0"
+    image: "mirmi/mios:latest"
     restart: always
     environment:
       - verbosity=info
@@ -28,10 +28,10 @@ services:
     depends_on:
       - "ros"
       - "mongo"      
-  ros:
-    image: "ros:noetic-ros-core"
-    network_mode: "host"
-    command: roscore
+  #ros:
+  #  image: "ros:noetic-ros-core"
+  #  network_mode: "host"
+  #  command: roscore
   mongo:
     image: "mongo:4.4.6"
     ports:

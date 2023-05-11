@@ -6,14 +6,13 @@ RUN pip3 install -Iv 'setuptools==57.5.0'
 RUN pip3 install -U numpy
 RUN pip3 install -U scipy
 RUN pip3 install -U pymongo
-RUN pip3 install -U sklearn
+RUN pip3 install -U scikit-learn
 RUN pip3 install -U requests
 RUN pip3 install -U pyDOE scikit-optimize
 RUN pip3 install -U websockets
 RUN pip3 install -U deap
-#RUN apt-get install -y git
-#RUN git clone https://github.com/DEAP/deap.git
-#RUN cd deap && python3 setup.py install && cd .. && rm -r deap
+RUN pip3 install -U ifaddr
+
 
 
 COPY ml_service/ /mios_mls/

@@ -59,7 +59,7 @@ bool PandaBody::activate_fci(){
     spdlog::trace("PandaBody::activate_fci()");
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("activate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("activate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         if(!py_result.cast<bool>()){
             spdlog::error("Cannot activate FCI through Desk client.");
         }
@@ -75,7 +75,7 @@ bool PandaBody::deactivate_fci(){
     spdlog::trace("PandaBody::deactivate_fci()");
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("deactivate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("deactivate_fci")(m_memory->get_parameters()->system.robot_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         if(!py_result.cast<bool>()){
             spdlog::error("Cannot deactivate FCI through Desk client.");
         }
@@ -93,17 +93,13 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
     std::optional<std::string> new_ip={};
     spdlog::debug("PandaBody: ping_robot("+last_ip.value_or("127.0.0.1")+")");
     //check given IP:
-    while(!new_ip.has_value()){
-        if(last_ip.has_value()){
-            if(mirmi_utils::ping(last_ip.value().c_str())==false){
-                spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
-            }else{
-                if(is_robot(last_ip.value_or("127.0.0.1"))){
-                    new_ip=last_ip;
-                    spdlog::debug("PandaBody: found robot at"+new_ip.value()+" unlocking...");
-                    unlock_brakes(new_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
-                    return new_ip;
-                }
+    if(last_ip.has_value()){
+        if(mirmi_utils::ping(last_ip.value().c_str())==false){
+            spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
+        }else{
+            new_ip=last_ip;
+            if(is_robot(new_ip.value())){
+                return new_ip;
             }
         }
     }
@@ -289,30 +285,33 @@ bool PandaBody::is_robot(const std::string &ip){
     //int tokenForceTimeout = 0;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object in_control = desk_client.attr("in_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object in_control = desk_client.attr("in_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         spdlog::debug("PandaBody::is_robot("+ip+")" );
         if(!in_control.cast<bool>()){
             spdlog::debug("PandaBody::is_robot("+ip+"): not in control of DESK, aquire control...");
-            pybind11::object take_control_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+            pybind11::object take_control_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
             bool desk_in_control = take_control_result.cast<bool>();
             if(!desk_in_control){
-                spdlog::debug("PandaBody cannot take control over robot. Rebooting....");
-                pybind11::object reboot_result = desk_client.attr("reboot")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
-                //spdlog::debug("PandaBody::is_robot(): Not able to take control over DESK. Try to force control...");
-                //pybind11::object py_result = desk_client.attr("force_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
-                desk_in_control = reboot_result.cast<bool>();
-                //spdlog::warn("Please verify that you are in control of the robot: Press the Button with the cyrcle on the Pilot! \n You have " + std::to_string(30) + "Seconds.");
-                //std::this_thread::sleep_for(std::chrono::seconds(30));
+                spdlog::debug("PandaBody::is_robot(): Not able to take control over DESK. Try to force control...");
+                pybind11::object py_result = desk_client.attr("force_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
+                desk_in_control = py_result.cast<bool>();
                 if(!desk_in_control){
                     spdlog::error("PandaBody::is_robot(): Cannot aquire control over DESK");
                     return false;
+                }
+                else{
+                    spdlog::warn("Please verify that you are in control of the robot: Press the Button with the cyrcle on the Pilot! \n You have " + std::to_string(30) + "Seconds.");
+                    std::this_thread::sleep_for(std::chrono::seconds(30));
+                    pybind11::object in_control = desk_client.attr("in_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
+                    if(in_control.cast<bool>()){
+                        spdlog::debug("PandaBody::is_robot(): MIOS is now in control of DESK.");
+                    }
                 }
 
             }
             else{
                 spdlog::debug("PandaBody::is_robot(): Now in control over DESK");
             }
-            return false;
         }
         else{
             spdlog::debug("PandaBody: MIOS is in control of DESK-Interface of robot at "+ip);
@@ -753,7 +752,7 @@ bool PandaBody::start_desk_task(const std::string &task,const std::optional<std:
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("start_task")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", task);
+        pybind11::object py_result = desk_client.attr("start_task")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", task, m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
@@ -781,7 +780,7 @@ bool PandaBody::stop_desk_task(const std::optional<std::string> &ip, const std::
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("stop_task")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("stop_task")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
@@ -799,7 +798,7 @@ void PandaBody::wait_for_desk_task(const std::optional<std::string> &ip, const s
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
         while(true){
-            pybind11::object py_result = desk_client.attr("is_busy")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+            pybind11::object py_result = desk_client.attr("is_busy")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
             result = py_result.cast<bool>();
             if(result){
                 return;
@@ -824,7 +823,7 @@ bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("shutdown")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("shutdown")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
@@ -840,7 +839,7 @@ bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::s
     deactivate_fci();
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("unlock_brakes")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("unlock_brakes")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
@@ -857,7 +856,7 @@ bool PandaBody::lock_brakes(const std::optional<std::string> &ip, const std::str
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("lock_brakes")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("lock_brakes")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());
@@ -876,7 +875,7 @@ bool PandaBody::move_to_pack_pose(const std::optional<std::string> &ip, const st
     bool result;
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
-        pybind11::object py_result = desk_client.attr("pack_pose")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR");
+        pybind11::object py_result = desk_client.attr("pack_pose")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
         spdlog::debug(e.what());

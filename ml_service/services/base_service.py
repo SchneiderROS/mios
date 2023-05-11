@@ -7,6 +7,7 @@ from xmlrpc.client import ServerProxy
 import socket
 import time
 import numpy as np
+import socket
 
 from engine.engine import Engine
 from engine.engine import Trial
@@ -287,7 +288,16 @@ class BaseService(metaclass=ABCMeta):
                   self.get_theta(x_real), external=external))
 
     def wait_for_result(self, uuid: str) -> TaskResult:
-        return self.engine.wait_for_trial(uuid, 50 * self.problem_definition.n_variations).task_result
+    
+        result = self.engine.wait_for_trial(uuid, 50 * self.problem_definition.n_variations).task_result
+        s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        if result.q_metric.final_cost is None:
+            s.sendto(str(0).encode(), ("localhost", 8003))
+        else:
+            s.sendto(str(result.q_metric.final_cost).encode(), ("localhost", 8003))
+            print("send_final_cost: ", result.q_metric.final_cost)
+            # why inf? if result.q_metric.final_cost == float('inf'):
+        return result   
 
     def get_theta(self, x) -> dict:
         logger.debug("BaseService.get_theta(" + str(x) + ")")

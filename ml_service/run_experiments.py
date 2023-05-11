@@ -432,7 +432,6 @@ def single_robot_learning():
         knowledge_source.tags = []
         del knowledge_source
 
-
 def single_robot_learning_trans():
     #default sequence
     robots = {  "collective-panda-prime": ["key_door"],
