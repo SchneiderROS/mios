@@ -27,8 +27,8 @@ hostnames = [
 "10.157.174.203",  #0 ms            collective-016.local    [n/a]           A8:A1:59:B2:B2:E4                   [n/a]                               ASRock Incorporation                      
 "10.157.174.46",  #0 ms            collective-017.local    [n/a]           A8:A1:59:B8:24:CF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.103",  #0 ms            collective-018.local    [n/a]           A8:A1:59:B8:23:1E                   [n/a]                               ASRock Incorporation                      
-"10.157.174.206",  #0 ms            collective-019.local    [n/a]           A8:A1:59:B8:22:E2                   [n/a]                               ASRock Incorporation                      
-#"10.157.174.204",  #0 ms            collective-020.local    [n/a]           A8:A1:59:B8:22:AE                   [n/a]                               ASRock Incorporation                      
+#"10.157.174.206",  #0 ms            collective-019.local    [n/a]           A8:A1:59:B8:22:E2                   [n/a]                               ASRock Incorporation                      
+"10.157.174.204",  #0 ms            collective-020.local    [n/a]           A8:A1:59:B8:22:AE                   [n/a]                               ASRock Incorporation                      
 "10.157.175.173",  #0 ms            collective-021.local    [n/a]           A8:A1:59:B8:24:C9                   [n/a]                               ASRock Incorporation                      
 "10.157.174.244",  #0 ms            collective-022.local    [n/a]           A8:A1:59:B8:24:E6                   [n/a]                               ASRock Incorporation                      
 "10.157.174.205",  #0 ms            collective-023.local    [n/a]           A8:A1:59:B8:26:4D                   [n/a]                               ASRock Incorporation                      
@@ -47,7 +47,8 @@ hostnames = [
 "10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
 modules = ["001",\
         "002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017",\
-        "018","019",#"020",
+        "018",#"019",
+        "020",
         "021","022","023","024","025","026","027","028","029",#"030",
         "032",#"034",#"038","039","046",
         "050",]
@@ -67,7 +68,9 @@ modules = ["001",\
 #    if host.find("010") != -1:
 #        hostnames.remove(host)
 #hostnames.remove("collective-010.rsi.ei.tum.de")
-
+second_ushape = [   "collective-016.rsi.ei.tum.de","collective-021.rsi.ei.tum.de","collective-022.rsi.ei.tum.de",
+                    "collective-018.rsi.ei.tum.de","collective-017.rsi.ei.tum.de","collective-015.rsi.ei.tum.de",
+                    "collective-014.rsi.ei.tum.de","collective-013.rsi.ei.tum.de","collective-009.rsi.ei.tum.de",]
 print(hostnames)
 
 
@@ -119,10 +122,119 @@ class Task:
 def command_collective(cmd: str, args: dict = {}):
     threads = []
     for r in hostnames:
-        robot = r
-        threads.append(Thread(target=call_method, args=(robot, 12000, cmd, args,)))
+        print(r)
+        threads.append(Thread(target=call_method, args=(r, 12000, cmd, args,)))
         threads[-1].start()
-        threads.append(Thread(target=call_method, args=(robot, 13000, cmd, args,)))
+        threads.append(Thread(target=call_method, args=(r, 13000, cmd, args,)))
+        threads[-1].start()
+    for t in threads:
+        t.join()
+
+def command_some(robots:list, cmd: str, args: dict = {}):
+    threads = []
+    for r in robots:
+        print(r)
+        threads.append(Thread(target=call_method, args=(r, 12000, cmd, args,)))
+        threads[-1].start()
+        threads.append(Thread(target=call_method, args=(r, 13000, cmd, args,)))
+        threads[-1].start()
+    for t in threads:
+        t.join()
+
+def automatica_wave_small(robot, port=12000):
+    move_joint(robot, "wave_high",port=port)
+    pi = 3.14159265359
+    wiggle_context1 = {
+        "skill": {
+            "dX_fourier_a_a": [0.0, 0.02, 0., 0, 0, 0.25],
+            "dX_fourier_a_phi": [0, pi/2, 0, pi/2, 0, pi/2],
+            "dX_fourier_a_f": [0, 1.25, 0, 0.6125, 0, 1.25],
+            "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
+            "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
+            "use_EE": True,
+            "time_max": 10
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t1 = time.time()
+    t = Task(robot,port)
+    t.add_skill("wiggle", "GenericWiggleMotion", wiggle_context1)
+    t.start(False)
+    c = 0
+    while time.time() - t1 < 10:
+        c+=1
+        t.add_skill("wiggle"+str(c), "GenericWiggleMotion", wiggle_context1)
+        t.start(False)
+        t.wait()
+
+def automatica_wave_big(robot, port=12000):
+    move_joint(robot, "wave_high", port=port)
+    pi = 3.14159265359
+    speed = 0.4
+    wiggle_context = {
+        "skill": {
+            "dX_fourier_a_a": [0.05,        0.1,    0.,      0.1,       0.1,        0.5],
+            "dX_fourier_a_phi": [0,         pi/2,   0,       3*pi/2,         pi/2,       pi/2],
+            "dX_fourier_a_f": [2*speed,     speed,  2*speed, speed,   2*speed,    speed],
+            "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
+            "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
+            "use_EE": True,
+            "time_max": 10
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t1 = time.time()
+    t = Task(robot,port)
+    t.add_skill("wiggle", "GenericWiggleMotion", wiggle_context)
+    t.start(False)
+    t.wait()
+    c = 0
+    while time.time() - t1 < 10:
+        c+=1
+        t.add_skill("wiggle"+str(c), "GenericWiggleMotion", wiggle_context)
+        t.start(False)
+        t.wait()
+
+def automatica_waving():
+    big_flags = [("collective-016.rsi.ei.tum.de", 13000),("collective-021.rsi.ei.tum.de", 12000),("collective-021.rsi.ei.tum.de", 13000),
+                 ("collective-022.rsi.ei.tum.de", 12000),("collective-022.rsi.ei.tum.de", 13000),("collective-017.rsi.ei.tum.de", 12000),
+                 ("collective-014.rsi.ei.tum.de", 13000),("collective-020.rsi.ei.tum.de", 13000),("collective-015.rsi.ei.tum.de", 12000),
+                 ("collective-015.rsi.ei.tum.de", 13000)]
+    small_flags = [("collective-018.rsi.ei.tum.de", 12000),("collective-018.rsi.ei.tum.de", 13000),
+                ("collective-014.rsi.ei.tum.de", 12000),("collective-009.rsi.ei.tum.de", 12000),("collective-009.rsi.ei.tum.de", 13000),
+                ("collective-013.rsi.ei.tum.de", 13000),("collective-016.rsi.ei.tum.de", 12000)]
+    threads = []
+    print("big_flags")
+    for robot, port in small_flags:
+        print(robot,port)
+        threads.append(Thread(target=automatica_wave_small, args=(robot,port)))
+    print("small_flags")
+    for robot, port in big_flags:
+        print(robot,port)
+        threads.append(Thread(target=automatica_wave_big, args=(robot,port)))
+    for t in threads:
+        t.start()
+    raise_banner()
+    for t in threads:
+        t.join()
+
+    
+
+def raise_banner():
+    threads = []
+    for r in ["collective-013.rsi.ei.tum.de","collective-020.rsi.ei.tum.de"]:
+        threads.append(Thread(target=move_joint, args=(r, "wave_high", 12000, True)))
+        threads[-1].start()
+    for t in threads:
+        t.join()
+def lower_banner():
+    threads = []
+    for r in ["collective-013.rsi.ei.tum.de","collective-020.rsi.ei.tum.de"]:
+        threads.append(Thread(target=move_joint, args=(r, "wave_low", 12000, True)))
         threads[-1].start()
     for t in threads:
         t.join()
@@ -154,17 +266,6 @@ def populate_all():
     for t in threads:
         t.join()
 
-def command_collective(cmd: str, args: dict = {}):
-    threads = []
-    for r in hostnames:
-        robot = r
-        threads.append(Thread(target=call_method, args=(robot, 12000, cmd, args,)))
-        threads.append(Thread(target=call_method, args=(robot, 13000, cmd, args,)))
-        threads[-2].start()
-       
-
-    for t in threads:
-        t.join()
         
 ############################################################## 
 #  lock dual arm robots 
@@ -301,6 +402,17 @@ def wink_thread(robot, port):
 def move_all(pose = "default_pose"):
     threads = []
     for host in hostnames:
+        threads.append(Thread(target=move_joint, args=(host, pose, 12000, True)))
+        threads[-1].start()
+        threads.append(Thread(target=move_joint, args=(host, pose, 13000, True)))
+        threads[-1].start()
+    for t in threads:
+        t.join()
+    print("finished")
+
+def move_some(robots:list, pose):
+    threads = []
+    for host in robots:
         threads.append(Thread(target=move_joint, args=(host, pose, 12000, True)))
         threads[-1].start()
         threads.append(Thread(target=move_joint, args=(host, pose, 13000, True)))
