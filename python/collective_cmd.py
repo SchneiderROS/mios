@@ -5,9 +5,26 @@ import os
 from threading import Thread
 import copy
 from utils.ws_client import *
+import json
 
 import time
 import copy
+
+
+###################################################################################
+list_block_2 = ["001", "002", "003", "004", "005", "006", "007", "008", "010", "011"]
+list_U = ["023", "024", "025", "026", "027", "028", "029"]
+
+def load_config(module_list):
+    with open("ip.json", "r") as jsonfile:
+        data = json.load(jsonfile)        
+        ips = [data[i] for i in module_list]
+        print(ips)
+    
+    return ips
+###################################################################################
+
+
 hostnames = [
 "10.157.175.221",  #0 ms            collective-001.local    [n/a]           A8:A1:59:B8:22:8B                   [n/a]                               ASRock Incorporation                      
 "10.157.174.166",  #0 ms            collective-002.local    [n/a]           A8:A1:59:B8:25:9A                   [n/a]                               ASRock Incorporation                      
@@ -27,7 +44,7 @@ hostnames = [
 "10.157.174.203",  #0 ms            collective-016.local    [n/a]           A8:A1:59:B2:B2:E4                   [n/a]                               ASRock Incorporation                      
 "10.157.174.46",  #0 ms            collective-017.local    [n/a]           A8:A1:59:B8:24:CF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.103",  #0 ms            collective-018.local    [n/a]           A8:A1:59:B8:23:1E                   [n/a]                               ASRock Incorporation                      
-"10.157.174.206",  #0 ms            collective-019.local    [n/a]           A8:A1:59:B8:22:E2                   [n/a]                               ASRock Incorporation                      
+# "10.157.174.206",  #0 ms            collective-019.local    [n/a]           A8:A1:59:B8:22:E2                   [n/a]                               ASRock Incorporation                      
 #"10.157.174.204",  #0 ms            collective-020.local    [n/a]           A8:A1:59:B8:22:AE                   [n/a]                               ASRock Incorporation                      
 "10.157.175.173",  #0 ms            collective-021.local    [n/a]           A8:A1:59:B8:24:C9                   [n/a]                               ASRock Incorporation                      
 "10.157.174.244",  #0 ms            collective-022.local    [n/a]           A8:A1:59:B8:24:E6                   [n/a]                               ASRock Incorporation                      
@@ -161,30 +178,23 @@ def command_collective(cmd: str, args: dict = {}):
         threads.append(Thread(target=call_method, args=(robot, 12000, cmd, args,)))
         threads.append(Thread(target=call_method, args=(robot, 13000, cmd, args,)))
         threads[-2].start()
+        threads[-1].start()
        
 
     for t in threads:
         t.join()
         
 ############################################################## 
-#  lock dual arm robots 
-def lock_dualarm(r):
-    try:
-        call_method(r, 12000, "lock_brakes")
-    except:
-        print("The left arm of " + r + " loss connection")
-        
-    try:
-        call_method(r, 13000, "lock_brakes")
-    except:
-        print("The right arm of " + r + " loss connection")        
-
-def try_lock():
+def command_group(ip_groups, cmd: str, args: dict = {}):
     threads = []
-    for r in hostnames:
-        threads.append(Thread(target=lock_dualarm, args=(r)))
+    for r in ip_groups:
+        robot = r
+        threads.append(Thread(target=call_method, args=(robot, 12000, cmd, args,)))
+        threads.append(Thread(target=call_method, args=(robot, 13000, cmd, args,)))
+        threads[-2].start()
         threads[-1].start()
-    
+
+
     for t in threads:
         t.join()
 
