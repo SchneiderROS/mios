@@ -5,9 +5,26 @@ import os
 from threading import Thread
 import copy
 from utils.ws_client import *
+import json
 
 import time
 import copy
+
+
+###################################################################################
+list_block_1 = ["001", "002", "003", "004", "005", "006", "007", "008", "010", "011"]
+list_U = ["023", "024", "025", "026", "027", "028", "029"]
+
+def load_config(module_list):
+    with open("ip.json", "r") as jsonfile:
+        data = json.load(jsonfile)        
+        ips = [data[i] for i in module_list]
+        print(ips)
+    
+    return ips
+###################################################################################
+
+
 hostnames = [
 "10.157.175.221",  #0 ms            collective-001.local    [n/a]           A8:A1:59:B8:22:8B                   [n/a]                               ASRock Incorporation                      
 "10.157.174.166",  #0 ms            collective-002.local    [n/a]           A8:A1:59:B8:25:9A                   [n/a]                               ASRock Incorporation                      
@@ -265,31 +282,6 @@ def populate_all():
     
     for t in threads:
         t.join()
-
-        
-############################################################## 
-#  lock dual arm robots 
-def lock_dualarm(r):
-    try:
-        call_method(r, 12000, "lock_brakes")
-    except:
-        print("The left arm of " + r + " loss connection")
-        
-    try:
-        call_method(r, 13000, "lock_brakes")
-    except:
-        print("The right arm of " + r + " loss connection")        
-
-def try_lock():
-    threads = []
-    for r in hostnames:
-        threads.append(Thread(target=lock_dualarm, args=(r)))
-        threads[-1].start()
-    
-    for t in threads:
-        t.join()
-
-##############################################################
 
 
 def copy_object(source:str, destinations:list, object_name:str, robot_arm="left"):
