@@ -11,6 +11,19 @@ from utils.helper_functions import *
 import os
 from threading import Thread
 
+###################################################################################
+list_block_1 = ["001", "002", "003", "004", "005", "006", "007", "008", "010", "011"]
+list_U = ["023", "024", "025", "026", "027", "028", "029"]
+list_external = ["050"]
+
+def load_config(module_list):
+    with open("../python/ip.json", "r") as jsonfile:
+        data = json.load(jsonfile)        
+        ips = [data[i] for i in module_list]
+        print(ips)
+    
+    return ips
+###################################################################################
 
 def learn_task(robot:str, problem_definition: ProblemDefinition, service_config: ServiceConfiguration, tags: list,
                n_iterations: int = 10, keep_record: bool = False, knowledge = None, wait: bool = False, service_port:int = 8000):
@@ -694,7 +707,7 @@ def dualarm_demo2():
     #"10.157.174.163",  #0 ms            collective-038.local    [n/a]           A8:A1:59:B8:23:9F                   [n/a]                               ASRock Incorporation                      
     #"10.157.174.175",  #0 ms            collective-039.local    [n/a]           A8:A1:59:B8:25:70                   [n/a]                               ASRock Incorporation                      
     #"10.157.174.52" ,  #0 ms            collective-046.local    [n/a]           A8:A1:59:B8:23:A5                   [n/a]                               ASRock Incorporation                      
-    "10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
+    "172.24.192.25"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
     modules = ["001",\
             "002","003","004","005","006","007","008","009","010","011","012","013","014","015","016",
             "017",\
@@ -703,6 +716,15 @@ def dualarm_demo2():
             "023","024","025","026","027","028","029",#"030",
             "032",#"034",#"038","039","046",
             "050",]
+    robots_dualarm = []
+    robots_dualarm.extend(load_config(list_block_1))
+    robots_dualarm.extend(load_config(list_U))
+    robots_dualarm.extend(load_config(list_external))
+    modules = []
+    modules.extend(list_block_1)
+    modules.extend(list_U)
+    modules.extend(list_external)
+
     threads = []
     sc = SVMLearner(2000,10,0,True,False, 0.4,True).get_configuration()
     tags = ["demo_learning_2"]
@@ -858,7 +880,7 @@ def stop_dualarm():
     #"10.157.174.163",  #0 ms            collective-038.local    [n/a]           A8:A1:59:B8:23:9F                   [n/a]                               ASRock Incorporation                      
     #"10.157.174.175",  #0 ms            collective-039.local    [n/a]           A8:A1:59:B8:25:70                   [n/a]                               ASRock Incorporation                      
     #"10.157.174.52" ,  #0 ms            collective-046.local    [n/a]           A8:A1:59:B8:23:A5                   [n/a]                               ASRock Incorporation                      
-    "10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
+    "172.24.192.25"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
     modules = ["001",\
             "002","003","004","005","006","007","008","009","010","011","012","013","014","015","016",
             "017",\
