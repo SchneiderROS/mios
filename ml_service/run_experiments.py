@@ -1,5 +1,3 @@
-from itertools import count
-from subprocess import call
 from definitions.templates import *
 from definitions.cost_functions import *
 from definitions.service_configs import *
@@ -151,6 +149,105 @@ def check_poses(robot_dict):
         for pose in robot_dict[robot]:
             error.append(check_pose(robot,pose))
     return error            
+
+def transfer_learning():
+    robots = {"collective-017": "cylinder_30",
+              "collective-005": "usb_a",
+              "collective-010": "schuko",
+              "collective-029": "IEC60320_C13",
+              "collective-027": "abus_e30"}
+    tasks = ["cylinder_30", "usb_a", "schuko", "IEC60320_C13", "abus_e30"]
+    
+    #sc = SVMLearner(130,10,0,True,False, 0.4,True).get_configuration()
+    sc = CMAESLearner(10,13,True).get_configuration()
+    # learning for base knowledge
+    tags = ["transfer_learning","evaluation"]
+    for n_current_iter in range(0,10):
+        threads = []
+        print("Number of iteration: ", n_current_iter+1,"/10")
+
+        for robot in robots.keys():
+            insertable = robots[robot]
+
+            knowledge_source = Knowledge()
+            knowledge_source.kb_location = "collective-020.rsi.ei.tum.de"
+            knowledge_source.mode = "global" 
+            knowledge_source.kb_db = "global_knowledge"
+            knowledge_source.kb_task_type = "insertion"
+            knowledge_source.scope = []
+            knowledge_source.scope.extend(tags)
+            knowledge_source.scope.extend(insertable)
+            knowledge_source.scope.append("n"+str(n_current_iter+1))
+            knowledge_source.type = "all"
+
+            pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
+                                    {"Insertable": insertable, "Container": insertable+"_container",
+                                    "Approach": insertable+"container_approach"}).get_problem_definition(insertable)
+            threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags, n_current_iter, False, knowledge_source.to_dict(), True)))
+            threads[-1].start()
+        for t in threads:
+            t.join()
+        # check for completness:
+        client = MongoDBClient(knowledge_source.kb_location)
+        for robot in robots.keys():
+            for task in robots[robot]:
+                knowledge_tags = tags.copy()
+                knowledge_tags.extend(["n"+str(n_current_iter+1), task])
+                print("checking ", knowledge_tags," for consistency.")
+                if not client.read("global_knowledge", "insertion",{"meta.tags":knowledge_tags}):
+                    robot_db = MongoDBClient(robot)
+                    if len(robot_db.read("ml_results","insertion",{"meta.tags":knowledge_tags})) < 133:
+                        print("task ",task, " wasn finished properly")
+                        return task
+        kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
+        kb.clear_memory()
+        knowledge_source.scope = []
+        knowledge_source.tags = []
+        del knowledge_source
+
+    #transfer to here: 
+    for task in tasks:
+        tags = ["transfer_learning","evaluation"]
+        for n_current_iter in range(0,10):
+            threads = []
+            print("Number of iteration: ", n_current_iter+1,"/10")
+
+            for robot in robots.keys():
+                insertable = robots[robot]
+                knowledge_source = Knowledge()
+                knowledge_source.kb_location = "collective-020.rsi.ei.tum.de"
+                knowledge_source.mode = "global" 
+                knowledge_source.kb_db = "global_knowledge"
+                knowledge_source.kb_task_type = "insertion"
+                knowledge_source.scope = []
+                knowledge_source.scope.extend(tags)
+                knowledge_source.scope.extend(task)  # search for knowledge of other (or same) insertable
+                knowledge_source.scope.append("n"+str(n_current_iter+1))
+                knowledge_source.type = "all"
+                pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
+                                        {"Insertable": insertable, "Container": insertable+"_container",
+                                        "Approach": insertable+"container_approach"}).get_problem_definition(insertable)
+                threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags, n_current_iter, False, knowledge_source.to_dict(), True)))
+                threads[-1].start()
+            for t in threads:
+                t.join()
+            # check for completness:
+            client = MongoDBClient(knowledge_source.kb_location)
+            for robot in robots.keys():
+                for task in robots[robot]:
+                    knowledge_tags = tags.copy()
+                    knowledge_tags.extend(["n"+str(n_current_iter+1), task])
+                    print("checking ", knowledge_tags," for consistency.")
+                    if not client.read("global_knowledge", "insertion",{"meta.tags":knowledge_tags}):
+                        robot_db = MongoDBClient(robot)
+                        if len(robot_db.read("ml_results","insertion",{"meta.tags":knowledge_tags})) < 133:
+                            print("task ",task, " wasn finished properly")
+                            return task
+            kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
+            kb.clear_memory()
+            knowledge_source.scope = []
+            knowledge_source.tags = []
+            del knowledge_source
 
 def collective_experiment():
     '''
