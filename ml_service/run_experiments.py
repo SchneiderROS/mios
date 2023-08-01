@@ -12,9 +12,14 @@ import json
 
 
 ###################################################################################
-list_block_1 = ["001", "002", "003", "004", "005", "006", "007", "008", "010", "011", "012"]
-list_block_2 = ["009","013","014","015","016","017","018","020","021","022"]
-list_U = ["023", "024", "025", "027", "028", "029"] #, "026"
+list_block_1 = ["001", "002", "003", "004", #"005", 
+                "006", "007", "008", #"010", 
+                "011", "012"]
+list_block_2 = ["009","013","014","015",#"016","017",
+                "018",#"020",
+                "021","022"]
+list_U = ["023", "024", "025", "027", "028", #"029"
+          ] #, "026"
 list_external = ["050"]
 
 def load_config(module_list):
@@ -159,8 +164,8 @@ def transfer_learning():
               "collective-017.rsi.ei.tum.de": "abus_e30"}
     tasks = ["cylinder_50", "usb-a", "schuko", "IEC60320_C13", "abus_e30"]
     
-    #sc = SVMLearner(130,10,0,True,False, 0.4,True).get_configuration()
-    sc = CMAESLearner(10,13,True).get_configuration()
+    sc = SVMLearner(130,10,0,True,False, 0.4,True).get_configuration()
+    #sc = CMAESLearner(10,13,True).get_configuration()
     # learning for base knowledge
     tags = ["test","evaluation"]  # transfer_learning
 
@@ -185,6 +190,8 @@ def transfer_learning():
                 pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                                         {"Insertable": insertable, "Container": insertable+"_container",
                                         "Approach": insertable+"_container_approach"}).get_problem_definition(insertable)
+                if insertable == "schuko" or insertable == "IEC60320_C13":
+                    pd.domain.limits["p2_f_push_z"] = (0, 30)
                 threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags, n_current_iter, False, knowledge_source.to_dict(), True)))
                 threads[-1].start()
             for t in threads:

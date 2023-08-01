@@ -12,9 +12,15 @@ import copy
 
 
 ###################################################################################
-list_block_1 = ["001", "002", "003", "004", "005", "006", "007", "008", "010", "011"]
-list_U = ["023", "024", "025", "026", "027", "028", "029"]
-
+list_block_1 = ["001", "002", "003", "004", #"005", 
+                "006", "007", "008", #"010", 
+                "011", "012"]
+list_block_2 = ["009","013","014","015",#"016","017",
+                "018",#"020",
+                "021","022"]
+list_U = ["023", "024", "025", "027", "028", #"029"
+          ] #, "026"
+list_external = ["050"]
 def load_config(module_list):
     with open("ip.json", "r") as jsonfile:
         data = json.load(jsonfile)        
@@ -790,7 +796,7 @@ def extract(robot, extractable, extractTo, container, port):
     t = Task(robot, port)
     t.add_skill("extraction","TaxExtraction",move_context)
     t.start(queue=False)
-    t.wait()
+    return t.wait()
 
 def gear_full():
     gear_grasp()
@@ -798,7 +804,9 @@ def gear_full():
     gear_reset(True)
 
 def gear_place_ring():
-    gear_unmount_ring()
+    result = gear_unmount_ring()
+    if not result["result"]["success"]:
+        return False
     move_joint("10.157.174.245","026_left_pre")
     move("10.157.174.245","ring",[0,0,0])
     call_method("10.157.174.245",12000,"move_gripper",{"speed":1,"force":1,"width":0})
@@ -812,7 +820,7 @@ def gear_unmount_ring():
     move("10.157.174.245","026_left_container_approach",[0,0,0])
     move("10.157.174.245","026_left_container",[0,0,0])
     call_method("10.157.174.245",12000,"grasp",{"speed":0.1,"width":0.04,"force":0.2,"epsilon_inner":1,"epsilon_outer":1})
-    gear_reset(False)
+    return gear_reset(False)
     
 
 def gear_grasp():
@@ -826,11 +834,14 @@ def gear_reset(ring_inside = False):
     #call_method("10.157.174.245",12000,"move_gripper",{"force":100,"speed":0.08,"width":0.0,"espilon_inner":1,"epsilon_outer":1})
     if ring_inside:
         call_method("10.157.174.245",12000,"move_gripper",{"speed":1,"force":1,"width":0})
-    extract("10.157.174.245","026_left","026_left_container_approach","026_left_container",12000)
+    result = extract("10.157.174.245","026_left","026_left_container_approach","026_left_container",12000)
     #move("10.157.174.245","026_left_container_approach",[0,0,0],12000,True)
+    if not result["result"]["success"]:
+        return False
     move("10.157.174.245","026_left_container_above",[0,0,0],12000,True)
     move_joint("10.157.174.245","026_left_start",12000,True)
     move_joint("10.157.174.245","026_left_pre")
+    return True
 
 def gear_insertion():
     call_method("10.157.174.245",12000,"set_grasped_object",{"object":"026_left"})
@@ -951,6 +962,12 @@ def move_to_approach_poses():
 
     for t in threads:
         t.join()
+
+def home_grippers(modules:list):
+    ips = load_config(modules)
+    for robot in ips:
+        call_method(robot,12000,"home_gripper",silent=True)
+        call_method(robot,13000,"home_gripper", silent=True)
 
 def grasp(module, side=None):
     ip = load_config([module])[0]
