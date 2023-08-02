@@ -152,7 +152,7 @@ class FrankaAPI:
         #                     headers={'content-type': 'application/x-www-form-urlencoded',
         #                              'Cookie': 'authorization=%s' % self._token, 'X-Control-Token': self._spoc_token})
         temp_body = json.dumps({'token':'%s' % self._spoc_token})
-        self._client.request('POST', '/desk/api/reboot', #temp_body,
+        self._client.request('POST', '/admin/api/reboot', #temp_body,
                              headers={'content-type': 'application/json',
                                       'Cookie': 'authorization=%s' % self._token,
                                       "X-Control-Token":self._spoc_token})
