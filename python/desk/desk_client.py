@@ -159,10 +159,7 @@ class FrankaAPI:
         print("rebooting robot...")
         response = self._client.getresponse()
         content = response.read()
-        if response.status == 200:
-            return True
-        else:
-            return False
+        return True
 
     def in_control(self):
         temp = "mode=%22one%22".encode("utf-8")  # 'mode':'\"one\"'

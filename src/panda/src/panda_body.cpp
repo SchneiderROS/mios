@@ -852,6 +852,14 @@ bool PandaBody::reboot_robot(const std::optional<std::string> &ip, const std::st
         spdlog::warn("Cannot reboot, error when calling the python desk client.");
         result=false;
     }
+    if(result){
+        spdlog::info("Rebooting Robot... Wait until re-initialising.");
+        std::this_thread::sleep_for(std::chrono::seconds(120));
+        result=false;
+        if(this->initialize()){
+            result = true;
+        }
+    }
     return result;
 }
 
