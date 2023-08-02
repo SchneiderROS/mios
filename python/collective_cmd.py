@@ -384,6 +384,7 @@ def move_joint(robot, location, port=12000, offset=[0,0,0,0,0,0,0], wait=True, s
     move_context["skill"]["objects"]["goal_pose"] = location
     move_context["skill"]["time_max"] = 10
     move_context["skill"]["q_g_offset"] = offset
+    move_context["user"]["env_X"] = [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
     if speed:
         move_context["skill"]["speed"] = speed[0]
         move_context["skill"]["acc"] = speed[1]
@@ -767,24 +768,31 @@ def get_status():
             print(host, " -right- Not reachable!")
 
 
-def hold_pose(robot, duration, port):
+def hold_pose(robot, duration, port, control="joint"):
     hold_context = {
         "skill": {
             "t_max": duration,
         },
         "control": {
-            "control_mode": 0,
-            "cart_imp": {
-                "K_x": [2000, 2000, 2000, 250, 250, 250]
+            "control_mode": 1,
+            "joint_imp":{
+                "K_theta":[10000,10000,10000,10000,10000,10000,10000]
             }
+            
         },
         "user": {"F_ext_max": [100, 50]}
     }
+    if control == "cart":
+        hold_context["control"] = { "control_mode": 0,
+                                    "cart_imp": {
+                                        "K_x": [3000, 3000, 3000, 200, 200, 200]
+                                        }
+                                    }
     t = Task(robot, port)
     t.add_skill("hold","HoldPose",hold_context)
     t.start(queue=False)
 
-def extract(robot, extractable, extractTo, container, port):
+def extract(robot, extractable, extractTo, container, port=12000):
     path_to_default_context = os.getcwd() + "/taxonomy/default_contexts/"
     f = open(path_to_default_context + "extraction.json")
     move_context = json.load(f)
@@ -795,6 +803,21 @@ def extract(robot, extractable, extractTo, container, port):
     #move_context["user"]["env_X"] = [0, 0, 1, 1, 1, 1]
     t = Task(robot, port)
     t.add_skill("extraction","TaxExtraction",move_context)
+    t.start(queue=False)
+    return t.wait()
+
+def insert(robot, insertable, approach, container, port=12000):
+    path_to_default_context = os.getcwd() + "/taxonomy/default_contexts/"
+    f = open(path_to_default_context + "insertion.json")
+    move_context = json.load(f)
+    move_context["skill"]["objects"]["Container"] = container
+    move_context["skill"]["objects"]["Approach"] = approach
+    move_context["skill"]["objects"]["Insertable"] = insertable
+    move_context["skill"]["time_max"] = 7
+    move_context["skill"]["p2"]["f_push"][2] = 25
+    #move_context["user"]["env_X"] = [0, 0, 1, 1, 1, 1]
+    t = Task(robot, port)
+    t.add_skill("insertion","TaxInsertion",move_context)
     t.start(queue=False)
     return t.wait()
 

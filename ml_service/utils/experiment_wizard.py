@@ -1,11 +1,74 @@
 from xmlrpc.client import ServerProxy
 import copy
 import time
-
+from threading import Thread
 from utils.database import backup_result
 from problem_definition.problem_definition import ProblemDefinition
 from services.base_service import ServiceConfiguration
 from mongodb_client.mongodb_client import MongoDBClient
+from utils.ws_client import *
+from utils.taxonomy_utils import Task
+from utils.helper_functions import *
+
+
+class DualarmCMD():
+    def __init__(self, cmd):
+        self.keep_running = False
+        self.thread = None
+        self.port = None
+        self.cmd = cmd
+        self.agent = self.cmd["agent"]
+        if "sleep" in cmd:
+            self.sleep = cmd["sleep"]
+        else:
+            self.sleep = 5
+        if "port" in cmd:
+            self.port = cmd["port"]
+        else:
+            self.port = 13000
+        
+
+        self.hold_context = {
+                    "skill": {
+                        "t_max": self.sleep,},
+                    "control": {
+                        "control_mode": 0,
+                        "cart_imp": {
+                            "K_x": [2000, 2000, 2000, 250, 250, 250]}},
+                        #"joint_imp":{
+                        #    "K_theta":[10000,10000,10000,10000,10000,10000,10000]}},
+                    "user": {"F_ext_max": [100, 50]}}
+        self.move_context = {
+                    "skill": {
+                        "speed": 0.5,
+                        "acc": 1,
+                        "q_g": [0, 0, 0, 0, 0, 0, 0],
+                        "objects": {
+                            "goal_pose": self.cmd["pose"]}},
+                    "control": {
+                        "control_mode": 3},
+                    "user": {
+                        "env_X": [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]}}
+
+    def _execute_loop(self):
+        print("execute_loop")
+        while(self.keep_running):
+            print("sending tasks")
+            t = Task(self.agent, self.port)
+            t.add_skill("move", "MoveToPoseJoint", self.move_context)
+            t.add_skill("hold","HoldPose",self.hold_context)
+            t.start(queue=False)
+            t.wait()
+
+    def stop(self):
+        self.keep_running = False
+        call_method(self.agent,self.port,"stop_task")
+        self.thread.join()
+    def start(self):
+        print("start with ", self.cmd)
+        self.keep_running = True
+        self.thread = Thread(target=self._execute_loop)
+        self.thread.start()
 
 
 def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service: ServiceConfiguration, n_eval: int = 1,
@@ -42,7 +105,7 @@ def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service:
 
 
 def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, service: ServiceConfiguration, iter: int = 1,
-                     tags: list = None, knowledge: dict = None, keep_record: bool = True, wait: bool = True, service_port:int = 8000):
+                     tags: list = None, knowledge: dict = None, keep_record: bool = True, wait: bool = True, service_port:int = 8000, dualarm_cmd:dict=None):
     if tags is None:
         tags = []
 
@@ -59,6 +122,11 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
     if keep_record is True and len(client.read("ml_results", problem_def.skill_class, {"meta.tags": {"$all": problem_def.tags}})) != 0:
         print("Continue at n" + str(iter+1))
         return
+    if dualarm_cmd is not None:
+        move_joint(dualarm_cmd["agent"],dualarm_cmd["port"],dualarm_cmd["pose"],wait=True)
+        c = DualarmCMD(dualarm_cmd)
+        c.start()
+
     s = ServerProxy("http://" + learner + ":"+str(service_port), allow_none=True)
     #if knowledge_tmp is not None:
         #if "scope" not in knowledge_tmp:
@@ -72,7 +140,8 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
     if wait:
         while s.is_busy():
             time.sleep(15)
-    
+    c.stop()
+    move_joint(dualarm_cmd["agent"],dualarm_cmd["port"],dualarm_cmd["pose"],wait=True)
         # backup_result(agent, "collective-control-001.local", problem_def.skill_class, uuid)
 
 def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0, mongo_port=27017):

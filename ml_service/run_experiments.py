@@ -37,8 +37,8 @@ def learn_task(robot:str, problem_definition: ProblemDefinition, service_config:
     start_experiment(robot, [robot], problem_definition, service_config, n_iterations, knowledge=knowledge, tags=tags,
                      keep_record=keep_record, wait=wait,service_port=service_port)
 def learn_single_task(robot:str, problem_definition: ProblemDefinition, service_config: ServiceConfiguration, tags: list,
-               current_number_iterations: int=0, keep_record: bool = False, knowledge = None, wait: bool = False, service_port:int=8000):
-    start_single_experiment(robot, [robot], problem_definition, service_config, current_number_iterations, tags, knowledge, keep_record, wait, service_port=service_port)
+               current_number_iterations: int=0, keep_record: bool = False, knowledge = None, wait: bool = False, service_port:int=8000, dualarm_cmd: dict=None):
+    start_single_experiment(robot, [robot], problem_definition, service_config, current_number_iterations, tags, knowledge, keep_record, wait, service_port=service_port, dualarm_cmd = dualarm_cmd)
 
 def test_learning():
     pd = InsertionFactory("collective-panda-001", ContactForcesMetric("insertion", {"contact_forces": 175}),
@@ -164,18 +164,20 @@ def transfer_learning():
               "collective-017.rsi.ei.tum.de": "abus_e30"}
     tasks = ["cylinder_50", "usb-a", "schuko", "IEC60320_C13", "abus_e30"]
     
-    sc = SVMLearner(130,10,0,True,False, 0.4,True).get_configuration()
+    sc = SVMLearner(20,10,0,True,False, 0.4,True).get_configuration()
     #sc = CMAESLearner(10,13,True).get_configuration()
     # learning for base knowledge
-    tags = ["test2","evaluation"]  # transfer_learning
-
-    for n_current_iter in range(0,10):
+    tags = ["test3","evaluation"]  # transfer_learning
+    n_current_iter = {}
+    for task in tasks:
+        n_current_iter[task] = 0
+    slowest_iteration = 0
+    while slowest_iteration < 1:
         threads = []
         print("Number of iteration: ", n_current_iter+1,"/10")
         try:
             for robot in robots.keys():
                 insertable = robots[robot]
-
                 knowledge_source = Knowledge()
                 knowledge_source.kb_location = "collective-020.rsi.ei.tum.de"
                 knowledge_source.mode = "global" 
@@ -184,15 +186,18 @@ def transfer_learning():
                 knowledge_source.scope = []
                 knowledge_source.scope.extend(tags)
                 knowledge_source.scope.extend(insertable)
-                knowledge_source.scope.append("n"+str(n_current_iter+1))
+                knowledge_source.scope.append("n"+str(n_current_iter[insertable]+1))
                 knowledge_source.type = "all"
 
                 pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                                         {"Insertable": insertable, "Container": insertable+"_container",
                                         "Approach": insertable+"_container_approach"}).get_problem_definition(insertable)
-                if insertable == "schuko" or insertable == "IEC60320_C13":
+                if insertable == "IEC60320_C13" or insertable == "schuko":
                     pd.domain.limits["p2_f_push_z"] = (0, 30)
-                threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags, n_current_iter, False, knowledge_source.to_dict(), True)))
+                dualarm_cmd = {"agent":robot,"port":13000,"sleep":10000,"pose":insertable+"_hold"}
+                threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags),
+                                                                kwargs={'dualarm_cmd':dualarm_cmd, 'wait':True, 'knowledge': knowledge_source.to_dict(),
+                                                                        'keep_record':False,'current_number_iterations':n_current_iter[insertable]}))
                 threads[-1].start()
             for t in threads:
                 t.join()
@@ -201,13 +206,20 @@ def transfer_learning():
             for robot in robots.keys():
                     task = robots[robot]
                     knowledge_tags = tags.copy()
-                    knowledge_tags.extend(["n"+str(n_current_iter+1), task])
+                    knowledge_tags.extend(["n"+str(n_current_iter[task]+1), task])
                     print("checking ", knowledge_tags," for consistency.")
+
+                    
+                    n_current_iter[task] += 1
+
+
                     if not client.read("global_knowledge", "insertion",{"meta.tags":knowledge_tags}):
                         robot_db = MongoDBClient(robot)
                         if len(robot_db.read("ml_results","insertion",{"meta.tags":knowledge_tags})) < 133:
-                            print("task ",task, " wasn finished properly")
-                            return task
+                            print("task ",task, " wasn finished properly. Deleting results and do it again.")
+                        robot_db.remove("ml_results","insertion",{"meta.tags":knowledge_tags})
+                    else:
+                        n_current_iter[task] += 1
             kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
             kb.clear_memory()
             knowledge_source.scope = []
@@ -217,14 +229,29 @@ def transfer_learning():
             stop_services(list(robots.keys()))
             return True
         return True
+    
+    for robot in robots.keys():
+        insertable = robots[robot]
+        move_joint(robot,insertable+"_hold",wait=True,port=13000)
+        if place_insertable(robot, insertable, insertable+"_container",insertable+"_container_approach",insertable+"container_above",port=12000):
+            call_method(robot, 12000, "reboot")
+            call_method(robot, 13000, "reboot")
+    time.sleep(600)
+    for robot in robots.keys():
+        insertable = robots[robot]
+        call_method(robot, 13000, "grasp", {"width":0,"force":100,"speed":1,"epsilon_inner":1,"epsilon_outer":1})
+        move_joint(robot,insertable+"_hold",wait=True,port=13000)
+        grasp_insertable(robot, insertable, insertable+"_container",insertable+"_container_approach",insertable+"container_above",port=12000)
+    
     #transfer to here: 
     for task in tasks:
-        tags = ["test","evaluation"]
-        for n_current_iter in range(0,10):
+        for n_current_iter in range(0,1):
             threads = []
             print("Number of iteration: ", n_current_iter+1,"/10")
-
             for robot in robots.keys():
+
+                tags = ["test","evaluation"]
+
                 insertable = robots[robot]
                 knowledge_source = Knowledge()
                 knowledge_source.kb_location = "collective-020.rsi.ei.tum.de"
@@ -236,6 +263,7 @@ def transfer_learning():
                 knowledge_source.scope.extend(task)  # search for knowledge of other (or same) insertable
                 knowledge_source.scope.append("n"+str(n_current_iter+1))
                 knowledge_source.type = "all"
+                tags.append("from_"+task)
                 pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                                         {"Insertable": insertable, "Container": insertable+"_container",
                                         "Approach": insertable+"container_approach"}).get_problem_definition(insertable)
