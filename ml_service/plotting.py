@@ -172,6 +172,7 @@ def plot_collective_learning(tags, data_src):
 def plot_transfer_learning(db: str):
     tasks = ["cylinder_10", "cylinder_20", "cylinder_30", "cylinder_40", "cylinder_50", "cylinder_60", #"key_abus_e30",
              "key_pad", "key_old", "key_hatch"]
+    tasks = ["cylinder_50", "usb-a", "schuko", "IEC60320_C13", "abus_e30"]
 
     p = DataProcessor()
     fig, axes = plt.subplots(10, 10, sharex=True, sharey=True, gridspec_kw={'hspace': 0, 'wspace': 0})
@@ -185,15 +186,15 @@ def plot_transfer_learning(db: str):
                 if i == j:
                     print("Processing plot " + str(i * 10 + j + 1), end="\r")
                     tags = ["transfer_learning", tasks[i]]
-                    results = get_multiple_experiment_data("localhost", "insert_object",  # collective-control-001.local
-                                                           results_db="results_tl_base",
-                                                           filter={"meta.tags": {"$all": tags}})
+                    results = get_multiple_experiment_data("collective-020", "insertion",  # collective-control-001.local , insert_object
+                                                           results_db="global_results",
+                                                           filter={"meta.tags": {"$all": tags+["base"]}})
                     cost = p.get_average_cost(results, True)
                     axes[i, j].plot(cost)
                 else:
                     tags = ["transfer_learning", tasks[j], "from_" + tasks[i]]
-                    results = get_multiple_experiment_data("localhost", "insert_object",  # collective-control-001.local
-                                                           results_db=db,
+                    results = get_multiple_experiment_data("collective-020", "insertion",  # collective-control-001.local, insert_object
+                                                           results_db="global_results",
                                                            filter={"meta.tags": {"$all": tags}})
                     cost = p.get_average_cost(results, True)
                     axes[i, j].plot(cost)
@@ -225,9 +226,9 @@ def plot_transfer_learning_2(task: str):
     p = DataProcessor()
     plot = Plotter()
     tags = ["transfer_learning", task]
-    results = get_multiple_experiment_data("localhost", "insert_object",  # collective-control-001.local
+    results = get_multiple_experiment_data("collective-020", "insertion",  # collective-control-001.local
                                            results_db="transfer_base_v2",
-                                           filter={"meta.tags": {"$all": tags}})
+                                           filter={"meta.tags": {"$all": tags+["base"]}})
     cost = p.get_average_cost(results, True, 13)
     cost = np.insert(cost, 0, 1)
    # plot.plot_cost_over_trials(cost)
@@ -235,7 +236,7 @@ def plot_transfer_learning_2(task: str):
     for i in range(len(tasks)):
         try:
             tags = ["transfer_learning", task, "from_" + tasks[i]]
-            results = get_multiple_experiment_data("localhost", "insert_object",  # collective-control-001.local
+            results = get_multiple_experiment_data("collective-020", "insertion",  # collective-control-001.local
                                                    results_db="transfer_all_v2",
                                                    filter={"meta.tags": {"$all": tags}})
             cost = p.get_average_cost(results, True, 13)
@@ -296,9 +297,9 @@ def plot_transfer_learning_3():
             legend = []
             try:
                 tags = ["transfer_learning", tasks[i * n_rows + j]]
-                results = get_multiple_experiment_data("localhost", "insert_object",
-                                                       results_db="transfer_base_v2",
-                                                       filter={"meta.tags": {"$all": tags}})
+                results = get_multiple_experiment_data("collective-020","insertion",  #"localhost", "insert_object",
+                                                       results_db="global_results" #"transfer_base_v2",
+                                                       filter={"meta.tags": {"$all": tags+["base"]}})
                 if trial_wise is True:
                     base_cost, _ = p.get_average_cost(results, True, episode_size)
                     base_casr, _ = p.get_average_success(results)
@@ -329,9 +330,9 @@ def plot_transfer_learning_3():
             for t in range(len(tasks)):
                 try:
                     tags = ["transfer_learning", tasks[i * n_rows + j], "from_" + tasks[t]]
-                    results = get_multiple_experiment_data("localhost", "insert_object",
-                                                           results_db="transfer_all_v2",
-                                                           filter={"meta.tags": {"$all": tags}})
+                    results = get_multiple_experiment_data("collective-020","insertion",  #"localhost", "insert_object",
+                                                       results_db="global_results" #"transfer_all_v2",
+                                                       filter={"meta.tags": {"$all": tags+["base"]}})
                     if trial_wise is True:
                         cost, _ = p.get_average_cost(results, True, episode_size)
                         casr, _ = p.get_average_success(results)
@@ -482,6 +483,8 @@ def plot_transfer_learning_4():
     })
     tasks = ["cylinder_10", "cylinder_20", "cylinder_30", "cylinder_40", "cylinder_50", "cylinder_60",
              "key_pad", "key_old", "key_hatch"]
+    tasks = ["cylinder_50", "usb-a", "schuko", "IEC60320_C13", "abus_e30"]
+
     task_colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"]
 
     best_task = {
@@ -545,9 +548,9 @@ def plot_transfer_learning_4():
             axes_casr[i, j].set_title("Task: " + task_title[tasks[i * n_rows + j]], y=1.0, pad=-14, fontsize=16)
             try:
                 tags = ["transfer_learning", tasks[i * n_rows + j]]
-                results = get_multiple_experiment_data("localhost", "insert_object",
-                                                       results_db="transfer_base_v2",
-                                                       filter={"meta.tags": {"$all": tags}})
+                results = get_multiple_experiment_data("collective-020", "insertion",
+                                                       results_db="global_results",  #"transfer_base_v2",
+                                                       filter={"meta.tags": {"$all": tags+["base"]}})
                 if trial_wise is True:
                     base_cost, _ = p.get_average_cost(results, True, episode_size)
                     base_casr, _ = p.get_average_success(results)
@@ -589,8 +592,8 @@ def plot_transfer_learning_4():
             for t in range(len(tasks)):
                 try:
                     tags = ["transfer_learning", tasks[i * n_rows + j], "from_" + tasks[t]]
-                    results = get_multiple_experiment_data("localhost", "insert_object",
-                                                           results_db="transfer_all_v2",
+                    results = get_multiple_experiment_data("collective-020","insertion"  #"localhost", "insert_object",
+                                                           results_db="global_results"  # "transfer_all_v2",
                                                            filter={"meta.tags": {"$all": tags}})
                     if trial_wise is True:
                         cost, _ = p.get_average_cost(results, True, episode_size)

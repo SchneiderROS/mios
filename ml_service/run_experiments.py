@@ -167,7 +167,7 @@ def transfer_learning():
     sc = SVMLearner(130,10,0,True,False, -1,True).get_configuration()
     #sc = CMAESLearner(10,13,True).get_configuration()
     # learning for base knowledge
-    tags = ["transfer_learning","evaluation"]  # transfer_learning
+    tags = ["transfer_learning","evaluation","base"]  # transfer_learning
     n_current_iter = {}
     for task in tasks:
         n_current_iter[task] = 0
@@ -248,7 +248,7 @@ def transfer_learning():
     #     call_method(robot, 13000, "grasp", {"width":0,"force":100,"speed":1,"epsilon_inner":1,"epsilon_outer":1})
     #     move_joint(robot,insertable+"_hold",wait=True,port=13000)
     #     grasp_insertable(robot, insertable, insertable+"_container",insertable+"_container_approach",insertable+"container_above",port=12000)
-    
+    tags.pop(tags.index("base"))
     #transfer to here: 
     for task in tasks:
         for n_current_iter in range(0,10):
