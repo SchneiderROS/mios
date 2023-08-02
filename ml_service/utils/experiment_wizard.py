@@ -51,9 +51,7 @@ class DualarmCMD():
                         "env_X": [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]}}
 
     def _execute_loop(self):
-        print("execute_loop")
         while(self.keep_running):
-            print("sending tasks")
             t = Task(self.agent, self.port)
             t.add_skill("move", "MoveToPoseJoint", self.move_context)
             t.add_skill("hold","HoldPose",self.hold_context)
@@ -65,7 +63,6 @@ class DualarmCMD():
         call_method(self.agent,self.port,"stop_task")
         self.thread.join()
     def start(self):
-        print("start with ", self.cmd)
         self.keep_running = True
         self.thread = Thread(target=self._execute_loop)
         self.thread.start()
@@ -140,8 +137,9 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
     if wait:
         while s.is_busy():
             time.sleep(15)
-    c.stop()
-    move_joint(dualarm_cmd["agent"],dualarm_cmd["pose"],port=dualarm_cmd["port"],wait=True)
+    if dualarm_cmd is not None:
+        c.stop()
+        move_joint(dualarm_cmd["agent"],dualarm_cmd["pose"],port=dualarm_cmd["port"],wait=True)
         # backup_result(agent, "collective-control-001.local", problem_def.skill_class, uuid)
 
 def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0, mongo_port=27017):
@@ -150,6 +148,8 @@ def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion
         documents = mongo_client.read(db, task_class, {"meta.tags":tags})
         if len(documents) == 0:
             print("Not found documents on ", robot)
+        else:
+            print("found ",len(documents)," documents that will now be deleted.")
         ids = []
         for d in documents:
             if len(d) > min_size:
