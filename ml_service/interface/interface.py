@@ -205,6 +205,7 @@ class Interface:
     def stop_cmd_loop(self):
         if self.cmd_loop:
             self.cmd_loop.stop()
+        self.cmd_loop = None
 
     def get_status(self) -> str:
         """returns a detailed status for debugging purposes"""
