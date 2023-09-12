@@ -38,8 +38,8 @@ def learn_task(robot:str, problem_definition: ProblemDefinition, service_config:
     start_experiment(robot, [robot], problem_definition, service_config, n_iterations, knowledge=knowledge, tags=tags,
                      keep_record=keep_record, wait=wait,service_port=service_port)
 def learn_single_task(robot:str, problem_definition: ProblemDefinition, service_config: ServiceConfiguration, tags: list,
-               current_number_iterations: int=0, keep_record: bool = False, knowledge = None, wait: bool = False, service_port:int=8000, dualarm_cmd: dict=None):
-    return start_single_experiment(robot, [robot], problem_definition, service_config, current_number_iterations, tags, knowledge, keep_record, wait, service_port=service_port, dualarm_cmd = dualarm_cmd)
+               current_number_iterations: int=0, keep_record: bool = False, knowledge = None, wait: bool = False, service_port:int=8000, dualarm_cmd:dict=None):
+    return start_single_experiment(robot, [robot], problem_definition, service_config, current_number_iterations, tags, knowledge, keep_record, wait, service_port=service_port,dualarm_cmd=dualarm_cmd)
 
 def test_learning():
     pd = InsertionFactory("collective-panda-001", ContactForcesMetric("insertion", {"contact_forces": 175}),
@@ -223,12 +223,12 @@ def learn_from_source(robot, insertable):
         extract_context["skill"]["objects"]["Extractable"] = "016_right"
         extract_context["skill"]["objects"]["ExtractTo"] = "016_right_container_approach"
         dualarm_skills.append(("extract", "TaxExtraction", extract_context))
-        #dualarm_cmd = {"agent":robot,"port":13000,"skills":[("insert", "TaxInsertion", insert_context),("extract", "TaxExtraction", extract_context)],"sleep":1,"pose":"hold"}
+
     dualarm_cmd = {"agent":robot,"port":13000,"skills":dualarm_skills,"sleep":1}
-    dualarm_cmd_thread = learn_single_task(robot, pd, sc, ["default_context"], 0, False, knowledge, False, 8000, dualarm_cmd)
+    learn_single_task(robot, pd, sc, ["default_context"], 0, False, knowledge, False, 8000, dualarm_cmd)
     input("press enter to stop robot")
     stop_services([robot])
-    dualarm_cmd_thread.stop()
+
 
 
 def transfer_learning():
@@ -276,7 +276,7 @@ def transfer_learning():
                                         "Approach": insertable+"_container_approach"}).get_problem_definition(insertable)
                 if insertable == "IEC60320_C13" or insertable == "schuko":
                     pd.domain.limits["p2_f_push_z"] = (0, 30)
-                dualarm_cmd = {"agent":robot,"port":13000,"sleep":10000,"pose":insertable+"_hold"}
+                dualarm_cmd = {"agent":robot,"port":13000,"sleep":10000,"pose":insertable+"_hold"} ## veraltet!!!
                 threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags),
                                                                 kwargs={'dualarm_cmd':dualarm_cmd, 'wait':True, 'knowledge': knowledge_source.to_dict(),
                                                                         'keep_record':False,'current_number_iterations':n_current_iter[insertable]}))
@@ -887,7 +887,7 @@ def dualarm_demo_thread(robot, obj, tags, sc, knowledge:dict):
         if current_task != "IdleTask":
             return robot+" is not in IdleTask, but" + current_task
 
-        hold_pose(robot,1000000,13000)
+        #hold_pose(robot,1000000,13000)
         pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                                     {"Insertable": obj, "Container": obj+"_container",
                                     "Approach": obj+"_container_approach"}).get_problem_definition(obj)
@@ -908,7 +908,6 @@ def dualarm_demo_thread(robot, obj, tags, sc, knowledge:dict):
                         "F_ext_max": [100, 50]}}
         dualarm_skills.append(("move", "MoveToPoseJoint", move_context))
         if obj == "016_left":
-            dualarm_cmd = []
             call_method(robot,13000,"set_grasped_object",{"object":"016_right"})
             f = open(path_to_default_context + "insertion.json")
             insert_context = json.load(f)

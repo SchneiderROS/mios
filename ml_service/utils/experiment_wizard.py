@@ -1,7 +1,6 @@
 from xmlrpc.client import ServerProxy
 import copy
 import time
-from threading import Thread
 from utils.database import backup_result
 from problem_definition.problem_definition import ProblemDefinition
 from services.base_service import ServiceConfiguration
@@ -9,47 +8,6 @@ from mongodb_client.mongodb_client import MongoDBClient
 from utils.ws_client import *
 from utils.taxonomy_utils import Task
 from utils.helper_functions import *
-
-
-class DualarmCMD():
-    def __init__(self, cmd):
-        self.keep_running = False
-        self.thread = None
-        self.port = None
-        self.cmd = cmd
-        self.agent = self.cmd["agent"]
-        if "sleep" in cmd:
-            self.sleep = cmd["sleep"]
-        else:
-            self.sleep = 5
-        if "port" in cmd:
-            self.port = cmd["port"]
-        else:
-            self.port = 13000
-        self.skills = cmd["skills"]
-
-    def _execute_loop(self):
-        t = Task(self.agent, self.port)
-        for i in range(0,100):
-            for skill in self.skills:
-                t.add_skill(skill[0]+"-"+str(i),skill[1],skill[2])
-        #t.add_skill("hold","HoldPose",self.hold_context)
-        while(self.keep_running):
-            t.start(queue=False)
-            t.wait(timeout=1000)
-        return True
-            
-
-    def stop(self):
-        self.keep_running = False
-        call_method(self.agent,self.port,"stop_task")
-        self.thread.join()
-
-    def start(self):
-        self.keep_running = True
-        self.thread = Thread(target=self._execute_loop)
-        self.thread.start()
-
 
 def start_experiment(learner: str, agents: list, pd: ProblemDefinition, service: ServiceConfiguration, n_eval: int = 1,
                      tags: list = None, knowledge: dict = None, keep_record: bool = True, wait: bool = True, service_port:int = 8000):
@@ -102,10 +60,6 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
     if keep_record is True and len(client.read("ml_results", problem_def.skill_class, {"meta.tags": {"$all": problem_def.tags}})) != 0:
         print("Continue at n" + str(iter+1))
         return
-    if dualarm_cmd is not None:
-        #move_joint(dualarm_cmd["agent"],dualarm_cmd["pose"],port=dualarm_cmd["port"],wait=True)
-        c = DualarmCMD(dualarm_cmd)
-        c.start()
 
     s = ServerProxy("http://" + learner + ":"+str(service_port), allow_none=True)
     #if knowledge_tmp is not None:
@@ -116,16 +70,13 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
         #knowledge_tmp["scope"].append("n" + str(iter+1))
         #print(knowledge_tmp)
     #print("start task on ", agents, " with knowledge scope = ",knowledge_tmp["meta"]["scope"])
+    if dualarm_cmd:
+        s.start_cmd_loop(dualarm_cmd)
     uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge_tmp)
+
     if wait:
         while s.is_busy():
             time.sleep(15)
-    if dualarm_cmd is not None and wait is True:
-        c.stop()
-        move_joint(dualarm_cmd["agent"],dualarm_cmd["pose"],port=dualarm_cmd["port"],wait=True)
-        # backup_result(agent, "collective-control-001.local", problem_def.skill_class, uuid)
-    else:
-        return c
 
 def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0, mongo_port=27017):
     for robot in robots:
