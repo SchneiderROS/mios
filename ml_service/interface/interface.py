@@ -223,7 +223,7 @@ class Interface:
 
     def start_telemetry(self, ip, port):
         self.keep_running_telemetry = True
-        self.telemetry_sender = tensorboard_client(ip, port)
+        self.telemetry_sender = TensorboardClient(ip, port)
         if self.telemetry_buffer is None:
             return False
         self.telemetry_thread = Thread(target=self._send_telemetry, args=(ip, port))
