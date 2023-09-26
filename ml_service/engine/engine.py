@@ -234,7 +234,7 @@ class Engine:
         self.cnt_trial += 1
         trial.t_0 = time.time()
         for i in range(self.problem_definition.n_variations):
-            print("Running variation " + str(i))
+            #print("Running variation " + str(i))
             self.problem_definition.apply_object_modifiers(trial.task_context)
             result, variation_result = self._execute_task(agent, trial)
 
@@ -259,7 +259,7 @@ class Engine:
 
             trial.t_1 = time.time()
             trial.t_delta = trial.t_1 - trial.t_0
-            print("#######################")
+            #print("#######################")
             print(trial.trial_number)
 
             self.lock_data.acquire()
@@ -311,7 +311,7 @@ class Engine:
                 time.sleep(1)
                 return False, None
             variation_result.q_metric = self.problem_definition.calculate_cost(variation_result)
-            print(variation_result.q_metric.final_cost)
+            #print(variation_result.q_metric.final_cost)
             break
         logger.debug("Engine::_execute_task.end")
         return cnt_repeat < self.max_trial_repeats and self.keep_running is True, variation_result
@@ -319,10 +319,10 @@ class Engine:
     def _reset_task(self, agent: str, trial: Trial):
         logger.debug("Engine::_reset_task()")
         for i in trial.reset_instructions:
-            logger.debug("Engine::_reset_task.instructions: " + str(i["parameters"]))
+            #logger.debug("Engine::_reset_task.instructions: " + str(i["parameters"]))
             instruction_done = False
             while instruction_done is False:
-                logger.debug("Engine::_reset_task.loop")
+                #logger.debug("Engine::_reset_task.loop")
                 if i["method"] == "start_task":
                     result, task_uuid = self._start_task(agent, i["parameters"])
                     if result is False:
@@ -346,14 +346,14 @@ class Engine:
 
                 instruction_done = True
 
-        logger.debug("Engine::_reset_task.end")
+        #logger.debug("Engine::_reset_task.end")
 
     def _start_task(self, agent: str, task_context: dict) -> (bool, str):
         task_uuid = "INVALID"
         task_name = task_context["name"]
         while(self.pause_execution and self.keep_running):
             time.sleep(1)
-        logger.info("Executing task " + task_name + " on agent " + agent + ".")
+        logger.info("_start_task::Executing task " + task_name + " on agent " + agent + ".")
         # logger.debug("Task context: " + str(task_context))
         response = start_task(agent, task_name, task_context, True, port=self.mios_port)
         if response is None:
@@ -379,7 +379,7 @@ class Engine:
             return False, task_uuid
 
         task_uuid = response["result"]["task_uuid"]
-        logger.debug("Engine::_start_Task.end")
+        #logger.debug("Engine::_start_Task.end")
         return True, task_uuid
 
     def _wait_for_task(self, agent: str, task_uuid: str) -> (bool, TaskResult):

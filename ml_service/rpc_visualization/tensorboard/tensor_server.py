@@ -22,10 +22,14 @@ class Server():
         self.server.register_function(self.plot, 'plot') 
         self.server.register_function(self.echo, 'echo') 
     
-    def plot(self, plot_name:str, data:float, n):
+    def plot(self, data):
+        print(data)
+
+
+    def plot_old(self, plot_name:str, data:float, n):
         print((plot_name, data, n))
         self.writer.add_scalar('Collective Learning/' + plot_name, data, n)
-        print("print data", )
+        print("print data", n)
         return (plot_name, data, n)
         
     def echo(self,x):

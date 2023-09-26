@@ -21,6 +21,8 @@ class TensorboardClient:
             port (_type_): tensorboard xmlrpc server port
         """
         print("server info: ", (host, str(port)))
+        self.ip = host
+        self.port = port
         self.proxy = xmlrpc.client.ServerProxy("http://%s:%s/" %(host, str(port))) 
         self.count = 0
         self.hostname = socket.gethostname()
@@ -94,7 +96,7 @@ class Switcher():
                 self.vis_buffer.add_data(value)
     
     def send_start(self, ip="10.157.175.142", port="8004"):
-        self.proxy = tensorboard_client(ip, port)        
+        self.proxy = TensorboardClient(ip, port)        
         self.flag = 1
             
     def send_off(self):

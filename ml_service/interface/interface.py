@@ -222,6 +222,7 @@ class Interface:
         logger.debug("interface::stop_cmd_loop: stopped successfully")
 
     def start_telemetry(self, ip, port):
+        logger.debug("interface::start_telemetry with ip "+str(ip)+" and port "+str(port))
         self.keep_running_telemetry = True
         self.telemetry_sender = TensorboardClient(ip, port)
         if self.telemetry_buffer is None:
@@ -231,12 +232,14 @@ class Interface:
         return True
 
     def stop_telemetry(self):
+        logger.debug("interface::stop_telemetry")
         self.keep_running_telemetry = False
         self.telemetry_thread.join()
 
     def _send_telemetry(self):
         while self.keep_running_telemetry:
             self.telemetry_sender.send(self.telemetry_buffer.get_data())
+            logger.debug("_send_telemetry to " + str(self.telemetry_sender.ip))
             time.sleep(2)
 
     def get_status(self) -> str:
