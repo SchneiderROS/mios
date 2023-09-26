@@ -362,7 +362,7 @@ class BaseService(metaclass=ABCMeta):
             return float(x)
         elif isinstance(x, dict):
             for key in x.keys():
-                x[key] = self.make_float_again(x)
+                x[key] = self.make_float_again(x[key])
         elif isinstance(x, list):
             for i in range(len(x)):
                 x[i] = self.make_float_again(x[i])
