@@ -20,7 +20,6 @@ class TensorboardClient:
             host (_type_): tensorboard xmlrpc server ip
             port (_type_): tensorboard xmlrpc server port
         """
-        print("server info: ", (host, str(port)))
         self.ip = host
         self.port = port
         self.proxy = xmlrpc.client.ServerProxy("http://%s:%s/" %(host, str(port))) 

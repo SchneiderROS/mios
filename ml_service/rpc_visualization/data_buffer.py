@@ -15,7 +15,7 @@ class DataBuffer:
             self.buffer.append(data)
             # notify waiting threads that new data is available
             self.condition.notify_all()
-            logger.debug("DataBuffer::add_data, current size: ",str(len(self.buffer)))
+            logger.debug("DataBuffer::add_data, current size: "+str(len(self.buffer)))
 
     def get_data(self):
         with self.lock:
