@@ -1,7 +1,7 @@
 import xmlrpc
 from xmlrpc.server import SimpleXMLRPCServer
 import socket
-from DataBuffer import DataBuffer
+from rpc_visualization.data_buffer import DataBuffer
 import sys
 import threading
 import ifaddr
@@ -11,7 +11,7 @@ import math
 # 8003 switch udp server
 # 8004 tensorboard client
 
-class tensorboard_client:
+class TensorboardClient:
     """tensorboard xmlrpc client class"""
     def __init__(self, host, port) -> None:
         """__init__
@@ -59,7 +59,7 @@ def get_ip() -> str:
     
     return "0.0.0.0"
 
-class switcher(): 
+class Switcher(): 
     def __init__(self): 
         self.vis_buffer = DataBuffer()
         self.server = SimpleXMLRPCServer(((get_ip(), 8002)), allow_none=True) 
@@ -117,7 +117,7 @@ class switcher():
 
 if __name__ == "__main__":
     try:
-        witch = switcher()
+        witch = Switcher()
         t1 = threading.Thread(target=witch.UDP_start)
         t1.start()
         t2 = threading.Thread(target=witch.send_data)

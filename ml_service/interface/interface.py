@@ -15,12 +15,11 @@ from problem_definition.problem_definition import ProblemDefinition
 from utils.ws_client import call_method
 from database.database import Database
 from utils.cmd_loop import CMDLoop
-from rpc_visualization.switcher import tensorboard_client
+from rpc_visualization.switcher import TensorboardClient
 
 from xmlrpc.server import SimpleXMLRPCServer
 from socketserver import ThreadingMixIn
 from xmlrpc.client import ServerProxy
-from rpc_visualization.switcher import tensorboard_client
 
 logger = logging.getLogger("ml_service")
 
@@ -46,8 +45,8 @@ class Interface:
         self.rpc_server = InterfaceServer(("0.0.0.0", interface_port), allow_none=True)
 
         self.telemetry_buffer = None
-        self.keep_running_telemetry
-        self.telemetry_sender = 
+        self.keep_running_telemetry = False
+        self.telemetry_sender = None
         self.start_global_database()
 
     def start_rpc_server(self):
