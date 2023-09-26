@@ -47,6 +47,8 @@ class Interface:
         self.telemetry_buffer = None
         self.keep_running_telemetry = False
         self.telemetry_sender = None
+        self.telemetry_thread = None
+
         self.start_global_database()
 
     def start_rpc_server(self):
@@ -234,7 +236,9 @@ class Interface:
     def stop_telemetry(self):
         logger.debug("interface::stop_telemetry")
         self.keep_running_telemetry = False
-        self.telemetry_thread.join()
+        if self.telemetry_thread is not None:
+            self.telemetry_thread.join()
+            self.telemetry_thread = None
 
     def _send_telemetry(self):
         while self.keep_running_telemetry:
