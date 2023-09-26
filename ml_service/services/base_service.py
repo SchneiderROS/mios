@@ -307,7 +307,7 @@ class BaseService(metaclass=ABCMeta):
         #logger.debug("BaseService.get_theta(" + str(x) + ")")
         theta = dict()
         for i in range(len(self.problem_definition.domain.vector_mapping)):
-            theta[self.problem_definition.domain.vector_mapping[i]] = x[i]
+            theta[self.problem_definition.domain.vector_mapping[i]] = float(x[i])
         return theta
     
     def get_params(self, theta) -> list:
@@ -321,7 +321,7 @@ class BaseService(metaclass=ABCMeta):
         theta = dict()
         updated_context = self.problem_definition.default_context
         for i in range(len(self.problem_definition.domain.vector_mapping)):
-            theta[self.problem_definition.domain.vector_mapping[i]] = x[i]
+            theta[self.problem_definition.domain.vector_mapping[i]] = float(x[i])
 
         # logger.debug("BaseService.update_default_context.theta: " + str(theta))
 
