@@ -46,6 +46,9 @@ class Server():
         self.transfermap_storage = []
         self.current_transfer_data = {}
         self.keep_running = False
+
+        self.lock = threading.Lock()
+        self.condition = threading.Condition(self.lock)
         self.save_frame_thread.start()
     
     def plot(self, hostname, data, count):
@@ -59,11 +62,11 @@ class Server():
         #self.writer.add_scalar('Collective Learning/'+hostname, cost, trial_number)
         if hostname not in self.current_data.keys():
             self.current_data[hostname] = 0
-        if hostname not in self.current_transfer_data.keys():
-            self.current_transfer_data[hostname] = {}
         elif success:
             self.current_data[hostname] += 1 
-            
+
+        if hostname not in self.current_transfer_data.keys():
+            self.current_transfer_data[hostname] = {}
         if external:
             if external not in self.current_transfer_data[hostname].keys():
                 self.current_transfer_data[hostname][external] = 0
@@ -79,14 +82,15 @@ class Server():
         current_heatmap = np.zeros((5,5))
         current_transfermap = np.zeros((25,25))
         while self.keep_running:
-            for name in self.current_data.keys():  # name = hostname like "collective-003"
-                    index = modules.index(name[-3:])
-                    col = index%5
-                    row = int(index/5)
-                    current_heatmap[row][col] = self.current_data[name]
-                    for knowledge_source in self.current_transfer_data[name].keys():
-                        #print("update transfer from",modules.index(knowledge_source), "to ",modules.index(name[-3:]))
-                        current_transfermap[modules.index(knowledge_source)][modules.index(name[-3:])] = self.current_transfer_data[name][knowledge_source]
+            with self.lock:
+                for name in self.current_data.keys():  # name = hostname like "collective-003"
+                        index = modules.index(name[-3:])
+                        col = index%5
+                        row = int(index/5)
+                        current_heatmap[row][col] = self.current_data[name]
+                        for knowledge_source in self.current_transfer_data[name].keys():
+                            #print("update transfer from",modules.index(knowledge_source), "to ",modules.index(name[-3:]))
+                            current_transfermap[modules.index(knowledge_source)][modules.index(name[-3:])] = self.current_transfer_data[name][knowledge_source]
 
             self.storage.append(current_heatmap)
             self.transfermap_storage.append(current_transfermap)
