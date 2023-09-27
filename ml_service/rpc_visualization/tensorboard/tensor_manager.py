@@ -58,7 +58,7 @@ def send_stop():
             print("error for ",r)
     threads = []
     for r in robot_list:
-        threads.append(Thread(target=stop, args=(r)))
+        threads.append(Thread(target=stop, args=(r,)))
     for t in threads:
         t.start()
     for t in threads:
