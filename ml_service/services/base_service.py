@@ -292,6 +292,7 @@ class BaseService(metaclass=ABCMeta):
 
     def wait_for_result(self, uuid: str) -> TaskResult:
         result = self.engine.wait_for_trial(uuid, 50 * self.problem_definition.n_variations)
+        result["external"] = eval(result["external"])  # make it a dict again
         self.data_buffer_visualization.add_data(self.make_float_again(result.to_dict()))
         return result.task_result
 
