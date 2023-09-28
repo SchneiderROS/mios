@@ -33,7 +33,7 @@ class Server():
     def __init__(self, server_addr): 
         print(server_addr)
         print(type(server_addr))
-        self.writer = SummaryWriter(log_dir= "/home/collective-dev/vis_CL/collective_" + datetime.datetime.now().strftime("%d%b-%H:%M") , flush_secs=1) 
+        self.writer = SummaryWriter(log_dir= "x00x/collective_" + datetime.datetime.now().strftime("%d%b-%H:%M") , flush_secs=1)
         self.server = SimpleXMLRPCServer((server_addr), allow_none=True) 
         self.save_frame_thread = Thread(target=self.save_frames, args=(100,))
         self.current_data = {}
@@ -70,24 +70,34 @@ class Server():
                 self.current_transfer_data[hostname] = {}
             if external:
                 if external not in self.current_transfer_data[hostname].keys():
-                    self.current_transfer_data[hostname][external] = 0
+                    #self.current_transfer_data[hostname][external] = 0
+                    self.current_transfer_data[hostname][external] = 3  #float("inf")
                 if success:
-                    self.current_transfer_data[hostname][external] += 1
+                    #self.current_transfer_data[hostname][external] += 1
+                    if cost < self.current_transfer_data[hostname][hostname[-3:]]:
+                        self.current_transfer_data[hostname][hostname[-3:]] = cost
                 else:
-                    self.current_transfer_data[hostname][external] -= 1
+                    #self.current_transfer_data[hostname][external] -= 1
+                    if cost < self.current_transfer_data[hostname][hostname[-3:]]:
+                        self.current_transfer_data[hostname][hostname[-3:]] = cost
             else:
                 if hostname[-3:] not in self.current_transfer_data[hostname].keys():
-                    self.current_transfer_data[hostname][hostname[-3:]] = 0
+                    #self.current_transfer_data[hostname][hostname[-3:]] = 0
+                    self.current_transfer_data[hostname][hostname[-3:]] = 3
                 if success:
-                    self.current_transfer_data[hostname][hostname[-3:]] += 1
+                    #self.current_transfer_data[hostname][hostname[-3:]] += 1
+                    if cost < self.current_transfer_data[hostname][hostname[-3:]]:
+                        self.current_transfer_data[hostname][hostname[-3:]] = cost
                 else:
-                    self.current_transfer_data[hostname][hostname[-3:]] += 1
+                    #self.current_transfer_data[hostname][hostname[-3:]] += 1
+                    if cost < self.current_transfer_data[hostname][hostname[-3:]]:
+                        self.current_transfer_data[hostname][hostname[-3:]] = cost
         #self.plotter.add_data(hostname, cost)
 
     def save_frames(self, period):
         self.keep_running = True
         current_heatmap = np.zeros((5,5))
-        current_transfermap = np.zeros((25,25))
+        current_transfermap = np.ones((25,25)) * 3
         while self.keep_running:
             with self.lock:
                 for name in self.current_data.keys():  # name = hostname like "collective-003"

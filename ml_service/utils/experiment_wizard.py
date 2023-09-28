@@ -69,7 +69,7 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
         #    knowledge_tmp["scope"].remove("n" + str(iter))
         #knowledge_tmp["scope"].append("n" + str(iter+1))
         #print(knowledge_tmp)
-    #print("start task on ", agents, " with knowledge scope = ",knowledge_tmp["meta"]["scope"])
+    print("start task on ", agents, " with knowledge mode = ",str(knowledge_tmp["meta"]["mode"]))
     if dualarm_cmd:
         s.start_cmd_loop(dualarm_cmd)
     uuid = s.start_service(problem_def.to_dict(), service.to_dict(), agents, knowledge_tmp)
