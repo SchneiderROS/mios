@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from threading import Thread
 from tempfile import TemporaryFile
+from copy import deepcopy
 
 
 
@@ -60,21 +61,22 @@ class Server():
         success = data["task_result"]["q_metric"]["success"]
         trial_number = data["trial_number"]  #int 
         #self.writer.add_scalar('Collective Learning/'+hostname, cost, trial_number)
-        if hostname not in self.current_data.keys():
-            self.current_data[hostname] = 0
-        elif success:
-            self.current_data[hostname] += 1 
+        with self.lock:
+            if hostname not in self.current_data.keys():
+                self.current_data[hostname] = 0
+            elif success:
+                self.current_data[hostname] += 1 
 
-        if hostname not in self.current_transfer_data.keys():
-            self.current_transfer_data[hostname] = {}
-        if external:
-            if external not in self.current_transfer_data[hostname].keys():
-                self.current_transfer_data[hostname][external] = 0
-            if success:
-                self.current_transfer_data[hostname][external] += 1
-            else:
-                self.current_transfer_data[hostname][external] -= 1
-            print(self.current_transfer_data[hostname], " success:",success, hostname)
+            if hostname not in self.current_transfer_data.keys():
+                self.current_transfer_data[hostname] = {}
+            if external:
+                if external not in self.current_transfer_data[hostname].keys():
+                    self.current_transfer_data[hostname][external] = 0
+                if success:
+                    self.current_transfer_data[hostname][external] += 1
+                else:
+                    self.current_transfer_data[hostname][external] -= 1
+                #print(self.current_transfer_data[hostname], " success:",success, hostname)
         #self.plotter.add_data(hostname, cost)
 
     def save_frames(self, period):
@@ -89,11 +91,10 @@ class Server():
                         row = int(index/5)
                         current_heatmap[row][col] = self.current_data[name]
                         for knowledge_source in self.current_transfer_data[name].keys():
-                            #print("update transfer from",modules.index(knowledge_source), "to ",modules.index(name[-3:]))
                             current_transfermap[modules.index(knowledge_source)][modules.index(name[-3:])] = self.current_transfer_data[name][knowledge_source]
-
-            self.storage.append(current_heatmap)
-            self.transfermap_storage.append(current_transfermap)
+            print(current_heatmap)
+            self.storage.append(deepcopy(current_heatmap))
+            self.transfermap_storage.append(deepcopy(current_transfermap))
             np.save("heatmap.npy", self.storage)
             np.save("transfermap.npy",self.transfermap_storage)
             time.sleep(period/1000)
