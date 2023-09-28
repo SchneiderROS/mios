@@ -97,7 +97,7 @@ class Server():
                         current_heatmap[row][col] = self.current_data[name]
                         for knowledge_source in self.current_transfer_data[name].keys():  # knowledge_source like "003"
                             current_transfermap[modules.index(knowledge_source)][modules.index(name[-3:])] = self.current_transfer_data[name][knowledge_source]
-
+            print("number of sumbmitted agents: ", len(self.current_data.keys()))
             self.storage.append(deepcopy(current_heatmap))
             self.transfermap_storage.append(deepcopy(current_transfermap))
             np.save("heatmap.npy", self.storage)
