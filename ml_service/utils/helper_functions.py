@@ -9,11 +9,39 @@ import socket
 from utils.ws_client import call_method
 from mongodb_client.mongodb_client import MongoDBClient
 from utils.taxonomy_utils import Task
+from plotting.data_acquisition import *
 
 
 def get_ip(hostname: str):
     print("hostname: ",hostname)
     return socket.gethostbyname(hostname)
+
+def lowest_results(robot:str, tags:list):
+    data = get_multiple_experiment_data(robot, "insertion", "ml_results", {"meta.tags":tags})
+    lowerst_cost = 100
+    for result in data:
+        cost_tmp = result.get_lowest_cost()
+        print("lowest cost of ",cost_tmp, "at index ",result.costs.index(cost_tmp))
+        if lowerst_cost > cost_tmp:
+            lowerst_cost = cost_tmp
+    print("lowest_cost for", tags ," on ", robot,":  ",lowerst_cost)
+    return lowerst_cost
+
+def n_trial_until(robot, tags, cutoff):
+    data = get_multiple_experiment_data(robot, "insertion", "ml_results", {"meta.tags":tags})
+    lowerst_cost = 100
+    for result in data:
+        lowest_index = float("inf")
+        index_tmp = float("inf")
+        for i,cost in enumerate(result.costs):
+            if cost < cutoff:
+                print("lower cost than ",cutoff, "at index ",i)
+                index_tmp = i
+                break
+        if index_tmp<lowest_index:
+            lowest_index = index_tmp
+    return lowest_index
+        
 
 def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0):
     for robot in robots:

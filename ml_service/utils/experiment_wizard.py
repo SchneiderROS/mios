@@ -48,7 +48,7 @@ def start_single_experiment(learner: str, agents: list, pd: ProblemDefinition, s
         tags = []
 
     agents = agents
-    problem_def = pd
+    problem_def = copy.deepcopy(pd)
     problem_def.tags.extend(tags)
     client = MongoDBClient(learner)
 

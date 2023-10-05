@@ -318,7 +318,7 @@ class Result:
         return data_dict
 
 
-class Knowledge:
+class KnowledgePoint:   # changed from name "Knowledge" to "KnowledgePoint"
     def __init__(self, data: dict):
         data_tmp = copy.deepcopy(data)
         del data_tmp["_id"]

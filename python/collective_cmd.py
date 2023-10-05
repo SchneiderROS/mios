@@ -1,5 +1,4 @@
 from desk.mongodb_client import MongoDBClient
-import pymongo
 from xmlrpc.client import ServerProxy
 import os
 from threading import Thread
@@ -439,7 +438,6 @@ def wink_thread(robot, port, duration=False):
     t0.start()
     result = t0.wait()
     
-
 
 def move_all(pose = "default_pose"):
     threads = []
