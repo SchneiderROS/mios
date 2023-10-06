@@ -510,7 +510,10 @@ def five_agent_collective():
             dualarm_cmd = {"agent":robot,"port":13000,"skills":dualarm_skills,"sleep":1}
             threads.append(Thread(target=learn_single_task, args=(robot, pd, sc, tags, n_current_iter, False, knowledge_source.to_dict(), True, 8000, dualarm_cmd)))
             threads[-1].start()
-
+            time.sleep(0.2)
+            server = ServerProxy("http://%s:%s/" %(robot, "8000"))
+            if server.start_telemetry("10.157.175.246", 8004):
+                print("start sending telemetry")
             while sum([t.is_alive() for t in threads]) >= 5:  # 5agents are running in parallel
                 time.sleep(1)
 
