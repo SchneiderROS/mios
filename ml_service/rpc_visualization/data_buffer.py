@@ -19,15 +19,17 @@ class DataBuffer:
 
     def get_data(self, timeout=None):
         with self.lock:
+            result = None
             # wait until there is data in the buffer
             while len(self.buffer) == 0:
                 self.condition.wait(timeout=timeout)
             # get the data from the buffer
-            result = None
+            logger.debug("BUFFER: timeout")
             try:
                 result = self.buffer.pop(0)
             except IndexError:
                 pass
+            logger.debug("BUFFER:  return "+str(result))
             return result
         
     def empty_buffer(self):
