@@ -432,9 +432,7 @@ def test_cutoff(cutoff ={ '001_left': 0.7080000000000001,   # best solution foun
 
 def five_agent_collective():
     modules = list_block_1 + list_block_2 + list_U
-    tasks = {}
-    for xxx in modules: 
-        tasks["collective-"+str(xxx)+".rsi.ei.tum.de"] = [str(xxx)+"_left"]
+    
 
     cutoff = {  '001_left': 0.7080000000000001,   # best solution found
                 '003_left': 0.68016,
@@ -465,6 +463,9 @@ def five_agent_collective():
     sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     tags = ["5agents_25tasks", "collective"]
     for n_current_iter in range(10):
+        tasks = {}
+        for xxx in modules: 
+            tasks["collective-"+str(xxx)+".rsi.ei.tum.de"] = [str(xxx)+"_left"]
         threads = []
         print("Number of iteration: ", n_current_iter+1)
         knowledge_source = Knowledge()
