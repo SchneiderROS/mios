@@ -235,8 +235,8 @@ class Interface:
         return True
 
     def stop_telemetry(self):
-        logger.debug("interface::stop_telemetry")
         self.keep_running_telemetry = False
+        logger.debug("interface::stop_telemetry"+str(self.keep_running_telemetry))
         if self.telemetry_thread is not None:
             self.telemetry_thread.join()
             self.telemetry_thread = None
