@@ -126,12 +126,11 @@ class Interface:
             self.telemetry_buffer = self.service.data_buffer_visualization
             result = self.service.learn_task()
             logger.debug("learning success " + str(result))
-            self.stop_cmd_loop()
-            self.stop_telemetry()
         finally:
             logger.debug("Interface::learn_task.finally: Releasing service lock")
-            self.service_lock.release()
             self.stop_cmd_loop()
+            self.stop_telemetry()
+            self.service_lock.release()
         return result
     
     def stop_service(self):
