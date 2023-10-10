@@ -462,7 +462,7 @@ def five_agent_collective():
 
     sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     tags = ["5agents_25tasks", "collective"]
-    for n_current_iter in range(12,13):
+    for n_current_iter in range(13,23):
         tasks = {}
         for xxx in modules: 
             tasks["collective-"+str(xxx)+".rsi.ei.tum.de"] = [str(xxx)+"_left"]
@@ -522,7 +522,8 @@ def five_agent_collective():
 
         kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
         kb.clear_memory()
-        return "finished :)"
+        print("run ", n_current_iter, " finished :)")
+    return "finished :)"
 
 
 def collective_experiment():
