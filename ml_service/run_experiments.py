@@ -1124,7 +1124,7 @@ def dualarm_demo2(dualarm_modules):   # dualarm_modules = list_block_1, list_U, 
 
     threads = []
     sc = SVMLearner(2000,10,0,True,False, 0.4,True).get_configuration()
-    tags = ["visualization_isolated"]
+    tags = ["demorun"]
     knowledge_source = Knowledge()
     knowledge_source.kb_location = None  # robots_dualarm[0]
     knowledge_source.mode = None  # "global"
