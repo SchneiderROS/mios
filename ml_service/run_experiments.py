@@ -403,7 +403,10 @@ def get_states(modules):
         s = ServerProxy("http://"+ip+":8000", allow_none=True)
         busy = s.is_busy()
         if type(response) is dict:
-            status = response["result"]["status"]
+            try:
+                status = response["result"]["status"]
+            except KeyError:
+                states.append(False)
             if status == "Idle" and not busy:
                 states.append(True)
             else:

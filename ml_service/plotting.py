@@ -2068,6 +2068,7 @@ def plot_big_collective(tags:list = ["5agents_25tasks", "collective"]):
     task_finished_times = []
     for xxx in modules:
         results = get_multiple_experiment_data("collective-"+xxx+".rsi.ei.tum.de", "insertion", "ml_results", {"meta.tags": tags})
+        print(len(results), "results found for ",xxx)
         for result in results:
             if len(result.costs)<10:
                 continue
@@ -2080,6 +2081,8 @@ def plot_big_collective(tags:list = ["5agents_25tasks", "collective"]):
                                             "accumulated_costs_times":[], 
                                             "starting_times":[],
                                             "instances":[]}
+            if result.instance in results_dict[iteration]["instances"]:
+                continue
             if results_dict[iteration]["earliest_starting_time"] > result.starting_time:  # save lowest starting time
                 results_dict[iteration]["earliest_starting_time"] = result.starting_time
             monotonically_decreading_costs = p.get_monotonically_decreasing_cost(result.costs)
@@ -2090,17 +2093,20 @@ def plot_big_collective(tags:list = ["5agents_25tasks", "collective"]):
             results_dict[iteration]["instances"].append(result.instance)
             sorted(results_dict[iteration]["accumulated_costs_times"])
     max_instances = 0
+    all_instaces = []
     print(results_dict.keys())
-    for results in results_dict.values():
-        if len(results["instances"]) > max_instances:
-            max_instances = len(results["instances"])        
+    for r in results_dict.values():
+        if len(r["instances"]) > max_instances:
+            max_instances = len(r["instances"])
+            all_instaces = r["instances"]
     print("max instanses",max_instances)
 
     #rearranging data for plotting and adding time offeset relative to experiment beginning
     for iteration in list(results_dict.keys()):
         results = results_dict[iteration]
         if len(results["instances"]) < max_instances:
-            print("pop iteration ",iteration)
+            missing = [x for x in all_instaces if x not in results["instances"]]
+            print("pop iteration ",iteration, "\n" ,"missing instances: ",missing)
             del results_dict[iteration]
             #results_dict.pop(iteration)
             continue
