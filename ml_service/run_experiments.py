@@ -403,7 +403,10 @@ def get_states(modules):
         s = ServerProxy("http://"+ip+":8000", allow_none=True)
         busy = s.is_busy()
         if type(response) is dict:
-            status = response["result"]["status"]
+            try:
+                status = response["result"]["status"]
+            except KeyError:
+                states.append(False)
             if status == "Idle" and not busy:
                 states.append(True)
             else:
@@ -448,8 +451,6 @@ def test_cutoff(cutoff ={ '001_left': 0.7080000000000001,   # best solution foun
 
 def five_agent_collective():
     modules = list_block_1 + list_block_2 + list_U
-    
-
     cutoff = {  '001_left': 0.7080000000000001,   # best solution found *1.2
                 '003_left': 0.68016,
                 '004_left': 0.74976,
@@ -478,9 +479,9 @@ def five_agent_collective():
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
 
-    tags = ["5agents_25tasks", "collective"]
-    for n_current_iter in range(4,20): #range(15,25):
-        tasks = {}
+    tags = ["5agents_25tasks_rearanged", "collective"]
+    for n_current_iter in range(1,20): #range(15,25):
+        tasks = {"collective-014.rsi.ei.tum.de":["014_left"]}  #  do this task at first
         for xxx in modules: 
             tasks["collective-"+str(xxx)+".rsi.ei.tum.de"] = [str(xxx)+"_left"]
         threads = []
@@ -531,8 +532,8 @@ def five_agent_collective():
             threads[-1].start()
             time.sleep(1)
             server = ServerProxy("http://%s:%s/" %(robot, "8000"))
-            if server.start_telemetry("10.157.175.246", 8004):
-                print("start sending telemetry")
+            #if server.start_telemetry("10.157.175.246", 8004):
+            #    print("start sending telemetry")
             while sum([t.is_alive() for t in threads]) >= 5:  # 5agents are running in parallel
                 time.sleep(1)
 
