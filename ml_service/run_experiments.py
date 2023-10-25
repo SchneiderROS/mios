@@ -398,20 +398,22 @@ def get_cutoff():
 def get_states(modules):
     ips = get_ips(modules)
     states = []
-    for ip in ips:
+    for ip,xxx in zip(ips,modules):
+        print("get state of ",xxx)
         response = call_method(ip, 12000, "get_state")
         s = ServerProxy("http://"+ip+":8000", allow_none=True)
         busy = s.is_busy()
         if type(response) is dict:
             try:
-                status = response["result"]["status"]
+                status = response["result"]["current_task"]
+                if status == "IdleTask" and not busy:
+                    states.append(True)
+                else:
+                    states.append(False)
+                    print("\n",ip, "robot is not ready:\n ml_service is busy", busy, "\n mios-left state:",status)
             except KeyError:
                 states.append(False)
-            if status == "Idle" and not busy:
-                states.append(True)
-            else:
-                states.append(False)
-                print("\n",ip, "robot is not ready:\n ml_service is busy", busy, "\n mios-left state:",status)
+
     return states
 
 def test_cutoff(cutoff ={ '001_left': 0.7080000000000001,   # best solution found
