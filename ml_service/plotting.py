@@ -2094,7 +2094,7 @@ def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], singl
             results_dict[iteration]["starting_times"].append(result.starting_time)
             results_dict[iteration]["times_of_taskFinish"].append(learning_time)
             results_dict[iteration]["instances"].append(result.instance)
-            sorted(results_dict[iteration]["accumulated_costs_times"])
+      #      sorted(results_dict[iteration]["accumulated_costs_times"])
     max_instances = 0
     all_instaces = []
     #print(results_dict.keys())
@@ -2123,9 +2123,11 @@ def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], singl
             times_costs_relative = [(cost, time+time_offset) for time, cost in results["accumulated_costs_times"][i]]  
             accumulated_costs_times.extend(times_costs_relative)
             results["times_of_taskFinish"][i] = results["times_of_taskFinish"][i] + time_offset
-        results["accumulated_costs_times"] = sorted(accumulated_costs_times)
-        results["instances"] = [x[1] for x in sorted(zip(results["times_of_taskFinish"], results["instances"]))]  #same order as times_of_taskFinish (next line)
-        results["times_of_taskFinish"] = sorted(results["times_of_taskFinish"])
+        
+        if not single_agent:
+            results["accumulated_costs_times"] = sorted(accumulated_costs_times)
+            results["instances"] = [x[1] for x in sorted(zip(results["times_of_taskFinish"], results["instances"]))]  #same order as times_of_taskFinish (next line)
+            results["times_of_taskFinish"] = sorted(results["times_of_taskFinish"])
         #print("instances ordered: \n","\n".join(results["instances"]))
     
     # create data for plotting
@@ -2190,8 +2192,8 @@ def video_plot_big_collective():
         else:
             data = [x for x in isolated_single if x*60<=i*reduce_factor]
             graph_isolated.set_data(data, range(len(data)))
-            i=int((i*reduce_factor - ((isolated_single[-1] - collective[-1])*60) / reduce_factor))
-            data = [x for x in collective if x*60<i*reduce_factor]
+            #i=int((i*reduce_factor - ((isolated_single[-1] - collective[-1])*60) / reduce_factor))
+            data = [x for x in collective if (x +(isolated_single[-1] - collective[-1]))*60<i*reduce_factor]
             graph_collective.set_data(data, range(len(data)))
         axes1.legend(loc="lower right")
         pass
@@ -2210,14 +2212,14 @@ def video_plot_big_collective():
     axes1.legend(loc="lower right")
 
     print("\ngetting collective data")
-    mean_collective, confidence_collective = get_big_collective_data(["5agents_25tasks","collective"])
+    mean_collective, confidence_collective = get_big_collective_data(["5agents_25tasks","collective", "n30"])
     mean_collective = [x/60 for x in mean_collective]
 
     print("\ngetting single isolated data")
-    mean_isolated_single, confidence_isolated_single = get_big_collective_data(["5agents_25tasks_local","isolated_local_noFastPipeline"], single_agent=True)
+    mean_isolated_single, confidence_isolated_single = get_big_collective_data(["5agents_25tasks_local","isolated_local_noFastPipeline", "n30"], single_agent=True)
     mean_isolated_single = [x/60 for x in mean_isolated_single]
 
-    total_time = mean_collective[-1] + mean_isolated_single[-1]  #in minutes
+    total_time = mean_isolated_single[-1]  #in minutes
     num_frames =  int(total_time*60)+1  # Number of frames with framerate 0.2
     num_frames += 10  #add 10 sec to the end 
     num_frames  = int(num_frames/100)
