@@ -138,7 +138,21 @@ def learn_multiple_tasks(robot: str, task_instances: list, service_config: Servi
 
 def delete_results(robot:str, tags:list):
     client = MongoDBClient(robot)
-    client.remove("ml_results", "insertion", {"meta.tags":tags})
+    if not client.remove("ml_results", "insertion", {"meta.tags":tags}):
+        print("Cannot find ", tags, "at ml_results")
+    if not client.remove("local_knowledge", "insertion", {"meta.tags": tags}):
+        print("Cannot find ", tags, "at local_knowledge")
+    if not client.remove("global_knowledge", "insertion", {"meta.tags": tags}):
+        print("Cannot find ", tags, "at global_knowledge")
+    
+
+def delete_some_results(modules: list, tags:list):
+    ips = get_ips(modules)
+    threads = []
+    for ip,module in zip(ips, modules):
+        print("\nDelete results on ",module)
+        delete_results(ip, tags)
+
 
 def check_pose(robot,pose):
     error = []
@@ -410,7 +424,7 @@ def get_states(modules):
                     states.append(True)
                 else:
                     states.append(False)
-                    print("\n",ip, "robot is not ready:\n ml_service is busy", busy, "\n mios-left state:",status)
+                    print("  ",ip, "robot is not ready:\n ml_service is busy", busy, "\n mios-left state:",status)
             except KeyError:
                 states.append(False)
 
@@ -481,8 +495,8 @@ def five_agent_collective():
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
 
-    tags = ["5agents_25tasks_rearanged", "collective"]
-    for n_current_iter in range(30,31): #range(15,25):
+    tags = ["5agents_25tasks_local","isolated_local_noFastPipeline"]
+    for n_current_iter in range(29,30): #range(15,25):
         tasks = {}
         #tasks = {"collective-014.rsi.ei.tum.de":["014_left"]}  #  do this task at first
         for xxx in modules: 
@@ -490,8 +504,8 @@ def five_agent_collective():
         threads = []
         print("Number of iteration: ", n_current_iter+1)
         knowledge_source = Knowledge()
-        knowledge_source.kb_location = "collective-001.rsi.ei.tum.de"
-        knowledge_source.mode = "global" 
+        knowledge_source.kb_location = None #  "collective-001.rsi.ei.tum.de"
+        knowledge_source.mode = None  # "global" 
         knowledge_source.scope = []
         knowledge_source.scope.extend(tags)
         knowledge_source.scope.append("n"+str(n_current_iter+1))
@@ -537,7 +551,7 @@ def five_agent_collective():
             server = ServerProxy("http://%s:%s/" %(robot, "8000"))
             if server.start_telemetry("10.157.175.246", 8004):
                 print("start sending telemetry")
-            while sum([t.is_alive() for t in threads]) >= 5:  # 5agents are running in parallel
+            while sum([t.is_alive() for t in threads]) >= 35:  # 5agents are running in parallel
                 time.sleep(1)
 
         for t in threads:
