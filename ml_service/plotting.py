@@ -2174,8 +2174,8 @@ def plot_big_collective():
     axes1.fill_betweenx(range(len(mean_collective_re)), lower_bound_confindece_collective_re, upper_bound_confindece_collective_re, alpha=0.2)
     
     axes1.set_xlabel("time [min]")
-    axes1.set_ylabel("learned tasks [1]")
-    axes1.set_title("5 agents | 25 tasks")
+    axes1.set_ylabel("learned skills [1]")
+    axes1.set_title("learn 25 skills | 5 agent collective VS single isolated")
     axes1.set_xlim((0,700))
     #axes1.set_xlim((0,180))
     axes1.grid()
@@ -2185,7 +2185,7 @@ def plot_big_collective():
 
 def video_plot_big_collective():
     def plot_frame(i, collective, isolated_single):
-        reduce_factor = 100
+        reduce_factor = 1#00
         if (i-1)*reduce_factor <= (isolated_single[-1] - collective[-1])*60:
             data = [x for x in isolated_single if x*60<=i*reduce_factor]
             graph_isolated.set_data(data, range(len(data)))
@@ -2201,15 +2201,15 @@ def video_plot_big_collective():
     # Create a figure and axis
     colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"]  # [:len(n_tasks)]
     fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1,figsize=(16, 12))
-    axes1.set_xlabel("time [min]")
-    axes1.set_ylabel("learned tasks [1]")
-    axes1.set_title("5 agents collective | 1 agent isolated")
+    axes1.set_xlabel("time [min]", fontsize=14)
+    axes1.set_ylabel("learned skills [1]", fontsize=14)
+    axes1.set_title("5 agents collective | 1 agent isolated", fontsize=14)
     axes1.set_xlim((0,575))
     axes1.set_ylim((0,25))
     axes1.grid()
     graph_isolated, = plt.plot([], [], color="green",label="isolated single")
     graph_collective, = plt.plot([], [], color="blue",label="collective knowledge sharing")
-    axes1.legend(loc="lower right")
+    axes1.legend(loc="lower right", fontsize=14)
 
     print("\ngetting collective data")
     mean_collective, confidence_collective = get_big_collective_data(["5agents_25tasks","collective", "n30"])
@@ -2222,7 +2222,7 @@ def video_plot_big_collective():
     total_time = mean_isolated_single[-1]  #in minutes
     num_frames =  int(total_time*60)+1  # Number of frames with framerate 0.2
     num_frames += 10  #add 10 sec to the end 
-    num_frames  = int(num_frames/100)
+    #num_frames  = int(num_frames/100)
     print("total frames: ", num_frames)
     print("collective: ",mean_collective, len(mean_collective))
     print("isolated: ",mean_isolated_single)
