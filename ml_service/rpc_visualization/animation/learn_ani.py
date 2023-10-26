@@ -45,8 +45,9 @@ def sns_heatmap(i , m):
 
 # Create a figure and axis
 fig, ax = plt.subplots(figsize=(8, 6))
-name = "collective_10Oct/heatmap"
+name = "iso_251023/heatmap_nonParallel"
 data = np.load(name+".npy").astype(int)
+data = data[::50]
 print(data[-1],"\n Size: ",len(data))
 # num_frames =  np.size(data[:80000], axis = 0)  # Number of frames in the video
 num_frames =  np.size(data, axis = 0)  # Number of frames in the video
@@ -54,7 +55,7 @@ ani = FuncAnimation(fig, sns_heatmap, frames=num_frames, fargs=(data,), repeat=F
 
 # Save the animation as a video (replace 'animation.mp4' with your desired filename)
 Writer = animation.writers['ffmpeg']
-writer = Writer(fps=10, bitrate=1800)
+writer = Writer(fps=0.2, bitrate=1800)
 ani.save(name+'.mp4', writer=writer,  progress_callback = lambda i, n: print(f'Progress {i/n}'))
 
 # Show the animation (optional)

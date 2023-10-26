@@ -2173,13 +2173,13 @@ def plot_big_collective():
     legend_collective_re = axes1.plot(mean_collective_re, range(len(mean_collective_re)), label="collective knowledge sharing (optimised sequence)")
     axes1.fill_betweenx(range(len(mean_collective_re)), lower_bound_confindece_collective_re, upper_bound_confindece_collective_re, alpha=0.2)
     
-    axes1.set_xlabel("time [min]")
-    axes1.set_ylabel("learned skills [1]")
-    axes1.set_title("learn 25 skills | 5 agent collective VS single isolated")
+    axes1.set_xlabel("time [min]", fontsize=14)
+    axes1.set_ylabel("learned skills [1]", fontsize=14)
+    axes1.set_title("learn 25 skills | 5 agent collective VS single isolated", fontsize=14)
     axes1.set_xlim((0,700))
     #axes1.set_xlim((0,180))
     axes1.grid()
-    axes1.legend(loc="lower right")
+    axes1.legend(loc="lower right", fontsize=14)
     plt.show()
 
 
