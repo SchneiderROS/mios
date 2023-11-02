@@ -1176,8 +1176,8 @@ def dualarm_demo2():   # dualarm_modules = list_block_1, list_U, list_external
     sc = SVMLearner(2000,10,0,True,False, 0.4,True).get_configuration()
     tags = ["demorun"]
     knowledge_source = Knowledge()
-    knowledge_source.kb_location = None  # robots_dualarm[0]
-    knowledge_source.mode = None  # "global"
+    knowledge_source.kb_location = robots_dualarm[0] #None  # 
+    knowledge_source.mode = "global"  #None  # 
     knowledge_source.scope = []
     knowledge_source.scope.extend(tags)
     #knowledge_source.scope.append("n"+str(n_current_iter+1))
