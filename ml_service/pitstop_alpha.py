@@ -39,12 +39,12 @@ def ten_agent_collective():
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()    
    
-    tags = ["10agents_25tasks","collective","ps_alpha_4"]
+    tags = ["10agents_25tasks","collective","ps_alpha_5"]
     # tags = ["test run"]
         
         
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
-    for n_current_iter in [0]: # reverse one
+    for n_current_iter in range(10): # reverse one
         tasks = {}
         #tasks = {"collective-014.rsi.ei.tum.de":["014_left"]}  #  do this task at first
         for xxx in modules: 
