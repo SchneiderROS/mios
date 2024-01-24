@@ -27,7 +27,8 @@ list_block_1 = ["001", #"002",
                 "006", "007", "008", "010", 
                 "011", "012"]
 list_block_2 = ["009","013","014","015","016","017",
-                # "018",#"020",
+                # "018",
+                #"020",
                 "021","022"]
 list_U = ["023", "024", "025", "027", "028", "029"] #, "026"
 list_external = ["050"]
@@ -1158,18 +1159,18 @@ def dualarm_demo_thread(robot, obj, tags, sc, knowledge:dict):
     except TypeError:
         print("TypeError for ",obj," on ",robot)
 
-def dualarm_demo2():   # dualarm_modules = list_block_1, list_U, list_external
+def dualarm_demo2(dualarm_modules = list_block_1+list_block_2+ list_U):   # 
     robots_dualarm = []
-    robots_dualarm.extend(get_ips(list_block_1))
-    robots_dualarm.extend(get_ips(list_block_2))
-    robots_dualarm.extend(get_ips(list_U))
+    #robots_dualarm.extend(get_ips(list_block_1))
+    #robots_dualarm.extend(get_ips(list_block_2))
+    #robots_dualarm.extend(get_ips(list_U))
     #robots_dualarm.extend(get_ips(list_external))
-    # robots_dualarm.extend(get_ips(dualarm_modules))
+    robots_dualarm.extend(get_ips(dualarm_modules))
     modules = []
-    # modules.extend(dualarm_modules)
-    modules.extend(list_block_1)
-    modules.extend(list_block_2)
-    modules.extend(list_U)
+    modules.extend(dualarm_modules)
+    #modules.extend(list_block_1)
+    #modules.extend(list_block_2)
+    #modules.extend(list_U)
     # modules.extend(list_external)
 
     threads = []
