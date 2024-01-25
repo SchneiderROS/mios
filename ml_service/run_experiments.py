@@ -1164,18 +1164,18 @@ def dualarm_demo_thread(robot, obj, tags, sc, knowledge:dict):
     except TypeError:
         print("TypeError for ",obj," on ",robot)
 
-def dualarm_demo2():   # dualarm_modules = list_block_1, list_U, list_external
+def dualarm_demo2(dualarm_modules = list_block_1+list_block_2+ list_U):   # 
     robots_dualarm = []
-    robots_dualarm.extend(get_ips(list_block_1))
-    robots_dualarm.extend(get_ips(list_block_2))
-    robots_dualarm.extend(get_ips(list_U))
+    #robots_dualarm.extend(get_ips(list_block_1))
+    #robots_dualarm.extend(get_ips(list_block_2))
+    #robots_dualarm.extend(get_ips(list_U))
     #robots_dualarm.extend(get_ips(list_external))
-    # robots_dualarm.extend(get_ips(dualarm_modules))
+    robots_dualarm.extend(get_ips(dualarm_modules))
     modules = []
-    # modules.extend(dualarm_modules)
-    modules.extend(list_block_1)
-    modules.extend(list_block_2)
-    modules.extend(list_U)
+    modules.extend(dualarm_modules)
+    #modules.extend(list_block_1)
+    #modules.extend(list_block_2)
+    #modules.extend(list_U)
     # modules.extend(list_external)
 
     threads = []

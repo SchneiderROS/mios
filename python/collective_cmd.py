@@ -57,7 +57,7 @@ hostnames = [
 "10.157.174.205",  #0 ms            collective-023.local    [n/a]           A8:A1:59:B8:26:4D                   [n/a]                               ASRock Incorporation                      
 "10.157.175.156",  #0 ms            collective-024.local    [n/a]           A8:A1:59:B8:23:5A                   [n/a]                               ASRock Incorporation                      
 "10.157.174.186",  #0 ms            collective-025.local    [n/a]           A8:A1:59:B8:25:D5                   [n/a]                               ASRock Incorporation                      
-"10.157.174.245",  #0 ms            collective-026.local    [n/a]           A8:A1:59:B2:1C:7A                   [n/a]                               ASRock Incorporation                      
+"10.157.175.135",  #0 ms            collective-026.local    [n/a]           A8:A1:59:B2:1C:7A                   [n/a]                               ASRock Incorporation                      
 "10.157.174.249",  #0 ms            collective-027.local    [n/a]           A8:A1:59:B8:23:B9                   [n/a]                               ASRock Incorporation                      
 "10.157.174.255",  #0 ms            collective-028.local    [n/a]           A8:A1:59:B2:AE:FF                   [n/a]                               ASRock Incorporation                      
 "10.157.174.42" ,  #0 ms            collective-029.local    [n/a]           A8:A1:59:B2:AD:9A                   [n/a]                               ASRock Incorporation                      
@@ -70,7 +70,7 @@ hostnames = [
 "10.157.175.134"]  #0 ms            collective-050.local    [n/a]           A8:A1:59:B2:0F:85                   [n/a]                               ASRock Incorporation 
 modules = ["001",\
         "002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017",\
-        "018",#"019",
+        #"018",#"019",
         "020",
         "021","022","023","024","025","026","027","028","029",#"030",
         "032",#"034",#"038","039","046",
@@ -842,50 +842,50 @@ def gear_place_ring():
     result = gear_unmount_ring()
     if not result["result"]["success"]:
         return False
-    move_joint("10.157.174.245","026_left_pre")
-    move("10.157.174.245","ring",[0,0,0])
-    call_method("10.157.174.245",12000,"move_gripper",{"speed":1,"force":1,"width":0})
-    move("10.157.174.245","026_left_pre",[0,0,0])
+    move_joint("10.157.175.135","026_left_pre")
+    move("10.157.175.135","ring",[0,0,0])
+    call_method("10.157.175.135",12000,"move_gripper",{"speed":1,"force":1,"width":0})
+    move("10.157.175.135","026_left_pre",[0,0,0])
     #gear_insertion()
 
 def gear_unmount_ring():
-    move_joint("10.157.174.245","026_left_start")
-    move_joint("10.157.174.245","026_left_container_above")
-    call_method("10.157.174.245",12000,"move_gripper",{"speed":1,"force":1,"width":0})
-    move("10.157.174.245","026_left_container_approach",[0,0,0])
-    move("10.157.174.245","026_left_container",[0,0,0])
-    call_method("10.157.174.245",12000,"grasp",{"speed":0.1,"width":0.04,"force":0.2,"epsilon_inner":1,"epsilon_outer":1})
+    move_joint("10.157.175.135","026_left_start")
+    move_joint("10.157.175.135","026_left_container_above")
+    call_method("10.157.175.135",12000,"move_gripper",{"speed":1,"force":1,"width":0})
+    move("10.157.175.135","026_left_container_approach",[0,0,0])
+    move("10.157.175.135","026_left_container",[0,0,0])
+    call_method("10.157.175.135",12000,"grasp",{"speed":0.1,"width":0.04,"force":0.2,"epsilon_inner":1,"epsilon_outer":1})
     return gear_reset(False)
     
 
 def gear_grasp():
-    move_joint("10.157.174.245","026_left_pre")
-    call_method("10.157.174.245",12000,"move_gripper",{"speed":1,"force":1,"width":0})
-    move("10.157.174.245","ring",[0,0,0])
-    call_method("10.157.174.245",12000,"grasp",{"speed":0.1,"width":0.04,"force":0.2,"epsilon_inner":1,"epsilon_outer":1})
-    move("10.157.174.245","026_left_pre",[0,0,0])
+    move_joint("10.157.175.135","026_left_pre")
+    call_method("10.157.175.135",12000,"move_gripper",{"speed":1,"force":1,"width":0})
+    move("10.157.175.135","ring",[0,0,0])
+    call_method("10.157.175.135",12000,"grasp",{"speed":0.1,"width":0.04,"force":0.2,"epsilon_inner":1,"epsilon_outer":1})
+    move("10.157.175.135","026_left_pre",[0,0,0])
 
 def gear_reset(ring_inside = False):
-    #call_method("10.157.174.245",12000,"move_gripper",{"force":100,"speed":0.08,"width":0.0,"espilon_inner":1,"epsilon_outer":1})
+    #call_method("10.157.175.135",12000,"move_gripper",{"force":100,"speed":0.08,"width":0.0,"espilon_inner":1,"epsilon_outer":1})
     if ring_inside:
-        call_method("10.157.174.245",12000,"move_gripper",{"speed":1,"force":1,"width":0})
-    result = extract("10.157.174.245","026_left","026_left_container_approach","026_left_container",12000)
-    #move("10.157.174.245","026_left_container_approach",[0,0,0],12000,True)
+        call_method("10.157.175.135",12000,"move_gripper",{"speed":1,"force":1,"width":0})
+    result = extract("10.157.175.135","026_left","026_left_container_approach","026_left_container",12000)
+    #move("10.157.175.135","026_left_container_approach",[0,0,0],12000,True)
     if not result["result"]["success"]:
         return False
-    move("10.157.174.245","026_left_container_above",[0,0,0],12000,True)
-    move_joint("10.157.174.245","026_left_start",12000,True)
-    move_joint("10.157.174.245","026_left_pre")
+    move("10.157.175.135","026_left_container_above",[0,0,0],12000,True)
+    move_joint("10.157.175.135","026_left_start",12000,True)
+    move_joint("10.157.175.135","026_left_pre")
     return True
 
 def gear_insertion():
-    call_method("10.157.174.245",12000,"set_grasped_object",{"object":"026_left"})
-    move_joint("10.157.174.245","026_left_pre")
+    call_method("10.157.175.135",12000,"set_grasped_object",{"object":"026_left"})
+    move_joint("10.157.175.135","026_left_pre")
 
-    move_joint("10.157.174.245","hold",13000,True)
-    move_joint("10.157.174.245","026_left_start",12000,True)
-    move_joint("10.157.174.245","026_left_container_above",12000,True)
-    move("10.157.174.245","026_left_container_approach",[0,0,0],12000,True)
+    move_joint("10.157.175.135","hold",13000,True)
+    move_joint("10.157.175.135","026_left_start",12000,True)
+    move_joint("10.157.175.135","026_left_container_above",12000,True)
+    move("10.157.175.135","026_left_container_approach",[0,0,0],12000,True)
 
     content = {
         "skill": {
@@ -931,7 +931,7 @@ def gear_insertion():
             "F_ext_contact": [3.0, 2.0]
         }
     }
-    t = Task("10.157.174.245")
+    t = Task("10.157.175.135")
     t.add_skill("insertion", "TaxInsertion", content)
     t.start()
     result = t.wait()
@@ -974,6 +974,12 @@ def stop_services(robots:list):
             print(e)
 
 def attention(modules):
+    for m in ["006","020","017"]:  #skip some modules
+        try:
+            index = modules.index(m)
+            modules.pop(index)
+        except ValueError:
+            continue
     ips = get_ips(modules)
     move_some(ips, "reset")
     threads = []
@@ -990,7 +996,7 @@ def attention(modules):
     for r in ips:
         call_method(r, 12000, "stop_task")
         call_method(r, 13000, "stop_task")
-        if r == "10.157.174.245":
+        if r == "10.157.175.135":
             continue
         #threads.append(Thread(target=wink_thread, args=(r, 12000)))
         #threads.append(Thread(target=wink_thread, args=(r, 13000)))
