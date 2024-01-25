@@ -2182,6 +2182,13 @@ def plot_big_collective():
     legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (10 agents)")
     axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
     print("\ngetting collective data")
+    mean_collective, confidence_collective = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5_reverse"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective = [x/60 for x in mean_collective]
+    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
+    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
+    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (10 agents) reverse sheduled")
+    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    print("\ngetting collective data")
     mean_collective, confidence_collective = get_big_collective_data(["5agents_25tasks","collective"])  # history: ["5agents_25tasks","collective"]
     mean_collective = [x/60 for x in mean_collective]
     lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
