@@ -2029,7 +2029,7 @@ def get_confidence(listoflists, confidence=0.95):
         interval.append(st.t.interval(confidence=confidence, df=len(points)-1, loc=mean[-1], scale=st.sem(points)))
     return mean, interval
 
-def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], single_agent=False, cutoff=None):
+def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], single_agent=False, cutoff=None, skip_module=set()):
     
     p = DataProcessor()
     if cutoff is None:  #plot old comparison
@@ -2069,6 +2069,8 @@ def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], singl
     max_instances = 0
     task_finished_times = []
     for xxx in modules:
+        if xxx in skip_module:
+            continue
         results = get_multiple_experiment_data("collective-"+xxx+".rsi.ei.tum.de", "insertion", "ml_results", {"meta.tags": tags})
         #print(len(results), "results found for ",xxx)
         for result in results:
@@ -2256,54 +2258,54 @@ def plot_pitstop_alpha():
     fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
     
     print("\ngetting data - collective with 10 agents")
-    mean_collective, confidence_collective = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (10 agents)")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_10, confidence_collective_10 = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_10 = [x/60 for x in mean_collective_10]
+    lower_bound_confindece_collective_10 = [x[0]/60 for x in confidence_collective_10]
+    upper_bound_confindece_collective_10 = [x[1]/60 for x in confidence_collective_10]
+    legend_collective = axes1.plot(mean_collective_10, range(len(mean_collective_10)), label="collective knowledge sharing (10 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_10)), lower_bound_confindece_collective_10, upper_bound_confindece_collective_10, alpha=0.2)
     print("\ngetting data - collective with 10 agents reverse")
-    mean_collective, confidence_collective = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5_reverse"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (10 agents) reverse sheduled")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_10_re, confidence_collective_10_re = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5_reverse"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_10_re = [x/60 for x in mean_collective_10_re]
+    lower_bound_confindece_collective_10_re = [x[0]/60 for x in confidence_collective_10_re]
+    upper_bound_confindece_collective_10_re = [x[1]/60 for x in confidence_collective_10_re]
+    legend_collective = axes1.plot(mean_collective_10_re, range(len(mean_collective_10_re)), label="collective knowledge sharing (10 agents) reverse sheduled")
+    axes1.fill_betweenx(range(len(mean_collective_10_re)), lower_bound_confindece_collective_10_re, upper_bound_confindece_collective_10_re, alpha=0.2)
     print("\ngetting data - collective with 5 agents")
-    mean_collective, confidence_collective = get_big_collective_data(["5agents_25tasks","collective"])  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (5 agents)")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_5, confidence_collective_5 = get_big_collective_data(["5agents_25tasks","collective"])  # history: ["5agents_25tasks","collective"]
+    mean_collective_5 = [x/60 for x in mean_collective_5]
+    lower_bound_confindece_collective_5 = [x[0]/60 for x in confidence_collective_5]
+    upper_bound_confindece_collective_5 = [x[1]/60 for x in confidence_collective_5]
+    legend_collective = axes1.plot(mean_collective_5, range(len(mean_collective_5)), label="collective knowledge sharing (5 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_5)), lower_bound_confindece_collective_5, upper_bound_confindece_collective_5, alpha=0.2)
     print("\ngetting data - collective with 6 agents")
-    mean_collective, confidence_collective = get_big_collective_data(["6agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (6 agents)")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_6, confidence_collective_6 = get_big_collective_data(["6agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_6 = [x/60 for x in mean_collective_6]
+    lower_bound_confindece_collective_6 = [x[0]/60 for x in confidence_collective_6]
+    upper_bound_confindece_collective_6 = [x[1]/60 for x in confidence_collective_6]
+    legend_collective = axes1.plot(mean_collective_6, range(len(mean_collective_6)), label="collective knowledge sharing (6 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_6)), lower_bound_confindece_collective_6, upper_bound_confindece_collective_6, alpha=0.2)
     print("\ngetting data - collective with 7 agents")
-    mean_collective, confidence_collective = get_big_collective_data(["7agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (7 agents)")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_7, confidence_collective_7 = get_big_collective_data(["7agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_7 = [x/60 for x in mean_collective_7]
+    lower_bound_confindece_collective_7 = [x[0]/60 for x in confidence_collective_7]
+    upper_bound_confindece_collective_7 = [x[1]/60 for x in confidence_collective_7]
+    legend_collective = axes1.plot(mean_collective_7, range(len(mean_collective_7)), label="collective knowledge sharing (7 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_7)), lower_bound_confindece_collective_7, upper_bound_confindece_collective_7, alpha=0.2)
     print("\ngetting data - collective with 8 agents")
-    mean_collective, confidence_collective = get_big_collective_data(["8agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (8 agents)")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_8, confidence_collective_8 = get_big_collective_data(["8agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_8 = [x/60 for x in mean_collective_8]
+    lower_bound_confindece_collective_8 = [x[0]/60 for x in confidence_collective_8]
+    upper_bound_confindece_collective_8 = [x[1]/60 for x in confidence_collective_8]
+    legend_collective = axes1.plot(mean_collective_8, range(len(mean_collective_8)), label="collective knowledge sharing (8 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_8)), lower_bound_confindece_collective_8, upper_bound_confindece_collective_8, alpha=0.2)
     print("\ngetting data - collective with 9 agents")
-    mean_collective, confidence_collective = get_big_collective_data(["9agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (9 agents)")
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
+    mean_collective_9, confidence_collective_9 = get_big_collective_data(["9agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_9 = [x/60 for x in mean_collective_9]
+    lower_bound_confindece_collective_9 = [x[0]/60 for x in confidence_collective_9]
+    upper_bound_confindece_collective_9 = [x[1]/60 for x in confidence_collective_9]
+    legend_collective = axes1.plot(mean_collective_9, range(len(mean_collective_9)), label="collective knowledge sharing (9 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_9)), lower_bound_confindece_collective_9, upper_bound_confindece_collective_9, alpha=0.2)
     
     #print(["\n5agents_25tasks_rearanged", "collective"])
     #mean_collective_re, confidence_collective_re = get_big_collective_data(["5agents_25tasks_rearanged", "collective"])  # history: ["5agents_25tasks_rearanged", "collective"]
@@ -2313,6 +2315,7 @@ def plot_pitstop_alpha():
     #legend_collective_re = axes1.plot(mean_collective_re, range(len(mean_collective_re)), label="collective knowledge sharing (5 agents, optimised sequence)")
     #axes1.fill_betweenx(range(len(mean_collective_re)), lower_bound_confindece_collective_re, upper_bound_confindece_collective_re, alpha=0.2)
     
+
     axes1.set_xlabel("time [min]", fontsize=14)
     axes1.set_ylabel("learned skills [1]", fontsize=14)
     axes1.set_title("learn 25 skills | 5 agent collective VS 10 agent collective", fontsize=14)
@@ -2320,7 +2323,20 @@ def plot_pitstop_alpha():
     axes1.set_xlim((0,180))
     axes1.grid()
     axes1.legend(loc="lower right", fontsize=14)
-    plt.show()
+    plt.show(block=False)
+
+    print("total learning time comparison")
+    fig2, axes2 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
+    y = []
+    for time in [mean_collective_5,mean_collective_6,mean_collective_7,mean_collective_8,mean_collective_9,mean_collective_10]:
+        y.append(time[-1])
+    axes2.plot(range(5,11),y,label="agent dependent total learning time (25 tasks)")
+    axes2.set_ylabel("learning time [min]")
+    axes2.set_xlabel("number of agents")
+    axes2.set_title("collective with 25 tasks")
+    axes2.grid()
+    axes2.legend(loc="upper right", fontsize=14)
+    plt.show(block=False)
 
 
 def video_plot_big_collective():
