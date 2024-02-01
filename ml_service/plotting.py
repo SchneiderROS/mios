@@ -16,6 +16,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d import Axes3D
 import csv
 import scipy.stats as st
+from matplotlib import colors
+import seaborn as sns
 
 plot = Plotter()
 
@@ -2280,6 +2282,52 @@ def video_plot_big_collective():
 
 #[x for sublist in listoflists for x in sublist]
 #[x for sublist in listoflistsoflists for subsublist in sublist for x in subsublist]
+    
+def plot_transfer_map():
+    tags_list = [["10agents_25tasks","collective","ps_alpha_5_reverse","n1"],["10agents_25tasks","collective","ps_alpha_5","n1"]]
+    modules = list_block_1 + list_block_2 + list_U
+    transfer_matrix = np.ones((len(modules),len(modules)))*float("inf")  #init transfer matrix
+    for m_index, m in enumerate(modules):
+        results = []
+        for tags in tags_list:
+            results.extend(get_multiple_experiment_data("collective-"+m+".rsi.ei.tum.de","insertion", filter={"meta.tags":tags}))
+        for result in results:
+            for trial in result.trials:
+                if trial["q_metric"]["success"] is False:
+                    continue
+                transfer_index = None
+                try:
+                    external = eval(trial["external"])["skill_instance"][:3]
+                    transfer_index = modules.index(external)
+                    print(external, transfer_index)
+                except TypeError:
+                    transfer_index = m_index
+                if trial["q_metric"]["final_cost"] < transfer_matrix[m_index][transfer_index]:
+                    transfer_matrix[m_index][transfer_index] = trial["q_metric"]["final_cost"]
+    fig, ax = plt.subplots(figsize=(16, 12))
+    color_list = ["#E7F1E7","#D4E6D4","#BDD7BD","#A7CBA7","#8DBB8D","#78AE78","#5E9E5E","#479147","#308030","#197519","#016701"]
+    color_list.reverse()
+    cmap = colors.ListedColormap(color_list)
+    bounds = [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
+    # bounds = list(range(11))
+    norm = colors.BoundaryNorm(bounds, cmap.N)    # labels = ["task"+str(i) for i in range(1,26)]
+    labels = ["IEC(C7)", "Triangle-1", "Hexagon-1", "USB-1", "Triangle-2", "Cylinder-1", "Key-1", "Plug(type F)-1", "Audio Jack\n(3.5mm)", "IEC(C13)", "Cylinder-2", "Hexagon-2", "HDMI-1", "Key-2", "Cylinder-3", "Square-1", "Hexagon-3", "Square-2", "Audio jack\n(6.35mm)", "USB-2", "Plug(type C)", "Key-3", "Plug(type F)-2", "HDMI-2", "Key-4"]
+
+    plt.clf()
+    # c = sns.color_palette("light:#006600", as_cmap=True)
+    ax = sns.heatmap(transfer_matrix, linewidth=0.5, cmap=cmap, norm=norm, annot=True, fmt=".2f") #fmt="g"
+
+    ax.set_xticklabels(labels, rotation=90)    
+    ax.set_yticklabels(labels, rotation=0)  
+    cbar = ax.collections[0].colorbar
+    cbar.set_ticks(bounds)
+    # ax.set_yticks([])  # Remove y labels
+    # plt.title("Collective Learning Process")
+
+    ax.set_title(f'Collective Learning Process')
+    plt.show(block=False)
+        
+
 
 def plot_collective_experiment_time():
     import time
