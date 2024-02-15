@@ -37,7 +37,7 @@ cutoff = {  '001_left': 0.7080000000000001,   # best solution found *1.2
 
 def var_sr_collective(sr:float, n_agents: int, n_current_iter:int, tags:list, reverse=False):
     """
-    sr: sample rate [0, 0.2, 0.4, 0.6, 0.8, 1]
+    sr: sample rate [0, 0.2, 0.4, 0.6, 0.8, 1]; 0.4 is already finished in pitstop-alpha
     """
     modules = copy.deepcopy(list_robots)
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
@@ -121,5 +121,5 @@ def var_sr_collective(sr:float, n_agents: int, n_current_iter:int, tags:list, re
 def bravo_experiment():
     num = 5 # this number is the optimal number from 
     for i in range(10):  # iteration
-        for sr in [0, 0.2, 0.4, 0.6, 0.8, 1]:
-            var_sr_collective( sr,num,i, ["sr"+str(n),"collective","ps_alpha_beta"])
+        for sr in [0, 0.2, 0.6, 0.8, 1]:
+            var_sr_collective( sr,num,i, ["sr"+str(num),"collective","ps_alpha_beta"])
