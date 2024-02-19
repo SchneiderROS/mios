@@ -2308,6 +2308,34 @@ def plot_pitstop_alpha():
     upper_bound_confindece_collective_9 = [x[1]/60 for x in confidence_collective_9]
     legend_collective = axes1.plot(mean_collective_9, range(len(mean_collective_9)), label="collective knowledge sharing (9 agents)")
     axes1.fill_betweenx(range(len(mean_collective_9)), lower_bound_confindece_collective_9, upper_bound_confindece_collective_9, alpha=0.2)
+    print("\ngetting data - collective with 1 agents")
+    mean_collective_1, confidence_collective_1 = get_big_collective_data(["1agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_1 = [x/60 for x in mean_collective_1]
+    lower_bound_confindece_collective_1 = [x[0]/60 for x in confidence_collective_1]
+    upper_bound_confindece_collective_1 = [x[1]/60 for x in confidence_collective_1]
+    legend_collective = axes1.plot(mean_collective_1, range(len(mean_collective_1)), label="collective knowledge sharing (1 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_1)), lower_bound_confindece_collective_1, upper_bound_confindece_collective_1, alpha=0.2)
+    print("\ngetting data - collective with 2 agents")
+    mean_collective_2, confidence_collective_2 = get_big_collective_data(["2agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_2 = [x/60 for x in mean_collective_2]
+    lower_bound_confindece_collective_2 = [x[0]/60 for x in confidence_collective_2]
+    upper_bound_confindece_collective_2 = [x[1]/60 for x in confidence_collective_2]
+    legend_collective = axes1.plot(mean_collective_2, range(len(mean_collective_2)), label="collective knowledge sharing (2 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_2)), lower_bound_confindece_collective_2, upper_bound_confindece_collective_2, alpha=0.2)
+    print("\ngetting data - collective with 3 agents")
+    mean_collective_3, confidence_collective_3 = get_big_collective_data(["3agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_3 = [x/60 for x in mean_collective_3]
+    lower_bound_confindece_collective_3 = [x[0]/60 for x in confidence_collective_3]
+    upper_bound_confindece_collective_3 = [x[1]/60 for x in confidence_collective_3]
+    legend_collective = axes1.plot(mean_collective_3, range(len(mean_collective_3)), label="collective knowledge sharing (3 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_3)), lower_bound_confindece_collective_3, upper_bound_confindece_collective_3, alpha=0.2)
+    print("\ngetting data - collective with 4 agents")
+    mean_collective_4, confidence_collective_4 = get_big_collective_data(["4agents_25tasks","collective"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
+    mean_collective_4 = [x/60 for x in mean_collective_4]
+    lower_bound_confindece_collective_4 = [x[0]/60 for x in confidence_collective_4]
+    upper_bound_confindece_collective_4 = [x[1]/60 for x in confidence_collective_4]
+    legend_collective = axes1.plot(mean_collective_4, range(len(mean_collective_4)), label="collective knowledge sharing (4 agents)")
+    axes1.fill_betweenx(range(len(mean_collective_4)), lower_bound_confindece_collective_4, upper_bound_confindece_collective_4, alpha=0.2)
     
     #print(["\n5agents_25tasks_rearanged", "collective"])
     #mean_collective_re, confidence_collective_re = get_big_collective_data(["5agents_25tasks_rearanged", "collective"])  # history: ["5agents_25tasks_rearanged", "collective"]
@@ -2331,7 +2359,12 @@ def plot_pitstop_alpha():
     fig2, axes2 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
     y = []
     var = []
-    for time,confidence in zip([mean_collective_5,mean_collective_6,mean_collective_7,mean_collective_8,mean_collective_9,mean_collective_10], [
+    for i,(time,confidence) in enumerate(zip([mean_collective_1,mean_collective_2,mean_collective_3,mean_collective_4,mean_collective_5,
+    mean_collective_6,mean_collective_7,mean_collective_8,mean_collective_9,mean_collective_10], [
+        (lower_bound_confindece_collective_1[-1], upper_bound_confindece_collective_1[-1]),
+        (lower_bound_confindece_collective_2[-1], upper_bound_confindece_collective_2[-1]),
+        (lower_bound_confindece_collective_3[-1], upper_bound_confindece_collective_3[-1]),
+        (lower_bound_confindece_collective_4[-1], upper_bound_confindece_collective_4[-1]),
         (lower_bound_confindece_collective_5[-1], upper_bound_confindece_collective_5[-1]),
         (lower_bound_confindece_collective_6[-1], upper_bound_confindece_collective_6[-1]),
         (lower_bound_confindece_collective_7[-1], upper_bound_confindece_collective_7[-1]),
@@ -2339,14 +2372,15 @@ def plot_pitstop_alpha():
         (lower_bound_confindece_collective_9[-1], upper_bound_confindece_collective_9[-1]),
         (lower_bound_confindece_collective_10[-1], upper_bound_confindece_collective_10[-1]),
         
-    ]):
-        y.append(time[-1])
-        var.append(confidence)
+    ])):
+        y.append(time[-1]*i)
+        var.append([v + (time[-1]*(i-1) ) for v in confidence])
+        #var.append(confidence)
     print(var)
-    axes2.plot(range(5,11),y,label="agent dependent total learning time (25 tasks)")
-    axes2.fill_between(range(5,11), [v[0] for v in var], [v[1] for v in var], alpha=0.2)
-    axes2.set_ylim(0,200)
-    axes2.set_ylabel("learning time [min]")
+    axes2.plot(range(1,11),y,label="agent dependent total learning time (25 tasks)")
+    axes2.fill_between(range(1,11), [v[0] for v in var], [v[1] for v in var], alpha=0.2)
+    #axes2.set_ylim(0,200)
+    axes2.set_ylabel("learning time [min] * agent")
     axes2.set_xlabel("number of agents")
     axes2.set_title("collective with 25 tasks")
     axes2.grid()
