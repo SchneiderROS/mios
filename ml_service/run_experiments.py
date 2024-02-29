@@ -1419,7 +1419,7 @@ def cmaes_run(if_reverse = False):
     #sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     sc = CMAESLearner(9, 20, False).get_configuration()
     #tags = ["isolated", "CMAES", "25Tasks"]
-    tags = ["test", "CMAEStest"]       
+    tags = ["CMAES", "25tasks", "noSharing"]       
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
     for n_current_iter in range(10): # reverse one
         tasks = {}
