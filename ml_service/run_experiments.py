@@ -273,7 +273,7 @@ def learn_from_source(robot, insertable):
         dualarm_skills.append(("extract", "TaxExtraction", extract_context))
 
     dualarm_cmd = {"agent":robot,"port":13000,"skills":dualarm_skills,"sleep":1}
-    learn_single_task(robot, pd, sc, ["default_context"], 0, False, knowledge, False, 8000, dualarm_cmd)
+    learn_single_task(robot, pd, sc, ["default_context"], 0, False, knowledge.to_dict(), False, 8000, dualarm_cmd)
     input("press enter to stop robot")
     stop_services([robot])
 
@@ -1418,8 +1418,8 @@ def cmaes_run(if_reverse = False):
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     #sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
     sc = CMAESLearner(9, 20, False).get_configuration()
-    #tags = ["isolated", "CMAES", "25Tasks"]
-    tags = ["test", "CMAEStest"]       
+    tags = ["isolated", "CMAES", "25Tasks", "9ind20gen","additional_run"]
+    #tags = ["test", "CMAEStest"]       
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
     for n_current_iter in range(10): # reverse one
         tasks = {}
