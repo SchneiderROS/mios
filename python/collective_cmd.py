@@ -15,11 +15,11 @@ list_block_1 = ["001", #"002",
                 "003", "004", "005", 
                 "006", "007", "008", "010", 
                 "011", "012"]
-list_block_2 = ["009","013","014","015","016","017",
+list_block_2 = ["009","013","014","015","016","017","041",
                 # "018",#"020",
+                "041",
                 "021","022"]
-list_U = ["023", "024", "025", "027", "028", "029"
-          ] #, "026"
+list_U = ["023", "024", "025", "027", "028", "029"] #, "026"
 list_external = ["050"]
 def get_ips(module_list):
     with open("ip.json", "r") as jsonfile:
@@ -294,7 +294,7 @@ def copy_object(source:str, destinations:list, object_name:str, robot_arm="left"
         t.join()
     print("sending completed. Restart cluster!")
 
-def move(robot, location, offset, port=12000, wait = True):
+def move(robot, location, offset = [0,0,0], port=12000, wait = True):
     context = {
         "skill": {
             "p0":{
