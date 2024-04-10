@@ -83,7 +83,7 @@ bool SkillParametersLLInterface::from_json(const nlohmann::json &parameters){
 
 std::map<std::string,std::set<std::string> > SkillParametersLLInterface::get_parameter_list(){
     return {{"ip_dst",{}},{"port_dst",{}},{"host",{}},{"multicast_ip",{}},{"port_src",{}},{"remote_event_protocol",{}},{"terminate_when_loc",{}},{"multicast",{}},{"multicast_group",{}},{"LLInterface_mode",{}},
-        };
+        {"twist",{"static_frame"}}};
 }
 
 LLInterface::LLInterface(const std::string &name, Memory *memory, Portal *portal):Skill("LLInterface",{},name,memory,portal,
@@ -122,6 +122,7 @@ std::shared_ptr<ManipulationPrimitive> LLInterface::get_initial_mp(const Percept
 
 std::optional<std::shared_ptr<ManipulationPrimitive> > LLInterface::graph_transition(const Percept &p){
     if(get_active_mp()->get_name()=="handshake"){
+        spdlog::debug("LLInterface: waiting for handshake");
         if(m_memory->get_event("handshake")!=nullptr){
             spdlog::debug("LLInterface: Received handshake (slave)");
             std::shared_ptr<ManipulationPrimitive> mp = create_mp("receive",p);
@@ -162,10 +163,6 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > LLInterface::graph_transi
                     spdlog::error("Could not open incoming udp channel.");
                     throw SkillException();
                 }
-                //std::cout << mp->get_strategy<RemoteCartPoseStrategy>("LLInterface")->m_O_T_EE_d_in << std::endl;
-                mp->create_strategy<FFStrategy>("feed_forward",1);
-                mp->get_strategy<FFStrategy>("feed_forward")->set_TF_F_ff(read_parameters<Params>()->direct_cart.F_ff,m_memory->read_parameters()->limits.cartesian_space.dF_J_max);
-                mp->get_strategy<FFStrategy>("feed_forward")->set_frame(true);
             }
             if(read_parameters<Params>()->mode==LLInterfaceMode::llJointPose){
                 mp->create_strategy<RemoteJointPoseStrategy>("LLInterface",1);
