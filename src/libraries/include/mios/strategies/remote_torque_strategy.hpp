@@ -32,6 +32,9 @@ private:
     Portal* m_portal;
     std::string m_stream_name;
     Eigen::Matrix<double,7,1> m_alpha;
+
+    std::array<double,7> tau_y, tau_dy;
+    bool ds_inter = false;
 };
 
 }
