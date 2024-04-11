@@ -64,7 +64,7 @@ logs/
 build*
 venv
 _deps
-mios
+mios/
 
 # IDE files #
 ###########
@@ -81,4 +81,4 @@ doc/latex/*
 ########
 src/ros_workspace/devel
 include/commons/config.hpp
-mios/*
+!**/include/mios  
