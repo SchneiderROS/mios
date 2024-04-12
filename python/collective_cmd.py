@@ -482,20 +482,23 @@ def lltest(module = "013"):
     robot_ip = copy.deepcopy(get_ips([module]))[0]
     own_ip = "10.0.2.35"
     move_joint(robot_ip, "test")
-    current_state = get_current_percept(robot_ip, "10.0.2.35", 12345,["TF_dX_d"])["TF_dX_d"]
+    current_state = get_current_percept(robot_ip, "10.0.2.35", 12345,["TF_T_EE_d"])["TF_T_EE_d"]
     llInterface_context = {
         "skill": {
             "ip_dst": own_ip,  # IP to send answers to
             "port_dst": 8888,  # port to send answers to
             "port_src": 8888,  # receiving port
-            "LLInterface_mode": "Twist",
+            "LLInterface_mode": "CartPose",
             "twist": {"static_frame": True}
         },
         "control": {
-            "control_mode": 1,
-            "joint_imp": {
-                "K_theta": [2500,2200,2800,2600,2300,2200,250]
-            }
+            "control_mode": 0,
+            #"joint_imp": {
+            #    "K_theta": [2500,2200,2800,2600,2300,2200,250]
+            #},
+            #"cart_imp": {
+            #    "K_x": [2000, 2000, 2000, 250, 250, 250]
+            #}
         }
     }    
     t = Task(robot_ip)
@@ -511,14 +514,14 @@ def lltest(module = "013"):
     try:
         while True:
             if increase_angle:
-                current_state[-1] += 0.005
+                current_state[-2] += 0.005
             else:
-                current_state[-1] -= 0.005
-            if current_state[-1] > 1 and increase_angle:
+                current_state[-2] -= 0.005
+            if current_state[-2] > 1 and increase_angle:
                 increase_angle = False
-            if current_state[-1] < -1 and not increase_angle:
+            if current_state[-2] < -1 and not increase_angle:
                 increase_angle = True
-            current_state[0] = 0.05
+            #current_state[0] = 0.05
             udp_send_message_teleformat(robot_ip, 8888, current_state, counter=counter)
             print(current_state)
             time.sleep(0.01)
@@ -530,10 +533,10 @@ def lltest(module = "013"):
     t.wait()
 
 def subscrib_telemetry(robot_ip, receiving_ip, receiving_port, data:list):
-    call_method(robot_ip,12000, "subscribe_telemetry",{"subscribe":["q_d","q"],"ip":receiving_ip,"port":receiving_port})
+    call_method(robot_ip,12000, "subscribe_telemetry",{"subscribe":data,"ip":receiving_ip,"port":receiving_port})
     if udp_receiver(receiving_ip,receiving_port):
         print("unsubscribe...")
-        call_method(robot_ip,12000, "unsubscribe_telemetry",{"subscribe":["q_d","q"],"ip":receiving_ip,"port":receiving_port})
+        call_method(robot_ip,12000, "unsubscribe_telemetry",{"subscribe":data,"ip":receiving_ip,"port":receiving_port})
 
 def get_current_percept(robot_ip,receiving_ip,receiving_port, percepts:list):
     call_method(robot_ip,12000, "subscribe_telemetry",{"subscribe":percepts,"ip":receiving_ip,"port":receiving_port})
@@ -575,10 +578,12 @@ def udp_receiver(ip, port):
             print("   --- Interrupt writing ctrl+c ---")
             while True: 
                 data, adrr = s.recvfrom(8192) 
-                print(json.loads(data.decode("utf-8")))
-                #print("q_d: ", json.loads(data.decode("utf-8"))["q_d"])
-                #print("q:   ",json.loads(data.decode("utf-8"))["q"])
-                
+                data_dict = json.loads(data.decode("utf-8"))
+                for key, value in data_dict.items():
+                    if type(value) == list:
+                        print(key, ": ", [float("{0:0.2f}".format(v)) for v in value])
+                    else: 
+                        print(key, ": ", value)
         except KeyboardInterrupt:
             s.close()
         return True
