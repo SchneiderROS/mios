@@ -1,7 +1,6 @@
 from definitions.templates import *
 from definitions.cost_functions import *
 from definitions.service_configs import *
-from ml_service import mongodb_client
 from utils.database import delete_global_knowledge
 from utils.experiment_wizard import *
 from utils.taxonomy_utils import *
