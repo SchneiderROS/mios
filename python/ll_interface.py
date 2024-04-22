@@ -271,7 +271,7 @@ def move_joint(robot, location,port=12000, wait=True):
     t0.start()
     if wait:
         return t0.wait()
-def extract(obj_nr):
+def extract(ip, obj_nr):
     extraction_context = {
         "skill": {
             "objects": {
@@ -302,7 +302,7 @@ def extract(obj_nr):
         }
     }
     
-    t = Task("localhost")
+    t = Task(ip)
     t.add_skill("extraction", "TaxExtraction", extraction_context)
     t.start()
     time.sleep(0.1)
@@ -310,7 +310,7 @@ def extract(obj_nr):
 
 
 def extract_and_reset(ip, obj_nr):
-    extract(obj_nr)
+    extract(ip, obj_nr)
     # move arms to pre-start pose
     move_joint(ip, obj_nr + "_left_container_approach", 12000)
     move_joint(ip, "hold", 13000)
