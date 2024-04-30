@@ -155,16 +155,16 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > LLInterface::graph_transi
                 mp->create_strategy<RemoteCartPoseStrategy>("LLInterface",1);
                 if(!mp->get_strategy<RemoteCartPoseStrategy>("LLInterface")->connect(m_portal,"remote_cart_pose_in",get_parameters<Params>()->port_src,256,3,10000,20,read_parameters<Params>()->multicast, read_parameters<Params>()->host, read_parameters<Params>()->multicast_ip)){
                     spdlog::error("Could not open incoming udp channel.");
-                    return{};
-                    //throw SkillException();
+                    //return{};
+                    throw SkillException();
                 }
             }
             if(read_parameters<Params>()->mode==LLInterfaceMode::llJointPose){
                 mp->create_strategy<RemoteJointPoseStrategy>("LLInterface",1);
                 if(!mp->get_strategy<RemoteJointPoseStrategy>("LLInterface")->connect(m_portal,"remote_joint_pose_in",get_parameters<Params>()->port_src,256,3,10000,20,read_parameters<Params>()->multicast, read_parameters<Params>()->host, read_parameters<Params>()->multicast_ip)){
                     spdlog::error("Could not open incoming udp channel.");
-                    return{};
-                    //throw SkillException();
+                    //return{};
+                    throw SkillException();
                     
                 }
             }
@@ -172,8 +172,8 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > LLInterface::graph_transi
                 mp->create_strategy<RemoteTwistStrategy>("LLInterface",1);
                 if(!mp->get_strategy<RemoteTwistStrategy>("LLInterface")->connect(m_portal,"remote_twist_in",get_parameters<Params>()->port_src,256,3,10000,200,read_parameters<Params>()->multicast, read_parameters<Params>()->host, read_parameters<Params>()->multicast_ip)){
                     spdlog::error("Could not open incoming udp channel.");
-                    return{};
-                    //throw SkillException();
+                    //return{};
+                    throw SkillException();
                 }
             }
             if(read_parameters<Params>()->mode==LLInterfaceMode::llTorque){
@@ -183,16 +183,16 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > LLInterface::graph_transi
                 }
                 if(!mp->get_strategy<RemoteTorqueStrategy>("LLInterface")->connect(m_portal,"remote_torque_in",get_parameters<Params>()->port_src,256,3,10000,200,read_parameters<Params>()->multicast, read_parameters<Params>()->host, read_parameters<Params>()->multicast_ip)){
                     spdlog::error("Could not open incoming udp channel.");
-                    return{};
-                    //throw SkillException();
+                    //return{};
+                    throw SkillException();
                 }
             }
             if(read_parameters<Params>()->mode==LLInterfaceMode::llWrench){
                 mp->create_strategy<RemoteWrenchStrategy>("LLInterface",1);
                 if(!mp->get_strategy<RemoteWrenchStrategy>("LLInterface")->connect(m_portal,"remote_wrench_in",get_parameters<Params>()->port_src,256,3,10000,200,read_parameters<Params>()->multicast, read_parameters<Params>()->host, read_parameters<Params>()->multicast_ip)){
                     spdlog::error("Could not open incoming udp channel.");
-                    return{};
-                    //throw SkillException();
+                    //return{};
+                    throw SkillException();
                 }
             }
             return mp;
