@@ -94,21 +94,18 @@ LLInterface::LLInterface(const std::string &name, Memory *memory, Portal *portal
 
 LLInterface::~LLInterface(){
     if(read_parameters<Params>()->mode==LLInterfaceMode::llCartPose){
-        m_portal->close_udp_outstream("remote_cart_pose_out");
-        m_portal->close_udp_outstream("remote_force_out");
         m_portal->close_udp_instream("remote_cart_pose_in");
-        m_portal->close_udp_instream("remote_wrench_in");
     }
     if(read_parameters<Params>()->mode==LLInterfaceMode::llJointPose){
-        m_portal->close_udp_outstream("remote_joint_pose_out");
-        m_portal->close_udp_outstream("remote_torque_out");
         m_portal->close_udp_instream("remote_joint_pose_in");
-        m_portal->close_udp_instream("remote_torque_in");
     }
     if(read_parameters<Params>()->mode==LLInterfaceMode::llTwist){
-        m_portal->close_udp_outstream("remote_twist_out");
-        m_portal->close_udp_outstream("remote_force_out");
         m_portal->close_udp_instream("remote_twist_in");
+    }
+        if(read_parameters<Params>()->mode==LLInterfaceMode::llTorque){
+        m_portal->close_udp_instream("remote_torque_in");
+    }
+        if(read_parameters<Params>()->mode==LLInterfaceMode::llWrench){
         m_portal->close_udp_instream("remote_wrench_in");
     }
 }
@@ -204,16 +201,19 @@ std::optional<std::shared_ptr<ManipulationPrimitive> > LLInterface::graph_transi
             spdlog::debug("LLInterface: Terminating LLInterface (slave)");
             std::shared_ptr<ManipulationPrimitive> mp = create_mp("handshake",p);
             if(read_parameters<Params>()->mode==LLInterfaceMode::llCartPose){
-                m_portal->close_udp_outstream("remote_force_out");
                 m_portal->close_udp_instream("remote_cart_pose_in");
             }
             if(read_parameters<Params>()->mode==LLInterfaceMode::llJointPose){
-                m_portal->close_udp_outstream("remote_torque_out");
                 m_portal->close_udp_instream("remote_joint_pose_in");
             }
             if(read_parameters<Params>()->mode==LLInterfaceMode::llTwist){
-                m_portal->close_udp_outstream("remote_force_out");
                 m_portal->close_udp_instream("remote_twist_in");
+            }
+            if(read_parameters<Params>()->mode==LLInterfaceMode::llTorque){
+                m_portal->close_udp_instream("remote_torque_in");
+            }
+            if(read_parameters<Params>()->mode==LLInterfaceMode::llWrench){
+                m_portal->close_udp_instream("remote_wrench_in");
             }
             nlohmann::json response;
             mp->create_strategy<IdleStrategy>("idle",1);
