@@ -1,4 +1,3 @@
-import subprocess
 from deep_learning.agents.ppo import PPO
 from deep_learning.agents.sac import SAC
 from deep_learning.agents.ddpg import DDPG
@@ -6,9 +5,10 @@ from deep_learning.utils.utils import Dict
 from configparser import ConfigParser
 from desk.mongodb_client import MongoDBClient
 from torch.utils.tensorboard import SummaryWriter
-import requests
 from datetime import datetime
 import xmlrpc.client
+import subprocess
+import requests
 import pickle
 import socket
 import numpy as np
@@ -21,15 +21,32 @@ import asyncio
 
 from desk.mongodb_client import MongoDBClient
 
+modelKnowledge0={'mode':0,
+                'scaling':[1,1,1,1,1,1],
+                'actionLimits':[[-1,1],[-1,1],[-1,1],[-1,1],[-1,1],[-1,1],[-1,1]],
+                'sigmaScaling':0.1,
+                'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
-modelKnowledge={'mode':1,
+modelKnowledge1={'mode':1,
+                'scaling':[1,1,1,1,1,1],
+                'actionLimits':[[-2,2],[-2,2],[-2,2],[-2,2],[-2,2],[-2,2]],
+                'sigmaScaling':0.1,
+                'graspOrientation':[1,0,0,0,1,0,0,0,1]}
+#todo
+modelKnowledge2={'mode':1,
+                'scaling':[1,1,1,1,1,1],
+                'actionLimits':[[-3,3],[-3,3],[-3,3],[-3,3],[-3,3],[-3,3]],
+                'sigmaScaling':0.1,
+                'graspOrientation':[1,0,0,0,1,0,0,0,1]}
+#todo
+modelKnowledge3={'mode':1,
                 'scaling':[1,1,1,1,1,1],
                 'actionLimits':[[-3,3],[-3,3],[-3,3],[-3,3],[-3,3],[-3,3]],
                 'sigmaScaling':0.1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
 learningParams= {'architecture':'sac',
-                'epochs':500,
+                'epochs':400,
                 'train':True,
                 'experiment_ID': 0,
                 'number_of_experiments': 5,
@@ -39,7 +56,9 @@ learningParams= {'architecture':'sac',
                 'logging':True,
                 'maxTime':5,
                 'load':'no'}
-tags = ["sac"]
+
+tags=learningParams['architecture']
+#tags = ["sac"]
 
 
 def get_ip_address(hostname):
@@ -60,7 +79,7 @@ class CollectiveDeepReinforcementLearner():
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tags = tags
 
-        if modelKnowledge['mode']==0:
+        if self.model_knowledge['mode']==0:
             self.interface='Torque'
             self.end2end=True
         else:
@@ -75,9 +94,7 @@ class CollectiveDeepReinforcementLearner():
 
 
     def initializeLocalLearners(self):
-        dual_arm_system_IDs=[format(i, '03d') for i in range(24, 26)]
-        #dual_arm_system_IDs=[format(i, '03d') for i in range(15, 30)]
-        #dual_arm_system_IDs=[format(i, '03d') for i in [29]]
+        dual_arm_system_IDs=[format(i, '03d') for i in range(30)]
         def ping_hosts(hosts):
             reachable_hosts = []
             unreachable_hosts = []
@@ -281,11 +298,11 @@ class CollectiveDeepReinforcementLearner():
         self.loop = asyncio.get_event_loop()
         self.loop.run_until_complete(self.learning_loop(self.robotLearningInstances, self.learning_callback))
 
-        #saving experiment results
+        #saving experiment results^
         self.saveExperimentData("experimentData")
 
-
-Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge)
-Learner.initializeLocalLearners()
-Learner.learning()
+for i in range(5):
+    Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge0)
+    Learner.initializeLocalLearners()
+    Learner.learning()
    
