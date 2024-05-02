@@ -79,6 +79,9 @@ class LLSender:
                 "cart_imp": {
                    "K_x": [10, 10, 10, 2.5, 2.5, 2.5]
                 }
+            },
+            "user":{
+                "F_ext_max": [30, 15]
             }
         }    
 
