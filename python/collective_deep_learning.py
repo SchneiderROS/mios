@@ -4,6 +4,7 @@ from deep_learning.agents.sac import SAC
 from deep_learning.agents.ddpg import DDPG
 from deep_learning.utils.utils import Dict
 from configparser import ConfigParser
+from ml_service import mongodb_client
 from torch.utils.tensorboard import SummaryWriter
 import requests
 from datetime import datetime
@@ -17,6 +18,9 @@ import time
 import os
 
 import asyncio
+
+from desk.mongodb_client import MongoDBClient
+
 
 modelKnowledge={'mode':1,
                 'scaling':[1,1,1,1,1,1],
@@ -35,6 +39,7 @@ learningParams= {'architecture':'sac',
                 'logging':True,
                 'maxTime':5,
                 'load':'no'}
+tags = ["sac"]
 
 
 def get_ip_address(hostname):
@@ -53,6 +58,7 @@ class CollectiveDeepReinforcementLearner():
         self.loadExistingNetwork=learning_params['load']
         self.saveInterval=learning_params['saveInterval']
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.tags = tags
 
         if modelKnowledge['mode']==0:
             self.interface='Torque'
@@ -64,6 +70,9 @@ class CollectiveDeepReinforcementLearner():
         parser = ConfigParser()
         parser.read('deep_learning/config.ini')
         self.agent_args = Dict(parser,self.architecture)
+        self.mongo_client = MongoDBClient()
+        self.tags.append("iteration_"+str(len(self.mongo_client.read("deep_ml_results", "insertion", {"meta.tags": self.tags})) +1))  #append iteration number to tags
+
 
     def initializeLocalLearners(self):
         dual_arm_system_IDs=[format(i, '03d') for i in range(24, 26)]
@@ -119,6 +128,15 @@ class CollectiveDeepReinforcementLearner():
         self.learningTasks=set()
         index=0
         for host,IP in learningInstances:
+            self.mongo_client.write("deep_ml_results","insertion",{"meta":{"learningInstance":host,
+                                                                           "starting_time":time.time(),
+                                                                           "tags": self.tags+[host],
+                                                                           "learning_params": self.learning_params,
+                                                                           "model_knowledge":self.model_knowledge,
+                                                                           "architecture":self.architecture,
+                                                                           "device":self.device,
+                                                                           "end2end":self.end2end,
+                                                                           "interface":self.interface}})  # create db entry
             learnerProxy = xmlrpc.client.ServerProxy("http://"+host+":9000")
             call_task = asyncio.create_task(self.rpc_call_to_learner(learnerProxy,index))
             self.learningTasks.add(call_task)
@@ -144,6 +162,11 @@ class CollectiveDeepReinforcementLearner():
         new_transitions=learnerProxy.getNewExperimentData()
         trialResult=learnerProxy.getTrialResult()
         self.learningLog[learner_index].append(trialResult)
+        mongo_data = self.mongo_client.read("deep_ml_results","insertion",{"meta.tags":self.tags+[host]})
+        if mongo_data:
+            mongo_data = mongo_data[0]
+            mongo_data["n"+str(len(self.learningLog[learner_index]+1))] = {"success":trialResult[0], "time":trialResult[1]}
+            self.mongo_client.update("deep_ml_results","insertion",{"meta.tags":self.tags+[host]},mongo_data)
         #2. append data to agent
         for transition in new_transitions:
             self.agents[learner_index].put_data(transition) 
@@ -192,10 +215,12 @@ class CollectiveDeepReinforcementLearner():
         #save network weights
         os.makedirs(path+"/"+folder_name+"/"+str(i)+"/network_weights")
         for i in range(len(self.robotLearningInstances)):
+            mongo_data = self.mongo_client.read("deep_ml_results","insertion",{"meta.tags":self.tags+[host]})
             host,IP=self.robotLearningInstances[i]
             os.makedirs(path+"/"+folder_name+"/"+str(i)+"/network_weights/"+host)   
             for j in range(len(self.storedNetworkWeights[i])):         
                 torch.save(self.agents[i].state_dict(),path+"/"+folder_name+"/"+str(i)+"/network_weights/"+host+"/"+str((j+1)*self.saveInterval))
+               # mongo_data["n"+str(j+1)]["weights"] = self.storedNetworkWeights[i]
 
         #save experiment parameters                
         experiments_params = {'learning_params': self.learning_params, 'model_knowledge': self.model_knowledge}
