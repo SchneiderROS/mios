@@ -175,11 +175,18 @@ class CollectiveDeepReinforcementLearner():
             for task in done:
                 index=task.result()
                 isFinished=callback(index)
+                host,IP=self.robotLearningInstances[index]
                 if isFinished==False:
-                    host,IP=self.robotLearningInstances[index]
                     learnerProxy=xmlrpc.client.ServerProxy("http://"+IP+":9000")
                     call_task = asyncio.create_task(self.rpc_call_to_learner(learnerProxy,index))
                     self.learningTasks.add(call_task)
+                else:
+                    mongo_data = self.mongo_client.read("deep_ml_results","insertion",{"meta.tags":self.tags+[host]})
+                    if mongo_data:
+                        mongo_data = mongo_data[0]
+                        mongo_data["meta"]["ending_time"] = time.time()
+                        self.mongo_client.update("deep_ml_results","insertion",{"meta.tags":self.tags+[host]},mongo_data)
+                    
             self.learningTasks-=done
     
     def learning_callback(self,learner_index):
@@ -226,6 +233,7 @@ class CollectiveDeepReinforcementLearner():
             return True
 
     def saveExperimentData(self,path):
+
         #create folder
         i=1
         folder_name = datetime.now().strftime("%Y-%m-%d")
@@ -243,7 +251,6 @@ class CollectiveDeepReinforcementLearner():
         #save network weights
         os.makedirs(path+"/"+folder_name+"/"+str(i)+"/network_weights")
         for i in range(len(self.robotLearningInstances)):
-            mongo_data = self.mongo_client.read("deep_ml_results","insertion",{"meta.tags":self.tags+[host]})
             host,IP=self.robotLearningInstances[i]
             os.makedirs(path+"/"+folder_name+"/"+str(i)+"/network_weights/"+host)   
             for j in range(len(self.storedNetworkWeights[i])):         
