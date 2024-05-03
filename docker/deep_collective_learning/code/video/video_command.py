@@ -27,7 +27,7 @@ import os
 
 
 class VideoRecorder:
-    def __init__(self, tag="", device='/dev/video4', output_dir='./'):
+    def __init__(self, tag="", device='/dev/video4', output_dir='./v/'):
         os.system("pwd")
         os.system("touch aaa.txt")
         self.tag = tag
@@ -38,7 +38,11 @@ class VideoRecorder:
         current_time = datetime.now()
         time_string = current_time.strftime("%Y%m%d_%H%M%S")
         hostname = socket.gethostname()
-        self.name = f"{self.tag}HH{hostname}HH{time_string}.mp4"
+        self.name = self.output_dir + f"{self.tag}HH{hostname}HH{time_string}.mp4"
+        
+        # file = open('v/read.txt', 'w') 
+        # file.write('Welcome to Geeks for Geeks') 
+        # file.close() 
         
         ffmpeg_command = [
             'ffmpeg',
@@ -51,7 +55,6 @@ class VideoRecorder:
         
         # ffmpeg_command = ['pwd']
         self.ffmpeg_process = subprocess.Popen(ffmpeg_command)
-        os.system("ls")
 
         
     
