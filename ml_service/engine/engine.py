@@ -158,7 +158,9 @@ class Engine:
         self.problem_definition = problem_definition
         self.meta_data = problem_definition.to_dict()
         self.meta_data["t_0"] = time.time()
-        self.meta_data["date"] = str(datetime.datetime.now())
+        now = datetime.datetime.now()
+        now.strftime("%Y-%m-%d_%H:%M:%S")
+        self.meta_data["date"] = now.strftime("%Y-%m-%d_%H:%M:%S")
         self.database_results_collection = self.database_client.client.ml_results[problem_definition.skill_class]
         self.database_results_id = self.database_results_collection.insert_one(
             {"meta": self.meta_data}).inserted_id
@@ -246,6 +248,12 @@ class Engine:
         self._run_trial(agent, trial)
         self.free_agents.add(agent)
         logger.debug("Free agent " + agent)
+        try:  # just to be sure
+            with ServerProxy("http://" + agent + ":9000") as s:
+                logger.debug("stop_recoring video")
+                s.stop_recording()
+        except:
+            pass
 
     def _run_trial(self, agent: str, trial: Trial):
         if trial.is_valid() is False:
@@ -255,18 +263,15 @@ class Engine:
         trial.t_0 = time.time()
         # start video recording
         try:
-
-            logger.debug("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            logger.debug("http://" + agent + ":9000")
             with ServerProxy("http://" + agent + ":9000") as s:
                 folder = ""
                 for tag in self.problem_definition.tags:
-                    folder = folder + tag +  "/"
-                folder = folder + self.meta_data["date"] +"/"
+                    folder = folder + tag
+                folder = folder +"/" + self.meta_data["date"] + "/"
                 trial_name = "n"+str(trial.trial_number)+"_"+str(trial.t_0)
-                logger.debug(folder+trial_name)
+                logger.debug("start recording at "+folder+trial_name+".mp4")
                 s.start_recording(folder+trial_name)
-                logger.debug("\n\n\n")
+                time.sleep(2)
         except:
             pass
 
@@ -274,7 +279,6 @@ class Engine:
             #print("Running variation " + str(i))
             self.problem_definition.apply_object_modifiers(trial.task_context)
             result, variation_result = self._execute_task(agent, trial)
-
             if self.keep_running is True:
                 if result is False:
                     logger.warning("Could not execute task for agent " + agent + ". Trial will be re-inserted into queue.")
@@ -296,7 +300,6 @@ class Engine:
 
             trial.t_1 = time.time()
             trial.t_delta = trial.t_1 - trial.t_0
-            #print("#######################")
             print(trial.trial_number)
 
             self.lock_data.acquire()
@@ -307,6 +310,7 @@ class Engine:
             self._reset_task(agent, trial)
         try:
             with ServerProxy("http://" + agent + ":9000") as s:
+                logger.debug("stop_recoring video")
                 s.stop_recording()
         except:
             pass
