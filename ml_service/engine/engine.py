@@ -255,13 +255,18 @@ class Engine:
         trial.t_0 = time.time()
         # start video recording
         try:
+
+            logger.debug("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            logger.debug("http://" + agent + ":9000")
             with ServerProxy("http://" + agent + ":9000") as s:
                 folder = ""
                 for tag in self.problem_definition.tags:
                     folder = folder + tag +  "/"
                 folder = folder + self.meta_data["date"] +"/"
                 trial_name = "n"+str(trial.trial_number)+"_"+str(trial.t_0)
+                logger.debug(folder+trial_name)
                 s.start_recording(folder+trial_name)
+                logger.debug("\n\n\n")
         except:
             pass
 
