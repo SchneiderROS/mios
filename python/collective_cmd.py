@@ -1202,14 +1202,12 @@ def grasp_thread(module, side=None):
     move_joint(ip, module+"_left_container_approach", 12000)
     move_joint(ip, "hold", 13000)
 
-def teach_dualarm(module:str):
-    insertable = module+"_left"
+def teach_dualarm(module:str, object_name:str):
+    insertable = object_name
     robot = get_ips([module])[0]
-    
-    
     print("\nteaching ",insertable, "for ", robot,"\n")
     input("teach hold position of right arm")
-    call_method(robot, 13000, "teach_object",{"object":"hold"})
+    call_method(robot, 13000, "teach_object",{"object":"hold_"+insertable})
     input("Press key to start teaching. [Pose above container, without object]")
     call_method(robot,12000,"release_object")
     call_method(robot, 12000, "teach_object", {"object": insertable+"_container_above"})
