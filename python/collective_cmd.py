@@ -1224,4 +1224,5 @@ def teach_dualarm(module:str, object_name:str):
     input("Teach approach [with object]")
     call_method(robot, 12000, "teach_object", {"object": insertable+"_container_approach"})
     input("Teach container [with object]")
-    call_method(robot, 12000, "teach_object", {"object": insertable+"_container"})        
+    call_method(robot, 12000, "teach_object", {"object": insertable+"_container"}) 
+    call_method(robot, 12000, "set_grasped_object", {"object": insertable})
