@@ -61,8 +61,8 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
     n_current_iter: number of current iteration
 
     '''
-    # tags = ["ps_alpha_5","10agents_25tasks"]
-    tags = ["100_testing"]
+    tags = ["ps_alpha_5","10agents_25tasks", "round1"]
+    # tags = ["100_testing"]
     # modules = list_block_1 + list_block_2 + list_U
     
     modules = list_block_1 
