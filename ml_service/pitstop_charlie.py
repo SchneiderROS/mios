@@ -108,10 +108,11 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
                 "collective-041.rsi.ei.tum.de":["A_key_24"],
                 "collective-021.rsi.ei.tum.de":["A_020_pentagram"],
                 "collective-022.rsi.ei.tum.de":["C_key_10"],
-                "collective-023.rsi.ei.tum.de":[],
-                "collective-024.rsi.ei.tum.de":[],
-                "collective-025.rsi.ei.tum.de":[],
-                "collective-027.rsi.ei.tum.de":[],
+                "collective-023.rsi.ei.tum.de":["C_key_08"],
+                "collective-024.rsi.ei.tum.de":["C_key_24"],
+                "collective-025.rsi.ei.tum.de":["A_023_stairs"],
+                "collective-026.rsi.ei.tum.de":["A_022_diamond"],
+                "collective-027.rsi.ei.tum.de":["C_key_23"],
                 "collective-040.rsi.ei.tum.de":[],
                 "collective-029.rsi.ei.tum.de":["A_018_cross-2", "A_016_cross-1"]
             }
