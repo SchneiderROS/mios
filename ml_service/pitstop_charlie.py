@@ -53,13 +53,15 @@ def prefill_fast_pipe(iteration_n:int, kb_location:str, tags: list = ["10agents_
                 break
 
             
-def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_charlie_1"], n_agents:int = 10):
+def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_charlie_1"], n_agents:int = 5): #10
     '''
     n_current_iter: number of current iteration
 
     '''
-    tags = ["ps_alpha_5","10agents_25tasks"]
-    modules = list_block_1 + list_block_2 + list_U
+    # tags = ["ps_alpha_5","10agents_25tasks"]
+    tags = ["testing"]
+    # modules = list_block_1 + list_block_2 + list_U
+    modules = list_block_1 
     cutoff = {  '001_left': 0.7080000000000001,   # best solution found *1.2
                 '003_left': 0.68016,
                 '004_left': 0.74976,
@@ -90,16 +92,17 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
         
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
 
-    tasks = {   "collective-001.rsi.ei.tum.de":["task1",""],
-                "collective-003.rsi.ei.tum.de":[],
-                "collective-004.rsi.ei.tum.de":[],
-                "collective-005.rsi.ei.tum.de":[],
-                "collective-006.rsi.ei.tum.de":[],
-                "collective-007.rsi.ei.tum.de":[],
-                "collective-008.rsi.ei.tum.de":[],
-                "collective-010.rsi.ei.tum.de":[],
-                "collective-011.rsi.ei.tum.de":[],
-                "collective-012.rsi.ei.tum.de":[],
+    tasks = {   
+            #  "collective-001.rsi.ei.tum.de":["task1",""],
+            #     "collective-003.rsi.ei.tum.de":[],
+            #     "collective-004.rsi.ei.tum.de":[],
+            #     "collective-005.rsi.ei.tum.de":[],
+            #     "collective-006.rsi.ei.tum.de":[],
+            #     "collective-007.rsi.ei.tum.de":[],
+            #     "collective-008.rsi.ei.tum.de":[],
+            #     "collective-010.rsi.ei.tum.de":[],
+            #     "collective-011.rsi.ei.tum.de":[],
+            #     "collective-012.rsi.ei.tum.de":[],
                 "collective-009.rsi.ei.tum.de":["B_017_IT2DE"],
                 "collective-013.rsi.ei.tum.de":["A_012_ellipsoid-2"],
                 "collective-014.rsi.ei.tum.de":["A_024_moon"],
@@ -109,12 +112,12 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
                 "collective-041.rsi.ei.tum.de":["A_key_24"],
                 "collective-021.rsi.ei.tum.de":["A_020_pentagram"],
                 "collective-022.rsi.ei.tum.de":["C_key_10"],
-                "collective-023.rsi.ei.tum.de":[],
-                "collective-024.rsi.ei.tum.de":[],
-                "collective-025.rsi.ei.tum.de":[],
-                "collective-027.rsi.ei.tum.de":[],
-                "collective-040.rsi.ei.tum.de":[],
-                "collective-029.rsi.ei.tum.de":["A_018_cross-2", "A_016_cross-1"]
+                # "collective-023.rsi.ei.tum.de":[],
+                # "collective-024.rsi.ei.tum.de":[],
+                # "collective-025.rsi.ei.tum.de":[],
+                # "collective-027.rsi.ei.tum.de":[],
+                # "collective-040.rsi.ei.tum.de":[],
+                # "collective-029.rsi.ei.tum.de":["A_018_cross-2", "A_016_cross-1"]
             }
 
     threads = []
