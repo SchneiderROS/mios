@@ -1225,3 +1225,8 @@ def teach_dualarm(module:str, object_name:str):
     call_method(robot, 12000, "teach_object", {"object": insertable+"_container_approach"})
     input("Teach container [with object]")
     call_method(robot, 12000, "teach_object", {"object": insertable+"_container"})        
+
+def release_objects(module):
+    robot = get_ips([module])[0]
+    call_method(robot, 12000, "release_object")
+    call_method(robot, 13000, "release_object")
