@@ -2070,7 +2070,44 @@ def get_confidence(listoflists, confidence=0.95):
         interval.append(st.t.interval(confidence=confidence, df=len(points)-1, loc=mean[-1], scale=st.sem(points)))
     return mean, interval
 
-def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], single_agent=False, cutoff=None, skip_module=set()):
+def get_confidence_time(listoflists, confidence=0.95, n_points=1000):
+    '''calculates the everage and confidence-interval of listoflists (used for trials with timestemp)
+        input: list of lists with (time, cost)
+        n_points: resolution; How many points the output should have  
+        output: mean, interval and time points (size = n_points)  
+    '''
+    if len(listoflists) < 1:
+        return False, False, False
+    longest_time = 0
+    for data in listoflists:  # find longest time
+        max_time_i = max([time for (time,cost) in data])  # max time for this iteration
+        if max_time_i>longest_time:
+            longest_time = max_time_i
+    mean = []
+    interval = []
+    for time_i in np.linspace(0, ceil(longest_time), n_points):
+        # calculate mean and interval for every time_i:
+        temp = []
+        for i in range(len(listoflists)):
+            # append last cost entry before time_i
+            trials_before_time = [trial for trial in listoflists[i] if trial[0] <= time_i]
+            if trials_before_time:  # is not empty
+                temp.append(trials_before_time[-1][1]) #append latest cost  
+        if len(temp) <= 1:
+            mean.append(float('nan'))
+            interval.append(float('nan'))
+        else:
+            mean.append(np.mean(temp))
+            interval.append(st.t.interval(confidence=confidence, df=len(temp)-1, loc=mean[-1], scale=st.sem(temp)))
+    for i in range(len(mean)-1,-1,-1):
+        if mean[i] != mean[i]:
+            mean[i] = mean[i+1]
+        if interval[i] != interval[i]:
+            interval[i] = interval[i+1]
+    return mean, interval, np.linspace(0, ceil(longest_time), n_points)
+
+def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], single_agent=False, cutoff=None, skip_module=set(), only_full_sets = True, monocally_decreasing=True):
+    
     p = DataProcessor()
     if cutoff is None:  #plot old comparison
         cutoff = {  '001_left': 0.7080000000000001,   # best solution found *1.2
@@ -2142,7 +2179,10 @@ def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], singl
                 continue
             if results_dict[iteration]["earliest_starting_time"] > result.starting_time:  # save lowest starting time
                 results_dict[iteration]["earliest_starting_time"] = result.starting_time
-            monotonically_decreading_costs = p.get_monotonically_decreasing_cost(result.costs)
+            if monocally_decreasing: 
+                monotonically_decreading_costs = p.get_monotonically_decreasing_cost(result.costs)
+            else:
+                monotonically_decreading_costs = result.costs
             times_costs = [(t,c) for t,c in zip(result.times, monotonically_decreading_costs)]  # list of tupels [(cost,time),(cost,time),...]
             results_dict[iteration]["accumulated_costs_times"].append(times_costs)
             results_dict[iteration]["starting_times"].append(result.starting_time)
@@ -2162,7 +2202,7 @@ def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], singl
     #rearranging data for plotting and adding time offeset relative to experiment beginning
     for iteration in list(results_dict.keys()):
         results = results_dict[iteration]
-        if len(results["instances"]) < max_instances:
+        if len(results["instances"]) < max_instances and only_full_sets:
             missing = [x for x in all_instaces if x not in results["instances"]]
             print("pop iteration ",iteration, "\n" ,"missing instances: ",missing)
             del results_dict[iteration]
@@ -2650,85 +2690,230 @@ def plot_100_collective():
     plt.style.use('dark_background')
     fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
     
-    # print("\ngetting collective data")
-    # mean_collective, confidence_collective = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5"],cutoff=new_cutoff)  # history: ["5agents_25tasks","collective"]
-    # mean_collective = [x/60 for x in mean_collective]
-    # lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    # upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    # legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (10 agents)")
-    # axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
-
-
-    print("\ngetting 100 collective data")
-    mean_collective, first_successes, n_tasks = get_global_collective_data(cutoff=new_cutoff,skip_module=set(["018","010","020"]))  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    first_successes = [x/60 for x in first_successes]
-    print(len(first_successes)," vs ", len(mean_collective))
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing\n(10 agents, %i objects)"%n_tasks, color="tab:blue",linewidth=2)
-    #legend_collective = axes1.plot(first_successes, range(len(first_successes)), label="first successes(10 agents, %i objects)"%n_tasks, color="tab:olive",linewidth=2)
-
-    print("\ngetting collective data")
-    mean_collective, confidence_collective = get_big_collective_data(["10agents_25tasks","collective","ps_alpha_5_reverse"],cutoff=new_cutoff,skip_module=set(["018","010","020"]))  # history: ["5agents_25tasks","collective"]
-    mean_collective = [x/60 for x in mean_collective]
-    lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing\n(10 agents, optimised sequence)",color="tab:pink",linewidth=2)
-    axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2,color="tab:pink")
-    # print("\ngetting collective data")
-    # mean_collective, confidence_collective = get_big_collective_data(["5agents_25tasks","collective"],skip_module=set(["018","010","020"]))  # history: ["5agents_25tasks","collective"]
-    # mean_collective = [x/60 for x in mean_collective]
-    # lower_bound_confindece_collective = [x[0]/60 for x in confidence_collective]
-    # upper_bound_confindece_collective = [x[1]/60 for x in confidence_collective]
-    # legend_collective = axes1.plot(mean_collective, range(len(mean_collective)), label="collective knowledge sharing (5 agents)")
-    # axes1.fill_betweenx(range(len(mean_collective)), lower_bound_confindece_collective, upper_bound_confindece_collective, alpha=0.2)
-    #print("\ngetting parallel isolated data")
-    #mean_isolated, confidence_isolated = get_big_collective_data(["5agents_25tasks_local","isolated_local_noFastPipeline"])  # history: ["5agents_25tasks_local","isolated_local_noFastPipeline"]
-    #mean_isolated = [x/60 for x in mean_isolated]
-    #lower_bound_confindece_isolated = [x[0]/60 for x in confidence_isolated]
-    #upper_bound_confindece_isolated = [x[1]/60 for x in confidence_isolated]
-    #legend_isolated = axes1.plot(mean_isolated, range(len(mean_isolated)), label="isolated parallel learning")
-    #axes1.fill_betweenx(range(len(mean_isolated)), lower_bound_confindece_isolated, upper_bound_confindece_isolated, alpha=0.2)
     print("\ngetting single isolated data")
-    mean_isolated_single, confidence_isolated_single = get_big_collective_data(["5agents_25tasks_local","isolated_local_noFastPipeline"], single_agent=True,skip_module=set(["018","010","020"]))  #history: ["5agents_25tasks_local","isolated_local_noFastPipeline"]
+    mean_isolated_single, confidence_isolated_single, results_dict_single = get_big_collective_data(['noKnowledge', 'noSharing', 'isolated',], single_agent=False, skip_module=set(["028", "018","010"])) 
     mean_isolated_single = [x/60 for x in mean_isolated_single]
     lower_bound_confindece_isolated_single = [x[0]/60 for x in confidence_isolated_single]
     upper_bound_confindece_isolated_single = [x[1]/60 for x in confidence_isolated_single]
-    legend_isolated_single = axes1.plot(mean_isolated_single, range(len(mean_isolated_single)), label="isolated single learning",color = "tab:green",linewidth=2)
-    axes1.fill_betweenx(range(len(mean_isolated_single)), lower_bound_confindece_isolated_single, upper_bound_confindece_isolated_single, alpha=0.2,color = "tab:green")
-    print(["\n5agents_25tasks_rearanged", "collective"])
-    mean_collective_re, confidence_collective_re = get_big_collective_data(["5agents_25tasks_rearanged", "collective"],skip_module=set(["018","010","020"]))  # history: ["5agents_25tasks_rearanged", "collective"]
-    mean_collective_re = [x/60 for x in mean_collective_re]
-    lower_bound_confindece_collective_re = [x[0]/60 for x in confidence_collective_re]
-    upper_bound_confindece_collective_re = [x[1]/60 for x in confidence_collective_re]
-    legend_collective_re = axes1.plot(mean_collective_re, range(len(mean_collective_re)), label="collective knowledge sharing\n(5 agents, optimised sequence)",color="tab:red",linewidth=2)
-    axes1.fill_betweenx(range(len(mean_collective_re)), lower_bound_confindece_collective_re, upper_bound_confindece_collective_re, alpha=0.2,color="tab:red")
-        
-        
+    legend_isolated_single = axes1.plot(mean_isolated_single, range(len(mean_isolated_single)), label="isolated single learning (PSP)")
+    axes1.fill_betweenx(range(len(mean_isolated_single)), lower_bound_confindece_isolated_single, upper_bound_confindece_isolated_single, alpha=0.2)
+    print("\ngetting alpha transfer  data")
+    mean_isolated_alpha, confidence_isolated_alpha, results_dict_alpha = get_big_collective_data(["alpha_task_transfer","default_context"], single_agent=False, skip_module=set(["028", "018","010"])) 
+    mean_isolated_alpha = [x/60 for x in mean_isolated_alpha]
+    lower_bound_confindece_isolated_alpha = [x[0]/60 for x in confidence_isolated_alpha]
+    upper_bound_confindece_isolated_alpha = [x[1]/60 for x in confidence_isolated_alpha]
+    legend_isolated_alpha = axes1.plot(mean_isolated_alpha, range(len(mean_isolated_alpha)), label="alpha task transfer, isolated (PSP)")
+    axes1.fill_betweenx(range(len(mean_isolated_alpha)), lower_bound_confindece_isolated_alpha, upper_bound_confindece_isolated_alpha, alpha=0.2)
+    
+
+    print("\ngetting single isolated data CMAES")
+    mean_isolated_single, confidence_isolated_single, results_dict_single_cmaes = get_big_collective_data(["isolated", "CMAES", "25Tasks", "9ind20gen","additional_run"], single_agent=False, skip_module=set(["028", "018","010","023"])) 
+    mean_isolated_single = [x/60 for x in mean_isolated_single]
+    lower_bound_confindece_isolated_single = [x[0]/60 for x in confidence_isolated_single]
+    upper_bound_confindece_isolated_single = [x[1]/60 for x in confidence_isolated_single]
+    legend_isolated_single = axes1.plot(mean_isolated_single, range(len(mean_isolated_single)), label="isolated single learning (CMA-ES)")
+    axes1.fill_betweenx(range(len(mean_isolated_single)), lower_bound_confindece_isolated_single, upper_bound_confindece_isolated_single, alpha=0.2)
+    print("\ngetting alpha transfer  data CMAES")
+    mean_isolated_alpha, confidence_isolated_alpha, results_dict_alpha_cmaes = get_big_collective_data(["alpha_task_transfer_cmaes","default_context"], single_agent=False, skip_module=set(["028", "018","010"])) 
+    mean_isolated_alpha = [x/60 for x in mean_isolated_alpha]
+    lower_bound_confindece_isolated_alpha = [x[0]/60 for x in confidence_isolated_alpha]
+    upper_bound_confindece_isolated_alpha = [x[1]/60 for x in confidence_isolated_alpha]
+    legend_isolated_alpha = axes1.plot(mean_isolated_alpha, range(len(mean_isolated_alpha)), label="alpha task transfer, isolated (CMA-ES)")
+    axes1.fill_betweenx(range(len(mean_isolated_alpha)), lower_bound_confindece_isolated_alpha, upper_bound_confindece_isolated_alpha, alpha=0.2)
+    
+    fig2, axes2 = plt.subplots(6, 4, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=2)
+    results = {}
+    for iter in results_dict_alpha.keys():
+        for i in range(len(results_dict_alpha[iter]["instances"])):
+            instance = results_dict_alpha[iter]["instances"][i]
+            if instance not in results:
+                results[instance] = {"alpha":[], "isolated":[], "alpha_cmaes":[], "isolated_cmaes":[]}
+            results[instance]["alpha"].append(results_dict_alpha[iter]["costs_times"][i])
+            index_isolated = results_dict_single[iter]["instances"].index(instance)
+            results[instance]["isolated"].append(results_dict_single[iter]["costs_times"][index_isolated])
+            
+            if iter in results_dict_alpha_cmaes:
+                try:
+                    index_alpha_cmaes = results_dict_alpha_cmaes[iter]["instances"].index(instance)
+                    results[instance]["alpha_cmaes"].append(results_dict_alpha_cmaes[iter]["costs_times"][index_alpha_cmaes])
+                except ValueError:
+                    pass
+            if iter in results_dict_single_cmaes:
+                try:
+                    index_isolated_cmaes = results_dict_single_cmaes[iter]["instances"].index(instance)
+                    results[instance]["isolated_cmaes"].append(results_dict_single_cmaes[iter]["costs_times"][index_isolated_cmaes])
+                except ValueError:
+                    pass
+
+    for i, instance in enumerate(results.keys()):
+        mean, interval, time_points = get_confidence_time(results[instance]["isolated"], n_points=1000)
+        time_points = [s/60 for s in time_points]
+        label = labels[modules.index(instance[:3])]
+        axes2[i%6,int(i/6)].set_title(label)
+        line_psp_no = axes2[i%6,int(i/6)].plot(time_points, mean, label = "no Knowledge, PSP")
+        lower_confidence = [x[0] for x in interval]
+        upper_confidence = [x[1] for x in interval]
+        axes2[i%6,int(i/6)].fill_between(time_points, lower_confidence, upper_confidence, alpha=0.2)
+
+        mean, interval, time_points = get_confidence_time(results[instance]["alpha"], n_points=1000)
+        time_points = [s/60 for s in time_points]
+        label = labels[modules.index(instance[:3])]
+        axes2[i%6,int(i/6)].set_title(label)
+        line_psp_alpha = axes2[i%6,int(i/6)].plot(time_points, mean, label = "alpha, PSP")
+        lower_confidence = [x[0] for x in interval]
+        upper_confidence = [x[1] for x in interval]
+        axes2[i%6,int(i/6)].fill_between(time_points, lower_confidence, upper_confidence, alpha=0.2)
+
+        if results[instance]["isolated_cmaes"]:
+            mean, interval, time_points = get_confidence_time(results[instance]["isolated_cmaes"], n_points=1000)
+            time_points = [s/60 for s in time_points]
+            label = labels[modules.index(instance[:3])]
+            axes2[i%6,int(i/6)].set_title(label)
+            line_cmaes_no = axes2[i%6,int(i/6)].plot(time_points, mean, label = "no Knowledge, CMA-ES")
+            lower_confidence = [x[0] for x in interval]
+            upper_confidence = [x[1] for x in interval]
+            axes2[i%6,int(i/6)].fill_between(time_points, lower_confidence, upper_confidence, alpha=0.2)
+        if results[instance]["alpha_cmaes"]:
+            mean, interval, time_points = get_confidence_time(results[instance]["alpha_cmaes"], n_points=1000)
+            time_points = [s/60 for s in time_points]
+            label = labels[modules.index(instance[:3])]
+            axes2[i%6,int(i/6)].set_title(label)
+            line_cmaes_alpha = axes2[i%6,int(i/6)].plot(time_points, mean, label = "alpha, CMA-ES")
+            lower_confidence = [x[0] for x in interval]
+            upper_confidence = [x[1] for x in interval]
+            axes2[i%6,int(i/6)].fill_between(time_points, lower_confidence, upper_confidence, alpha=0.2)
+
+        #axes2[i%6,int(i/6)].legend(loc="upper right")
+        axes2[i%6,int(i/6)].set_ylim((0,2))
+        axes2[i%6,int(i/6)].set_xlabel("time [min]")
+        axes2[i%6,int(i/6)].set_ylabel("cost [1]")
+    
+    #lines = []
+    #legend_texts = []
+    #for ax in axes2: 
+    #    Line, Label = ax.get_legend_handles_labels() 
+    #    # print(Label) 
+    #    lines.extend(Line) 
+    #    legend_texts.extend(Label) 
+    #fig2.legend(lines, legend_texts, loc="bottom right")
+    lines, texts = axes2[0,2].get_legend_handles_labels()
+    fig2.legend(lines, texts, loc = "lower right")
+    print("130 trials for each run (alpha and noKnowledge)")
+
     axes1.set_xlabel("time [min]", fontsize=14)
     axes1.set_ylabel("learned skills [1]", fontsize=14)
-    axes1.set_title("learn %i skills"%n_tasks, fontsize=14)
-    axes1.set_xlim((0,700))
-    axes1.set_xlim((0,220))
-    axes1.set_ylim((0,100))
+    axes1.set_title("alpha task transfer VS no knowledge", fontsize=14)
+    axes1.set_xlim((0,55))
     axes1.grid()
-    axes1.legend(loc="center right", fontsize=14)  #lower right
-    plt.show(block=False)
-
-    fig2, axes2 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=2)
-    print(first_successes)
-    legend_collective = axes2.plot(first_successes, range(len(first_successes)), label="first successes(10 agents, %i objects)"%n_tasks,linewidth=2)
-    axes2.set_title("first successes (100 skills)")
-    axes2.set_xlabel("time [min]", fontsize=14)
-    axes2.set_ylabel("first successful trial [1]", fontsize=14)
-    axes2.set_title("learn %i skills"%n_tasks, fontsize=14)
-    axes2.set_xlim((0,700))
-    axes2.set_xlim((0,220))
-    axes2.set_ylim((0,100))
-    axes2.legend(loc="lower right", fontsize=14) 
-    axes2.grid()
-
+    axes1.legend(loc="lower right", fontsize=14)
     plt.show()
 
+
+def plot_originalVScurrentPSP():
+    cutoff = {  '001_left': 0.,   # best solution found *1.2
+                    '003_left': 0,
+                    '004_left': 0,
+                    '005_left': 0, #
+                    '006_left': 0,
+                    '007_left': 0,
+                    '008_left': 0,
+                    '010_left': 0,
+                    '011_left': 0,
+                    '012_left': 0,
+                    '009_left': 0,
+                    '013_left': 0,
+                    '014_left': 0,
+                    '015_left': 0,
+                    '016_left': 0,   #
+                    '017_left': 0,
+                    '018_left': 0,  # '018_left': 0.63144,
+                    '021_left': 0,
+                    '022_left': 0,
+                    '023_left': 0,
+                    '024_left': 0,
+                    '025_left': 0,
+                    '027_left': 0,
+                    '028_left': 0,
+                    '029_left': 0}
+    labels = ["IEC(C7)", "Triangle-1", "Hexagon-1", "USB-1", "Triangle-2", "Cylinder-1", "Key-1", "Plug(type F)-1", "Audio Jack(3.5mm)", "IEC(C13)", "Cylinder-2", "Hexagon-2", "HDMI-1", "Key-2", "Cylinder-3", "Square-1", "Hexagon-3", "Square-2", "Audio jack(6.35mm)", "USB-2", "Plug(type C)", "Key-3", "Plug(type F)-2", "HDMI-2", "Key-4"]
+    modules = list_block_1 + list_block_2 + list_U
+
+    colors = ["red", "green", "yellow", "orange", "cyan", "blueviolet", "black", "dimgrey", "lightgrey"]  # [:len(n_tasks)]
+    fig1, axes1 = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0, 'wspace': 0.2}, num=1)
+    
+    print("\ngetting currnt psp data")
+    mean_isolated_single, confidence_isolated_single, results_dict_psp = get_big_collective_data(['noKnowledge', 'noSharing', 'isolated','PSP'], single_agent=False, skip_module=set(["028","003", "018","010","011","015", "036","023","024","025","026","027","041","029"]),only_full_sets=False, monocally_decreasing=True,cutoff=cutoff) 
+    mean_isolated_single = [x/60 for x in mean_isolated_single]
+    lower_bound_confindece_isolated_single = [x[0]/60 for x in confidence_isolated_single]
+    upper_bound_confindece_isolated_single = [x[1]/60 for x in confidence_isolated_single]
+    legend_isolated_single = axes1.plot(mean_isolated_single, range(len(mean_isolated_single)), label="current Version")
+    axes1.fill_betweenx(range(len(mean_isolated_single)), lower_bound_confindece_isolated_single, upper_bound_confindece_isolated_single, alpha=0.2)
+    print("\ngetting original psp  data")
+    mean_isolated_alpha, confidence_isolated_alpha, results_dict_orig = get_big_collective_data(['noKnowledge', 'noSharing', 'isolated','origPSP'], single_agent=False, skip_module=set(["028","003", "018","010","011","015","036","023","024","025","026","027","041","029"]),only_full_sets=False, monocally_decreasing=True,cutoff=cutoff) 
+    mean_isolated_alpha = [x/60 for x in mean_isolated_alpha]
+    lower_bound_confindece_isolated_alpha = [x[0]/60 for x in confidence_isolated_alpha]
+    upper_bound_confindece_isolated_alpha = [x[1]/60 for x in confidence_isolated_alpha]
+    legend_isolated_alpha = axes1.plot(mean_isolated_alpha, range(len(mean_isolated_alpha)), label="original PSP")
+    axes1.fill_betweenx(range(len(mean_isolated_alpha)), lower_bound_confindece_isolated_alpha, upper_bound_confindece_isolated_alpha, alpha=0.2)
+
+    fig2, axes2 = plt.subplots(6, 2, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=2)
+    results = {}
+    for iter in results_dict_psp.keys():
+        for i in range(len(results_dict_psp[iter]["instances"])):
+            instance = results_dict_psp[iter]["instances"][i]
+            if instance not in results:
+                results[instance] = {"orig":[], "current":[]}
+            results[instance]["current"].append(results_dict_psp[iter]["costs_times"][i])
+            if iter in results_dict_orig:
+                try:
+                    index_orig = results_dict_orig[iter]["instances"].index(instance)
+                    results[instance]["orig"].append(results_dict_orig[iter]["costs_times"][index_orig])
+                except ValueError:
+                    pass
+
+    for i, instance in enumerate(results.keys()):
+        mean, interval, time_points = get_confidence_time(results[instance]["current"], n_points=1000)
+        time_points = [s/60 for s in time_points]
+        label = labels[modules.index(instance[:3])]
+        axes2[i%6,int(i/6)].set_title(label)
+        line_psp_no = axes2[i%6,int(i/6)].plot(time_points, mean, label = "current PSP")
+        lower_confidence = [x[0] for x in interval]
+        upper_confidence = [x[1] for x in interval]
+        axes2[i%6,int(i/6)].fill_between(time_points, lower_confidence, upper_confidence, alpha=0.2)
+
+        if results[instance]["orig"]:
+            mean, interval, time_points = get_confidence_time(results[instance]["orig"], n_points=1000)
+            time_points = [s/60 for s in time_points]
+            label = labels[modules.index(instance[:3])]
+            axes2[i%6,int(i/6)].set_title(label)
+            line_psp_alpha = axes2[i%6,int(i/6)].plot(time_points, mean, label = "original PSP")
+            lower_confidence = [x[0] for x in interval]
+            upper_confidence = [x[1] for x in interval]
+            axes2[i%6,int(i/6)].fill_between(time_points, lower_confidence, upper_confidence, alpha=0.2)
+        #axes2[i%6,int(i/6)].legend(loc="upper right")
+        axes2[i%6,int(i/6)].set_ylim((0,2))
+        axes2[i%6,int(i/6)].set_xlabel("time [min]")
+        axes2[i%6,int(i/6)].set_ylabel("cost [1]")
+    
+    #lines = []
+    #legend_texts = []
+    #for ax in axes2: 
+    #    Line, Label = ax.get_legend_handles_labels() 
+    #    # print(Label) 
+    #    lines.extend(Line) 
+    #    legend_texts.extend(Label) 
+    #fig2.legend(lines, legend_texts, loc="bottom right")
+    lines, texts = axes2[0,0].get_legend_handles_labels()
+    fig2.legend(lines, texts, loc = "lower right")
+    print("130 trials for each run (alpha and noKnowledge)")
+
+    axes1.set_xlabel("time [min]", fontsize=14)
+    axes1.set_ylabel("learned skills [1]", fontsize=14)
+    axes1.set_title("original VS current PSP", fontsize=14)
+    axes1.set_xlim((0,55))
+    axes1.grid()
+    axes1.legend(loc="lower right", fontsize=14)
+    plt.show()
 
 def plot_CMAES():
     new_cutoff = {  '001_left': 0.7080000000000001,   # best solution found *1.2

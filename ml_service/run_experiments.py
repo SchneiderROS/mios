@@ -277,6 +277,83 @@ def learn_from_source(robot, insertable):
     input("press enter to stop robot")
     stop_services([robot])
 
+def learn_alpha_skills(modules = list_block_1+list_block_2+list_U):
+    ips = get_ips(modules)
+    #states = get_states(modules)
+    #remove modules that are not ready:
+    
+    insertables = [m+"_left" for m in modules]
+    threads = []
+    for i in range(0,len(ips)):
+        threads.append(Thread(target=learn_from_source, args=(ips[i], insertables[i], 10)))
+        threads[-1].start()
+    print("threads started")
+    for t in threads:
+        t.join()
+    print("finished :)")
+
+def learn_isolated_nonSharing(robot, insertable, iterations = 1):
+    stop_services([robot])
+    wait_for_services([robot], [["localhost"]])
+    path_to_default_context = os.getcwd() + "/../python/taxonomy/default_contexts/"
+    f = open(path_to_default_context + "insertion.json")
+    insertion = InsertionFactory2([robot], TimeMetric("insertion", {"time": 5}),
+                                        {"Insertable": insertable, "Container": insertable+"_container",
+                                        "Approach": insertable+"_container_approach"})
+    pd = insertion.get_problem_definition(insertable)
+    if insertable == "010_left" or insertable == "023_left" or insertable == "027_left" or insertable == "024_left":
+        print("increase limits for ",insertable)
+        pd.domain.limits["p2_f_push_z"] = (0,60)
+    sc = SVMLearner(300,10,0,True,False, -1,True).get_configuration()
+    knowledge = Knowledge()
+    dualarm_skills = []
+    if insertable != "016_left":
+        move_context = {
+                    "skill": {
+                        "speed": 0.5,
+                        "acc": 1,
+                        "q_g": [0, 0, 0, 0, 0, 0, 0],
+                        "objects": {
+                            "goal_pose": "hold"}},
+                    "control": {
+                        "control_mode": 3},
+                    "user": {
+                        "env_X": [0.001, 0.001, 0.001, 0.001, 0.001, 0.001],
+                        "F_ext_max": [100, 50]}}
+        dualarm_skills.append(("move", "MoveToPoseJoint", move_context))
+    else:
+        call_method(robot,13000,"set_grasped_object",{"object":"016_right"})
+        f = open(path_to_default_context + "insertion.json")
+        insert_context = json.load(f)
+        insert_context["skill"]["objects"]["Container"] = "016_right_container"
+        insert_context["skill"]["objects"]["Insertable"] = "016_right"
+        insert_context["skill"]["objects"]["Approach"] = "016_right_container_approach"
+        dualarm_skills.append(("insert", "TaxInsertion", insert_context))
+        f = open(path_to_default_context + "extraction.json")
+        extract_context = json.load(f)
+        extract_context["skill"]["objects"]["Container"] = "016_right_container"
+        extract_context["skill"]["objects"]["Extractable"] = "016_right"
+        extract_context["skill"]["objects"]["ExtractTo"] = "016_right_container_approach"
+        dualarm_skills.append(("extract", "TaxExtraction", extract_context))
+
+    dualarm_cmd = {"agent":robot,"port":13000,"skills":dualarm_skills,"sleep":1}
+    if iterations > 1:
+        learn_task(robot, pd, sc, ["noKnowledge", "noSharing", "isolated","PSP","insertion2"], iterations, True, knowledge.to_dict(),True,8000, dualarm_cmd)
+    else:
+        learn_single_task(robot, pd, sc, ["noKnowledge", "noSharing", "isolated","PSP","insertion2"], 0, False, knowledge.to_dict(), False, 8000, dualarm_cmd)
+
+def learn_comparison(modules = list_block_1+list_block_2+list_U):
+    ips = get_ips(modules)
+    insertables = [m+"_left" for m in modules]
+    threads = []
+    for i in range(0,len(ips)):
+        threads.append(Thread(target=learn_isolated_nonSharing, args=(ips[i], insertables[i], 10)))
+        threads[-1].start()
+    print("threads started")
+    for t in threads:
+        t.join()
+    print("finished :)")
+    
 def learn_from_trial(source_ip, source_uuid, source_trial_n: list, target_ip, target_instance):
     mongodb_client = MongoDBClient(source_ip)
     source_results = mongodb_client.read("ml_results","insertion",{"meta.uuid":source_uuid})[0]

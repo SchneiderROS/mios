@@ -302,7 +302,29 @@ def copy_object(source:str, destinations:list, object_name:str, robot_arm="left"
         t.join()
     print("sending completed. Restart cluster!")
 
-def move(robot, location, offset = [0,0,0], port=12000, wait = True):
+def move_to_contact(robot, location, port = 12000, wait=True):
+    context = {
+                "skill": {
+                    "speed": 0.5,
+                    "objects": {
+                        "goal_pose": location
+                    }
+                },
+                "control": {
+                    "control_mode": 2
+                },
+                "user":{
+                    "F_ext_contact": [10,5]
+                }
+
+            }
+    t = Task(robot, port=port)
+    t.add_skill("contact", "MoveToContact", context)
+    t.start()
+    if wait:
+        return t.wait()
+
+def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,5]):
     context = {
         "skill": {
             "p0":{
@@ -318,7 +340,11 @@ def move(robot, location, offset = [0,0,0], port=12000, wait = True):
                 }
         },
         "control": {
-            "control_mode": 2
+            "control_mode": 0
+        },
+        "user":{
+            "F_ext_max": f_ext,
+            #"env_X": [0.002, 0.002, 0.002, 0.0175, 0.0175, 0.0175]  #[0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
         }
     }
     t = Task(robot, port=port)
@@ -946,7 +972,7 @@ def extract(robot, extractable, extractTo, container, port=12000):
     t.start(queue=False)
     return t.wait()
 
-def insert(robot, insertable, approach, container, port=12000):
+def insert(robot, insertable, approach, container, deltaX =[0,0,0,0,0,0], port=12000):
     path_to_default_context = os.getcwd() + "/taxonomy/default_contexts/"
     f = open(path_to_default_context + "insertion.json")
     move_context = json.load(f)
@@ -955,6 +981,29 @@ def insert(robot, insertable, approach, container, port=12000):
     move_context["skill"]["objects"]["Insertable"] = insertable
     move_context["skill"]["time_max"] = 7
     move_context["skill"]["p2"]["f_push"][2] = 25
+    move_context["skill"]["p0"]["DeltaX"] = deltaX
+    #move_context["user"]["env_X"] = [0, 0, 1, 1, 1, 1]
+    t = Task(robot, port)
+    t.add_skill("insertion","TaxInsertion",move_context)
+    t.start(queue=False)
+    return t.wait()
+
+def insert2(robot, insertable, approach, container, deltaX =[0,0,0,0,0,0], port=12000):
+    path_to_default_context = os.getcwd() + "/taxonomy/default_contexts/"
+    f = open(path_to_default_context + "insertion.json")
+    move_context = json.load(f)
+    move_context["skill"]["objects"]["Container"] = container
+    move_context["skill"]["objects"]["Approach"] = approach
+    move_context["skill"]["objects"]["Insertable"] = insertable
+    move_context["skill"]["time_max"] = 7
+    move_context["skill"]["p2"]["search_c"] = [0,0,25,0,0,0]
+    move_context["skill"]["p2"]["search_a"] = [0,0,0,0,0,0]
+    move_context["skill"]["p2"]["search_f"] = [0,0,0,0,0,0]
+    move_context["skill"]["p2"]["search_phi"] = [0,0,0,0,0,0]
+    move_context["skill"]["p2"]["delta_a"] = [0,0,0,0,0,0]
+    move_context["skill"]["p2"]["delta_f"] = [0,0,0,0,0,0]
+    move_context["skill"]["p2"]["delta_phi"] = [0,0,0,0,0,0]
+    move_context["skill"]["p0"]["DeltaX"] = deltaX
     #move_context["user"]["env_X"] = [0, 0, 1, 1, 1, 1]
     t = Task(robot, port)
     t.add_skill("insertion","TaxInsertion",move_context)
@@ -1283,6 +1332,9 @@ def teach_dualarm(module:str, object_name:str):
     
     print(call_method(robot, 12000, "set_grasped_object",{"object":insertable}))      
 
+
+def test_auto_object_exchange():
+    pass
 
 def teach_dualarm_without_homing(module:str, object_name:str):
     insertable = object_name
