@@ -38,6 +38,7 @@
 #include "mios/skills/file.hpp"
 #include "mios/skills/extraction.hpp"
 #include "mios/skills/insertion.hpp"
+#include "mios/skills/insertion2.hpp"
 #include "mios/skills/wipe.hpp"
 #include "mios/skills/turn.hpp"
 #include "mios/skills/move_trajectory.hpp"
