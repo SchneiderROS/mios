@@ -60,7 +60,7 @@ void MoveToPoseStrategy2::get_next_command(Actuator &cmd, [[maybe_unused]] const
         cmd.TF_T_EE_d.block<1,1>(i,3) = m_T_EE_0.block<1,1>(i,3)*(1-m_s) + m_T_EE_d.block<1,1>(i,3)*m_s;
     }
     //std::cout << cmd.TF_T_EE_d << std::endl;
-    std::cout << std::to_string(m_s) << std::endl;
+    //std::cout << std::to_string(m_s) << std::endl;
 
 
 }
