@@ -61,19 +61,31 @@ class have_a_rest:
         self.delay_start_time[one] = time.time()
         for i in self.robots:
             if i != one:
-                # TODO: pause_service
+                # pause_service
+                self.pause(i)                
                 self.delay_start_time[i] = time.time()
     
     def resume_others(self, one):
         self.delay_time[one] += time.time() - self.delay_start_time[one]
         for i in self.robots:
             if i != one:
-                # TODO: resume_service
+                # resume_service
+                self.resume()
                 self.delay_time[i] += time.time() - self.delay_start_time[i]
 
     
-    def update_robots(self, left_robots):
-        self.robots = left_robots
+    def rm_robots(self, finished_one):
+        self.robots.remove(finished_one)
+        
+    def pause(self, one):
+        s = ServerProxy("http://" + one + ":8000", allow_none=True)
+        s.pause_service()
+        print("pause: " + one)
+        
+    def resume(self, one):
+        s = ServerProxy("http://" + one + ":8000", allow_none=True)
+        s.resume_service()
+        print("resume: " + one)
 
 cutoff = {  '001_left': 0.7080000000000001,   # best solution found *1.2
             '003_left': 0.68016,
@@ -179,16 +191,24 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
         
     threads = []
     tags.extend(tags_addon)
+    
+    Rest = have_a_rest(list_robots) # init with the robots
     while len(tasks) > 0:
         finished_robot = []
         for robot in tasks:
             server = ServerProxy("http://%s:%s/" %(robot, "8000"))
             if len(tasks[robot]) == 0:
                 finished_robot.append(robot)
+                Rest.rm_robots(robot)
                 continue
             if server.is_busy():
                 continue
             if not check_object(robot, tasks[robot][0]):
+                Rest.stop_others(robot)
+                while not check_object(robot, tasks[robot][0]):
+                    time.sleep(1)
+                Rest.resume_others(robot)
+                
                 continue
             # TODO: add wait function
             # it takes the robot and finished robot, tasks as input
@@ -242,7 +262,9 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
     kb = ServerProxy("http://" + knowledge_source.kb_location+ ":8001", allow_none=True)
     kb.clear_memory()
     print("run ", n_current_iter, " finished :)")
+    print("total pause time: ", Rest.delay_time)
     return "finished :)"
+
 
 def check_object(host, obj):
     result = call_method(host, 12000, "get_state")
