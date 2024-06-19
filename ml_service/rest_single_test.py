@@ -30,49 +30,12 @@ cutoff = {
             # '010_left': 0.6888000000000001,
         }
 # ---------------------------- rest ------------------------------------
-class have_a_rest:
-    def __init__(self, robots:list):
-        self.robots = robots
-        self.delay_time = {}
-        self.delay_start_time = {}
-        
-        for i in self.robots:
-            self.delay_time[i] = 0
-            self.delay_start_time[i] = 0
-                
-    def stop_others(self, one):
-        self.delay_start_time[one] = time.time()
-        for i in self.robots:
-            if i != one:
-                # pause_service
-                self.pause(i)                
-                self.delay_start_time[i] = time.time()
-    
-    def resume_others(self, one):
-        self.delay_time[one] += time.time() - self.delay_start_time[one]
-        for i in self.robots:
-            if i != one:
-                # resume_service
-                self.resume(i)
-                self.delay_time[i] += time.time() - self.delay_start_time[i]
-
-    
-    def rm_robots(self, finished_one):
-        self.robots.remove(finished_one)
-        
-    def pause(self, one):
-        
-        
-    def resume(self, one):
-        s = ServerProxy("http://collective-" + one + ".rsi.ei.tum.de:8000", allow_none=True)
-        s.resume_service()
-        print("resume: " + one)
 
 
 waiting_robots = []
 # -----------------------------------------------------------------------------
             
-def test(n_current_iter:int, tags_addon:list = ["100collective","ps_charlie_1"], n_agents:int = 1): #10
+def test(n_current_iter =1 , tags_addon:list = ["100collective","ps_charlie_1"], n_agents:int = 1): #10
     '''
     n_current_iter: number of current iteration
 
