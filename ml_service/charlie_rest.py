@@ -4,16 +4,20 @@ import time
 from problem_definition.domain import Domain
 from run_experiments import *
 
+# input is a string, output is only the contained numbers as string
+def get_numbers(input):
+    return ''.join(filter(str.isdigit, input))
+
 # ---------------------------- exp robots ------------------------------------
-list_robots = ["007", "008", "010"]
+list_robots = ["007", "006", "011"]
 
 print(len(list_robots))
 print(list_robots)
 # ---------------------------- tasks ------------------------------------
 tasks = {   
             "collective-007.rsi.ei.tum.de":["D_022","D_011"],
-            "collective-008.rsi.ei.tum.de":["D_008", "D_004","D_013"],
-            "collective-010.rsi.ei.tum.de":["D_009","D_014","D_024","D_025"],
+            "collective-006.rsi.ei.tum.de":["D_002", "D_001", "D_021"],
+            "collective-011.rsi.ei.tum.de":["D_010", "D_015","D_023"],
         }   
 
 print(tasks)
@@ -41,6 +45,7 @@ class have_a_rest:
             self.delay_start_time[i] = 0
                 
     def stop_others(self, one):
+        one = get_numbers(one)
         self.delay_start_time[one] = time.time()
         for i in self.robots:
             if i != one:
@@ -49,6 +54,7 @@ class have_a_rest:
                 self.delay_start_time[i] = time.time()
     
     def resume_others(self, one):
+        one = get_numbers(one)
         self.delay_time[one] += time.time() - self.delay_start_time[one]
         for i in self.robots:
             if i != one:
@@ -61,11 +67,14 @@ class have_a_rest:
         self.robots.remove(finished_one)
         
     def pause(self, one):
+        one = get_numbers(one)
+        print("pause: " + one)  
         s = ServerProxy("http://collective-" + one + ".rsi.ei.tum.de:8000", allow_none=True)
         s.pause_service()
         print("pause: " + one)
         
     def resume(self, one):
+        one = get_numbers(one)
         s = ServerProxy("http://collective-" + one + ".rsi.ei.tum.de:8000", allow_none=True)
         s.resume_service()
         print("resume: " + one)
@@ -114,7 +123,7 @@ def collective25(n_current_iter=1, tags_addon:list = ["100collective","ps_charli
             '010_left': 0.6888000000000001,
         }   
 
-    sc = SVMLearner(50,10,0,True,False, 0.4,True).get_configuration()
+    sc = SVMLearner(3,10,0,True,False, 0.4,True).get_configuration()
         
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
 
