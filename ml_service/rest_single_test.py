@@ -70,7 +70,7 @@ def test(n_current_iter =1 , tags_addon:list = ["100collective","ps_charlie_1"],
     threads = []
     tags.extend(tags_addon)
     
-    robot = "007_left"
+    robot = "collective-007.rsi.ei.tum.de"
     
     insertable = tasks[robot].pop(0)
     container = insertable+"_container" 
