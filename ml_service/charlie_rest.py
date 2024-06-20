@@ -9,10 +9,7 @@ def get_numbers(input):
     return ''.join(filter(str.isdigit, input))
 
 # ---------------------------- exp robots ------------------------------------
-list_robots = ["007", "006", "011"]
 
-print(len(list_robots))
-print(list_robots)
 # ---------------------------- tasks ------------------------------------
 tasks = {   
             "collective-007.rsi.ei.tum.de":["D_022","D_011"],
@@ -21,6 +18,7 @@ tasks = {
         }   
 
 print(tasks)
+list_robots = list(tasks.keys())
 total = 0
 for k in tasks:
     total += len(tasks[k])
@@ -69,13 +67,13 @@ class have_a_rest:
     def pause(self, one):
         one = get_numbers(one)
         print("pause: " + one)  
-        s = ServerProxy("http://collective-" + one + ".rsi.ei.tum.de:8000", allow_none=True)
+        s = ServerProxy("http://" + one + ":8000", allow_none=True)
         s.pause_service()
         print("pause: " + one)
         
     def resume(self, one):
         one = get_numbers(one)
-        s = ServerProxy("http://collective-" + one + ".rsi.ei.tum.de:8000", allow_none=True)
+        s = ServerProxy("http://" + one + ":8000", allow_none=True)
         s.resume_service()
         print("resume: " + one)
 
@@ -115,7 +113,6 @@ def collective25(n_current_iter=1, tags_addon:list = ["100collective","ps_charli
     # tags = ["100_testing"]
     # modules = list_block_1 + list_block_2 + list_U
     
-    modules = list_robots 
 
     cutoff = {  
             '007_left': 0.62616,
