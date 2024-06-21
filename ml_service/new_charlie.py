@@ -153,7 +153,6 @@ n_agent = 2
 
 while True:
     # if no robot is leaning ^ no task in todo; then stop
-    time.sleep(1)
     if len(todos) == 0:
         if sum([t.is_alive() for t in threads]) == 0:
             if len(dos) == 0:
@@ -166,7 +165,7 @@ while True:
         # it will prefer to assign the task to the robots in the front of the todos
         # if it is busy then try to assign the task to the next one
         if i+1 > len(todos):
-            # jump out of current iteration; do not assign tasks to any robot when no robot is available
+            # jump out of current iteration;in other words, do not assign tasks to any robot when no robot is available
             break
         
         x = list(todos.keys())[i]
