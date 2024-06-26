@@ -83,6 +83,7 @@ class have_a_rest:
             threads[-1].start()
         for t in threads:
             t.join()
+        print("All robots are paused.") 
 
     def resume_all(self):
         threads = []
@@ -91,6 +92,7 @@ class have_a_rest:
             threads[-1].start()
         for t in threads:
             t.join()
+        print("All robots are resumed.") 
 
     def pause(self, one):
         #logger.debug("pause "+one)
@@ -239,7 +241,7 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
                 continue
             if sum([t.is_alive() for t in threads]) >= n_agents:
                 continue
-            if not get_states([robot.split(".")[0][-3:]])[0]:
+            if not get_states([robot.split(".")[0][-3:]])[0]: # get_states() returns True if IdleTask and not Busy
                 continue
             Rest.resume_all()
             insertable = tasks[robot].pop(0)
