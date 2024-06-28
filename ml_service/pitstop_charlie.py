@@ -43,7 +43,7 @@ tasks = {
         "collective-021.rsi.ei.tum.de":["A_020_pentagram", "A_010_square-2","C_018","C_019"],
         "collective-022.rsi.ei.tum.de":["C_009", "B_007_audioJack","C_010","C_013"],
         "collective-023.rsi.ei.tum.de":["C_014", "B_008_USB-2","A_019_oneline","C_key_08"],
-        "collective-024.rsi.ei.tum.de":["C_015", "B_014_CN","C_017"],
+        "collective-024.rsi.ei.tum.de":["B_014_CN", "C_015", "C_017"],
         "collective-025.rsi.ei.tum.de":["A_025_heart", "A_014_doji-1","A_023_stairs"],
         # "collective-026.rsi.ei.tum.de":["026_left","B-014","A_022_diamond","B-018"],
         "collective-027.rsi.ei.tum.de":["B_010_plugF-2","C_016","C_key_23","A_031_audi"],
