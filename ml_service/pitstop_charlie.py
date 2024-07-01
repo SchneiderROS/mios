@@ -22,41 +22,56 @@ print(list_robots)
 # ---------------------------- cutoff cost ------------------------------------
 
 tasks = {   
-        "collective-001.rsi.ei.tum.de":["001_left","D_007","D_016","D_017"],
-        "collective-003.rsi.ei.tum.de":["003_left","D_012","D_005","D_018","D_028"],
-        "collective-004.rsi.ei.tum.de":["004_left","D_019","D_020"],
-        "collective-005.rsi.ei.tum.de":["005_left","D_006", "D_026", "D_027"],
-        "collective-006.rsi.ei.tum.de":["006_left","D_002", "D_001", "D_021"],
-        #"collective-007.rsi.ei.tum.de":["007_left","D_022","D_011"],
-        "collective-008.rsi.ei.tum.de":["008_left","D_008", "D_004","D_013"],
-        #"collective-010.rsi.ei.tum.de":["010_left","D_009","D_014","D_024","D_025"],
-        "collective-011.rsi.ei.tum.de":["011_left","D_010", "D_015","D_023"],
-        "collective-012.rsi.ei.tum.de":["012_left","C_007","C_key_05","C_006"],
-        #"collective-009.rsi.ei.tum.de":["009_left","A_015_trapezoid","B_017_IT2DE","B_013"],
-        #"collective-013.rsi.ei.tum.de":["013_left","A_030_shamrock","A_012_ellipsoid-2", "C_011"],
-        #"collective-014.rsi.ei.tum.de":["014_left","A_024_moon","C_020","B_016"],
-        #"collective-015.rsi.ei.tum.de":["015_left","B_012_DE2DE","A_011","C_025"],
-        #"collective-016.rsi.ei.tum.de":["016_left","A_026_cylinder_10","A_026_cylinder_20","A_026_cylinder_50","A_026_cylinder_30"],  #,,,],"A_026_cylinder_60"
-        #"collective-017.rsi.ei.tum.de":["017_left","B_015","C_key_12","A_013_hexagram"],
-
-# Checkt 041 for correct teaching:
-        #"collective-041.rsi.ei.tum.de":["041_left","A_021_arrow","A_key_24","C_022"],  
-
-        #"collective-021.rsi.ei.tum.de":["021_left","C_018","A_020_pentagram","C_019"],
-        #"collective-022.rsi.ei.tum.de":["022_left","C_010","C_013","C_009"],
-        #"collective-023.rsi.ei.tum.de":["023_left","A_019_oneline","C_key_08","C_014"],
-        #"collective-024.rsi.ei.tum.de":["024_left","C_017","C_015","C_key_24"],
-        #"collective-025.rsi.ei.tum.de":["025_left","A_014_doji-1","A_023_stairs","A_025_heart"],
-        #"collective-026.rsi.ei.tum.de":["026_left","B-014","A_022_diamond","B-018"],
-        #"collective-027.rsi.ei.tum.de":["027_left","C_016","C_key_23","A_031_audi"],
-        # # "collective-040.rsi.ei.tum.de":[],
-        #"collective-029.rsi.ei.tum.de":["029_left","A_016_sector","A_018_cross-2", "A_016_cross-1"]
+        "collective-001.rsi.ei.tum.de":["D_016_extHexScrewdriver-30","A_018","D_007_extHexScrewdriver-10","D_017_extDodScrewdriver-30","B_002_IEC-C7"],
+        "collective-003.rsi.ei.tum.de":["D_028", "D_012", "D_005", "D_018", "A_001_triangle-1"],
+        "collective-004.rsi.ei.tum.de":["D_020", "D_019", "A_002_hexagon-1"],
+        "collective-005.rsi.ei.tum.de":["D_027", "D_026", "B_001_USB-1", "D_006"],
+        "collective-006.rsi.ei.tum.de":["D_021", "A_32_pentagon-1","D_002", "D_001" ],
+        "collective-007.rsi.ei.tum.de":["D_022", "A_004_cylinder-1","D_011"],
+        # "collective-008.rsi.ei.tum.de":["008_left","D_008", "D_004","D_013"],
+        "collective-036.rsi.ei.tum.de":["D_024", "B_003_plugF-1","D_009","D_014","D_025"],#PC 10 is broken and changed to 36 now
+        "collective-011.rsi.ei.tum.de":["B_004_audioJack-35", "D_010", "D_015","D_023"],
+        "collective-012.rsi.ei.tum.de":["C_007", "B_005_IEC-C13", "C_key_05","C_006"],
+        "collective-009.rsi.ei.tum.de":["B_013", "A_005_cylinder-2","A_015_trapezoid","B_017_IT2DE"],
+        "collective-013.rsi.ei.tum.de":["C_011", "A_030_shamrock","A_012_ellipsoid-2"],
+        "collective-014.rsi.ei.tum.de":["B_016", "B_006_HDMI-1","A_024_moon","C_020"],
+        "collective-015.rsi.ei.tum.de":["C_025", "B_012_DE2DE","A_011"],
+        "collective-016.rsi.ei.tum.de":["A_026_cylinder_60", "A_026_cylinder_10","A_026_cylinder_20","A_026_cylinder_30"],  #,,,],"A_026_cylinder_60"
+        "collective-017.rsi.ei.tum.de":["A_013_hexagram", "A_008_square-1","B_015","C_key_12"],
+        # Checkt 041 for correct teaching:
+        "collective-041.rsi.ei.tum.de":["A_009_hexagon-3","A_021_arrow","A_key_24","C_022"],  # check 41_left
+        "collective-021.rsi.ei.tum.de":["A_020_pentagram", "A_010_square-2","C_018","C_019"],
+        "collective-022.rsi.ei.tum.de":["C_009", "B_007_audioJack","C_010","C_013"],
+        "collective-023.rsi.ei.tum.de":["C_014", "B_008_USB-2","A_019_oneline","C_key_08"],
+        "collective-024.rsi.ei.tum.de":["B_014_CN", "C_015", "C_017"],
+        "collective-025.rsi.ei.tum.de":["A_025_heart", "A_014_doji-1","A_023_stairs"],
+        # "collective-026.rsi.ei.tum.de":["026_left","B-014","A_022_diamond","B-018"],
+        "collective-027.rsi.ei.tum.de":["B_010_plugF-2","C_016","C_key_23","A_031_audi"],
+        # "collective-040.rsi.ei.tum.de":[], # teach 40
+        # "collective-029.rsi.ei.tum.de":["029_left","A_016_sector","A_018_cross-2", "A_016_cross-1"]
         }
 total = 0
 for k in tasks:
     total += len(tasks[k])
 print("total tasks: ",total)
 
+def set_all_object():
+    for robot in tasks:
+        ip = get_ips([robot.split(".")[0][-3:]])[0]
+        next_obj = tasks[robot][0]
+        print("set ", next_obj, " for ", robot)
+        set_result = call_method(ip,12000,"set_grasped_object",{"object":next_obj})
+        # print(set_)
+        call_method(ip,13000,"set_grasped_object",{"object":next_obj})
+    
+    # print all current object for double-check
+    for robot in tasks:
+        ip = get_ips([robot.split(".")[0][-3:]])[0]
+        result = call_method(ip, 12000, "get_state")
+        if type(result) == dict:
+            print(robot, " is grasping ", result["result"]["grasped_object"])
+        else:
+            print("cannot reach ", robot)
 class have_a_rest:
     def __init__(self):
         self.robots = list(tasks.keys())
@@ -68,6 +83,7 @@ class have_a_rest:
             threads[-1].start()
         for t in threads:
             t.join()
+        #logger.debug("All robots are paused.") 
 
     def resume_all(self):
         threads = []
@@ -76,6 +92,7 @@ class have_a_rest:
             threads[-1].start()
         for t in threads:
             t.join()
+        #logger.debug("All robots are resumed.") 
 
     def pause(self, one):
         #logger.debug("pause "+one)
@@ -224,7 +241,7 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
                 continue
             if sum([t.is_alive() for t in threads]) >= n_agents:
                 continue
-            if not get_states([robot.split(".")[0][-3:]])[0]:
+            if not get_states([robot.split(".")[0][-3:]])[0]: # get_states() returns True if IdleTask and not Busy
                 continue
             Rest.resume_all()
             insertable = tasks[robot].pop(0)
@@ -380,7 +397,24 @@ def move_to_first_approach():
         call_method(t, 12000, "teach_object",{"object":ins+"_container_above"})
 
         
-    
-    
+def release_object(module, hand="left"):
+    ip = get_ips([module])[0]
+    if hand == "left": 
+        call_method(ip, 12000, "release_object", timeout=2)
+    elif hand == "right":
+        call_method(ip, 13000, "release_object", timeout=2)
+    elif hand == "both":
+        call_method(ip, 12000, "release_object", timeout=2)
+        call_method(ip, 13000, "release_object", timeout=2)
+    else:
+        print("Hand is not properly specified.")
 
 
+def get_state(module):
+    ip = get_ips([module])[0]
+    current_task_left = call_method(ip, 12000, "get_state")["result"]["current_task"]
+    current_task_right = call_method(ip, 13000, "get_state")["result"]["current_task"]
+    print("Left arm tasks is:", current_task_left, "Right arm task is:", current_task_right)
+    grasped_object = call_method(ip, 12000, "get_state")["result"]["grasped_object"]
+    print("Grasped object is:", grasped_object)
+    
