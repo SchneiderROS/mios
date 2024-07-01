@@ -567,7 +567,10 @@ def get_states(modules):
     states = []
     for ip,xxx in zip(ips,modules):
         print("get state of ",xxx)
-        response = call_method(ip, 12000, "get_state")
+        response = call_method(ip, 12000, "get_state",timeout=3)
+        if response == None:
+            states.append(False)
+            continue
         s = ServerProxy("http://"+ip+":8000", allow_none=True)
         busy = s.is_busy()
         if type(response) is dict:
