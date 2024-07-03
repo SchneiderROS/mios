@@ -1,4 +1,3 @@
-from numpy import insert
 from definitions.templates import *
 from definitions.cost_functions import *
 from definitions.service_configs import *
@@ -11,17 +10,6 @@ from utils.helper_functions import *
 import os
 from threading import Thread
 import json
-
-
-class RobotCollective:
-    def __init__(self, n_robots, n_tasks):
-        self.n_robots = n_robots
-        self.n_tasks = n_tasks
-        self.service_configuration = None
-        self.problem_definition = None
-        self.knowledge = Knowledge()
-        self.task_map = {}  # keys=robot_names: [list of tasks per robot]
-        self.allocation_order = []
         
 ###################################################################################
 list_block_1 = ["001", #"002", 
