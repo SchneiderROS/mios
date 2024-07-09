@@ -1,4 +1,3 @@
-from typing import Union
 from copy import deepcopy
 import time
 import sys
