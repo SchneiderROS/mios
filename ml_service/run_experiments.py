@@ -1954,11 +1954,11 @@ def robustnes_test():
         if len(successful_trials)<1:
             continue
         best_trial = max(successful_trials, key=lambda d: d["q_metric"]["final_cost"])
+
         knowledge = Knowledge()
         knowledge.parameters = []
         for i in range(100): 
             knowledge.parameters.append(best_trial["theta"])
-        
         container = insertable+"_container" 
         approach = container+"_approach"
         pd = InsertionFactory([host], TimeMetric("insertion", {"time": 5}),

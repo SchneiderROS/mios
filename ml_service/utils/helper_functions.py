@@ -128,6 +128,8 @@ def move_joint(robot, location,port=12000, wait=True):
     move_context = json.load(f)
     move_context["skill"]["objects"]["goal_pose"] = location
     move_context["skill"]["time_max"] = 10
+    #move_context["user"]["F_ext_max"] = [25,25]
+    move_context["user"]["tau_ext_max"] = [40,40,40,40,8,8,8]
     t0 = Task(robot, port=port)
     t0.add_skill("move", "MoveToPoseJoint", move_context)
     t0.start()
