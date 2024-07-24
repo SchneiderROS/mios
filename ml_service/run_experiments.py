@@ -1894,6 +1894,10 @@ def collective25():
     return "finished :)"
 
 def robustnes_test():
+    '''
+    007 is teached to above insted of approach
+    005 probably did this result 
+    '''
     tasks_orig = {   
         "collective-001.rsi.ei.tum.de":["D_016_extHexScrewdriver-30","A_018","D_007_extHexScrewdriver-10","D_017_extDodScrewdriver-30","B_002_IEC-C7"],
         "collective-003.rsi.ei.tum.de":["D_028", "D_012", "D_005", "D_018", "A_001_triangle-1"],
@@ -1945,7 +1949,7 @@ def robustnes_test():
         
         client = MongoDBClient(host)
         robot_count += 1
-        for result in client.read("ml_results","insertion",{"meta.tags":[insertable]}):
+        for result in client.read("ml_results","insertion",{"meta.tags":[insertable,"100collective","ps_charlie", "20agents"]}):
             successful_trials = []
             for trial_n, trial in result.items():
                 if trial_n == "meta":
