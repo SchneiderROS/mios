@@ -1961,8 +1961,7 @@ def robustnes_test():
         if len(successful_trials)<1:
             continue
         best_trial = max(successful_trials, key=lambda d: d["q_metric"]["final_cost"])
-        print(host, insertable, best_trial)
-        continue
+        print(host, insertable)
         knowledge = Knowledge()
         knowledge.parameters = []
         for i in range(100): 
