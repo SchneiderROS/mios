@@ -1,4 +1,5 @@
 from math import isclose, ceil
+from sys import exception
 import numpy as np
 import copy
 from plotting.data_acquisition import *
@@ -2157,6 +2158,8 @@ def get_big_collective_data(tags:list = ["5agents_25tasks", "collective"], singl
             continue
         print(len(results), "results found for ",xxx)
         for result in results:
+            if result.instance[-6:] == "_table":
+                result.instance = result.instance[:-6]
             iteration = get_iteration(result.tags)
             #if xxx == "001":
             #    print(xxx,"_left iterations",iteration, "best cost: ",min(result.costs))
@@ -2996,6 +2999,285 @@ def plot_robustness_test():
     axes1.set_xticks(x + width, list(results.keys()))
     axes1.grid()
     axes1.legend(loc="lower right", fontsize=14)
+    plt.show()
+
+    
+
+def plot_convergence_test():
+    plot_single_figures = False
+    colors = ['#8dd3c7', '#feffb3', '#bfbbd9', '#fa8174', '#81b1d2', '#fdb462', '#b3de69', '#bc82bd', '#ccebc4', '#ffed6f']
+    plt.style.use('dark_background')
+    labels = ["IEC(C7)", "Triangle-1", "Hexagon-1", "USB-1", "Triangle-2", "Cylinder-1", "Key-1", "Plug(type F)-1", "Audio Jack(3.5mm)", "IEC(C13)", "Cylinder-2", "Hexagon-2", "HDMI-1", "Key-2", "Cylinder-3", "Square-1", "Hexagon-3", "Square-2", "Audio jack(6.35mm)", "USB-2", "Plug(type C)", "Key-3", "Plug(type F)-2", "HDMI-2", "Key-4"]
+    modules = list_block_1 + list_block_2 + list_U
+    fig2, axes2 = plt.subplots(6, 4, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=100)
+    results = None
+    # try:
+    #     print("searching on collective NAS")
+    #     client = MongoDBClient("10.157.175.119")
+    #     results = client.read("plotting","convergence_test",{})
+    #     if len(results) > 0:
+    #         results = results[-1]
+    #         results.pop("_id")
+    #         print("found results on collective NAS")
+            
+    # except:
+    #     pass
+    if results is None:
+        print("\ngetting default PSP data")
+        # ["robustness_test","n2"]
+        mean_reboot, confidence_reboot, reboot = get_big_collective_data(["convergence_test_1","5000"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90) 
+        print("\ngetting success check data (retry 5x) with PSP")
+        # ["robustness_test","n2"]
+        mean_isolated_alpha, confidence_isolated_alpha, directly = get_big_collective_data(["convergence_test_2","success_check"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        
+        print("\ngetting success check data (retry 5x) with CMA-ES")
+        # ["robustness_test","n2"]
+        mean_isolated_alpha, confidence_isolated_alpha, cmaes = get_big_collective_data(["convergence_test_3","success_check"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        print("\ngetting success check data (retry 5x) with original PSP")
+        # ["robustness_test","n2"]
+        mean_isolated_alpha, confidence_isolated_alpha, origPSP = get_big_collective_data(["convergence_test_5","success_check"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        mean_isolated_alpha, confidence_isolated_alpha, cartHold = get_big_collective_data(["convergence_test_6","success_check","holdpose"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        mean_isolated_alpha, confidence_isolated_alpha, jointHold = get_big_collective_data(["convergence_test_6","success_check","jointpose"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        mean_isolated_alpha, confidence_isolated_alpha, lifted_jointHold = get_big_collective_data(["convergence_test_7","success_check","lifted_jointpose"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        mean_isolated_alpha, confidence_isolated_alpha, table_insertion = get_big_collective_data(["convergence_test_9","success_check","table_insertion"], single_agent=True, skip_module=set(["028", "018","010","029","016","040"]),monocally_decreasing=False, only_full_sets=False,min_length=90)  
+        
+        results = {}
+        successrate_reboot = {}
+        successrate_directly = {}
+        successrate_cmaes = {}
+        successrate_origPSP = {}
+        #print(reboot.keys())
+        #print(directly.keys())
+        for iter in reboot.keys():
+            for i in range(len(reboot[iter]["instances"])):
+                instance = reboot[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"defaultPSP":[]}
+                results[instance]["defaultPSP"].append(reboot[iter]["costs_times"][i])
+        for iter in directly.keys():
+            for i in range(len(directly[iter]["instances"])):
+                instance = directly[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"defaultPSPsc":[]}
+                if "beta" not in results[instance]:
+                    results[instance]["defaultPSPsc"] = []
+                results[instance]["defaultPSPsc"].append(directly[iter]["costs_times"][i])
+        for iter in cmaes.keys():
+            for i in range(len(cmaes[iter]["instances"])):
+                instance = cmaes[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"cmaes":[]}
+                if "cmaes" not in results[instance]:
+                    results[instance]["cmaes"] = []
+                results[instance]["cmaes"].append(cmaes[iter]["costs_times"][i])
+        for iter in origPSP.keys():
+            for i in range(len(origPSP[iter]["instances"])):
+                instance = origPSP[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"origPSP":[]}
+                if "origPSP" not in results[instance]:
+                    results[instance]["origPSP"] = []
+                results[instance]["origPSP"].append(origPSP[iter]["costs_times"][i])
+        for iter in cartHold.keys():
+            for i in range(len(cartHold[iter]["instances"])):
+                instance = cartHold[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"cartHold":[]}
+                if "cartHold" not in results[instance]:
+                    results[instance]["cartHold"] = []
+                results[instance]["cartHold"].append(cartHold[iter]["costs_times"][i])
+        for iter in jointHold.keys():
+            for i in range(len(jointHold[iter]["instances"])):
+                instance = jointHold[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"jointHold":[]}
+                if "jointHold" not in results[instance]:
+                    results[instance]["jointHold"] = []
+                results[instance]["jointHold"].append(jointHold[iter]["costs_times"][i])
+        for iter in lifted_jointHold.keys():
+            for i in range(len(lifted_jointHold[iter]["instances"])):
+                instance = lifted_jointHold[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"lifted_jointHold":[]}
+                if "lifted_jointHold" not in results[instance]:
+                    results[instance]["lifted_jointHold"] = []
+                results[instance]["lifted_jointHold"].append(lifted_jointHold[iter]["costs_times"][i])
+        for iter in table_insertion.keys():
+            for i in range(len(table_insertion[iter]["instances"])):
+                instance = table_insertion[iter]["instances"][i]
+                print("instance: ", i, instance, iter)
+                if instance not in results:
+                    results[instance] = {"table_insertion":[]}
+                if "table_insertion" not in results[instance]:
+                    results[instance]["table_insertion"] = []
+                results[instance]["table_insertion"].append(table_insertion[iter]["costs_times"][i])
+
+    figures = [None for x in range(len(results))]
+    axes = [None for x in range(len(results))]
+    for i, instance in enumerate(results.keys()):
+        label = instance
+        axes2[i%6,int(i/6)].set_title(label)
+        try:
+            print(instance, i)
+            times = [time/60 for time,cost in results[instance]["defaultPSP"][0]]
+            costs = [cost for time,cost in results[instance]["defaultPSP"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            #line_psp_r = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[0], label = "PSP")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                #axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[0], label = "PSP")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[0], alpha=0.2)
+        except KeyError:
+            print("no reboot data for ",instance)
+            pass  
+        try:          
+            times = [time/60 for time,cost in results[instance]["defaultPSPsc"][0]]
+            costs = [cost for time,cost in results[instance]["defaultPSPsc"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            #line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[1], label = "PSP with success-check")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                #axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[1], label = "PSP with success-check")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[1], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        try:          
+            times = [time/60 for time,cost in results[instance]["cmaes"][0]]
+            costs = [cost for time,cost in results[instance]["cmaes"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            #line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[2], label = "CMAES") # with success-check
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[2], label = "CMAES with success-check")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[2], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        try:          
+            times = [time/60 for time,cost in results[instance]["origPSP"][0]]
+            costs = [cost for time,cost in results[instance]["origPSP"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            #line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[3], label = "original PSP with nonlinear hold process")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[3], label = "original PSP with nonlinear hold process") #  with success-check
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[3], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        try:          
+            times = [time/60 for time,cost in results[instance]["cartHold"][0]]
+            costs = [cost for time,cost in results[instance]["cartHold"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            #line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[5], label = "original PSP with cartesian impedance Hold")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[5], label = "original PSP with cartesian Hold")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[3], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        try:          
+            times = [time/60 for time,cost in results[instance]["jointHold"][0]]
+            costs = [cost for time,cost in results[instance]["jointHold"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            #line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[6], label = "original PSP with joint impedance Hold")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[6], label = "original PSP with joint Hold")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[3], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        try:          
+            times = [time/60 for time,cost in results[instance]["lifted_jointHold"][0]]
+            costs = [cost for time,cost in results[instance]["lifted_jointHold"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[7], label = "original PSP with lifted joint impedance Hold")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[7], label = "original PSP with lifted joint Hold")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[3], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        try:          
+            times = [time/60 for time,cost in results[instance]["table_insertion"][0]]
+            costs = [cost for time,cost in results[instance]["table_insertion"][0]]
+            batch_mean = []
+            batch_std = []
+            for index in range(0,len(costs)-9,10):  # remove "-9" for full plot
+                batch_mean.append(np.mean(costs[index:index+10]))
+                batch_std.append(np.std(costs[index:index+10]))
+            line_psp_d = axes2[i%6,int(i/6)].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[9], label = "original PSP with table mount")
+            if plot_single_figures:
+                if figures[i] is None:
+                    figures[i], axes[i] = plt.subplots(1, 1, sharex=True, gridspec_kw={'hspace': 0.5, 'wspace': 0.4}, num=i)
+                axes[i].plot(list(range(1,len(batch_mean)+1)),batch_mean, color=colors[8], label = "original PSP with table mount")
+                #axes[i].fill_between(range(len(batch_mean)), np.array(batch_mean)+np.array(batch_std), np.array(batch_mean)-np.array(batch_std), color=colors[3], alpha=0.2)
+        except KeyError:
+            print("no directly after learning data for ",instance)
+            pass
+        axes2[i%6,int(i/6)].set_ylim((0,2.5))
+        axes2[i%6,int(i/6)].set_xlim((0,50))
+        axes2[5,int(i/6)].set_xlabel("mean cost of batch")
+        axes2[i%6,int(i/6)].set_ylabel("cost [1]")
+        if figures[i] is not None:
+            axes[i].set_ylim((0,2.5))
+            axes[i].set_xlabel("mean cost of batch")
+            axes[i].set_ylabel("cost [1]")
+            axes[i].legend(loc="upper right")
+            figures[i].suptitle("Convergence Test - 5000 Trials\n"+instance)
+    print(figures)
+    client = MongoDBClient("10.157.175.119")
+    client.write("plotting","convergence_test",results)
+    lines, texts = axes2[0,0].get_legend_handles_labels()
+    fig2.legend(lines, texts, loc = "lower right")
+    fig2.suptitle("Convergence Test - 5000 Trials")
+    print("130 trials for each run (alpha and noKnowledge)")
     plt.show()
 
 def plot_originalVScurrentPSP():

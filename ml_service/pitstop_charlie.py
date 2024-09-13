@@ -22,6 +22,7 @@ print(list_robots)
 
 tasks = {   
         "collective-001.rsi.ei.tum.de":["D_016_extHexScrewdriver-30","A_018","D_007_extHexScrewdriver-10","D_017_extDodScrewdriver-30","B_002_IEC-C7"],
+        #125, 21, 121, 162.5, 25.3 (grey)
         "collective-003.rsi.ei.tum.de":["D_028", "D_012", "D_005", "D_018", "A_001_triangle-1"],
         "collective-004.rsi.ei.tum.de":["D_020", "D_019", "A_002_hexagon-1"],
         "collective-005.rsi.ei.tum.de":["D_027", "D_026", "B_001_USB-1", "D_006"],
@@ -65,10 +66,12 @@ while True:
 print("total tasks: ",count)
 print("task sequence: ",task_sequence)
 
-def set_all_object():
+def set_all_object(tasks=tasks, tablemount = False):
     for robot in tasks:
         ip = get_ips([robot.split(".")[0][-3:]])[0]
         next_obj = tasks[robot][0]
+        if tablemount:
+            next_obj = next_obj + "_table"
         print("set ", next_obj, " for ", robot)
         set_result = call_method(ip,12000,"set_grasped_object",{"object":next_obj})
         # print(set_)
@@ -217,6 +220,7 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
 
     sc = SVMLearner(150,10,0,True,False, 0.4,True).get_configuration()
+    #sc = OrigPSPLearner(150,10,0,True,False, 0.4,True).get_configuration()
         
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
 
@@ -427,6 +431,36 @@ def release_object(module, hand="left"):
     else:
         print("Hand is not properly specified.")
 
+def change_tags(old_tags, replacement_tags, database = "ml_results"):
+
+    possible_tasks = []
+    for mtasks in tasks.values():
+        for task in mtasks:
+            possible_tasks.append(task) 
+    for host in tasks.keys():
+        client = MongoDBClient(host)
+        try:
+            data = client.read(database, "insertion", {"meta.tags":old_tags})
+            if len(data) < 1:
+                print("cannot find data at ", host)
+            if len(data) > 1:
+                print("found ",len(data), " entries at ", host)
+                answer = input(" continue? [Y/n]") 
+                if answer != "" or answer != "y" or answer != "Y":
+                    print("aborting...\n")
+                    continue
+            for d in data:
+                instance = "NullObject"
+                for t in d["meta"]["tags"]:
+                    if t in possible_tasks:
+                        instanec = t
+                        break
+                print(d["meta"]["tags"], "  >  ", replacement_tags+[t])
+                client.update(database, "insertion", {"_id": d["_id"]}, {"meta.tags":replacement_tags})
+        except:
+            print("cannot update tags on ", host)
+            continue
+
 
 def get_state(module):
     ip = get_ips([module])[0]
@@ -435,6 +469,11 @@ def get_state(module):
     print("Left arm tasks is:", current_task_left, "Right arm task is:", current_task_right)
     grasped_object = call_method(ip, 12000, "get_state")["result"]["grasped_object"]
     print("Grasped object is:", grasped_object)
+
+def grasp(m):
+     ip = get_ips([m])[0]
+     call_method(ip, 12000,"grasp",{"width":0,"force":100,"speed":1,"epsilon_outer":1,"epsilon_inner":1})
+     call_method(ip, 13000,"grasp",{"width":0,"force":100,"speed":1,"epsilon_outer":1,"epsilon_inner":1})
 
 def count_experiments():
     alle = []

@@ -112,7 +112,8 @@ class ProblemDefinition:
             "identity_weights": self.identity_weights,
             "object_modifier": self.object_modifier,
             "n_variations": self.n_variations,
-            "optimum_threshold": self.optimum_thr
+            "optimum_threshold": self.optimum_thr,
+            "variate_only_success": self.variate_only_success
         }
         return problem_definition
 
@@ -123,7 +124,8 @@ class ProblemDefinition:
                                pd_dict["termination_instructions"], pd_dict["reset_instructions"],
                                CostFunction.from_dict(pd_dict["cost_function"]), pd_dict["identity"],
                                pd_dict["identity_weights"], pd_dict["tags"], object_modifier=pd_dict["object_modifier"],
-                               n_variations=pd_dict["n_variations"],optimum_threshold=pd_dict["optimum_threshold"])
+                               n_variations=pd_dict["n_variations"],optimum_threshold=pd_dict["optimum_threshold"],
+                               variate_only_success=pd_dict["variate_only_success"])
         pd.domain = Domain.from_dict(pd_dict["domain"])
         pd.cost_function = CostFunction.from_dict(pd_dict["cost_function"])
         return pd

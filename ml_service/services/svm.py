@@ -34,7 +34,6 @@ class SVMConfiguration(ServiceConfiguration):
         self.batch_synchronisation = False
         self.request_probability = 0.0
         self.request_probability_decrease = False
-        self.finish_cost = 0  # instead of this one, the optimum_thr of the ProblemDefinition should be used.
 
     def __del__(self):
         print("DESTRUCTOR")
@@ -49,7 +48,7 @@ class SVMConfiguration(ServiceConfiguration):
             "batch_synchronisation": self.batch_synchronisation,
             "request_probability": self.request_probability,
             "request_probability_decrease": self.request_probability_decrease,
-            "finish_cost": self.finish_cost
+
         }
         return config
 
@@ -62,7 +61,7 @@ class SVMConfiguration(ServiceConfiguration):
         self.batch_synchronisation = config_dict["batch_synchronisation"]
         self.request_probability = config_dict["request_probability"]
         self.request_probability_decrease =config_dict["request_probability_decrease"]
-        self.finish_cost = config_dict["finish_cost"]
+
 
 
 class SVMService(BaseService):

@@ -451,7 +451,7 @@ def move_to_contact(robot, location, port = 12000, wait=True):
     if wait:
         return t.wait()
 
-def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,5]):
+def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,5], add_nullspace=False):
     context = {
         "skill": {
             "p0":{
@@ -474,6 +474,12 @@ def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,
             #"env_X": [0.002, 0.002, 0.002, 0.0175, 0.0175, 0.0175]  #[0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
         }
     }
+    if add_nullspace:
+        context["control"]["nullspace"] = {
+                                                    "K_theta": [20, 20, 15, 10, 7, 5, 2],
+                                                    "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+                                                    "active": True
+                                                    }
     t = Task(robot, port=port)
     t.add_skill("move", "TaxMove", context)
     t.start()
@@ -482,13 +488,26 @@ def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,
 
     #print("Result: " + str(result))
 
-def move_joint(robot, location, port=12000, offset=[0,0,0,0,0,0,0], wait=True, speed = []):
+def init_position(robot):
+    import math
+    # move robot to start position
+    M_PI_2 = math.pi / 2
+    M_PI_4 = math.pi / 4
+    initial_joint_pose = [0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4]
+    return start_task(robot, "MoveToJointPose", parameters={"parameters": {"q_g": initial_joint_pose, "pose":"NoneObject"}})
+
+
+def move_joint(robot, location, port=12000, offset=[0,0,0,0,0,0,0], wait=True, speed = [], q_g=[]):
     path_to_default_context = os.getcwd() + "/taxonomy/default_contexts/"
     f = open(path_to_default_context + "move_joint.json")
     move_context = json.load(f)
-    move_context["skill"]["objects"]["goal_pose"] = location
+    if not q_g:
+        move_context["skill"]["objects"]["goal_pose"] = location
+        move_context["skill"]["q_g_offset"] = offset
+    else:
+        move_context["skill"].pop("objects")
+        move_context["skill"]["q_g"] = q_g
     move_context["skill"]["time_max"] = 10
-    move_context["skill"]["q_g_offset"] = offset
     move_context["user"]["env_X"] = [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
     move_context["user"]["F_ext_max"] = [15,15]
     if speed:
@@ -1072,7 +1091,7 @@ def hold_pose(robot, duration, port, control="joint"):
             }
             
         },
-        "user": {"F_ext_max": [100, 50]}
+        #"user": {"F_ext_max": [100, 50]}
     }
     if control == "cart":
         hold_context["control"] = { "control_mode": 0,

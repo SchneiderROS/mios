@@ -46,7 +46,10 @@ def n_trial_until(robot, tags, cutoff):
 def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0):
     for robot in robots:
         mongo_client = MongoDBClient(robot)
-        documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+        try:
+            documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+        except:
+            continue
         if len(documents) == 0:
             print("Not found documents on ", robot)
         ids = []
