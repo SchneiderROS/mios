@@ -50,6 +50,36 @@ tasks = {
         # "collective-040.rsi.ei.tum.de":[], # teach 40
         #"collective-029.rsi.ei.tum.de":["029_left","A_016_sector","A_018_cross-2", "A_016_cross-1"]
         }
+tasks = {   
+        "collective-001.rsi.ei.tum.de":["D_007_extHexScrewdriver-10"],
+        #125, 21, 121, 162.5, 25.3 (grey)
+        "collective-003.rsi.ei.tum.de":["A_001", "D_012", "D_005", "D_018", "A_001_triangle-1"],
+        "collective-004.rsi.ei.tum.de":["A_002", "D_019", "A_002_hexagon-1"],
+        "collective-005.rsi.ei.tum.de":[ "D_006"],
+        "collective-006.rsi.ei.tum.de":["A_003", "A_32_pentagon-1","D_002", "D_001" ],
+        "collective-007.rsi.ei.tum.de":["A_004", "A_004_cylinder-1","D_011"],
+        "collective-008.rsi.ei.tum.de":[ "D_004"],
+        #"collective-036.rsi.ei.tum.de":["D_024", "B_003_plugF-1","D_009","D_014","D_025"],#PC 10 is broken and changed to 36 now
+        "collective-011.rsi.ei.tum.de":["D_023"],
+        #"collective-012.rsi.ei.tum.de":["C_007", "B_005_IEC-C13", "C_006"], #"C_key_05" is lost
+        "collective-009.rsi.ei.tum.de":["A_005_cylinder-2"],
+        "collective-013.rsi.ei.tum.de":["A_012_ellipsoid-2"],
+        "collective-014.rsi.ei.tum.de":["C_020"],
+        "collective-015.rsi.ei.tum.de":["A_011"],
+        #"collective-016.rsi.ei.tum.de":["A_026_cylinder_60", "A_026_cylinder_10","A_026_cylinder_20","A_026_cylinder_30"],  #,,,],"A_026_cylinder_60"
+        "collective-017.rsi.ei.tum.de":["B_015"],  # included for convergence test
+        # Checkt 041 for correct teaching:
+        "collective-041.rsi.ei.tum.de":["A_sector"],  # check 41_left
+        "collective-021.rsi.ei.tum.de":["C_018"],
+        "collective-022.rsi.ei.tum.de":["C_013"],
+        "collective-023.rsi.ei.tum.de":["A_019_oneline"],
+        "collective-024.rsi.ei.tum.de":[ "C_017"],
+        "collective-025.rsi.ei.tum.de":["A_023_stairs"],
+        "collective-026.rsi.ei.tum.de":["A_022_diamond"],    #["026_left","B-014","A_022_diamond","B-018"],
+        "collective-027.rsi.ei.tum.de":["A_031_audi"],
+        # "collective-040.rsi.ei.tum.de":[], # teach 40
+        "collective-029.rsi.ei.tum.de":["029_left"]
+        }
 task_sequence = []
 count = 0
 tasks_temp = copy.deepcopy(tasks)
@@ -73,6 +103,8 @@ def set_all_object(tasks=tasks, tablemount = False):
         if tablemount:
             next_obj = next_obj + "_table"
         print("set ", next_obj, " for ", robot)
+        call_method(ip,12000,"grasp",{"speed":0.2,"force":100,"width":0,"epsilon_inner":1,"epsilon_outer":1})
+        call_method(ip,13000,"grasp",{"speed":0.2,"force":100,"width":0,"epsilon_inner":1,"epsilon_outer":1})
         set_result = call_method(ip,12000,"set_grasped_object",{"object":next_obj})
         # print(set_)
         call_method(ip,13000,"set_grasped_object",{"object":"hold_"+next_obj})
@@ -219,7 +251,7 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
                 '029_left': 0.68088}
     # sc = SVMLearner(450,10,0,True,False, 0.4,True).get_configuration()
 
-    sc = SVMLearner(150,10,0,True,False, 0.4,True).get_configuration()
+    sc = SVMLearner(1500,10,0,True,False, 0.4,True).get_configuration()
     #sc = OrigPSPLearner(150,10,0,True,False, 0.4,True).get_configuration()
         
     # for n_current_iter in range(29,30): #range(15,25):   (not reserve)
@@ -270,9 +302,9 @@ def collective25(n_current_iter:int, tags_addon:list = ["100collective","ps_char
             if insertable in cutoff:
                 pd.optimum_thr = cutoff[insertable]
             else:
-                pd.optimum_thr = 0.8  ###########################'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                pd.optimum_thr = 0  ###########################'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             pd.cost_function.finish_thr = 2  # undercut cutoff threshold 3 time to stop learning
-            if insertable == "010_left" or insertable == "023_left" or insertable == "027_left":
+            if insertable == "010_left" or insertable == "023_left" or insertable == "027_left" or insertable[0] == "B":
                 print("increase limits for ",insertable)
                 pd.domain.limits["p2_f_push_z"] = (0,60)
             dualarm_skills = []
@@ -404,7 +436,9 @@ def get_objects(module):
     return names
 
 def move_to_first_approach():
-    for t in tasks:
+    for i,t in enumerate(tasks):
+        if i<10:
+            continue
         ins = tasks[t][0]
         print(t, ": ", ins)
         while True:
