@@ -201,6 +201,10 @@ UserParameters::UserParameters(){
     env_dq=0.005;
 
     safe_mode=true;
+    
+    DH_a<<0,0,0,0,0,0,0,0;
+    DH_b<<0,0,0,0,0,0,0,0;
+    DH_alpha<<0,0,0,0,0,0,0,0;
 }
 
 bool UserParameters::from_json(const nlohmann::json &parameters){
@@ -272,6 +276,18 @@ bool UserParameters::from_json(const nlohmann::json &parameters){
         spdlog::error("Could not read safe_mode.");
         return false;
     }
+    if(!mirmi_utils::read_json_param(parameters,"DH_a",DH_a)){
+        spdlog::error("Could not read Denavit Hartenberg Parameter (DH_a).");
+        return false;
+    }
+    if(!mirmi_utils::read_json_param(parameters,"DH_b",DH_b)){
+        spdlog::error("Could not read Denavit Hartenberg Parameter (DH_b).");
+        return false;
+    }
+    if(!mirmi_utils::read_json_param(parameters,"DH_alpha",DH_alpha)){
+        spdlog::error("Could not read Denavit Hartenberg Parameter (DH_alpha).");
+        return false;
+    }
     return true;
 }
 
@@ -298,6 +314,9 @@ nlohmann::json UserParameters::to_json() const{
     json_object["env_dq"]=env_dq;
 
     json_object["safe_mode"]=safe_mode;
+    json_object["DH_a"]=mirmi_utils::from_eigen<double,8,1>(DH_a);
+    json_object["DH_b"]=mirmi_utils::from_eigen<double,8,1>(DH_b);
+    json_object["DH_alpha"]=mirmi_utils::from_eigen<double,8,1>(DH_alpha);
     return json_object;
 }
 
@@ -306,6 +325,8 @@ FramesParameters::FramesParameters(){
     F_T_EE=Eigen::Matrix<double,4,4>::Identity();
     EE_T_TCP=Eigen::Matrix<double,4,4>::Identity();
     EE_T_K=Eigen::Matrix<double,4,4>::Identity();
+    WF_T_O=Eigen::Matrix<double,4,4>::Identity();
+    WF_T_TF=Eigen::Matrix<double,4,4>::Identity();
 }
 
 bool FramesParameters::from_json(const nlohmann::json &parameters){
@@ -334,6 +355,8 @@ nlohmann::json FramesParameters::to_json() const{
     json_object["F_T_EE"]=mirmi_utils::from_eigen<double,4,4>(F_T_EE);
     json_object["EE_T_TCP"]=mirmi_utils::from_eigen<double,4,4>(EE_T_TCP);
     json_object["EE_T_K"]=mirmi_utils::from_eigen<double,4,4>(EE_T_K);
+    json_object["WF_T_O"]=mirmi_utils::from_eigen<double,4,4>(WF_T_O);
+    json_object["WF_T_TF"]=mirmi_utils::from_eigen<double,4,4>(WF_T_TF);
     return json_object;
 }
 

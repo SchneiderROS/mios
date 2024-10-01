@@ -92,6 +92,10 @@ public:
 
     bool safe_mode;
 
+    // calibration parameters (Denavit Hartenberg Parameter):
+    Eigen::Matrix<double,8,1> DH_a;
+    Eigen::Matrix<double,8,1> DH_b;
+    Eigen::Matrix<double,8,1> DH_alpha;
 };
 
 class FramesParameters : public IParameters{
@@ -105,6 +109,8 @@ public:
     Eigen::Matrix<double,4,4> F_T_EE;
     Eigen::Matrix<double,4,4> EE_T_TCP;
     Eigen::Matrix<double,4,4> EE_T_K;
+    Eigen::Matrix<double,4,4> WF_T_O;
+    Eigen::Matrix<double,4,4> WF_T_TF;
 };
 
 class SystemParameters : public IParameters{
