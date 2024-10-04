@@ -17,13 +17,13 @@ import copy
 ###################################################################################
 list_block_1 = ["001", #"002", 
                 "003", "004", "005", 
-                "006", "007", "008", "010", 
+                "006", "007", "008", "043", 
                 "011", "012"]
-list_block_2 = ["009","013","014","015","016","017",
+list_block_2 = ["044","013","014","015","016","042",
                 # "018",#"020",
                 "041",
                 "021","022"]
-list_U = ["023", "024", "025","026", "027", "029"] #, "026", "028",
+list_U = ["023", "024", "025","026", "047"]# , "029"] #, "026", "028",
 list_external = ["050"]
 def get_ips(module_list):
     with open("ip.json", "r") as jsonfile:
@@ -1514,4 +1514,23 @@ def teach_dualarm_without_homing(module:str, object_name:str):
 
     input("Teach container [with object]")
     call_method(robot, 12000, "teach_object", {"object": insertable+"_container"})
+
+def handguiding(robot):
+    context = {
+        "skill": {
+            "record_trajectory": False,
+            #"recording_length": 1,
+            #"recording_name": None,
+            
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    t = Task(robot)
+    t.add_skill("record_trajectory", "HandGuiding", context)
+    t.start()
+    input("stop now?")
+    result = t.stop()
+    print("Result: " + str(result))
    
