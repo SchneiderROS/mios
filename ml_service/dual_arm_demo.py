@@ -7,7 +7,7 @@ from utils.taxonomy_utils import *
 from services.knowledge import Knowledge
 from utils.helper_functions import *
 from run_experiments import *
-from demo2 import stop_service
+from ml_service.old_demo2 import stop_service
 from run_experiments import *
 from threading import Thread
 from run_experiments import learn_insertion
