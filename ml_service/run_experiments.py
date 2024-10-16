@@ -52,11 +52,11 @@ def test_learning():
 
 
 def learn_insertion(robot: str, approach: str, insertable: str, container: str, tags: list, knowledge=None,
-                    wait: bool=True, n_iterations = 10, service_port=8000):
+                    wait: bool=True, n_iterations = 30, service_port=8000):
     pd = InsertionFactory([robot], TimeMetric("insertion", {"time": 5}),
                           {"Insertable": insertable, "Container": container,
                            "Approach": approach}).get_problem_definition(insertable)
-    sc = SVMLearner().get_configuration()
+    sc = SVMLearner(3000,10,0,True,False, -1,True).get_configuration()
     learn_task(robot, pd, sc, tags, knowledge=knowledge, n_iterations=n_iterations,service_port=service_port)
 
 
@@ -2044,7 +2044,7 @@ def convergence_test():
         "collective-004.rsi.ei.tum.de":["D_020", "D_019", "A_002_hexagon-1"],
         "collective-005.rsi.ei.tum.de":["D_027", "D_026", "B_001_USB-1", "D_006"],
         "collective-006.rsi.ei.tum.de":["D_021", "A_32_pentagon-1","D_002", "D_001" ],
-        "collective-007.rsi.ei.tum.de":["D_022", "A_004_cylinder-1","D_011"],
+        # "collective-007.rsi.ei.tum.de":["D_022", "A_004_cylinder-1","D_011"],
         #"collective-008.rsi.ei.tum.de":["008_left","D_008", "D_004","D_013"],
         "collective-044.rsi.ei.tum.de":["D_024", "B_003_plugF-1","D_009","D_014","D_025"],#PC 10 is broken and changed to 36 now
         
@@ -2078,7 +2078,7 @@ def convergence_test():
     control = "joint"  # control of the hold skill
     # sc = SVMLearner(1000,10,0,True,False, 0,False).get_configuration()
     #sc = CMAESLearner(10,500,True).get_configuration()
-    sc = OrigPSPLearner(1000,10,0,True,False, 0,False).get_configuration()
+    sc = OrigPSPLearner(1500,10,0,True,False, 0,False).get_configuration()
     # convergence_test_4 was tagged with origPSP but is was actually normal PSP
     #tags = ["convergence_test_5","5000","success_check", "origPSP"]  # later do with success check -> repeat successful trial 5 times
     #tags = ["convergence_test_6", "500", "success_check", "origPSP", "holdpose"]
@@ -2087,7 +2087,7 @@ def convergence_test():
     tags = ["nullspace", "table_insertion", "convergence_test_11","modify_length", "success_check","origPSPenhanced"]
     # tags = ["convergence_test_1","5000"]
     tags = ["nullspace", "table_insertion", "convergence_test_12","modify_length", "success_check","origPSPenhanced","Florian"]
-    
+    tags = ["dmeorun"]
     for host,insertable in tasks.items():
         
         insertable = insertable+"_table"
@@ -2147,7 +2147,7 @@ def convergence_test():
         time.sleep(1)
              
            
-def convergence_test():
+def convergence_test2():
     '''
     007 is teached to above insted of approach
     005 probably did this result 
@@ -2158,7 +2158,7 @@ def convergence_test():
         "collective-004.rsi.ei.tum.de":["D_020", "D_019", "A_002_hexagon-1"],
         "collective-005.rsi.ei.tum.de":["D_027", "D_026", "B_001_USB-1", "D_006"],
         "collective-006.rsi.ei.tum.de":["D_021", "A_32_pentagon-1","D_002", "D_001" ],
-        "collective-007.rsi.ei.tum.de":["D_022", "A_004_cylinder-1","D_011"],
+        #"collective-007.rsi.ei.tum.de":["D_022", "A_004_cylinder-1","D_011"],
         #"collective-008.rsi.ei.tum.de":["008_left","D_008", "D_004","D_013"],
         "collective-044.rsi.ei.tum.de":["D_024", "B_003_plugF-1","D_009","D_014","D_025"],#PC 10 is broken and changed to 36 now
         
@@ -2176,9 +2176,9 @@ def convergence_test():
         "collective-022.rsi.ei.tum.de":["C_009", "B_007_audioJack","C_010","C_013"],
         "collective-023.rsi.ei.tum.de":["C_014", "B_008_USB-2","A_019_oneline","C_key_08"],
         "collective-024.rsi.ei.tum.de":["B_014_CN", "C_015", "C_017"],
-        "collective-025.rsi.ei.tum.de":["A_025_heart", "A_014_doji-1","A_023_stairs"],
+        #"collective-025.rsi.ei.tum.de":["A_025_heart", "A_014_doji-1","A_023_stairs"],
         "collective-026.rsi.ei.tum.de":["A_016_cross-1","B_018","A_022_diamond"],    #["026_left","B-014","A_022_diamond","B-018"],
-        "collective-047.rsi.ei.tum.de":["B_010_plugF-2","C_016","C_key_23","A_031_audi"]
+       # "collective-047.rsi.ei.tum.de":["B_010_plugF-2","C_016","C_key_23","A_031_audi"]
         # "collective-040.rsi.ei.tum.de":[], # teach 40
         #"collective-029.rsi.ei.tum.de":["029_left","A_016_sector","A_018_cross-2", "A_016_cross-1"]
         }
@@ -2192,7 +2192,7 @@ def convergence_test():
     control = "joint"  # control of the hold skill
     sc = OrigPSPLearner(130,10,0,True,False, 0,False).get_configuration()
     tags = ["nullspace", "table_insertion", "IROS","modify_length", "success_check","origPSPenhanced", "global_knowledge"]
-    
+    tags = ["demorun"]
     for host,insertable in tasks.items():
         
         insertable = insertable+"_table"
@@ -2201,7 +2201,14 @@ def convergence_test():
             continue
         
         print(host, insertable)
-        knowledge = Knowledge("global",)
+        knowledge = Knowledge("global")
+        knowledge.kb_location = "collective-001.rsi.ei.tum.de"
+        knowledge.mode = "global"  # None:isolated parallel (no knowledge from theirself)  # "local": has transfer inside agent
+        knowledge.scope = [] # TODO: may here add the tag of previous running
+        knowledge.scope.extend(tags)
+       # knowledge.scope.append("n"+str(n_current_iter+1)) # searching for knowledge on the database (only works for the slow pipeline);  e.g. [] search all, 
+        knowledge.type = "all"  # all: 
+          
         container = insertable+"_container" 
         approach = container+"_approach"
         pd = InsertionFactory([host], TimeMetric("insertion", {"time": 5}),
