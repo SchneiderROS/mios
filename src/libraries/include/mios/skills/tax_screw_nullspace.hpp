@@ -25,6 +25,7 @@ public:
         double f_screw;
         double m_max;
         double phi;
+        double rot_d;
         double grasp_speed;
         double grasp_force;
         double release_speed;
@@ -69,6 +70,8 @@ private:
     Eigen::Matrix<double,6,1> K_x_temp;
 
     double m_grasp_finger_width;
+    double m_actual_phi;
+    double m_actual_rotation;
 
 };
 }

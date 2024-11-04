@@ -80,6 +80,10 @@ bool SkillParametersTaxScrewNullspace::from_json(const nlohmann::json& parameter
             spdlog::error("Missing parameter: p2.phi");
             return false;
         }
+        if(!mirmi_utils::read_json_param(parameters["p2"],"rot_d",p2.rot_d)){
+            spdlog::error("Missing parameter: p2.rot_d");
+            return false;
+        }
         if(!mirmi_utils::read_json_param(parameters["p2"],"grasp_speed",p2.grasp_speed)){
             spdlog::error("Missing parameter: p2.grasp_speed");
             return false;
@@ -126,7 +130,10 @@ std::map<std::string, std::set<std::string> > SkillParametersTaxScrewNullspace::
 }
 
 TaxScrewNullspace::TaxScrewNullspace(const std::string& name, Memory* memory, Portal *portal):Skill("TaxScrewNullspace",{"Screw","Approach","Screwdriver"},name,memory,portal,{ControlMode::mCartTorque}){
-
+    m_actual_phi=0;
+    m_memory->get_parameters()->control.nullspace_control.active=true;
+    m_memory->get_parameters()->control.nullspace_control.K_theta<<50, 50, 50, 50, 50, 50, 50;
+    m_memory->get_parameters()->control.nullspace_control.xi_theta<<0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7;
 }
 
 Eigen::Matrix<double,3,3> TaxScrewNullspace::get_O_R_T_0(const Percept &p) const{
@@ -248,7 +255,11 @@ std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_screw_mp(const 
     K_x_temp(5)=0;
     mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(K_x_temp,m_memory->read_parameters()->control.cart_imp.xi_x);
     m_nullspace_joint_pose=p.proprioception.q;
-    m_nullspace_joint_pose(6)=+2.8;
+    m_actual_rotation=skill_params->p2.rot_d-m_actual_phi;
+    if (m_actual_rotation>5.6){
+        m_actual_rotation=5.6;
+    }
+    m_nullspace_joint_pose(6)=m_actual_rotation-2.8;
     mp->create_strategy<MoveInNullspaceStrategy>("nullspace_motion",1);
     mp->get_strategy<MoveInNullspaceStrategy>("nullspace_motion")->set_goal(m_nullspace_joint_pose,skill_params->p2.joint_vel,skill_params->p2.joint_acc);
     return mp;
@@ -268,6 +279,7 @@ std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_reset_mp(const 
     K_x_temp(5)=0;
     mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(K_x_temp,m_memory->read_parameters()->control.cart_imp.xi_x);
     m_nullspace_joint_pose=p.proprioception.q;
+    m_actual_phi+=m_nullspace_joint_pose(6)+2.8;
     m_nullspace_joint_pose(6)=-2.8;
     mp->create_strategy<MoveInNullspaceStrategy>("nullspace_motion",1);
     mp->get_strategy<MoveInNullspaceStrategy>("nullspace_motion")->set_goal(m_nullspace_joint_pose,skill_params->p2.joint_vel,skill_params->p2.joint_acc);
@@ -301,7 +313,8 @@ std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_grasp_mp(const 
 
 
 bool TaxScrewNullspace::check_local_pre_conditions(const Percept &p){
-    if(toolUsage){
+    std::shared_ptr<SkillParametersTaxScrewNullspace> skill_params = get_parameters<SkillParametersTaxScrewNullspace>();
+    if(skill_params->toolUsage){
         if(m_memory->get_live_context()->grasped_object->name!=get_object("Screwdriver")->name){
             return false;
         }
@@ -314,21 +327,23 @@ bool TaxScrewNullspace::check_local_suc_conditions(const Percept &p){
     if(fabs(p.proprioception.K_F_ext_K(5))>skill_params->p2.m_max){
         return true;
     }
+    if(m_actual_phi>skill_params->p2.rot_d-0.05){
+        return true;
+    }
     return false;
 }
 
 bool TaxScrewNullspace::check_local_ex_conditions(const Percept &p){
     std::shared_ptr<SkillParametersTaxScrewNullspace> skill_params = get_parameters<SkillParametersTaxScrewNullspace>();
     if(get_active_mp()->get_name()=="reset" && get_result().success){
-        if(get_active_mp()->get_strategy_interface("move")->finished()){
-            return true;
-        }
+        return true;
     }
     return false;
 }
 
 bool TaxScrewNullspace::check_local_err_conditions(const Percept &p){
-    if(toolUsage){
+    std::shared_ptr<SkillParametersTaxScrewNullspace> skill_params = get_parameters<SkillParametersTaxScrewNullspace>();
+    if(skill_params->toolUsage){
         if(m_memory->get_live_context()->grasped_object->name!=get_object("Screwdriver")->name){
             return true;
         }
