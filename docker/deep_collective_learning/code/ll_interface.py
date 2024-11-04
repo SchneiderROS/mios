@@ -2,6 +2,14 @@ import struct
 import socket
 import time
 from utils.ws_client import *
+import logging
+import sys
+
+logger = logging.getLogger("deep_interface")
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 PI = 3.141592653
 INIT_q = [0, -3.141592653/4, 0, -3 * PI/4, 0, PI/2, PI/4]
@@ -74,22 +82,24 @@ class LLSender:
             "control": {
                 "control_mode": controller,
                 "joint_imp": {
-                "K_theta": [5,5,5,5,5,5,1]
+                "K_theta": [0,0,0,0,0,0,0]
                 },
                 "cart_imp": {
-                "K_x": [1, 1, 1, 0.25, 0.25, 0.25]
+                "K_x": [0, 0, 0, 0.0, 0.0, 0.0]
                 }
             },
             "user":{
                 "F_ext_max": [30, 15]
             }
         }            
-        if controller=="JointPose":
-            llInterface_context["control"]["K_theta"]=[300,300,300,300,100,100,20]
-        elif controller=="CartPose":
-            llInterface_context["control"]["K_x"]=[1000,1000,1000,50,50,50]
-        elif controller=="Twist":
-            llInterface_context["control"]["K_x"]=[1000,1000,1000,50,50,50]
+        if self.mode =="JointPose":
+            llInterface_context["control"]["joint_imp"]["K_theta"]=[300,300,300,300,100,100,20]
+        elif self.mode =="CartPose":
+            llInterface_context["control"]["cart_imp"]["K_x"]=[1000,1000,1000,50,50,50]
+        elif self.mode =="Twist":
+            llInterface_context["control"]["cart_imp"]["K_x"]=[1000,1000,1000,50,50,50]
+
+        logger.debug(str(llInterface_context))
 
         t = Task(self.robot_ip)
         t.add_skill("remote_"+self.mode, "LLInterface", llInterface_context)
@@ -298,13 +308,15 @@ def move_joint(robot, location,port=12000, wait=True):
     if wait:
         return t0.wait()
     
-def extract(ip, obj_nr):
+
+    
+def extract(ip, object):
     extraction_context = {
         "skill": {
             "objects": {
-                "Container": obj_nr + "_left_container",
-                "ExtractTo": obj_nr + "_left_container_approach",
-                "Extractable": obj_nr + "_left"
+                "Container": object + "_container",
+                "ExtractTo": object + "_container_approach",
+                "Extractable": object
             },
             "time_max": 15,
             "p0": {
@@ -338,22 +350,22 @@ def extract(ip, obj_nr):
 
 
 
-def extract_and_reset(ip, obj_nr):
+def extract_and_reset(ip, object):
+    object = object+"_table"
     successful=False
     while successful==False:
-        result=extract(ip, obj_nr)
+        result=extract(ip, object)
         if result:
             successful=result["result"]["task_result"]['success']
         time.sleep(0.5)
 
-    # move arms to pre-start pose
+    # move arms to pre-start pose 
     successful=False
     while successful==False:
-        result = move_joint(ip,obj_nr+"_left_container_above",12000)
+        result = move_joint(ip,object+"_container_above",12000)
         if result:
             successful=result["result"]["task_result"]['success']
         time.sleep(0.5)
 
     
-    move_joint(ip, obj_nr + "_left_container_approach", 12000)
-    move_joint(ip, "hold", 13000)
+    move_joint(ip, object + "_container_approach", 12000)

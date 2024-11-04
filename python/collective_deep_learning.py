@@ -17,9 +17,34 @@ import copy
 import math
 import time
 import os
+from tqdm import tqdm
 
 import asyncio
 from desk.mongodb_client import MongoDBClient
+
+tasks={'collective-001.rsi.ei.tum.de': 'B_002_IEC-C7',
+ 'collective-003.rsi.ei.tum.de': 'D_028',
+ 'collective-004.rsi.ei.tum.de': 'D_020',
+ 'collective-005.rsi.ei.tum.de': 'D_027',
+ 'collective-006.rsi.ei.tum.de': 'D_021',
+ 'collective-007.rsi.ei.tum.de': 'D_022',
+ #'collective-008.rsi.ei.tum.de': '008_left',
+ 'collective-033.rsi.ei.tum.de': 'D_023',
+ 'collective-035.rsi.ei.tum.de': 'C_007',
+ 'collective-043.rsi.ei.tum.de': 'B_013',
+ 'collective-013.rsi.ei.tum.de': 'C_011',
+ 'collective-014.rsi.ei.tum.de': 'B_016',
+ #'collective-015.rsi.ei.tum.de': 'C_025',
+ 'collective-016.rsi.ei.tum.de': 'A_026_cylinder_30',
+ #'collective-042.rsi.ei.tum.de': 'mercedes_star',
+ 'collective-041.rsi.ei.tum.de': 'A_009_hexagon-3',
+ 'collective-021.rsi.ei.tum.de': 'B_RS-232',
+ #'collective-022.rsi.ei.tum.de': 'C_009',
+ 'collective-023.rsi.ei.tum.de': 'C_014',
+ 'collective-024.rsi.ei.tum.de': 'B_014_CN',
+ 'collective-025.rsi.ei.tum.de': 'A_025_heart',
+ 'collective-026.rsi.ei.tum.de': 'A_016_cross-1',
+ 'collective-047.rsi.ei.tum.de': 'B_010_plugF-2'}
 
 modelKnowledge0={'mode':0,
                 'scaling':[1,1,1,1,1,1,1],
@@ -27,10 +52,17 @@ modelKnowledge0={'mode':0,
                 'sigmaScaling':1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
+modelKnowledge01={'mode':0,
+                'scaling':[2,2,2,2,2,2,2],
+                'actionLimits':[[-2,2],[-2,2],[-2,2],[-2,2],[-2,2],[-2,2],[-2,2]],
+                'sigmaScaling':1,
+                'graspOrientation':[1,0,0,0,1,0,0,0,1]}
+
+
 
 modelKnowledge1={'mode':1,
                 'scaling':[1,1,1,1,1,1],
-                'actionLimits':[[-2,2],[-2,2],[-2,2],[-2,2],[-2,2],[-2,2]],
+                'actionLimits':[[-1,1],[-1,1],[-1,1],[-1,1],[-1,1],[-1,1]],
                 'sigmaScaling':1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 #todo
@@ -47,15 +79,21 @@ modelKnowledge3={'mode':1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
 modelKnowledge4={'mode':2,
-                'scaling':[0.002,0.002,0.002,0.002,0.002,0.002,0.002],
-                'actionLimits':[[-0.002,0.002],[-0.002,0.002],[-0.002,0.002],[-0.002,0.002],[-0.002,0.002],[-0.002,0.002],[-0.002,0.002]],
+                'scaling':[0.005,0.005,0.005,0.005,0.005,0.005,0.005],
+                'actionLimits':[[-0.005,0.005],[-0.005,0.005],[-0.005,0.005],[-0.005,0.005],[-0.005,0.005],[-0.005,0.005],[-0.005,0.005]],
                 'sigmaScaling':1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
+# modelKnowledge4={'mode':2,
+#                 'scaling':[0.01,0.01,0.01,0.01,0.01,0.01,0.01],
+#                 'actionLimits':[[-0.01,0.01],[-0.01,0.01],[-0.01,0.01],[-0.01,0.01],[-0.01,0.01],[-0.01,0.01],[-0.01,0.01]],
+#                 'sigmaScaling':1,
+#                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
+
 
 modelKnowledge5={'mode':3,
-                'scaling':[0.001,0.001,0.001,0.001,0.001,0.001],
-                'actionLimits':[[-0.001,0.001],[-0.001,0.001],[-0.001,0.001],[-0.001,0.001],[-0.001,0.001],[-0.001,0.001]],
+                'scaling':[0.0004,0.0004,0.0004,0.0004,0.0004,0.0004],
+                'actionLimits':[[-0.0004,0.0004],[-0.0004,0.0004],[-0.0004,0.0004],[-0.0004,0.0004],[-0.0004,0.0004],[-0.0004,0.0004]],
                 'sigmaScaling':1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 #todo
@@ -72,10 +110,10 @@ modelKnowledge7={'mode':3,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
 learningParams= {'architecture':'sac',
-                'epochs':300,
+                'epochs':500,
                 'train':True,
                 'experiment_ID': 0,
-                'number_of_experiments': 3,
+                'number_of_experiments': 5,
                 'saveInterval':100,
                 'frequency': 25,
                 'taskID':0,
@@ -104,8 +142,8 @@ class CollectiveDeepReinforcementLearner():
         self.logging=learning_params['logging']
         self.loadExistingNetwork=learning_params['load']
         self.saveInterval=learning_params['saveInterval']
-        self.batchSizeScale=8
         self.timeoutTime=120
+        self.bars=[]
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print("Device: ",self.device)
         self.tags = tags
@@ -113,8 +151,14 @@ class CollectiveDeepReinforcementLearner():
         if self.model_knowledge['mode']==0:
             self.interface='Torque'
             self.end2end=True
-        else:
+        elif self.model_knowledge['mode']==1:
             self.interface='Wrench'
+            self.end2end=False
+        elif self.model_knowledge['mode']==2:
+            self.interface='JointPose'
+            self.end2end=True
+        elif self.model_knowledge['mode']==3:
+            self.interface='Twist'
             self.end2end=False
 
         parser = ConfigParser()
@@ -127,29 +171,28 @@ class CollectiveDeepReinforcementLearner():
         self.tags.append("iteration_"+str(iteration))
 
     def initializeLocalLearners(self):
-        dual_arm_system_IDs=[format(i, '03d') for i in range(0,50)]
-        #dual_arm_system_IDs=[format(i, '03d') for i in range(24,25)]
-        def ping_hosts(hosts):
+        def ping_hosts(tasks):
             reachable_hosts = []
             unreachable_hosts = []
             working_IPs=[]
-            for host in hosts:
-                result = subprocess.run(['ping', '-c', '1', '-W', '1', "collective-"+str(host)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            for task in tasks:
+                result = subprocess.run(['ping', '-c', '1', '-W', '1', str(task)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if result.returncode == 0:
-                    working_IPs.append("collective-"+str(host))
-                    reachable_hosts.append(host)
+                    working_IPs.append(task.split(".")[0])
+                    reachable_hosts.append(task.split(".")[0])
                 else:
-                    unreachable_hosts.append(host)
+                    unreachable_hosts.append(task.split(".")[0])
             return working_IPs, reachable_hosts, unreachable_hosts
 
 
-        working_Hosts,reachable, unreachable = ping_hosts(dual_arm_system_IDs)
+        working_Hosts,reachable, unreachable = ping_hosts(tasks)
         print(working_Hosts)
         print("Reachable hosts:", reachable)
         print("Unreachable hosts:", unreachable)
 
 
         self.robotLearningInstances=[]
+        i=0
         for host in working_Hosts:
             try:
                 RPC_SERVER_URL = "http://"+host+":9000"
@@ -159,7 +202,6 @@ class CollectiveDeepReinforcementLearner():
                 print("Response time:", response_time, "seconds")
 
                 learnerProxy = xmlrpc.client.ServerProxy("http://"+host+":9000")
-                print(learnerProxy)
                 if(learnerProxy.running()==True):
                     IP=get_ip_address(host)
                     if(learnerProxy.setModelKnowledge(self.model_knowledge)==True and
@@ -167,6 +209,8 @@ class CollectiveDeepReinforcementLearner():
                     learnerProxy.setID(host,IP)==True):
                         self.robotLearningInstances.append([host,IP])
                         print("Initialization of "+host+" successful!")
+                        #self.bars.append(tqdm(total=self.learning_params['epochs'],desc=host, position=i, leave=True, bar_format='{desc}:{bar}|{n_fmt}') )
+                        i+=1
                     else:
                         print("Initialization of "+host+" failed!")
             except:
@@ -174,15 +218,23 @@ class CollectiveDeepReinforcementLearner():
         print("Finished Initialization!")
 
     async def rpc_call_to_learner(self,learnerProxy,index):
+        host,IP=self.robotLearningInstances[index]
         task=self.loop.run_in_executor(None, getattr(learnerProxy, "learning"))
         try:
             startTime=time.time()
             await asyncio.wait_for(task,self.timeoutTime)
-            print(time.time()-startTime)
+            #print(host, time.time()-startTime)
             self.conFails[index]=0
         except asyncio.TimeoutError:
-            print(learnerProxy," did not respond")
+            print(host,learnerProxy," did not respond")
             self.conFails[index]+=1
+        finally:
+            try:
+                learnerProxy("close")()
+                return index
+            except Exception as e:
+                print(f"Failed to close connection for {learnerProxy}: {e}")
+                return index
         return index
 
     async def learning_loop(self,learningInstances,callback):
@@ -206,21 +258,24 @@ class CollectiveDeepReinforcementLearner():
         while len(self.learningTasks)>0:
             done, pending=await asyncio.wait(self.learningTasks, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
-                index=task.result()
-                isFinished=callback(index)
-                host,IP=self.robotLearningInstances[index]
-                if isFinished==False:
-                    del learnerProxy
-                    learnerProxy=xmlrpc.client.ServerProxy("http://"+IP+":9000")
-                    if self.conFails[index]<5:
-                        call_task = asyncio.create_task(self.rpc_call_to_learner(learnerProxy,index))
-                        self.learningTasks.add(call_task)
-                else:
-                    mongo_data = self.mongo_client.read("deep_ml_results","insertion",{"meta.tags":self.tags+[host]})
-                    if mongo_data:
-                        mongo_data = mongo_data[0]
-                        mongo_data["meta"]["ending_time"] = time.time()
-                        self.mongo_client.update("deep_ml_results","insertion",{"meta.tags":self.tags+[host]},mongo_data)
+                try:
+                    index=task.result()
+                    isFinished=callback(index)
+                    host,IP=self.robotLearningInstances[index]
+                    if isFinished==False:
+                        del learnerProxy
+                        learnerProxy=xmlrpc.client.ServerProxy("http://"+IP+":9000")
+                        if self.conFails[index]<5:
+                            call_task = asyncio.create_task(self.rpc_call_to_learner(learnerProxy,index))
+                            self.learningTasks.add(call_task)
+                    else:
+                        mongo_data = self.mongo_client.read("deep_ml_results","insertion",{"meta.tags":self.tags+[host]})
+                        if mongo_data:
+                            mongo_data = mongo_data[0]
+                            mongo_data["meta"]["ending_time"] = time.time()
+                            self.mongo_client.update("deep_ml_results","insertion",{"meta.tags":self.tags+[host]},mongo_data)
+                except:
+                    pass
                     
             self.learningTasks-=done
     
@@ -241,11 +296,14 @@ class CollectiveDeepReinforcementLearner():
             self.agents[learner_index].put_data(transition) 
         #3. train model -> improve!
         #print(self.agents[learner_index].data.data_idx)
-        if self.agents[learner_index].data.data_idx > 512: #self.agent_args.learn_start_size: 
+        if self.agents[learner_index].data.data_idx > 1024: #self.agent_args.learn_start_size: 
             startTime=time.time()
-            for i in range(math.ceil(self.learning_params['maxTime']*self.learning_params['frequency']/self.batchSizeScale)):
-                self.agents[learner_index].train_net(self.agent_args.batch_size*self.batchSizeScale, self.epochs[learner_index])
-            print("Training time: ",time.time()-startTime)
+            for i in range(math.ceil(self.learning_params['maxTime']*self.learning_params['frequency']/4)):
+                self.agents[learner_index].train_net(self.agent_args.batch_size*4, self.epochs[learner_index])
+            print(self.epochs[learner_index], host, "Training time: ",time.time()-startTime)
+        else:
+            pass
+            #print(host, "Insufficient samples: ",self.agents[learner_index].data.data_idx)
         #4. update weights
         state_dict_cpu = {k: v.cpu() for k, v in self.agents[learner_index].state_dict().items()}
         model_bytes = pickle.dumps(state_dict_cpu)
@@ -255,10 +313,10 @@ class CollectiveDeepReinforcementLearner():
             print("Transfer of weights to "+host+" failed!")   
 
         #5. store weights if needed
+        self.epochs[learner_index]+=1
         if self.epochs[learner_index]%self.saveInterval==0:
             self.storedNetworkWeights[learner_index].append(copy.deepcopy(self.agents[learner_index].state_dict()))     
-        #6. increment respective epoch
-        self.epochs[learner_index]+=1
+        #self.bars[learner_index].update(1)
         #7. start new learning epoch
         if self.epochs[learner_index]<self.learning_params['epochs']:
             return False
@@ -283,17 +341,23 @@ class CollectiveDeepReinforcementLearner():
 
         #save network weights
         os.makedirs(path+"/"+folder_name+"/"+str(i)+"/network_weights")
-        for i in range(len(self.robotLearningInstances)):
-            host,IP=self.robotLearningInstances[i]
+
+        print(len(self.storedNetworkWeights))
+
+        for j in range(len(self.robotLearningInstances)):
+            host,IP=self.robotLearningInstances[j]
             os.makedirs(path+"/"+folder_name+"/"+str(i)+"/network_weights/"+host)   
-            for j in range(len(self.storedNetworkWeights[i])):         
-                torch.save(self.agents[i].state_dict(),path+"/"+folder_name+"/"+str(i)+"/network_weights/"+host+"/"+str((j+1)*self.saveInterval))
-               # mongo_data["n"+str(j+1)]["weights"] = self.storedNetworkWeights[i]
+            print(host,len(self.storedNetworkWeights[j]))
+            for k in range(len(self.storedNetworkWeights[j])):         
+                torch.save(self.storedNetworkWeights[j][k],path+"/"+folder_name+"/"+str(i)+"/network_weights/"+host+"/"+str((k+1)*self.saveInterval))
+               # mongo_data["n"+str(k+1)]["weights"] = self.storedNetworkWeights[j]
 
         #save experiment parameters                
         experiments_params = {'learning_params': self.learning_params, 'model_knowledge': self.model_knowledge}
         with open(path+"/"+folder_name+"/"+str(i)+'/experiments_params.pkl', 'wb') as f:
             pickle.dump(experiments_params, f)
+        with open(path+"/"+folder_name+"/"+str(i)+'/experiments_params.txt', 'w') as f:
+            f.write(str(experiments_params))
 
     def learning(self):
         #initialize state size
@@ -355,14 +419,14 @@ class CollectiveDeepReinforcementLearner():
         self.saveExperimentData("experimentData")
 
 for i in range(1):
-    Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge0)
+    Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge4)
     Learner.initializeLocalLearners()
     Learner.learning()
    
-for i in range(1):
-    Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge1)
-    Learner.initializeLocalLearners()
-    Learner.learning()
+# for i in range(2):
+#     Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge1)
+#     Learner.initializeLocalLearners()
+#     Learner.learning()
 
 # for i in range(learningParams['number_of_experiments']):
 #     Learner=CollectiveDeepReinforcementLearner(learningParams,modelKnowledge0)

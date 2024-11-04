@@ -35,14 +35,15 @@ tasks={'collective-001.rsi.ei.tum.de': 'B_002_IEC-C7',
  'collective-005.rsi.ei.tum.de': 'D_027',
  'collective-006.rsi.ei.tum.de': 'D_021',
  'collective-007.rsi.ei.tum.de': 'D_022',
- 'collective-044.rsi.ei.tum.de': 'D_024',
- 'collective-012.rsi.ei.tum.de': 'C_007',
+ 'collective-008.rsi.ei.tum.de': '008_left',
+ 'collective-033.rsi.ei.tum.de': 'D_023',
+ 'collective-035.rsi.ei.tum.de': 'C_007',
  'collective-043.rsi.ei.tum.de': 'B_013',
  'collective-013.rsi.ei.tum.de': 'C_011',
  'collective-014.rsi.ei.tum.de': 'B_016',
- 'collective-015.rsi.ei.tum.de': 'C_025',
+ #'collective-015.rsi.ei.tum.de': 'C_025',
  'collective-016.rsi.ei.tum.de': 'A_026_cylinder_30',
- 'collective-042.rsi.ei.tum.de': 'A_013_hexagram',
+ 'collective-042.rsi.ei.tum.de': 'mercedes_star',
  'collective-041.rsi.ei.tum.de': 'A_009_hexagon-3',
  'collective-021.rsi.ei.tum.de': 'B_RS-232',
  'collective-022.rsi.ei.tum.de': 'C_009',
@@ -87,10 +88,10 @@ modelKnowledge={'mode':1,
                 'graspOrientation':[1,0,0,0,1,0,0,0,1]}
 
 learningParams= {'architecture':'sac',
-                'epochs':'500',
+                'epochs':'300',
                 'train':True,
                 'experiment_ID': 0,
-                'number_of_experiments': 5,
+                'number_of_experiments': 3,
                 'frequency': 25,
                 'taskID':0,
                 'logging':True,
@@ -102,7 +103,7 @@ def get_poses(module:str):
     client=MongoDBClient("collective-"+module+".rsi.ei.tum.de")
     object=tasks["collective-"+module+".rsi.ei.tum.de"]
     logger.debug(str(object))
-
+    object = object+"_table"
     container=client.read("miosL","environment",
                           {"name":object+"_container"})
     approach=client.read("miosL","environment",{"name":object+"_container_approach"})
@@ -150,7 +151,7 @@ class DeepReinforcementLearner():
             self.end2end=False
             
         self.penaltyMultiplier=0.0001
-        self.deltaTaskLimits=[0.1,0.1,0.1,0.5,0.5,0.5]
+        self.deltaTaskLimits=[0.1,0.1,0.1,0.25,0.25,0.25]
 
         parser = ConfigParser()
         parser.read('deep_learning/config.ini')
@@ -197,7 +198,7 @@ class DeepReinforcementLearner():
         d_old=np.sqrt(d_old)
         d_new=np.sqrt(d_new)
 
-        reward=10*(d_old-d_new)
+        reward=100*(d_old-d_new)
         
         return reward
 
@@ -211,10 +212,19 @@ class DeepReinforcementLearner():
             self.robot_hostname=host
             self.robot_ip=IP
             self.own_ip=IP
+            logger.debug("1")
 
             self.approachPoses,self.goalPoses=get_poses(self.robotID)
-            self.goalPose=self.getEulerFromPose(self.goalPoses["EE"])          
+            logger.debug("2")
+            self.goalPose=self.getEulerFromPose(self.goalPoses["EE"])  
+            logger.debug("3")  
+            self.taskFrame=np.reshape(self.goalPoses["EE"], (4, 4), order='F')[:3, :3]
+            logger.debug("4")
+
+      
             self.q_init=self.approachPoses["q"]
+            logger.debug(str(self.q_init))
+            logger.debug(str(self.goalPose))
             self.sender=LLSender(self.robot_ip,self.robot_ip,self.interface,self.q_init)
             logger.debug("Done")
             return True
@@ -224,11 +234,11 @@ class DeepReinforcementLearner():
 
     def getEulerFromPose(self, pose):
         eulerPose=[pose[12],pose[13],pose[14],0,0,0]
-        r = R_.from_matrix([[pose[0], pose[4], pose[8]],
-                        [pose[1], pose[5], pose[9]],
-                        [pose[2], pose[6], pose[10]]])
-        angles=r.as_euler('zyx', degrees=False)
-        eulerPose[3:6]=angles
+        # r = R_.from_matrix([[pose[0], pose[4], pose[8]],
+        #                 [pose[1], pose[5], pose[9]],
+        #                 [pose[2], pose[6], pose[10]]])
+        # angles=r.as_euler('zyx', degrees=False)
+        # eulerPose[3:6]=angles
 
         return eulerPose
 
@@ -337,7 +347,7 @@ class DeepReinforcementLearner():
 
     def  check_status(self):
         #check if trial has violated limits
-        for i in range(len(self.goalPose)):
+        for i in range(3):
             if(abs(self.actualPose[i]-self.goalPose[i])>self.deltaTaskLimits[i] and 
                abs(self.actualPose[i]-self.initialPose[i])>self.deltaTaskLimits[i]):
                 return True
@@ -406,6 +416,10 @@ class DeepReinforcementLearner():
 
             processedAction[0:3] = np.dot(self.graspOrientation, processedAction[0:3])
             processedAction[3:6] = np.dot(self.graspOrientation, processedAction[3:6])
+
+            processedAction[0:3] = np.dot(self.taskFrame, processedAction[0:3])
+            processedAction[3:6] = np.dot(self.taskFrame, processedAction[3:6])
+
         
         else:
             for i in range(7):                
@@ -415,14 +429,10 @@ class DeepReinforcementLearner():
         return processedAction
 
     def learning(self, tag=" ", trial=0):
-        logger.debug("1")
-
         desired_states=["q","dq","tau_ext","T_T_EE","TF_dX_EE","TF_F_ext_K"]
 
         #subscribe to state
         call_method(self.robot_ip,12000, "subscribe_telemetry",{"subscribe":desired_states,"ip":self.own_ip,"port":8887})
-        logger.debug("2")
-        
         self.DataList=[]
         self.state_lst=[]
 
@@ -430,14 +440,16 @@ class DeepReinforcementLearner():
         self.score=[]
 
         call_method(self.robot_ip,12000,"stop_task")   
-        extract_and_reset(self.robot_ip, self.robotID)   
-        logger.debug("3")
-        # record 
+        object=tasks["collective-"+str(self.robotID)+".rsi.ei.tum.de"]
+        logger.debug(str(object))
+        extract_and_reset(self.robot_ip, object) 
+        # record
         # self.start_recording(tag+"_n"+str(trial))  
         self.sender.start()
         done = False
         self.timestep=0
         robot_state,self.initialPose=self.getState()
+        desired_robot_pose=copy.deepcopy(robot_state[0:7])
         self.actualPose=copy.deepcopy(self.initialPose)
         logger.debug("starting")
         startingTime=time.time()
@@ -445,19 +457,19 @@ class DeepReinforcementLearner():
             robot_state_=copy.deepcopy(robot_state)
             robot_state = np.clip((robot_state_ - self.state_rms.mean) / (self.state_rms.var ** 0.5 + 1e-8), -5, 5)
             while not done:
-
                 self.state_lst.append(robot_state)
                 mu,sigma = self.agent.get_action(torch.from_numpy(robot_state).float().to(self.device),scale=self.actionSamplingVariance)
                 dist = torch.distributions.Normal(mu,sigma[0])
                 action = dist.sample()
                 log_prob = dist.log_prob(action).sum(-1,keepdim = True)
                 action=self.processAction(action)
-
                 if self.interface=="JointPose":
-                    new_action=robot_state[0:7]+action
-                    action=new_action
+                    desired_robot_pose+=action
+                    action=desired_robot_pose
+
                 self.sender.send(action.tolist()) 
-                time.sleep(self.deltaTime-0.0105)
+                time.sleep(self.deltaTime)
+
                 try:
                     if call_method(self.robot_ip,12000, "get_state")["result"]["current_task"]=="IdleTask":
                         done=True
@@ -471,9 +483,11 @@ class DeepReinforcementLearner():
                 reward=self.getReward(self.actualPose,self.lastPose)
 
                 if(self.check_status()):
+                    logger.debug("Boundaries")
                     done=True
 
                 if(self.check_success()):
+                    logger.debug("Success")
                     done=True
                 
 
@@ -490,6 +504,13 @@ class DeepReinforcementLearner():
                 self.DataList.append(self.convert_np_float64(transition))
 
                 if done==True:
+                    if self.interface!="JointPose":
+                        mu,sigma = self.agent.get_action(torch.from_numpy(robot_state).float().to(self.device),scale=self.actionSamplingVariance)
+                        dist = torch.distributions.Normal(mu,sigma[0])
+                        action = dist.sample()
+                        action*=0
+                        self.sender.send(action.tolist()) 
+                        time.sleep(self.deltaTime)
                     self.sender.stop()
                     self.state_rms.update(np.vstack(self.state_lst))
                     break
@@ -504,41 +525,61 @@ class DeepReinforcementLearner():
                     action, _ = self.agent.get_action(torch.from_numpy(np.asarray(robot_state)).float().to(self.device),scale=self.actionSamplingVariance)
                 else:
                     action, _ = self.agent.get_groundTruth(torch.from_numpy(np.asarray(robot_state)).float().to(self.device))
+
+                #logger.debug(str(action))
+
                 action = action.cpu().detach().numpy()
                 action=action[0]
+                #logger.debug(str(action))
+
                 action=self.processAction(action)
+                #logger.debug(str(action))
+
+                if self.interface=="JointPose":
+                    desired_robot_pose+=action
+                    #logger.debug(desired_robot_pose)
+                    action=desired_robot_pose
+
+
+
                 self.sender.send(action.tolist()) 
-                time.sleep(self.deltaTime-0.0105)
+                time.sleep(self.deltaTime)
                 try:
                     if call_method(self.robot_ip,12000, "get_state")["result"]["current_task"]=="IdleTask":
+                        logger.debug("Idle")
                         done=True
                 except:
+                    logger.debug("Except")
                     done=True
-
                 self.lastPose=copy.deepcopy(self.actualPose)
-                #startTime=time.time()
                 next_robot_state,self.actualPose=self.getState()
-                #print(time.time()-startTime)
                 reward=self.getReward(self.actualPose,self.lastPose)
                 if(self.check_status()):
+                    logger.debug("Boundaries")
                     done=True
                 if(self.check_success()):
+                    logger.debug("Success")
                     done=True
-                                
                 transition = make_transition(robot_state,\
                                             action.tolist(),\
                                             reward,\
                                             next_robot_state,\
                                             done\
                                             )           
-
                 self.DataList.append(self.convert_np_float64(transition))
                 robot_state = next_robot_state
 
                 if done==True:
+                    if self.interface!="JointPose":
+                        action, _ = self.agent.get_action(torch.from_numpy(np.asarray(robot_state)).float().to(self.device),scale=self.actionSamplingVariance)
+                        action = action.cpu().detach().numpy()
+                        action=action[0]
+                        action*=0
+                        self.sender.send(action.tolist()) 
+                        time.sleep(self.deltaTime)
                     self.sender.stop()
                     break
-        logger.debug("TrialTime:"+str(startingTime-time.time()))
+        logger.debug("TrialTime:"+str(time.time()-startingTime))
         logger.debug("finished")
 
         call_method(self.robot_ip,12000, "unsubscribe_telemetry",{"subscribe":desired_states,"ip":self.own_ip,"port":8887})    
@@ -568,7 +609,7 @@ class DeepReinforcementLearner():
             self.video_flag = False
             del self.recorder
         else:
-            logger.debug("pls check if the recording is start")
+            logger.debug("pls check if recording has been started")
 
 if __name__ == "__main__":
         logger.debug("Version: 1.0")
