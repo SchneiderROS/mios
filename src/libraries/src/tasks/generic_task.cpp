@@ -15,7 +15,6 @@
 #include "mios/skills/file.hpp"
 #include "mios/skills/extraction.hpp"
 #include "mios/skills/insertion.hpp"
-#include "mios/skills/insertion2.hpp"
 #include "mios/skills/turn.hpp"
 #include "mios/skills/move_trajectory.hpp"
 #include "mios/skills/wipe.hpp"
@@ -46,6 +45,7 @@
 #include "mios/skills/tax_cut.hpp"
 #include "mios/skills/tax_displace.hpp"
 #include "mios/skills/tax_screw.hpp"
+#include "mios/skills/tax_screw_nullspace.hpp"
 #include "mios/skills/tax_wrench.hpp"
 #include "mios/skills/tax_screw_out.hpp"
 #include "mios/skills/ll_interface.hpp"
@@ -86,8 +86,6 @@ void GenericTask::add_any_skill(unsigned int index){
     case mirmi_utils::str_to_int("HoldPose"):
         add_skill<HoldPose,SkillParametersHoldPose>(name);
         break;
-    case mirmi_utils::str_to_int("Insertion2"):
-        execute_skill<Insertion2,SkillParametersInsertion2>(name);
     case mirmi_utils::str_to_int("GenericWiggleMotion"):
         add_skill<GenericWiggleMotion,SkillParametersGenericWiggleMotion>(name);
     case mirmi_utils::str_to_int("TaxMove"):
@@ -196,9 +194,7 @@ void GenericTask::execute_any_skill(unsigned index){
     case mirmi_utils::str_to_int("Insertion"):
         execute_skill<Insertion,SkillParametersInsertion>(name);
         break;
-    case mirmi_utils::str_to_int("Insertion2"):
-        execute_skill<Insertion2,SkillParametersInsertion2>(name);
-        break;
+
     case mirmi_utils::str_to_int("Wipe"):
         execute_skill<Wipe,SkillParametersWipe>(name);
         break;
@@ -285,6 +281,9 @@ void GenericTask::execute_any_skill(unsigned index){
         break;
     case mirmi_utils::str_to_int("TaxScrew"):
         execute_skill<TaxScrew,SkillParametersTaxScrew>(name);
+        break;
+    case mirmi_utils::str_to_int("TaxScrewNullspace"):
+        execute_skill<TaxScrewNullspace,SkillParametersTaxScrewNullspace>(name);
         break;
     case mirmi_utils::str_to_int("TaxWrench"):
         execute_skill<TaxWrench,SkillParametersTaxWrench>(name);

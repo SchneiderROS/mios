@@ -30,6 +30,8 @@ public:
         double release_speed;
         Eigen::Matrix<double,2,1> dX_d;
         Eigen::Matrix<double,2,1> ddX_d;
+        double joint_vel;
+        double joint_acc;
     }p2;
     struct P3{
         Eigen::Matrix<double,6,1> K_x;
@@ -63,7 +65,7 @@ private:
 private:
     Eigen::Matrix<double,4,4> m_current_screw_pose;
     Eigen::Matrix<double,4,4> m_current_approach_pose;
-    Eigen::Matrix<double,1,7> m_nullspace_joint_pose;
+    Eigen::Matrix<double,7,1> m_nullspace_joint_pose;
     Eigen::Matrix<double,6,1> K_x_temp;
 
     double m_grasp_finger_width;

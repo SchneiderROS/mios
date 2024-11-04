@@ -1,6 +1,7 @@
 #include "mios/strategies/ff_strategy.hpp"
 #include "mios/strategies/cart_compliance_strategy.hpp"
 #include "mios/strategies/twist_strategy.hpp"
+#include "mios/strategies/move_in_nullspace.hpp"
 #include "mios/skills/tax_screw_nullspace.hpp"
 #include "mios/strategies/desired_wrench_strategy.hpp"
 #include "mios/strategies/move_to_pose.hpp"
@@ -89,6 +90,14 @@ bool SkillParametersTaxScrewNullspace::from_json(const nlohmann::json& parameter
         }
         if(!mirmi_utils::read_json_param(parameters["p2"],"release_speed",p2.release_speed)){
             spdlog::error("Missing parameter: p2.release_speed");
+            return false;
+        }
+        if(!mirmi_utils::read_json_param(parameters["p2"],"joint_vel",p2.joint_vel)){
+            spdlog::error("Missing parameter: p2.joint_vel");
+            return false;
+        }
+        if(!mirmi_utils::read_json_param(parameters["p2"],"joint_acc",p2.joint_acc)){
+            spdlog::error("Missing parameter: p2.joint_acc");
             return false;
         }
     }
@@ -238,12 +247,17 @@ std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_screw_mp(const 
     K_x_temp=skill_params->p3.K_x;
     K_x_temp(5)=0;
     mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(K_x_temp,m_memory->read_parameters()->control.cart_imp.xi_x);
+    m_nullspace_joint_pose=p.proprioception.q;
+    m_nullspace_joint_pose(6)=+2.8;
+    mp->create_strategy<MoveInNullspaceStrategy>("nullspace_motion",1);
+    mp->get_strategy<MoveInNullspaceStrategy>("nullspace_motion")->set_goal(m_nullspace_joint_pose,skill_params->p2.joint_vel,skill_params->p2.joint_acc);
     return mp;
 }
 
 std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_reset_mp(const Percept &p){
     spdlog::trace("TaxScrewNullspace::create_reset_mp()");
     std::shared_ptr<SkillParametersTaxScrewNullspace> skill_params = get_parameters<SkillParametersTaxScrewNullspace>();
+
     std::shared_ptr<ManipulationPrimitive> mp = create_mp("reset",p);
     mp->create_strategy<MoveToPoseStrategy>("move",1);
     std::shared_ptr<MoveToPoseStrategy> move = mp->get_strategy<MoveToPoseStrategy>("move");
@@ -253,6 +267,10 @@ std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_reset_mp(const 
     K_x_temp=skill_params->p3.K_x;
     K_x_temp(5)=0;
     mp->get_strategy<CartComplianceStrategy>("compliance")->set_complicance(K_x_temp,m_memory->read_parameters()->control.cart_imp.xi_x);
+    m_nullspace_joint_pose=p.proprioception.q;
+    m_nullspace_joint_pose(6)=-2.8;
+    mp->create_strategy<MoveInNullspaceStrategy>("nullspace_motion",1);
+    mp->get_strategy<MoveInNullspaceStrategy>("nullspace_motion")->set_goal(m_nullspace_joint_pose,skill_params->p2.joint_vel,skill_params->p2.joint_acc);
     return mp;
 }
 
@@ -282,12 +300,11 @@ std::shared_ptr<ManipulationPrimitive> TaxScrewNullspace::create_grasp_mp(const 
 }
 
 
-
-
-
 bool TaxScrewNullspace::check_local_pre_conditions(const Percept &p){
-    if(m_memory->get_live_context()->grasped_object->name!=get_object("Screwdriver")->name){
-        return false;
+    if(toolUsage){
+        if(m_memory->get_live_context()->grasped_object->name!=get_object("Screwdriver")->name){
+            return false;
+        }
     }
     return true;
 }
@@ -311,14 +328,11 @@ bool TaxScrewNullspace::check_local_ex_conditions(const Percept &p){
 }
 
 bool TaxScrewNullspace::check_local_err_conditions(const Percept &p){
-    if(m_memory->get_live_context()->grasped_object->name!=get_object("Screwdriver")->name){
-        return true;
+    if(toolUsage){
+        if(m_memory->get_live_context()->grasped_object->name!=get_object("Screwdriver")->name){
+            return true;
+        }
     }
-//    if(get_active_mp()->get_name()=="swipe"){
-//        if(p.proprioception.TF_F_ext_K(2)<m_memory->read_parameters()->user.F_ext_contact(0)){
-//            return true;
-//        }
-//    }
     return false;
 }
 

@@ -38,7 +38,6 @@
 #include "mios/skills/file.hpp"
 #include "mios/skills/extraction.hpp"
 #include "mios/skills/insertion.hpp"
-#include "mios/skills/insertion2.hpp"
 #include "mios/skills/wipe.hpp"
 #include "mios/skills/turn.hpp"
 #include "mios/skills/move_trajectory.hpp"
@@ -57,6 +56,7 @@
 #include "mios/skills/tax_cut.hpp"
 #include "mios/skills/tax_displace.hpp"
 #include "mios/skills/tax_screw.hpp"
+#include "mios/skills/tax_screw_nullspace.hpp"
 #include "mios/skills/tax_wrench.hpp"
 #include "mios/skills/tax_screw_out.hpp"
 #include "mios/skills/ll_interface.hpp"
@@ -81,7 +81,6 @@ SkillLibrary::SkillLibrary(){
     m_skill_parameters.insert(std::make_pair("File",std::make_shared<SkillParametersFile>()));
     m_skill_parameters.insert(std::make_pair("Extraction",std::make_shared<SkillParametersExtraction>()));
     m_skill_parameters.insert(std::make_pair("Insertion",std::make_shared<SkillParametersInsertion>()));
-    m_skill_parameters.insert(std::make_pair("Insertion2",std::make_shared<SkillParametersInsertion2>()));
     m_skill_parameters.insert(std::make_pair("Wipe",std::make_shared<SkillParametersWipe>()));
     m_skill_parameters.insert(std::make_pair("Turn",std::make_shared<SkillParametersTurn>()));
     m_skill_parameters.insert(std::make_pair("MoveTrajectory",std::make_shared<SkillParametersMoveTrajectory>()));
@@ -112,6 +111,7 @@ SkillLibrary::SkillLibrary(){
     m_skill_parameters.insert(std::make_pair("TaxCut",std::make_shared<SkillParametersTaxCut>()));
     m_skill_parameters.insert(std::make_pair("TaxDisplace",std::make_shared<SkillParametersTaxDisplace>()));
     m_skill_parameters.insert(std::make_pair("TaxScrew",std::make_shared<SkillParametersTaxScrew>()));
+    m_skill_parameters.insert(std::make_pair("TaxScrewNullspace",std::make_shared<SkillParametersTaxScrew>()));
     m_skill_parameters.insert(std::make_pair("TaxWrench",std::make_shared<SkillParametersTaxWrench>()));
     m_skill_parameters.insert(std::make_pair("TaxScrewOut",std::make_shared<SkillParametersTaxScrewOut>()));
     m_skill_parameters.insert(std::make_pair("TaxPush",std::make_shared<SkillParametersTaxPush>()));
