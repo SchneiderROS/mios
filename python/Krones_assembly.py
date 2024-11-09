@@ -8,7 +8,7 @@ import math
 #Screw
 #Insert
 
-poses={
+poses=[
     "idlePoseKrones",
     "standardPoseObjects",
     "screwPeg1Pose",
@@ -22,10 +22,13 @@ poses={
     "pegPose1",
     "pegPoseApproach1",
     "pegPose2",
-    "pegPose2Approach2"
-}
+    "pegPose2Approach2",
+    "screwPeg1InsertionPose",
+    "screwPeg1InsertionPoseApproach",
+    "screwPeg2InsertionPose",
+    "screwPeg2InsertionPoseApproach",
 
-
+]
 
 
 
@@ -36,27 +39,30 @@ robot_ip= "10.157.174.197"
 
 #move(robot_ip,location)
 
-def teach_robot_poses(robot:str,pose_name:str,port=12000):
-    status=None
-    index=0
-    while(status!='x'):
-        name=pose_name+"_"+str(index)
-        print("\nteaching ",name, "for ", robot,"\n")
-        index+=1
-        status=input("Press key")
-        call_method(robot, port, "teach_object",{"object":name})
 
 
 
 
-#teach_robot_poses(robot_ip,"pose1")
 
-start_task_and_wait(robot_ip, "MoveToCartPose",port=12000, parameters={"parameters": {"pose":"pose1_0"}})
+# #teach_robot_poses(robot_ip,13000)
 
-start_task_and_wait(robot_ip,)
+# #start_task_and_wait(robot_ip, "MoveToCartPose",port=13000, parameters={"parameters": {"pose":poses[0]}})
+# release(robot_ip,13000)
+# #start_task_and_wait(robot_ip, "MoveToCartPose",port=13000, parameters={"parameters": {"pose":poses[1]}})
 
+# #start_task_and_wait(robot_ip, "MoveToCartPose",port=13000, parameters={"parameters": {"pose":"screwPeg1Pose"}})
+# start_task_and_wait(robot_ip, "MoveToJointPose",port=13000, parameters={"parameters": {"pose":"screwPeg2Pose"}})
 
-# for i in range(3):
+# graspObject(robot_ip,"screwPeg2Pose",port=13000)
+# start_task_and_wait(robot_ip, "MoveToCartPose",port=13000, parameters={"parameters": {"pose":"screwPeg2PoseApproach"}})
+
+# start_task_and_wait(robot_ip, "MoveToCartPose",port=13000, parameters={"parameters": {"pose":"idlePoseKrones"}})
+# start_task_and_wait(robot_ip, "MoveToJointPose",port=13000, parameters={"parameters": {"pose":"screwPeg2InsertionPoseApproach"}})
+# start_task_and_wait(robot_ip, "MoveToCartPose",port=13000, parameters={"parameters": {"pose":"screwPeg2InsertionPose"}})
+
+screw(robot_ip,'screwPeg2InsertionPoseApproach','screwPeg2InsertionPose',port=13000 )
+
+# for i in range(3):s
 #     start_task_and_wait(robot_ip, "MoveToJointPose",port=12000, parameters={"parameters": {"pose":"pose1_0"}})
 #     start_task_and_wait(robot_ip, "MoveToJointPose",port=12000, parameters={"parameters": {"pose":"pose1_1"}})
 #     start_task_and_wait(robot_ip, "MoveToJointPose",port=12000, parameters={"parameters": {"pose":"pose1_2"}})
