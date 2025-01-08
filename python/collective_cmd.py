@@ -17,9 +17,9 @@ import copy
 ###################################################################################
 list_block_1 = ["001", #"002", 
                 "003", "004", "005", 
-                "006", "007", "008", "043", 
+                "006", "007", "043", #"008"
                 "033", "035"]
-list_block_2 = ["044","013","014","015","016","042",
+list_block_2 = ["013","014","015","016","042", #"044"
                  "018",#"020",
                 "041",
                 "021","022"]
@@ -501,12 +501,15 @@ def move_joint(robot, location, port=12000, offset=[0,0,0,0,0,0,0], wait=True, s
     path_to_default_context = os.getcwd() + "/taxonomy/default_contexts/"
     f = open(path_to_default_context + "move_joint.json")
     move_context = json.load(f)
+    print(move_context)
     if not q_g:
         move_context["skill"]["objects"]["goal_pose"] = location
         move_context["skill"]["q_g_offset"] = offset
     else:
-        move_context["skill"].pop("objects")
+        #move_context["skill"].pop("objects")
         move_context["skill"]["q_g"] = q_g
+        move_context["skill"]["objects"].pop("goal_pose")
+
     move_context["skill"]["time_max"] = 10
     move_context["user"]["env_X"] = [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
     move_context["user"]["F_ext_max"] = [15,15]
@@ -1499,7 +1502,7 @@ def teach_dualarm_without_homing(module:str, object_name:str):
     call_method(robot, 13000, "teach_object",{"object":insertable})
     call_method(robot, 13000, "grasp", {"width":0,"speed":1,"force":100,"epsilon_outer":1})
     call_method(robot, 13000, "set_grasped_object",{"object":insertable})
-    call_method(robot, 12000, "teach_object",{"object":insertable})
+    call_method(robot, 12000, "teach_object",{"object":insertable, "teach_width":True})
     call_method(robot, 12000, "grasp", {"width":0,"speed":1,"force":100,"epsilon_outer":1})
     call_method(robot, 12000, "set_grasped_object",{"object":insertable})
 
@@ -1514,6 +1517,60 @@ def teach_dualarm_without_homing(module:str, object_name:str):
 
     input("Teach container [with object]")
     call_method(robot, 12000, "teach_object", {"object": insertable+"_container"})
+
+
+def xmas_reset():
+    move("collective-040.rsi.ei.tum.de","t0",port=13000,wait=False)
+    move("0.0.0.0","t0")
+
+def xmas_move_2():
+    move("collective-040.rsi.ei.tum.de","t3",port=13000,wait=False,add_nullspace=True,f_ext=[25,25])
+    move("0.0.0.0","t3",add_nullspace=True,f_ext=[25,25])
+
+def xmas_move():
+    move("collective-040.rsi.ei.tum.de","t1",port=13000,f_ext=[25,25],wait=False,add_nullspace=True)
+    move("0.0.0.0","t1",f_ext=[25,25],add_nullspace=True)
+    
+    pi=3.1415
+    wiggle_contextl = {
+        "skill": {
+            "dX_fourier_a_a": [0.1, 0, 0.1, 0, 0, 0],
+            "dX_fourier_a_phi": [pi/2, pi/2, 0, pi/2, 0, 0],
+            "dX_fourier_a_f": [-0.12, -0.08, -0.12, 0.6125, 0, 0],
+            "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
+            "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
+            "use_EE": True,
+            "time_max": 10
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+    wiggle_contextr = {
+        "skill": {
+            "dX_fourier_a_a": [-0.1, -0, -0.1, 0, 0, 0],
+            "dX_fourier_a_phi": [pi/2, pi/2, 0, pi/2, 0, 0],
+            "dX_fourier_a_f": [-0.12, -0.08, -0.12, 0.6125, 0, 0],
+            "dX_fourier_b_a": [0, 0, 0, 0, 0, 0],
+            "dX_fourier_b_f": [0, 0, 0, 0, 0, 0],
+            "use_EE": True,
+            "time_max": 10
+        },
+        "control": {
+            "control_mode": 0
+        }
+    }
+
+    tr = Task("collective-040.rsi.ei.tum.de",13000)
+    tr.add_skill("wiggle", "GenericWiggleMotion", wiggle_contextr)
+    tl = Task("0.0.0.0",12000)
+    tl.add_skill("wiggle", "GenericWiggleMotion", wiggle_contextl)
+
+    tr.start()
+    tl.start()
+    tr.wait()
+    tl.wait()
+
 
 def handguiding(robot):
     context = {

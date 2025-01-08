@@ -92,14 +92,16 @@ def move_to_contact(robot, location, port = 12000, wait=True):
     if wait:
         return t.wait()
 
-def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,5], add_nullspace=False):
+def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,5], add_nullspace=False,
+         p_g=[]):
     context = {
         "skill": {
             "p0":{
                 "dX_d": [0.3, 0.8],
                 "ddX_d": [0.5, 1],
                 "K_x": [2000, 2000, 2000, 250, 250, 250],
-                "T_T_EE_g_offset": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, offset[0], offset[1], offset[2], 1]
+                "T_T_EE_g_offset": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, offset[0], offset[1], offset[2], 1],
+                "T_T_EE_g":p_g
 
             },
             "time_max":10,
@@ -115,6 +117,8 @@ def move(robot, location, offset = [0,0,0], port=12000, wait = True,f_ext = [10,
             #"env_X": [0.002, 0.002, 0.002, 0.0175, 0.0175, 0.0175]  #[0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
         }
     }
+    if p_g:
+        context["skill"]["objects"] = {}
     if add_nullspace:
         context["control"]["nullspace"] = {
                                                     "K_theta": [20, 20, 15, 10, 7, 5, 2],
@@ -146,7 +150,7 @@ def move_joint(robot, location, port=12000, offset=[0,0,0,0,0,0,0], wait=True, s
         move_context["skill"]["objects"]["goal_pose"] = location
         move_context["skill"]["q_g_offset"] = offset
     else:
-        move_context["skill"].pop("objects")
+        move_context["skill"]["objects"]["goal_pose"] = "NoneObject"
         move_context["skill"]["q_g"] = q_g
     move_context["skill"]["time_max"] = 10
     move_context["user"]["env_X"] = [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
@@ -154,6 +158,7 @@ def move_joint(robot, location, port=12000, offset=[0,0,0,0,0,0,0], wait=True, s
     if speed:
         move_context["skill"]["speed"] = speed[0]
         move_context["skill"]["acc"] = speed[1]
+    print(move_context)
     t0 = Task(robot, port=port)
     t0.add_skill("move", "MoveToPoseJoint", move_context)
     t0.start()
@@ -286,8 +291,9 @@ def teach_dualarm_without_homing(robot:str, object_name:str):
     print("\nteaching ",insertable, "for ", robot,"\n")
 
     input("insert objects")
-    call_method(robot, 12000, "teach_object",{"object":insertable})
     call_method(robot, 12000, "grasp", {"width":0,"speed":1,"force":100,"epsilon_outer":1})
+
+    call_method(robot, 12000, "teach_object",{"object":insertable, "teach_width":True})
     call_method(robot, 12000, "set_grasped_object",{"object":insertable})
 
     input("Press key to start teaching. [Pose above container")
@@ -322,10 +328,10 @@ def update_object(robot, name, content={}):
     obj = call_method(robot,12000,"download_object_context",{"object":name})
     obj = obj["result"]["context"]
     for key, o in content.items():
-        if key in obj["result"]["context"]:
-            obj["result"]["context"] = content[key]
+        if key in obj:
+            obj[key] = content[key]
     obj["object"] = obj["name"]
-    call_method(robot,12000,"set_object",o)
+    call_method(robot,12000,"set_object",obj)
 
 def taskboard(robot):
     input("teach pose above box")

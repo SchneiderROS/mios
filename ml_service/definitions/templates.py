@@ -21,7 +21,7 @@ class InsertionFactory(ProblemDefinitionFactory):
             "p1_ddx_d": (0, 0.5),
             "p1_ddphi_d": (0, 1),
             "p1_K_x": (0, 2000),
-            "p1_K_phi": (0, 2000),
+            "p1_K_phi": (0, 200),
             "p2_dx_d": (0, 0.1),
             "p2_dphi_d": (0, 0.5),
             "p2_ddx_d": (0, 0.5),

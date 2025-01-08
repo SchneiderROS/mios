@@ -239,6 +239,31 @@ def download_best_result_2(host: str, db: str, skill_class: str, skill_instance:
 
     return context
 
+def download_best_result_tags(host: str, skill_class: str, tags: str):
+    client = MongoDBClient(host)
+    results = client.read("ml_results",skill_class,{"meta.tags":tags})
+    trials, context_map, default_context = get_successful_trials(results)
+    context = default_context["skills"][skill_class]
+    best_trial = {}
+    best_cost = float('inf')
+    for t in trials:
+        if t["q_metric"]["final_cost"] < best_cost:
+            best_trial = t
+            best_cost = t["q_metric"]["final_cost"]
+        
+
+    for p in best_trial["theta"].keys():
+        mapping = context_map[p]
+        for m in mapping:
+            mapping_arr = m.split(".")
+            param_arr = mapping_arr[-1].split("-")
+            if len(param_arr) == 2:
+                context["skill"][mapping_arr[3]][param_arr[0]][int(param_arr[1]) - 1] = best_trial["theta"][p]
+            else:
+                context["skill"][mapping_arr[3]][param_arr[0]] = best_trial["theta"][p]
+
+    return context
+
 
 def get_successful_trials(doc):
     meta_info = []

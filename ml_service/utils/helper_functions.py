@@ -109,6 +109,11 @@ def move(robot, location, offset, port=12000, wait = True):
 
             },
             "time_max":10,
+
+            "log_data":True,
+            "data_length":10,
+            "log_name":"testtest",
+            "meta":{"description":"This is a test","tags":["this", "is", "a","test"]},
             "objects": {
                     "GoalPose": location
                 }
@@ -117,6 +122,7 @@ def move(robot, location, offset, port=12000, wait = True):
             "control_mode": 2
         }
     }
+    print(context)
     t = Task(robot, port=port)
     t.add_skill("move", "TaxMove", context)
     t.start()

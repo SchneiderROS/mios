@@ -60,7 +60,7 @@ tasks = {
         "collective-006.rsi.ei.tum.de":["D_021", "A_32_pentagon-1","D_002", "D_001" ],
         "collective-007.rsi.ei.tum.de":["D_022", "A_004_cylinder-1","D_011"],
         "collective-008.rsi.ei.tum.de":["008_left","D_008", "D_004","D_013"],
-        #"collective-044.rsi.ei.tum.de":["D_024", "B_003_plugF-1","D_009","D_014","D_025"],#PC 10 is broken and changed to 36 now
+        "collective-044.rsi.ei.tum.de":["D_024", "B_003_plugF-1","D_009","D_014","D_025"],#PC 10 is broken and changed to 36 now
         
         #"collective-011.rsi.ei.tum.de":["B_004_audioJack-35", "D_010", "D_015","D_023"],
         "collective-033.rsi.ei.tum.de":["D_023"],  # replacement for 011
@@ -609,3 +609,75 @@ def count_experiments():
     
     print("\n\ntotal: ",sum(alle))
         
+
+
+
+
+
+
+
+def download_best_result_tags(host: str, skill_class: str, tags: str):
+    client = MongoDBClient(host)
+    results = client.read("ml_results",skill_class,{"meta.tags":tags})
+    trials, context_map, default_context = get_successful_trials(results)
+    context = default_context["skills"][skill_class]
+    best_trial = {}
+    best_cost = float('inf')
+    for t in trials:
+        if t["q_metric"]["final_cost"] < best_cost:
+            best_trial = t
+            best_cost = t["q_metric"]["final_cost"]
+    print(best_trial)
+    print(best_cost)
+
+    for p in best_trial["theta"].keys():
+        mapping = context_map[p]
+        for m in mapping:
+            mapping_arr = m.split(".")
+            param_arr = mapping_arr[-1].split("-")
+            if len(param_arr) == 2:
+                context["skill"][mapping_arr[3]][param_arr[0]][int(param_arr[1]) - 1] = best_trial["theta"][p]
+            else:
+                context["skill"][mapping_arr[3]][param_arr[0]] = best_trial["theta"][p]
+
+    return context
+
+
+def get_successful_trials(doc):
+    meta_info = []
+    successful_trials = []
+    for d in doc:
+        meta_info.append(d["meta"])
+        # get raw ml data:
+        trials = get_raw_data(d)
+        for t in trials:
+            successful_trials.append(t)
+
+    context_map = meta_info[0]["domain"]["context_mapping"]
+    default_context = meta_info[0]["default_context"]
+    return successful_trials, context_map, default_context
+
+
+def get_raw_data(d):
+    successful_trials = []
+    for nr in range(len(d)):
+        key = "n" + str(nr)
+        if d.get(key, False):  # if trial number available
+            if d[key]["q_metric"]["success"]:  # if trial was successful
+                successful_trials.append(d[key])
+    return successful_trials
+
+def best_insertion(robot, tags= ["demorun"]):
+    context = download_best_result_tags(robot, "insertion", tags)
+    return context
+    
+    
+    print("Press [ctl+c] to stop play your best results" )
+    try:
+        while True:
+            t = Task(robot)
+            t.add_skill("best_insertion", "TaxInsertion", context)
+            t.start()
+            t.wait()
+    except KeyboardInterrupt:
+        pass
