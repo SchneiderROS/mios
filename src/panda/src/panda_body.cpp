@@ -93,7 +93,7 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
     std::optional<std::string> new_ip={};
     spdlog::debug("PandaBody: ping_robot("+last_ip.value_or("127.0.0.1")+")");
     //check given IP:
-    //while(!new_ip.has_value()){
+    while(!new_ip.has_value()){
         if(last_ip.has_value()){
             if(mirmi_utils::ping(last_ip.value().c_str())==false){
                 spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
@@ -106,30 +106,30 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
                 }
             }
         }
-    //}
-    // // search for robot IP:
-    // if(!new_ip.has_value()){
-    //     std::map<std::string,std::string> ifaces = mirmi_utils::get_subnets();
-    //     std::string address;
-    //     for(const auto& i : ifaces){
-    //         if(i.first=="lo" || i.first=="docker0" || i.first=="tap0" || i.first=="flannel.1" || i.first.substr(0,3)=="enx" || i.first.substr(0,3)=="wlp" || i.first.substr(0,2)=="br" || i.first.substr(0,4)=="enp4"){
-    //             continue;
-    //         }
-    //         for(unsigned j=2;j<255;j++){
-    //             address=i.second +std::to_string(j);
-    //             if(!mirmi_utils::ping(address.c_str())){
-    //                 spdlog::debug("Cannot find device at "+address+" on interface "+i.first+".");
-    //                 continue;
-    //             }else{
-    //                 spdlog::info("Found device at ip "+address+" at interface "+i.first+".");
-    //                 if(is_robot(address)){
-    //                     new_ip = address;
-    //                     return new_ip;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    }
+    // search for robot IP:
+    if(!new_ip.has_value()){
+        std::map<std::string,std::string> ifaces = mirmi_utils::get_subnets();
+        std::string address;
+        for(const auto& i : ifaces){
+            if(i.first=="lo" || i.first=="docker0" || i.first=="tap0" || i.first=="flannel.1" || i.first.substr(0,3)=="enx" || i.first.substr(0,3)=="wlp" || i.first.substr(0,2)=="br" || i.first.substr(0,4)=="enp4"){
+                continue;
+            }
+            for(unsigned j=2;j<255;j++){
+                address=i.second +std::to_string(j);
+                if(!mirmi_utils::ping(address.c_str())){
+                    spdlog::debug("Cannot find device at "+address+" on interface "+i.first+".");
+                    continue;
+                }else{
+                    spdlog::info("Found device at ip "+address+" at interface "+i.first+".");
+                    if(is_robot(address)){
+                        new_ip = address;
+                        return new_ip;
+                    }
+                }
+            }
+        }
+    }
     spdlog::warn("PandaBody::ping_robot: Cannot find Robot");
     return new_ip;
 
