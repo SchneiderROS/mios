@@ -203,7 +203,7 @@ class FrankaAPI:
                     return True
                 else:
                     return False
-            print("DESK_client: Bad https responde ", response.status, response.reason, " from ",response.geturl(),"\n header:\n", response.headers.as_string())
+            print("DESK_client: Bad https responde ", response.status, response.reason, "\n header:\n", response.headers.as_string())
             return False
 
     def force_control(self):
