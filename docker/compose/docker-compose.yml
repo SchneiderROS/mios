@@ -4,9 +4,9 @@ services:
     image: "mirmi/mios:13.6"
     restart: always
     environment:
-      - verbosity=debug
+      - verbosity=info
       - database_port=27017
-      - robot_config=3
+      - robot_config=0
       - robot_arm=left
     network_mode: "host"
     cap_add:
