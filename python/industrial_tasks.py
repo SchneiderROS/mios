@@ -72,37 +72,46 @@ def screw(robot,approach,location,port=12000, wait=True):
     if wait:
         return t0.wait()
 
-def move(robot,pose,port=12000,wait=True,cartesian=True,nullspace=True):
-
+def move(robot,pose,port=12000,wait=True,cartesian=True,nullspace=True,accuracy=False):
     move_context = {
         "skill": {
-            "p0": {
-                "dX_d": [0.1, 0.5],
-                "ddX_d": [0.5, 1],
-                "K_x": [1500, 1500, 1500, 150, 150, 150]
-            }
+            "p0":{
+                "dX_d": [0.5, 0.5],
+                "ddX_d": [0.5, 0.5],
+                "K_x": [1000, 1000, 1000, 50, 50, 50],
+                "T_T_EE_g_offset": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+
+            },
+            "time_max":10,
+            "objects": {
+                    "GoalPose": pose
+                }
         },
         "control": {
-            "control_mode": 1,
-            "nullspace":
-            {
-                "K_theta": [50, 50, 50, 50, 20, 20, 20],
-                "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
-                "active": True              
-            }
+            "control_mode": 0
         },
-        "user": {
-            "env_X": [0.005, 0.005, 0.005, 0.0175, 0.0175, 0.0175],
-            "F_ext":[100,50]
+        "user":{
+            "F_ext_max": [20,10],
+            #"env_X": [0.002, 0.002, 0.002, 0.0175, 0.0175, 0.0175]  #[0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
         }
     }
-    screw_context["skill"]["objects"]["goal_pose"] = location
-    screw_context["skill"]["time_max"] = 10
-    t0 = Task(robot, port=port)
-    t0.add_skill("screw", "TaxScrewNullspace", screw_context)
-    t0.start()
+    if nullspace:
+        move_context["control"]["nullspace"] = {
+            "K_theta": [20, 20, 15, 10, 7, 5, 2],
+            "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+            "active": True
+            }
+    if accuracy:
+        move_context["control"]["nullspace"] = {
+            "K_theta": [20, 20, 15, 10, 7, 5, 2],
+            "xi_theta": [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+            "active": True
+            }
+    t = Task(robot, port=port)
+    t.add_skill("move", "TaxMove", move_context)
+    t.start()
     if wait:
-        return t0.wait()
+        return t.wait()
 
 def graspObject(robot,obj,port=12000):
     call_method(robot, port, "grasp", {"force":100, "speed":0.5, "width":0, "epsilon_inner":1, "epsilon_outer":1})
