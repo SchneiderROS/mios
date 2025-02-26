@@ -9,7 +9,11 @@
 
 namespace mios {
 
+<<<<<<< HEAD
 TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_keep_running(false),m_thread_running(false),m_frequency(200){
+=======
+TelemetryUDP::TelemetryUDP(Core *core, Portal* portal):m_core(core),m_portal(portal),m_keep_running(false),m_thread_running(false),m_frequency(10){
+>>>>>>> deepinterface
     start_sending();
 }
 
@@ -115,7 +119,11 @@ void TelemetryUDP::sending_loop(){
         const Percept* p = m_core->get_percept();
         m_time_duration = m_time_1 - p->time;
         if(m_time_duration>= m_frequency){
+<<<<<<< HEAD
             m_core->refresh_percept({});
+=======
+            //m_core->refresh_percept({});
+>>>>>>> deepinterface
             p = m_core->get_percept();
         }
         m_time_2 = std::chrono::high_resolution_clock::now();

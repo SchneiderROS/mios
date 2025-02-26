@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ROOT=$(dirname "$(realpath $0)")
-PYTHONPATH=$PYTHONPATH:${ROOT}/../python/desk:${ROOT}/../ml_service:/usr/local/lib/python3.8/dist-packages
+PYTHONPATH=$PYTHONPATH:${ROOT}/../python/desk:${ROOT}/../ml_service:/usr/local/lib/python3.10/dist-packages
 export PYTHONPATH
 #export ROS_MASTER_URI=http://localhost:11311
 unset LD_LIBRARY_PATH

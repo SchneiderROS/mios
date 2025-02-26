@@ -54,6 +54,7 @@ void CommandInterface::bind_methods(){
     m_portal->bind_method_to_all("unlock_brakes",std::bind(&CommandInterface::unlock_brakes,this,std::placeholders::_1),{});
     m_portal->bind_method_to_all("lock_brakes",std::bind(&CommandInterface::lock_brakes,this,std::placeholders::_1),{});
     m_portal->bind_method_to_all("shutdown",std::bind(&CommandInterface::shutdown,this,std::placeholders::_1),{});
+    m_portal->bind_method_to_all("reboot",std::bind(&CommandInterface::reboot,this,std::placeholders::_1),{});
     m_portal->bind_method_to_all("pack_pose",std::bind(&CommandInterface::pack_pose,this,std::placeholders::_1),{});
     m_portal->bind_method_to_all("start_desk_task",std::bind(&CommandInterface::start_desk_task,this,std::placeholders::_1),{ArgPair("task",{})});
     m_portal->bind_method_to_all("stop_desk_task",std::bind(&CommandInterface::stop_desk_task,this,std::placeholders::_1),{});
@@ -253,15 +254,21 @@ nlohmann::json CommandInterface::teach_object(const nlohmann::json &request){
     nlohmann::json response;
     std::string object_name;
     bool teach_width=false;
+    double teach_force=100;
     request["object"].get_to(object_name);
-    request["teach_width"].get_to(teach_width);
+    if(request.contains("width")){
+        request["width"].get_to(teach_width);
+    }
+    if(request.contains("force")){
+        request["force"].get_to(teach_force);
+    }
     bool result=true;
     std::string error_message="";
     if(!m_core->refresh_percept({})){
         error_message="Could not teach the object because no current percept is available.";
         result=false;
     }
-    if(!m_memory->update_object(object_name,teach_width,*m_core->get_percept())){
+    if(!m_memory->update_object(object_name,teach_width,teach_force,*m_core->get_percept())){
         error_message="Could not teach object because memory returned an error.";
         result=false;
     }
@@ -387,6 +394,7 @@ nlohmann::json CommandInterface::get_state([[maybe_unused]] const nlohmann::json
         result=false;
     }
     const Percept* p = m_core->get_percept();
+    mirmi_utils::write_json_array<double,7,1>(response["gravity"],p->internal_model.G);
     mirmi_utils::write_json_array<double,7,1>(response["q"],p->proprioception.q);
     mirmi_utils::write_json_array<double,4,4>(response["O_T_EE"],p->proprioception.O_T_EE);
     response["grasped_object"]=m_memory->get_live_context()->grasped_object->name;
@@ -533,7 +541,20 @@ nlohmann::json CommandInterface::lock_brakes([[maybe_unused]] const nlohmann::js
 nlohmann::json CommandInterface::shutdown([[maybe_unused]] const nlohmann::json &request){
     spdlog::trace("CommandInterface:shutdown()");
     nlohmann::json response;
+    m_core->terminate();
     bool result=m_core->shutdown_body();
+    response["result"]=result;
+    return response;
+}
+
+nlohmann::json CommandInterface::reboot([[maybe_unused]] const nlohmann::json &request){
+    spdlog::info("CommandInterface:reboot()");
+    nlohmann::json response;
+    bool result=m_core->reboot_body();
+    if(result){
+        spdlog::info("Rebooting robot arm... Shutdown MIOS. You can restart MIOS as soon as the robot is booted.");
+        result = this->terminate(request);
+    }
     response["result"]=result;
     return response;
 }

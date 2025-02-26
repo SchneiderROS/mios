@@ -1,11 +1,9 @@
 #!/usr/bin/python3 -u
-import requests
 from http.client import HTTPSConnection
 import base64
 import hashlib
 import json
 import ssl
-import sys
 import socket
 import time
 
@@ -46,10 +44,12 @@ class FrankaAPI:
             self._spoc_token = self.mongodb_client.read(self.db, "parameters", {"name":"system"})[0]["spoc_token"]
             if self.in_control():
                 print("desk_client: In control. spoc token: ",self._spoc_token)
+                self._in_control = True
             else:
                 print("desk_clinet: Not in control yet. Updating mongodb accordingly.")
                 self.mongodb_client.update(self.db, "parameters", {"name":"system"}, {"spoc_in_control":False})
                 self.mongodb_client.update(self.db, "parameters", {"name":"system"}, {"spoc_token":""})
+                self._in_control = False
         return self
 
     def __exit__(self, type, value, traceback):
@@ -106,25 +106,26 @@ class FrankaAPI:
                                       'Cookie': 'authorization=%s' % self._token, 'X-Control-Token': self._spoc_token})
         return self._client.getresponse().read()
 
-    def unlock_brakes(self): 
+    def unlock_brakes(self): #https://192.168.3.100/desk/api/joints/unlock
         payload = {'force':'false'}
         temp_body = urlencode(payload, quote_via=quote_plus)  # force=false
-        self._client.request('POST', '/desk/api/robot/open-brakes', temp_body,
+        self._client.request('POST', '/desk/api/joints/unlock', temp_body,
                              headers={'content-type': 'application/x-www-form-urlencoded',
                                       'Cookie': 'authorization=%s' % self._token, 'X-Control-Token': self._spoc_token})
         return self._client.getresponse().read()
 
-    def lock_brakes(self):
-        self._client.request('POST', '/desk/api/robot/close-brakes',
+    def lock_brakes(self):  #https://192.168.3.100/desk/api/joints/lock
+        self._client.request('POST', '/desk/api/joints/lock',
                              headers={'content-type': 'application/x-www-form-urlencoded',
-                                      'Cookie': 'authorization=%s' % self._token})
+                                      'Cookie': 'authorization=%s' % self._token, 'X-Control-Token': self._spoc_token})
         return self._client.getresponse().read()
 
     def shutdown(self):
         self._client.request('POST', '/admin/api/shutdown',
-                             headers={'content-type': 'application/json'})
+                             headers={'content-type': 'application/json',
+                             'Cookie': 'authorization=%s' % self._token})
 
-    def pack_pose(self):
+    def pack_pose(self):  # GET	/desk/api/robot/fold  Connection: upgrade
         self._client.request('POST', '/desk/api/robot/fold',
                              headers={'content-type': 'application/x-www-form-urlencoded',
                                       'Cookie': 'authorization=%s' % self._token, 'X-Control-Token': self._spoc_token})
@@ -152,17 +153,15 @@ class FrankaAPI:
         #                     headers={'content-type': 'application/x-www-form-urlencoded',
         #                              'Cookie': 'authorization=%s' % self._token, 'X-Control-Token': self._spoc_token})
         temp_body = json.dumps({'token':'%s' % self._spoc_token})
-        self._client.request('POST', '/desk/api/reboot', #temp_body,
+        self._client.request('POST', '/admin/api/reboot', #temp_body,
                              headers={'content-type': 'application/json',
                                       'Cookie': 'authorization=%s' % self._token,
                                       "X-Control-Token":self._spoc_token})
-        print("rebooting robot...")
         response = self._client.getresponse()
         content = response.read()
-        if response.status == 200:
-            return True
-        else:
-            return False
+        print(response.status)
+        print(content)
+        return True
 
     def in_control(self):
         temp = "mode=%22one%22".encode("utf-8")  # 'mode':'\"one\"'
@@ -175,15 +174,17 @@ class FrankaAPI:
         if response_status == 200:
             self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_token":self._spoc_token})
             self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":True})
+            self._in_control = True
             return True
         else:
             self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":False})
+            self._in_control = False
             return False
 
-    def take_control(self):
+    def take_control(self): # /admin/api/control-token/request
         if not self.in_control():
             response = -1
-            temp_body = json.dumps({'requestedBy':'franka'})  #pinakothek
+            temp_body = json.dumps({'requestedBy':self._user})  #pinakothek
             self._client.request('POST', '/admin/api/control-token/request', temp_body,
                                  headers={'content-type': 'application/json',
                                           'Cookie': 'authorization=%s' % self._token,
@@ -202,7 +203,7 @@ class FrankaAPI:
                     return True
                 else:
                     return False
-            print("DESK_client: Bad https responde")
+            print("DESK_client: Bad https responde ", response.status, response.reason, "\n header:\n", response.headers.as_string())
             return False
 
     def force_control(self):
@@ -233,14 +234,14 @@ class FrankaAPI:
                     self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_token":self._spoc_token})
                     self.mongodb_client.update(self.db,"parameters",{"name":"system"},{"spoc_in_control":True})
                     print("verify your access to the robot: Press the O-Button!\n You have ",response," Seconds!")
-                    #time.sleep(response)
+                    #time.sleep(response) # or catch response: wss://172.16.0.10/desk/api/navigation/events with response {"circle":true}
                     return True
 
             return False
         print("Already in control! spoc token: ",self._spoc_token)
         return True
 
-    def release_control(self):
+    def release_control(self):  # DELETE /admin/api/control-token
         if self._in_control:
             temp_body = json.dumps({'token':'%s' % self._spoc_token})
             self._client.request('DELETE', '/admin/api/control-token', temp_body,
@@ -258,7 +259,7 @@ class FrankaAPI:
         print("Not in control, cannot release control")
         return True
         
-    def activate_fci(self):
+    def activate_fci(self): #/desk/api/system/fci
         temp_body = json.dumps({'token':'%s' % self._spoc_token})
         self._client.request('POST', '/admin/api/control-token/fci', temp_body,
                              headers={'content-type': 'application/json',
@@ -271,14 +272,47 @@ class FrankaAPI:
             print("FCI activated! spoc token: ",self._spoc_token)
             return True
         else:
+            # if details	[ "WrongOperatingMode" ] in response then you should switch to execution mode
+            print(response_context)
             print("bad http response!",response_status," spoc token: ",self._spoc_token)
             return False
 
-    def deactivate_fci(self):
+    def deactivate_fci(self): #/admin/api/control-token/fci
         temp_body = json.dumps({'token':'%s' % self._spoc_token})
         self._client.request('DELETE', '/admin/api/control-token/fci', temp_body,
                              headers={'content-type': 'application/json',
-                                      'Cookie': 'authorization=%s' % self._token})
+                                      'Cookie': 'authorization=%s' % self._token,
+                                      "X-Control-Token":self._spoc_token})
+
+        response = self._client.getresponse()
+        response_status = response.status
+        response_context = response.read()
+        if response_status == 200:
+            return True
+        else:
+            return False
+    
+    def programming(self):
+        temp_body = json.dumps({'token':'%s' % self._spoc_token})
+        self._client.request('POST', '/desk/api/operating-mode/programming',
+                             headers={'content-type': 'application/json',
+                                      'Cookie': 'authorization=%s' % self._token,
+                                      "X-Control-Token":self._spoc_token})
+
+        response = self._client.getresponse()
+        response_status = response.status
+        response_context = response.read()
+        if response_status == 200:
+            return True
+        else:
+            return False
+    
+    def execution(self):
+        temp_body = json.dumps({'token':'%s' % self._spoc_token})
+        self._client.request('POST', '/desk/api/operating-mode/execution',
+                             headers={'content-type': 'application/json',
+                                      'Cookie': 'authorization=%s' % self._token,
+                                      "X-Control-Token":self._spoc_token})
 
         response = self._client.getresponse()
         response_status = response.status
@@ -428,6 +462,22 @@ def in_control(ip, user, pwd, db, db_port):
     try:
         with FrankaAPI(ip, user, pwd, db, db_port) as api:
             return api.in_control()
+    except socket.error as e:
+        print(e)
+        print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
+
+def execution(ip, user, pwd, db, db_port):
+    try:
+        with FrankaAPI(ip, user, pwd, db, db_port) as api:
+            return api.execution()
+    except socket.error as e:
+        print(e)
+        print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)
+
+def programming(ip, user, pwd, db, db_port):
+    try:
+        with FrankaAPI(ip, user, pwd, db, db_port) as api:
+            return api.programming()
     except socket.error as e:
         print(e)
         print('Socket error, possibly no host with IP: ', ip, ', user: ', user, ' and password: ', pwd)

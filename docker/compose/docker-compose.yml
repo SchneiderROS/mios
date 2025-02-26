@@ -12,16 +12,20 @@ services:
     cap_add:
       - SYS_NICE
     depends_on:
-      - "ros"
       - "mongo"
-  #ros:
-  #  image: "ros:noetic-ros-core"
-  #  network_mode: "host"
-  #  command: roscore
   mongo:
     image: "mongo:4.4.6"
     ports:
       - "27017:27017"
     volumes:
       - ./localFolder:/data/db
+    command: mongod --quiet --logpath /dev/null 
+
+  mios_mls:
+    image: "mirmi/mios_mls:dualarm"
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+
+
 

@@ -8,6 +8,7 @@ import socket
 import time
 import numpy as np
 import socket
+import copy
 
 from engine.engine import Engine
 from engine.engine import Trial
@@ -18,6 +19,7 @@ from knowledge_processor.knowledge_manager import KnowledgeManager
 from mongodb_client.mongodb_client import MongoDBClient
 from utils.exception import *
 from services.knowledge import Knowledge
+from rpc_visualization.data_buffer import DataBuffer
 
 logger = logging.getLogger("ml_service")
 
@@ -74,7 +76,8 @@ class BaseService(metaclass=ABCMeta):
         self.similarity_estimate = {}  # this maps a similarity to all collective agents 
         self.external_success = {}     # will be filled for each external Task with 1 for success or 0 if not
         self.internal_success = []     # counts just the internal trials: 1 for success 0 for failure
-
+        self.data_buffer_visualization = DataBuffer()
+        self.test_debug = 0
         # 10s timeout for xmlrpc clinet:
         socket.setdefaulttimeout(10)
 
@@ -99,6 +102,7 @@ class BaseService(metaclass=ABCMeta):
         self.problem_definition = problem_definition
         self.configuration = configuration
         #self.knowledge_source = knowledge_source
+        self.data_buffer_visualization = DataBuffer()
         if knowledge_source is not None:
             self.knowledge.from_dict(knowledge_source)
         # Skill identity used for searching similar tasks:
@@ -116,6 +120,8 @@ class BaseService(metaclass=ABCMeta):
                 self.knowledge.confidence = 0.04
         elif self.knowledge.mode == None:
             self.centroid = None
+            self.configuration.request_probability = 0
+            self.knowledge.kb_location = None
         elif self.knowledge.mode == "specific":
             logger.debug("BaseService::initialize: Use specific knowledge: "+str(self.knowledge))
             client = MongoDBClient(self.knowledge.kb_location)
@@ -178,18 +184,26 @@ class BaseService(metaclass=ABCMeta):
             logger.error("base_service::initialize(): Unknown knowledge mode " + str(self.knowledge.mode))
 
         if self.knowledge.parameters:
-            self.centroid = []
-            if len(self.knowledge.parameters) != len(self.problem_definition.domain.limits):
-                logger.error("Domain sizes do not match!")
-                return False
-            for key in self.knowledge.parameters:
-                self.centroid.append(self.knowledge.parameters[key])
-            logger.debug("base_service.initialize(): Use global knowledge " + str(self.centroid))
-            self.centroid = self.problem_definition.domain.normalize(np.asarray(self.centroid))
-            self.confidence = self.knowledge.confidence
+            if type(self.knowledge.parameters) == dict:
+                self.centroid = []
+                if len(self.knowledge.parameters) != len(self.problem_definition.domain.limits):
+                    logger.error("Domain sizes do not match!")
+                    return False
+                for key in self.knowledge.parameters:
+                    self.centroid.append(self.knowledge.parameters[key])
+                logger.debug("base_service.initialize(): Use global knowledge " + str(self.centroid))
+                self.centroid = self.problem_definition.domain.normalize(np.asarray(self.centroid))
+                self.confidence = self.knowledge.confidence
+            if type(self.knowledge.parameters) == list:
+                self.initial_knowledge_list = []
+                for parameters in self.knowledge.parameters:
+                    knowledge = copy.deepcopy(self.knowledge)
+                    knowledge.parameters = parameters
+                    self.initial_knowledge_list.append(knowledge)
         else:
             logger.debug("base_service.initialize(): No Knowledge used as initial centroid!!!")
 
+        self.knowledge_manager.fast_pipe_ip = knowledge.kb_location
         self.engine = Engine(agents, mios_port=self.mios_port, mongo_port=self.mongo_port)
         self.database_results_id = self.engine.initialize(self.problem_definition, configuration.exploration_mode)
 
@@ -288,22 +302,18 @@ class BaseService(metaclass=ABCMeta):
                   self.get_theta(x_real), external=external))
 
     def wait_for_result(self, uuid: str) -> TaskResult:
-    
-        result = self.engine.wait_for_trial(uuid, 50 * self.problem_definition.n_variations).task_result
-        s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        if result.q_metric.final_cost is None:
-            s.sendto(str(0).encode(), ("localhost", 8003))
-        else:
-            s.sendto(str(result.q_metric.final_cost).encode(), ("localhost", 8003))
-            print("send_final_cost: ", result.q_metric.final_cost)
-            # why inf? if result.q_metric.final_cost == float('inf'):
-        return result   
+        result = self.engine.wait_for_trial(uuid, 50 * self.problem_definition.n_variations)
+        result_dict = result.to_dict()
+        if result_dict["external"]:  # if external is not False
+            result_dict["external"] = eval(result_dict["external"])  # make it a dict again
+        self.data_buffer_visualization.add_data(self.make_float_again(result_dict))
+        return result.task_result
 
     def get_theta(self, x) -> dict:
-        logger.debug("BaseService.get_theta(" + str(x) + ")")
+        #logger.debug("BaseService.get_theta(" + str(x) + ")")
         theta = dict()
         for i in range(len(self.problem_definition.domain.vector_mapping)):
-            theta[self.problem_definition.domain.vector_mapping[i]] = x[i]
+            theta[self.problem_definition.domain.vector_mapping[i]] = float(x[i])
         return theta
     
     def get_params(self, theta) -> list:
@@ -317,7 +327,7 @@ class BaseService(metaclass=ABCMeta):
         theta = dict()
         updated_context = self.problem_definition.default_context
         for i in range(len(self.problem_definition.domain.vector_mapping)):
-            theta[self.problem_definition.domain.vector_mapping[i]] = x[i]
+            theta[self.problem_definition.domain.vector_mapping[i]] = float(x[i])
 
         # logger.debug("BaseService.update_default_context.theta: " + str(theta))
 
@@ -352,3 +362,14 @@ class BaseService(metaclass=ABCMeta):
             if internal_dict_value is None:
                 return None
         return internal_dict_value
+    
+    def make_float_again(self, x):
+        if isinstance(x, np.float64):
+            return float(x)
+        elif isinstance(x, dict):
+            for key in x.keys():
+                x[key] = self.make_float_again(x[key])
+        elif isinstance(x, list):
+            for i in range(len(x)):
+                x[i] = self.make_float_again(x[i])
+        return x

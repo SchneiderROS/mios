@@ -34,7 +34,6 @@ class SVMConfiguration(ServiceConfiguration):
         self.batch_synchronisation = False
         self.request_probability = 0.0
         self.request_probability_decrease = False
-        self.finish_cost = 0
 
     def __del__(self):
         print("DESTRUCTOR")
@@ -49,7 +48,6 @@ class SVMConfiguration(ServiceConfiguration):
             "batch_synchronisation": self.batch_synchronisation,
             "request_probability": self.request_probability,
             "request_probability_decrease": self.request_probability_decrease,
-            "finish_cost": self.finish_cost
         }
         return config
 
@@ -62,7 +60,6 @@ class SVMConfiguration(ServiceConfiguration):
         self.batch_synchronisation = config_dict["batch_synchronisation"]
         self.request_probability = config_dict["request_probability"]
         self.request_probability_decrease =config_dict["request_probability_decrease"]
-        self.finish_cost = config_dict["finish_cost"]
 
 
 class SVMService(BaseService):
@@ -83,7 +80,7 @@ class SVMService(BaseService):
         self.gmm_samples = []
         self.bestSample = []
         self.svmCounter = 0
-        self.minCost = np.infty
+        self.minCost = np.inf
         self.success = []
         self.rewards = []
         self.svm_samples = []
@@ -107,7 +104,7 @@ class SVMService(BaseService):
         self.svmCounter=0
         self.neglect_samples = 0  # neglect first part of self.success, self.rewards to calculate self.mean
         self.bad_gmm_prediciton = 0  # counts how often gmm is not able to select samples which satisfy svm-predictions
-        self.minCost=np.infty
+        self.minCost=np.inf
         self.success=[]
         self.rewards=[]
         self.svm_samples=[]
@@ -145,7 +142,7 @@ class SVMService(BaseService):
         for i in range(0, int(self.configuration.n_trials / self.configuration.batch_width)):
             if self.keep_running is False:
                 break
-            if self.minCost < self.configuration.finish_cost:
+            if self.minCost < self.problem_definition.optimum_thr:
                 break
             self._setSamples(self.cnt_batch)#done
             self._run_trial_par(self.action_list_norm)#td
@@ -289,7 +286,8 @@ class SVMService(BaseService):
                     if random.random() < self.request_probability:
                         print("requesting 1 trial with ", self.similarity_estimate, " \nfrom ",self.task_identity_name)
                         try:
-                            new_trial = self.kb.request_trials(str(self.task_identity_name), 1, self.similarity_estimate)[0]  # take first Tuple of the list
+                            #new_trial = self.kb.request_trials(str(self.task_identity_name), 1, self.similarity_estimate)[0]  # take first Tuple of the list
+                            new_trial = self.knowledge_manager.receive_trial_fast_pipe(self.problem_definition.skill_instance,self.problem_definition.tags, self.problem_definition.skill_class)
                             external = new_trial[2]
                             uuid = self.push_trial(new_trial[0], external=external)
                         except IndexError:
@@ -594,7 +592,7 @@ class SVMService(BaseService):
                     pass
                     # self.gmm_samples.append(x)
 
-                lowest_bic = np.infty
+                lowest_bic = np.inf
                 bic = []
                 maxcomponents = 8
                 if maxcomponents > len(self.gmm_samples):

@@ -10,10 +10,14 @@ from services.cmaes import CMAESService
 from services.cmaes import CMAESConfiguration
 from services.svm import SVMService
 from services.svm import SVMConfiguration
+from services.orig_psp import OrigPSPService
+from services.orig_psp import OrigPSPConfiguration
 from services.base_service import ServiceConfiguration
 from problem_definition.problem_definition import ProblemDefinition
 from utils.ws_client import call_method
 from database.database import Database
+from utils.cmd_loop import CMDLoop
+from rpc_visualization.switcher import TensorboardClient
 
 from xmlrpc.server import SimpleXMLRPCServer
 from socketserver import ThreadingMixIn
@@ -33,6 +37,7 @@ class Interface:
         self.service = None
         self.learn_thread = None
         self.rpc_server = None
+        self.cmd_loop = None
         self.mios_port = mios_port
         self.interface_port = interface_port
         self.mongo_port = mongo_port
@@ -40,6 +45,13 @@ class Interface:
         self.global_db = Database(self.interface_port+1, self.mongo_port)
         self.global_db_thread = None
         self.rpc_server = InterfaceServer(("0.0.0.0", interface_port), allow_none=True)
+
+        # rpc_visulation related 
+        self.telemetry_buffer = None
+        self.keep_running_telemetry = False
+        self.telemetry_sender = None
+        self.telemetry_thread = None
+
         self.start_global_database()
 
     def start_rpc_server(self):
@@ -53,6 +65,10 @@ class Interface:
         self.rpc_server.register_function(self.pause_service, "pause_service")
         self.rpc_server.register_function(self.resume_service, "resume_service")
         self.rpc_server.register_function(self.status, "status")
+        self.rpc_server.register_function(self.start_cmd_loop, "start_cmd_loop")
+        self.rpc_server.register_function(self.stop_cmd_loop, "stop_cmd_loop")
+        self.rpc_server.register_function(self.start_telemetry, "start_telemetry")
+        self.rpc_server.register_function(self.stop_telemetry, "stop_telemetry")
         self.rpc_server.serve_forever()
         logger.debug("Interface::start_rpc_server.server_stopped")
 
@@ -72,6 +88,9 @@ class Interface:
         elif configuration["service_name"] == "svm":
             service_configuration = SVMConfiguration()
             service_configuration.from_dict(configuration)
+        elif configuration["service_name"] == "origPSP":
+            service_configuration = OrigPSPConfiguration()
+            service_configuration.from_dict(configuration)
 
         self.start_service(ProblemDefinition.from_dict(problem_definition), service_configuration, set(agents),
                            knowledge)
@@ -89,6 +108,8 @@ class Interface:
             self.service = CMAESService()
         elif configuration.service_name == "svm":
             self.service = SVMService()
+        elif configuration.service_name == "origPSP":
+            self.service = OrigPSPService()
         elif configuration.service_name == "generic":
             self.service = GenericOptimizerService()
         else:
@@ -103,22 +124,28 @@ class Interface:
     def learn_task(self, problem_definition: ProblemDefinition, configuration: ServiceConfiguration,
                    agents: set, knowledge: dict) -> bool:
         logger.debug("Interface::learn_task")
-        """strt to learn a task according to instructions"""
+        """start to learn a task according to instructions"""
+        result = False
         try:
             logger.debug("interface.learn_task: start learning task")
             if self.service.initialize(problem_definition, configuration, agents, knowledge) is False:
                 return False
             logger.debug("Service initialized ")
+            self.telemetry_buffer = self.service.data_buffer_visualization
             result = self.service.learn_task()
             logger.debug("learning success " + str(result))
-            return result
         finally:
             logger.debug("Interface::learn_task.finally: Releasing service lock")
+            self.stop_cmd_loop()
+            self.stop_telemetry()
             self.service_lock.release()
-
+        return result
+    
     def stop_service(self):
         logger.debug("Interface::stop_service")
         """Stop the learning process, if possible save all results and stop the robot"""
+        self.stop_cmd_loop()
+        self.stop_telemetry()
         if self.service is not None:
             self.service.stop()
     
@@ -190,6 +217,54 @@ class Interface:
         logger.debug("interface.stop_global_database: global Database hase been stoped, " + str(
             not self.global_db_thread.is_alive()))
         return not self.global_db_thread.is_alive()
+
+    def start_cmd_loop(self, cmd):
+        logger.debug("interface::start_cmd_loop() with cmd:\n"+str(cmd))
+        if not self.cmd_loop:
+            self.cmd_loop = CMDLoop(cmd)
+            self.cmd_loop.start()
+    
+    def stop_cmd_loop(self):
+        logger.debug("interface::stop_cmd_loop()")
+        if self.cmd_loop:
+            self.cmd_loop.stop()
+        self.cmd_loop = None
+        logger.debug("interface::stop_cmd_loop: stopped successfully")
+
+    def start_telemetry(self, ip, port):
+        logger.debug("interface::start_telemetry with ip "+str(ip)+" and port "+str(port))
+        self.keep_running_telemetry = True
+        self.telemetry_sender = TensorboardClient(ip, port)
+        if self.telemetry_buffer is None:
+            return False
+        self.telemetry_thread = Thread(target=self._send_telemetry)
+        self.telemetry_thread.start()
+        return True
+
+    def stop_telemetry(self):
+        self.keep_running_telemetry = False
+        logger.debug("interface::stop_telemetry"+str(self.keep_running_telemetry))
+        if self.service is not None:
+            self.service.data_buffer_visualization.add_data("STOP")
+        if self.telemetry_thread is not None:
+            self.telemetry_thread.join()
+            self.telemetry_thread = None
+
+    def _send_telemetry(self):
+        while self.keep_running_telemetry:
+            buffered_trial = self.telemetry_buffer.get_data(timeout=1)
+            if buffered_trial is None:
+                continue
+            if buffered_trial == "STOP":
+                break
+            logger.debug("_send_telemetry to " + str(self.telemetry_sender.ip)) 
+            if not self.telemetry_sender.send(buffered_trial):
+                self.telemetry_buffer.add_data(buffered_trial)
+                logger.error("cannot send trial to "+ str(self.telemetry_sender.ip)+":"+str(self.telemetry_sender.port))
+                time.sleep(2)
+        logger.debug("interface:: telemetry sending thread stopped.")
+        return True
+                
 
     def get_status(self) -> str:
         """returns a detailed status for debugging purposes"""

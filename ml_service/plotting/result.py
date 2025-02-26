@@ -9,7 +9,12 @@ class Result:
         self.id = copy.deepcopy(data_tmp["_id"])
         self.uuid = data_tmp["meta"]["uuid"]
         self.tags = data_tmp["meta"]["tags"]
+<<<<<<< HEAD
         print(self.tags)
+=======
+        self.instance = data_tmp["meta"]["skill_instance"]  # insertable
+        #print(self.tags)
+>>>>>>> deepinterface
         del data_tmp["_id"]
         n_trials = len(data_tmp) - 2
 
@@ -33,17 +38,28 @@ class Result:
             self.total_trials = 0
             self.total_time = 0
 
+<<<<<<< HEAD
 
         if "init_knowledge" in data_tmp["meta"]:
             self.knowledge = data_tmp["meta"]["init_knowledge"]["parameters"]
         else:
             self.knowledge = None
+=======
+        self.knowledge = None
+        if "init_knowledge" in data_tmp["meta"]:
+            if "parameters" in data_tmp["meta"]["init_knowledge"]:
+                self.knowledge = data_tmp["meta"]["init_knowledge"]["parameters"]
+            
+>>>>>>> deepinterface
 
 
     def get_successes_per_trial(self):
         success = []
         for t in self.trials:
-            success.append(t["q_metric"]["success"])
+            if "q_metric" in t:
+                success.append(t["q_metric"]["success"])
+            else:
+                success.append(t["success"])
         return success
 
     def get_successes_per_time(self):
@@ -86,9 +102,15 @@ class Result:
                 else:
                     episode_size_counter += 1
                     if cost_type is None:
-                        cost_raw.append(t["q_metric"]["final_cost"])
+                        if "q_metric" in t:
+                            cost_raw.append(t["q_metric"]["final_cost"])
+                        else:
+                            cost_raw.append(t["cost"])
                     else:
-                        cost_raw.append(t["q_metric"]["cost"][cost_type])
+                        if q_metric in t:
+                            cost_raw.append(t["q_metric"]["cost"][cost_type])
+                        else:
+                            cost_raw.append(t["cost"][cost_type])
             elif specification == "local" and not t["external"]:
                 if agent is not None:
                     if agent == t["agent"]:
@@ -96,12 +118,46 @@ class Result:
                         if cost_type is None:
                             cost_raw.append(t["q_metric"]["final_cost"])
                         else:
+                            if q_metric in t:
+                                cost_raw.append(t["q_metric"]["cost"][cost_type])
+                            else:
+                                cost_raw.append(t["cost"][cost_type])
+                    else:
+                        continue
+                else:
+                    episode_size_counter += 1
+                    if cost_type is None:
+                        if "q_metric" in t:
+                            cost_raw.append(t["q_metric"]["final_cost"])
+                        else:
+                            cost_raw.append(t["cost"])
+                    else:
+                        cost_raw.append(t["q_metric"]["cost"][cost_type])
+<<<<<<< HEAD
+            elif specification == "local" and not t["external"]:
+=======
+            elif specification == "external" and t["external"]:
+>>>>>>> deepinterface
+                if agent is not None:
+                    if agent == t["agent"]:
+                        episode_size_counter += 1
+                        if cost_type is None:
+<<<<<<< HEAD
+                            cost_raw.append(t["q_metric"]["final_cost"])
+=======
+                            if "q_metric" in t:
+                                cost_raw.append(t["q_metric"]["final_cost"])
+                            else:
+                                cost_raw.append(t["cost"])
+>>>>>>> deepinterface
+                        else:
                             cost_raw.append(t["q_metric"]["cost"][cost_type])
                     else:
                         continue
                 else:
                     episode_size_counter += 1
                     if cost_type is None:
+<<<<<<< HEAD
                         cost_raw.append(t["q_metric"]["final_cost"])
                     else:
                         cost_raw.append(t["q_metric"]["cost"][cost_type])
@@ -119,6 +175,12 @@ class Result:
                     episode_size_counter += 1
                     if cost_type is None:
                         cost_raw.append(t["q_metric"]["final_cost"])
+=======
+                        if "q_metric" in t:
+                            cost_raw.append(t["q_metric"]["final_cost"])
+                        else:
+                            cost_raw.append(t["cost"])
+>>>>>>> deepinterface
                     else:
                         cost_raw.append(t["q_metric"]["cost"][cost_type])
 
@@ -175,7 +237,10 @@ class Result:
                         if "q_metric" not in t:
                             cost.append(t["cost"])
                         else:
-                            cost.append(t["q_metric"]["final_cost"])
+                            if "q_metric" not in t:
+                                cost.append(t["final_cost"])
+                            else:
+                                cost.append(t["q_metric"]["final_cost"])
                     else:
                         cost.append(t["q_metric"]["cost"][cost_type])
                     if t["t_1"] == None:    
@@ -293,8 +358,14 @@ class Result:
             data_dict[param] = normalize(data_dict[param], min_param, max_param)
         return data_dict
 
+    def get_time_until_threshold(self, cost_threshold):
+        for c,t in zip(self.costs, self.times):
+            if c < cost_threshold:
+                return t
+        return False
 
-class Knowledge:
+
+class KnowledgePoint:   # changed from name "Knowledge" to "KnowledgePoint"
     def __init__(self, data: dict):
         data_tmp = copy.deepcopy(data)
         del data_tmp["_id"]

@@ -1,14 +1,15 @@
 import logging
+import time
 
 
 logger = logging.getLogger("ml_service")
 
 class Knowledge():
     def __init__(self, mode=None, type="similar", scope=[], kb_location=None, kb_db=None, kb_task_type=None, parameters=None,confidence=None, uuid=None,
-                prediction=False, prediction_error=None, identity=[1], skill_class=None, skill_instance=None, source=[], expected_cost=None, time=None,
+                prediction=False, prediction_error=None, identity=[1], skill_class=None, skill_instance=None, source=[], expected_cost=None, time=time.ctime(),
                 tags=[], equal_start=False, equal_tags=[], cost_function=[],identification_name=""):
-        self.mode = mode  # either None, "specific", "local", "global"
-        self.type = type  # also possible: "predicted" (use prediction), "all" (gives list of knowledges),
+        self.mode = mode  # either None, "specific", "local", "global"     (if "None", but parameters is not empty, the parameters will be used as centroid)
+        self.type = type  # also possible: "predicted" (use prediction), "all" (gives list of knowledges, no predicted ones),
         self.scope = scope  # scope (tags of results to make this knowledge)
         self.kb_location = kb_location  # location of the knowledge base
         self.kb_db = kb_db  # needed if type is specific
@@ -19,7 +20,7 @@ class Knowledge():
         self.prediction = prediction  # bool, wether this knowledge was predicted or not
         self.prediction_error = prediction_error
         self.identity = identity  # task identity
-        self.skill_class = skill_class
+        self.skill_class = skill_class  # eg. "insertion"
         self.skill_instance = skill_instance  #  skill_instance from problem_definition
         self.source = source  # uuid(s) of the source ml_results
         self.expected_cost = expected_cost
@@ -36,7 +37,7 @@ class Knowledge():
     def get_identification_name(self):
         return str({"skill_class": self.skill_class, "tags": self.tags, "identity": self.identity,"skill_instance":self.skill_instance})   # exactly the same as for problem_definition
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         meta_information = {
             "mode": self.mode,
             "type": self.type,

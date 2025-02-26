@@ -201,6 +201,10 @@ UserParameters::UserParameters(){
     env_dq=0.005;
 
     safe_mode=true;
+    
+    DH_a<<0,0,0,0,0,0,0,0;
+    DH_d<<0,0,0,0,0,0,0,0;
+    DH_alpha<<0,0,0,0,0,0,0,0;
 }
 
 bool UserParameters::from_json(const nlohmann::json &parameters){
@@ -272,6 +276,18 @@ bool UserParameters::from_json(const nlohmann::json &parameters){
         spdlog::error("Could not read safe_mode.");
         return false;
     }
+    if(!mirmi_utils::read_json_param(parameters,"DH_a",DH_a)){
+        spdlog::error("Could not read Denavit Hartenberg Parameter (DH_a).");
+        return false;
+    }
+    if(!mirmi_utils::read_json_param(parameters,"DH_d",DH_d)){
+        spdlog::error("Could not read Denavit Hartenberg Parameter (DH_d).");
+        return false;
+    }
+    if(!mirmi_utils::read_json_param(parameters,"DH_alpha",DH_alpha)){
+        spdlog::error("Could not read Denavit Hartenberg Parameter (DH_alpha).");
+        return false;
+    }
     return true;
 }
 
@@ -298,6 +314,9 @@ nlohmann::json UserParameters::to_json() const{
     json_object["env_dq"]=env_dq;
 
     json_object["safe_mode"]=safe_mode;
+    json_object["DH_a"]=mirmi_utils::from_eigen<double,8,1>(DH_a);
+    json_object["DH_d"]=mirmi_utils::from_eigen<double,8,1>(DH_d);
+    json_object["DH_alpha"]=mirmi_utils::from_eigen<double,8,1>(DH_alpha);
     return json_object;
 }
 
@@ -306,6 +325,8 @@ FramesParameters::FramesParameters(){
     F_T_EE=Eigen::Matrix<double,4,4>::Identity();
     EE_T_TCP=Eigen::Matrix<double,4,4>::Identity();
     EE_T_K=Eigen::Matrix<double,4,4>::Identity();
+    WF_T_O=Eigen::Matrix<double,4,4>::Identity();
+    WF_T_TF=Eigen::Matrix<double,4,4>::Identity();
 }
 
 bool FramesParameters::from_json(const nlohmann::json &parameters){
@@ -334,6 +355,8 @@ nlohmann::json FramesParameters::to_json() const{
     json_object["F_T_EE"]=mirmi_utils::from_eigen<double,4,4>(F_T_EE);
     json_object["EE_T_TCP"]=mirmi_utils::from_eigen<double,4,4>(EE_T_TCP);
     json_object["EE_T_K"]=mirmi_utils::from_eigen<double,4,4>(EE_T_K);
+    json_object["WF_T_O"]=mirmi_utils::from_eigen<double,4,4>(WF_T_O);
+    json_object["WF_T_TF"]=mirmi_utils::from_eigen<double,4,4>(WF_T_TF);
     return json_object;
 }
 
@@ -801,6 +824,7 @@ SkillParameters::SkillParameters(){
     log_data=false;
     data_length=0;
     log_name="";
+    log_meta=nlohmann::json();
 }
 
 bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
@@ -834,6 +858,10 @@ bool SkillParameters::read_global_skill_parameters(const nlohmann::json &p){
     }
     if(!mirmi_utils::read_json_param(p,"log_name",log_name)){
         spdlog::error("Could not read log_name.");
+        return false;
+    }
+    if(!mirmi_utils::read_json_param(p,"meta",log_meta)){
+        spdlog::error("Could not read log_meta.");
         return false;
     }
     if(p.find("objects")!=p.end()){
@@ -925,7 +953,14 @@ void SkillParameters::read_skill_objects_modifier(const nlohmann::json &p){
 }
 
 nlohmann::json SkillParameters::get_default_values(){
+    nlohmann::json log_meta;  //just some information about the skill
+    log_meta["description"]="";
+    log_meta["tags"]=nlohmann::json::array({"",""});
+    log_meta["skill_class"]="";  // will be set from mios according to skill object if available 
+    log_meta["skill_instance"]="";  // will be set from mios according to skill object if available 
+    
     nlohmann::json default_values;
+    default_values["meta"]=log_meta;
     default_values["time_max"]=0;;
     default_values["parallels_frequency"]=1000;
     default_values["ignore_settling"]=true;
@@ -945,6 +980,7 @@ nlohmann::json SkillParameters::get_default_values(){
 
 nlohmann::json SkillParameters::to_json() const{
     nlohmann::json json_object;
+    json_object["meta"]=log_meta;
     json_object["time_max"]=time_max;
     json_object["parallels_frequency"]=parallels_frequency;
     json_object["ignore_settling"]=ignore_settling;

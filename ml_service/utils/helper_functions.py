@@ -9,16 +9,57 @@ import socket
 from utils.ws_client import call_method
 from mongodb_client.mongodb_client import MongoDBClient
 from utils.taxonomy_utils import Task
+<<<<<<< HEAD
+=======
+from plotting.data_acquisition import *
+>>>>>>> deepinterface
 
 
 def get_ip(hostname: str):
     print("hostname: ",hostname)
     return socket.gethostbyname(hostname)
 
+<<<<<<< HEAD
 def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0):
     for robot in robots:
         mongo_client = MongoDBClient(robot)
         documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+=======
+def lowest_results(robot:str, tags:list):
+    data = get_multiple_experiment_data(robot, "insertion", "ml_results", {"meta.tags":tags})
+    lowerst_cost = 100
+    for result in data:
+        cost_tmp = result.get_lowest_cost()
+        print("lowest cost of ",cost_tmp, "at index ",result.costs.index(cost_tmp))
+        if lowerst_cost > cost_tmp:
+            lowerst_cost = cost_tmp
+    print("lowest_cost for", tags ," on ", robot,":  ",lowerst_cost)
+    return lowerst_cost
+
+def n_trial_until(robot, tags, cutoff):
+    data = get_multiple_experiment_data(robot, "insertion", "ml_results", {"meta.tags":tags})
+    lowerst_cost = 100
+    for result in data:
+        lowest_index = float("inf")
+        index_tmp = float("inf")
+        for i,cost in enumerate(result.costs):
+            if cost < cutoff:
+                print("lower cost than ",cutoff, "at index ",i)
+                index_tmp = i
+                break
+        if index_tmp<lowest_index:
+            lowest_index = index_tmp
+    return lowest_index
+        
+
+def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion", db: str ="ml_results", min_size: int =0):
+    for robot in robots:
+        mongo_client = MongoDBClient(robot)
+        try:
+            documents = mongo_client.read(db, task_class, {"meta.tags":tags})
+        except:
+            continue
+>>>>>>> deepinterface
         if len(documents) == 0:
             print("Not found documents on ", robot)
         ids = []
@@ -29,6 +70,47 @@ def delete_experiment_data(robots: list, tags: list, task_class: str ="insertion
         for id in ids:
             mongo_client.remove(db, task_class, {"_id":id})
 
+<<<<<<< HEAD
+=======
+def nested_get(input_dict, nested_key):
+    internal_dict_value = input_dict
+    for k in nested_key:
+        internal_dict_value = internal_dict_value.get(k, None)
+        if internal_dict_value is None:
+            return None
+    return internal_dict_value
+
+def get_nested_parameter(dic, keys):
+    key_list = keys.split(".")
+    parameter = key_list.pop(-1)
+    parameter = parameter.split("-")
+    key_list.append(parameter[0])
+    if len(parameter) == 1:
+        return nested_get(dic, key_list)
+    if len(parameter) == 2:
+        if nested_get(dic, key_list) is not None: 
+            return nested_get(dic, key_list)[int(parameter[1])-1]
+        else:
+            return None
+
+
+def set_nested_parameter(dic, keys, value):
+    # logger.debug("BaseService.set_nested_parameter(dic: " + str(dic) + ", " + "keys: " + str(keys) + ")")
+    for key in keys[:-1]:
+        dic = dic.setdefault(key, {})
+    tmp = keys[-1].split("-")
+    if len(tmp) == 1:
+        dic[keys[-1]] = value
+    elif len(tmp) == 2:
+        p_name = tmp[0]
+        p_dim = int(tmp[1])
+        if p_name not in dic:
+            dic[p_name] = []
+        if len(dic[p_name]) < p_dim:
+            dic[p_name].extend([0] * (p_dim - len(dic[p_name])))
+        dic[p_name][p_dim - 1] = value
+
+>>>>>>> deepinterface
 def move(robot, location, offset, port=12000, wait = True):
     context = {
         "skill": {
@@ -40,6 +122,14 @@ def move(robot, location, offset, port=12000, wait = True):
 
             },
             "time_max":10,
+<<<<<<< HEAD
+=======
+
+            "log_data":True,
+            "data_length":10,
+            "log_name":"testtest",
+            "meta":{"description":"This is a test","tags":["this", "is", "a","test"]},
+>>>>>>> deepinterface
             "objects": {
                     "GoalPose": location
                 }
@@ -48,6 +138,10 @@ def move(robot, location, offset, port=12000, wait = True):
             "control_mode": 2
         }
     }
+<<<<<<< HEAD
+=======
+    print(context)
+>>>>>>> deepinterface
     t = Task(robot, port=port)
     t.add_skill("move", "TaxMove", context)
     t.start()
@@ -62,16 +156,34 @@ def move_joint(robot, location,port=12000, wait=True):
     move_context = json.load(f)
     move_context["skill"]["objects"]["goal_pose"] = location
     move_context["skill"]["time_max"] = 10
+<<<<<<< HEAD
+=======
+    #move_context["user"]["F_ext_max"] = [25,25]
+    move_context["user"]["tau_ext_max"] = [40,40,40,40,8,8,8]
+>>>>>>> deepinterface
     t0 = Task(robot, port=port)
     t0.add_skill("move", "MoveToPoseJoint", move_context)
     t0.start()
     if wait:
+<<<<<<< HEAD
         result = t0.wait()
 
 def check_location(robot, pose_name, port=12000):
     client = MongoDBClient(robot)
     pose_object = client.read("mios","environment",{"name":pose_name})[0]
     if not pose_object:
+=======
+        return t0.wait()
+
+def check_location(robot, pose_name, port=12000):
+    client = MongoDBClient(robot)
+    try:
+        pose = call_method(robot, 12000, "download_object_context",{"object":pose_name})
+        pose_object = pose["result"]["context"]
+    except KeyError:
+        return False
+    except TypeError:
+>>>>>>> deepinterface
         return False
     cart_coordinates_g = pose_object["O_T_OB"][12:15]
     cart_coordinates_current = call_method(robot,port,"get_state")["result"]["O_T_EE"][12:15]
@@ -172,7 +284,15 @@ def grasp_insertable(robot:str, insertable = "generic_insertable", container = "
     while True:
         alternation=alternation*(-1)
         #print("current object grasped: ", call_method(robot,12000,"get_state")["result"]['grasped_object'] )
+<<<<<<< HEAD
         if call_method(robot,port,"get_state")["result"]['grasped_object'] == 'NullObject':
+=======
+        grasped_object = call_method(robot,port,"get_state")["result"]['grasped_object']
+        if grasped_object == insertable:
+            print("object is already grasped")
+            return True
+        if grasped_object == 'NullObject':
+>>>>>>> deepinterface
             call_method(robot, port, "release_object")
         else:
             print("I am already grasping something")
@@ -206,8 +326,14 @@ def grasp_insertable(robot:str, insertable = "generic_insertable", container = "
             count = 0
             while success_moving == False:
                 #call_method(robot, 12000, "move_gripper",{"width":0.07,"speed":1,"force":100})
+<<<<<<< HEAD
                 t1.start()
                 success_moving = t1.wait()["result"]["task_result"]["success"]
+=======
+                #t1.start()
+                success_moving = move_joint(robot,insertable, wait=True)["result"]["task_result"]["success"]
+                #success_moving = t1.wait()["result"]["task_result"]["success"]
+>>>>>>> deepinterface
                 if not success_moving:
                     print(robot, ": moving success = ", success_moving)
                 count += 1

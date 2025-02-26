@@ -81,6 +81,7 @@ void Core::start(){
 
 void Core::terminate(){
     spdlog::trace("Core::terminate()");
+    m_task_engine.stop();
     m_panda_body.disconnect_from_robot();
     m_panda_body.disconnect_from_gripper();
 }
@@ -541,6 +542,11 @@ bool Core::lock_body(){
 bool Core::shutdown_body(){
     spdlog::trace("Core::shutdown_body()");
     return m_panda_body.shutdown_robot(m_memory.read_parameters()->system.robot_ip,m_memory.read_parameters()->system.desk_user,m_memory.read_parameters()->system.desk_pwd);
+}
+
+bool Core::reboot_body(){
+    spdlog::trace("Core::reboot_body()");
+    return m_panda_body.reboot_robot(m_memory.read_parameters()->system.robot_ip,m_memory.read_parameters()->system.desk_user,m_memory.read_parameters()->system.desk_pwd);
 }
 
 bool Core::pack_body(){

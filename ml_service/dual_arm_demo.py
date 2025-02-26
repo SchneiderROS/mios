@@ -7,11 +7,54 @@ from utils.taxonomy_utils import *
 from services.knowledge import Knowledge
 from utils.helper_functions import *
 from run_experiments import *
-from demo2 import stop_service
+from ml_service.old_demo2 import stop_service
 from run_experiments import *
 from threading import Thread
 from run_experiments import learn_insertion
 
+
+class TaskO:
+    def __init__(self, robot):
+        self.skill_names = []
+        self.skill_types = []
+        self.skill_context = dict()
+        self.context = {
+            "parameters": {
+                "skill_names": [],
+                "skill_types": [],
+                "as_queue": False
+            },
+            "skills": self.skill_context
+        }
+
+        self.robot = robot
+        self.task_uuid = "INVALID"
+        self.t_0 = 0
+
+    def add_skill(self, name, skill_class, context):
+        self.skill_names.append(name)
+        self.skill_types.append(skill_class)
+        self.skill_context[name] = context
+
+        self.context["parameters"]["skill_names"] = self.skill_names
+        self.context["parameters"]["skill_types"] = self.skill_types
+        self.context["skills"] = self.skill_context
+
+    def start(self, queue: bool = False):
+        self.t_0 = time.time()
+        self.context["parameters"]["as_queue"] = queue
+        response = start_task(self.robot, "GenericTask", parameters=self.context, port = 12003)
+        self.task_uuid = response["result"]["task_uuid"]
+
+    def wait(self):
+        result = wait_for_task(self.robot, self.task_uuid, )
+        #print("Task execution took " + str(time.time() - self.t_0) + " s.")
+        return result
+
+    def stop(self):
+        result = stop_task(self.robot, port = 12003)
+        #print("Task execution took " + str(time.time() - self.t_0) + " s.")
+        return result
 
 path_to_default_context = os.getcwd() + "/../python/taxonomy/default_contexts/"
 #robot = "kfm01-dev.rsi.ei.tum.de"
