@@ -93,7 +93,6 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
     std::optional<std::string> new_ip={};
     spdlog::debug("PandaBody: ping_robot("+last_ip.value_or("127.0.0.1")+")");
     //check given IP:
-<<<<<<< HEAD
     if(last_ip.has_value()){
         if(mirmi_utils::ping(last_ip.value().c_str())==false){
             spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
@@ -101,19 +100,6 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
             new_ip=last_ip;
             if(is_robot(new_ip.value())){
                 return new_ip;
-=======
-    while(!new_ip.has_value()){
-        if(last_ip.has_value()){
-            if(mirmi_utils::ping(last_ip.value().c_str())==false){
-                spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
-            }else{
-                if(is_robot(last_ip.value_or("127.0.0.1"))){
-                    new_ip=last_ip;
-                    spdlog::debug("PandaBody: found robot at"+new_ip.value()+" unlocking...");
-                    unlock_brakes(new_ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd);
-                    return new_ip;
-                }
->>>>>>> deepinterface
             }
         }
     }
@@ -122,11 +108,7 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
         std::map<std::string,std::string> ifaces = mirmi_utils::get_subnets();
         std::string address;
         for(const auto& i : ifaces){
-<<<<<<< HEAD
             if(i.first=="lo" || i.first=="docker0" || i.first=="tap0" || i.first=="flannel.1" || i.first.substr(0,3)=="enx" || i.first.substr(0,3)=="wlp" || i.first.substr(0,2)=="br"){
-=======
-            if(i.first=="lo" || i.first=="docker0" || i.first=="tap0" || i.first=="flannel.1" || i.first.substr(0,3)=="enx" || i.first.substr(0,3)=="wlp" || i.first.substr(0,2)=="br" || i.first.substr(0,4)=="enp4"){
->>>>>>> deepinterface
                 continue;
             }
             for(unsigned j=2;j<255;j++){
@@ -306,11 +288,7 @@ bool PandaBody::is_robot(const std::string &ip){
         pybind11::object in_control = desk_client.attr("in_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         spdlog::debug("PandaBody::is_robot("+ip+")" );
         if(!in_control.cast<bool>()){
-<<<<<<< HEAD
             spdlog::debug("PandaBody::is_robot("+ip+"): not in control of DESK, aquire control...");
-=======
-            spdlog::debug("PandaBody::is_robot("+ip+"): not in control of DESK, aquire control... , in_control=");
->>>>>>> deepinterface
             pybind11::object take_control_result = desk_client.attr("take_control")(ip, m_memory->get_parameters()->system.desk_user, m_memory->get_parameters()->system.desk_pwd, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
             bool desk_in_control = take_control_result.cast<bool>();
             if(!desk_in_control){
@@ -723,95 +701,11 @@ bool PandaBody::set_ee(std::array<double, 16> F_T_EE){
     }
 }
 
-Eigen::Matrix4d PandaBody::dhTransformationMatrix(double theta, double d, double a, double alpha) const {
-    Eigen::Matrix4d T;
-
-    T << cos(theta),                 -sin(theta),                 0,               a,
-         sin(theta) * cos(alpha),    cos(theta) * cos(alpha),    -sin(alpha),     -d * sin(alpha),
-         sin(theta) * sin(alpha),    cos(theta) * sin(alpha),     cos(alpha),      d * cos(alpha),
-         0,                          0,                           0,               1;
-
-    return T;
-}
-
-std::array<double, 16> PandaBody::forward_kinematics(franka::RobotState& state) const{
-    spdlog::trace("PandaBody::forward_kinematics");
-    Eigen::Matrix<double, 8, 1>d = m_memory->get_parameters()->user.DH_d;
-    Eigen::Matrix<double, 8, 1> a = m_memory->get_parameters()->user.DH_a;
-    Eigen::Matrix<double, 8, 1> alpha = m_memory->get_parameters()->user.DH_alpha;
-    Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
-
-    for (int i = 0; i < 7; ++i) {
-        Eigen::Matrix4d deltaT = dhTransformationMatrix(state.q[i], d[i], a[i], alpha[i]);
-        T = T * deltaT;
-    }
-
-    Eigen::Matrix4d deltaT = dhTransformationMatrix(-M_PI / 4, d[7], a[7], alpha[7]);
-    T = T * deltaT;
-    
-    std::array<double, 16> O_T_EE;
-
-    for (int row = 0; row < 4; ++row) {
-        for (int col = 0; col < 4; ++col) {
-            O_T_EE[row * 4 + col] = T(row, col);
-        }
-    }
-
-    return O_T_EE;
-
-}
-
-// std::array<double, 16> PandaBody::get_WF_T_EE(franka::RobotState& state) const{
-//     Eigen::Matrix4d WF_T_O;
-//     Eigen::Matrix4d O_T_EE;
-//     Eigen::Matrix4d WF_T_EE;
-//     WF_T_O = m_memory->get_parameters()->frames.WF_T_O;
-//     O_T_EE = Eigen::Map<Eigen::Matrix4d>(state.O_T_EE.data());
-
-//     WF_T_EE=WF_T_O*O_T_EE;
-
-//     std::array<double, 16> _WF_T_EE;
-
-//     for (int row = 0; row < 4; ++row) {
-//         for (int col = 0; col < 4; ++col) {
-//             _WF_T_EE[row * 4 + col] = WF_T_EE(row, col);
-//         }
-//     }
-
-//     return _WF_T_EE;
-// }
-
-// std::array<double, 16> PandaBody::get_TF_T_EE(franka::RobotState& state) const{
-//     Eigen::Matrix4d WF_T_TF;
-//     Eigen::Matrix4d WF_T_EE;
-//     Eigen::Matrix4d TF_T_EE;
-//     WF_T_TF<<m_memory->get_parameters()->frames.WF_T_TF;
-//     O_T_EE = Eigen::Map<Eigen::Matrix4d>(state.WF_T_EE.data());
-
-//     TF_T_EE=WF_T_TF.inverse()*WF_T_EE;
-
-//     std::array<double, 16> _TF_T_EE;
-
-//     for (int row = 0; row < 4; ++row) {
-//         for (int col = 0; col < 4; ++col) {
-//             _TF_T_EE[row * 4 + col] = TF_T_EE(row, col);
-//         }
-//     }
-//     return _TF_T_EE;
-// }
-
-
 bool PandaBody::get_robot_state(franka::RobotState &state) const{
-    spdlog::trace("PandaBody::get_robot_state");
+//    spdlog::trace("PandaBody::get_robot_state");
     if(m_arm_connected){
         try{
             state=m_panda_arm->readOnce();
-
-            //use clibrated kinematics
-            //order matters!
-            //state.O_T_EE=forward_kinematics(state);
-            //state.WF_T_EE=get_WF_T_EE(state);
-            //state.TF_T_EE=get_TF_T_EE(state);
             return true;
         }catch(const franka::InvalidOperationException& e){
             spdlog::debug(e.what());
@@ -822,8 +716,6 @@ bool PandaBody::get_robot_state(franka::RobotState &state) const{
         }
     }else{
         get_default_robot_state(state);
-        //use clibrated kinematics
-        //state.O_T_EE=PandaBody::forward_kinematics(state);
         return true;
     }
 }
@@ -925,11 +817,8 @@ void PandaBody::wait_for_desk_task(const std::optional<std::string> &ip, const s
 
 bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     spdlog::trace("PandaBody::shutdown_robot");
-<<<<<<< HEAD
     disconnect_from_gripper();
     disconnect_from_robot();
-=======
->>>>>>> deepinterface
     deactivate_fci();
     bool result;
     try{
@@ -944,44 +833,12 @@ bool PandaBody::shutdown_robot(const std::optional<std::string> &ip, const std::
     return result;
 }
 
-bool PandaBody::reboot_robot(const std::optional<std::string> &ip, const std::string user, const std::string& password){
-    spdlog::trace("PandaBody::reboot_robot");
-    bool reconnect_arm = m_has_arm;
-    bool reconnect_hand = m_arm_connected;
-    //disconnect_from_gripper();
-    //disconnect_from_robot();
-    //deactivate_fci();
-    bool result;
-    deactivate_fci();
-    try{
-        pybind11::module desk_client = pybind11::module::import("desk_client");
-<<<<<<< HEAD
-=======
-        pybind11::object py_result = desk_client.attr("reboot")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
-        result = py_result.cast<bool>();
-    }catch(const pybind11::error_already_set& e){
-        spdlog::debug(e.what());
-        spdlog::warn("Cannot reboot, error when calling the python desk client.");
-        result=false;
-    }
-    /*if(result){
-        spdlog::info("Rebooting Robot... Wait until re-initialising.");
-        std::this_thread::sleep_for(std::chrono::seconds(120));
-        result=false;
-        if(this->initialize()){
-            result = true;
-        }
-    }*/
-    return result;
-}
-
 bool PandaBody::unlock_brakes(const std::optional<std::string> &ip, const std::string user, const std::string& password){
     spdlog::trace("PandaBody::unlock_brakes");
     bool result;
     deactivate_fci();
     try{
         pybind11::module desk_client = pybind11::module::import("desk_client");
->>>>>>> deepinterface
         pybind11::object py_result = desk_client.attr("unlock_brakes")(ip.value(), user, password, (m_memory->m_robot_arm == "left")? "miosL" : "miosR", m_memory->m_lt_memory.m_database_port);
         result = py_result.cast<bool>();
     }catch(const pybind11::error_already_set& e){
