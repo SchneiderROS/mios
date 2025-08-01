@@ -23,7 +23,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./docker/core
-          file: Dockerfile
+          file: ./docker/core/Dockerfile
           push: false
           tags: mios:${{ github.sha }}
 
@@ -31,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./docker/ml_service
-          file: Dockerfile
+          file: ./docker/ml_service/Dockerfile
           push: false
           tags: mios_mls:${{ github.sha }}
 
