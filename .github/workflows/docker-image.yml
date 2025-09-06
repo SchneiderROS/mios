@@ -11,15 +11,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: mios_build:latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
+        - name: install dependencies
+        run: |
+          cd docker
+          core_dep.sh
+  build_images:
+    runs-on: ubuntu-latest
+    container: mios_build:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+        - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Build mios Docker image
+        - name: Build mios Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./docker/core
@@ -27,7 +40,7 @@ jobs:
           push: false
           tags: mios:${{ github.sha }}
 
-      - name: Build mios_mls Docker image
+        - name: Build mios_mls Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./docker/ml_service
