@@ -25,7 +25,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/docker
           ls -al
-          core_dep.sh
+          bash core_dep.sh
   # build_images:
   #   runs-on: ubuntu-latest
   #   container: mios_build:latest
