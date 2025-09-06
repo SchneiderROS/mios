@@ -23,7 +23,8 @@ jobs:
 
       - name: install dependencies
         run: |
-          cd docker
+          cd $GITHUB_WORKSPACE/docker
+          ls -al
           core_dep.sh
   # build_images:
   #   runs-on: ubuntu-latest
