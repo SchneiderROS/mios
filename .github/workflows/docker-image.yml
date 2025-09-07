@@ -51,7 +51,7 @@ jobs:
         with:
           context: .
           file: ./docker/core/Dockerfile
-          push: false
+          push: true
           tags: mios:${{ github.sha }}
 
       - name: Build mios_mls Docker image
@@ -59,7 +59,7 @@ jobs:
         with:
           context: .
           file: ./docker/ml_service/Dockerfile
-          push: false
+          push: true
           tags: mios_mls:${{ github.sha }}
 
   
