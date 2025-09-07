@@ -37,16 +37,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-      steps:
-        - name: Download workspace
+    steps:
+      - name: Download workspace
         uses: actions/download-artifact@v4
         with:
           name: workspace
 
-        - name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-        - name: Build mios Docker image
+      - name: Build mios Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./docker/core
@@ -54,7 +54,7 @@ jobs:
           push: false
           tags: mios:${{ github.sha }}
 
-        - name: Build mios_mls Docker image
+      - name: Build mios_mls Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./docker/ml_service
@@ -62,4 +62,4 @@ jobs:
           push: false
           tags: mios_mls:${{ github.sha }}
 
-    
+  
