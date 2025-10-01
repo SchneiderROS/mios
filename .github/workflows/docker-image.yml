@@ -1,14 +1,38 @@
 name: Docker Build
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches:
+      - build
       - local_dev
   pull_request:
     branches:
+      - build
       - local_dev
 
 jobs:
+  lint_python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install lint dependencies
+        run: pip install ruff
+
+      - name: Lint python directory
+        run: ruff check python
+
   build:
     runs-on: ubuntu-latest
     container: 
@@ -46,8 +70,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
   
 
       - name: Build mios Docker image
@@ -55,15 +83,19 @@ jobs:
         with:
           context: .
           file: ./docker/core/Dockerfile
-          push: false
-          tags: ghcr.io/ciai-engineering/mios/mios:test
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/mios:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/mios:local_dev
 
       - name: Build mios_mls Docker image
         uses: docker/build-push-action@v5
         with:
-            context: .
-            file: ./docker/ml_service/Dockerfile
-            push: false
-            tags: ghcr.io/ciai-engineering/mios/mios_mls:test
+          context: .
+          file: ./docker/ml_service/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/mios_mls:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/mios_mls:local_dev
 
   
