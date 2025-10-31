@@ -33,7 +33,6 @@ jobs:
         run: ruff check python
 
   build_builder:
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
