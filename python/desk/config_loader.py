@@ -51,20 +51,20 @@ def load_config():
     it creates a template and exits the program.
     """
     if not os.path.exists(CONFIG_FILE):
-        print(f"Configuration file '{CONFIG_FILE}' not found.")
+        print(f"Configuration file '{CONFIG_FILE}' not found.", flush=True)
         try:
             with open(CONFIG_FILE, 'w') as f:
                 json.dump(DEFAULT_CONFIG, f, indent=2)
-            print(f"A new template '{CONFIG_FILE}' has been created.")
-            print("Please edit it with your robot's IP address and credentials before running the script again.")
+            print(f"A new template '{CONFIG_FILE}' has been created.", flush=True)
+            print("Please edit it with your robot's IP address and credentials before running the script again.", flush=True)
         except IOError as e:
-            print(f"Error creating configuration file: {e}")
+            print(f"Error creating configuration file: {e}", flush=True)
         #sys.exit(1) # Exit after creating the template
 
     try:
         with open(CONFIG_FILE, 'r') as f:
             return json.load(f)
     except (json.JSONDecodeError, IOError) as e:
-        print(f"Error reading configuration file '{CONFIG_FILE}': {e}")
-        print("Please ensure it is a valid JSON file.")
+        print(f"Error reading configuration file '{CONFIG_FILE}': {e}", flush=True)
+        print("Please ensure it is a valid JSON file.", flush=True)
         sys.exit(1)

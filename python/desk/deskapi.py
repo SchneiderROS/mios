@@ -75,9 +75,14 @@ def load_token() -> Optional[str]:
     try:
         mongo_client = MongoDBClient("localhost",27017)
         mios_system_conf = mongo_client.read(MONGONAME,"parameters",{"name":"system"})[0]
+        
+    except:
+        print(f"Cannot find token in MongoDB {MONGONAME}.", flush=True)
+        return None
+    try:
         return mios_system_conf["spoc_token"]
     except KeyError as e:
-        print(f"Cannot find token in MongoDB {MONGONAME}.")
+        print(f'load_token error: {e}', flush=True)
     return None
 
 def clear_token():
@@ -121,7 +126,7 @@ def enforce_control(owner="franka") -> Tuple[bool, dict]:
     if success:
         owner_status = data.get("owner")
         if owner_status and owner_status != owner:
-            print(f"Token currently held by {owner_status}. Forcing new token.")
+            print(f"Token currently held by {owner_status}. Forcing new token.", flush=True)
     return take_control(owner=owner)
 
 # ---------------- Robot Arm ----------------
@@ -167,7 +172,7 @@ def activate_fci() -> Tuple[bool, dict]:
     current_mode = mode_data.get('status')
     
     if current_mode == 'Programming':
-        print("Switching to Execution mode before activating FCI.")
+        print("Switching to Execution mode before activating FCI.", flush=True)
         switch_success, switch_result = switch_to_execution()
         if not switch_success:
             return False, {"error": f"Failed to switch to Execution: {switch_result.get('error', 'Unknown')}"}
