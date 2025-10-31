@@ -947,7 +947,7 @@ bool PandaBody::shutdown_robot(){
         std::this_thread::sleep_for(std::chrono::seconds(5));
         result=false;
         while(!this->initialize()){
-            spdlog::warning("Robot initialization failed. Wait and retry...");
+            spdlog::warn("Robot initialization failed. Wait and retry...");
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
         }
@@ -984,7 +984,7 @@ bool PandaBody::reboot_robot(){
         std::this_thread::sleep_for(std::chrono::seconds(5));
         result=false;
         while(!this->initialize()){
-            spdlog::warning("Robot initialization failed. Wait and retry...");
+            spdlog::warn("Robot initialization failed. Wait and retry...");
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
         }
