@@ -33,6 +33,7 @@ RUN pip3 install -U urwid
 
 COPY mios/ /mios/
 COPY dependencies/ /dependencies/
+RUN chmod +x /mios/bin/mios.sh
 
 EXPOSE 12000 12001 12002 8888 8889
 
