@@ -941,13 +941,15 @@ bool PandaBody::shutdown_robot(){
     }
     if(result){
         spdlog::info("Shutting down Robot... Wait until re-initialising.");
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         disconnect_from_gripper();
         disconnect_from_robot();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         result=false;
-        if(this->initialize()){
-            result = true;
-        }
+        while(!this->initialize()){
+            spdlog::warn("Robot initialization failed. Wait and retry...");
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        }   
     }
     return result;
 }
@@ -975,13 +977,16 @@ bool PandaBody::reboot_robot(){
     }
     if(result){
         spdlog::info("Rebooting Robot... Wait until re-initialising.");
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         disconnect_from_gripper();
         disconnect_from_robot();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         result=false;
-        if(this->initialize()){
-            result = true;
+        while(!this->initialize()){
+            spdlog::warn("Robot initialization failed. Wait and retry...");
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
+
     }
     return result;
 }
@@ -1014,7 +1019,7 @@ bool PandaBody::lock_brakes(){  // make sure it is waiting until all brakes are 
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
-        pybind11::object py_result = deskapi.attr("lock_joints");
+        pybind11::object py_result = deskapi.attr("lock_joints")();
         py::tuple result_tuple = py_result.cast<py::tuple>();
         result = result_tuple[0].cast<bool>();
         nlohmann::json status_json = result_tuple[1].cast<nlohmann::json>();
@@ -1037,7 +1042,7 @@ bool PandaBody::ensure_robot_ready(){  // put this in interface
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("keep_alive");
-        pybind11::object py_result = deskapi.attr("ensure_robot_ready");
+        pybind11::object py_result = deskapi.attr("ensure_robot_ready")();
         py::tuple result_tuple = py_result.cast<py::tuple>();
         result = result_tuple[0].cast<bool>();
         nlohmann::json status_json = result_tuple[1].cast<nlohmann::json>();
