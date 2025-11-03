@@ -34,7 +34,7 @@ ENV CC=/usr/bin/gcc
 ENV PATH=/opt/openrobots/bin:$PATH
 ENV PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
 ENV LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
-ENV PYTHONPATH=/opt/openrobots/lib/python3.10/site-packages:$PYTHONPATH # Adapt your desired python version here
+ENV PYTHONPATH=/opt/openrobots/lib/python3.10/site-packages:$PYTHONPATH
 ENV CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
 # RUN apt-get update && apt-get install -y \
 #     build-essential \
