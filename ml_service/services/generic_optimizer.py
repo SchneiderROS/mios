@@ -3,7 +3,6 @@ from scipy import optimize
 import logging
 from services.base_service import BaseService
 from services.base_service import ServiceConfiguration
-from services.optimisation_dummies import Sphere
 
 
 logger = logging.getLogger("ml_service")

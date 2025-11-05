@@ -1,17 +1,13 @@
 import logging
 import numpy as np
-import random
-import deap
+
 import time
 
 from sklearn.svm import SVC
 from sklearn import mixture
 
-from deap import creator
-
 from pyDOE import lhs
 
-from engine.engine import Trial
 from services.base_service import BaseService
 from services.base_service import ServiceConfiguration
 

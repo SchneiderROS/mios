@@ -8,7 +8,6 @@ from queue import Empty
 from copy import deepcopy
 import uuid
 import numpy as np
-from xmlrpc.client import ServerProxy
 from mongodb_client.mongodb_client import MongoDBClient
 from problem_definition.problem_definition import ProblemDefinition
 #from collective_manager.video_recorder import FFMpegWebcamRecorder
