@@ -19,6 +19,8 @@ set(${MODULE_NAME}_HEADER_FILES
     include/${PROJECT_NAME}/data_structures/results.hpp
     include/${PROJECT_NAME}/data_structures/task_data.hpp
     include/${PROJECT_NAME}/utils/exceptions.hpp
+    include/${PROJECT_NAME}/utils/types.hpp
+    include/${PROJECT_NAME}/utils/configuration.hpp
     )
 
 add_library(${MODULE_NAME}

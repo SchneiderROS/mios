@@ -20,6 +20,7 @@
 
 #include "mios/data_structures/actuator.hpp"
 #include "mios/data_structures/percept.hpp"
+#include "mios/utils/configuration.hpp"
 
 
 
@@ -29,7 +30,7 @@ class Skill;
 
 class Core{
 public:
-    Core(unsigned database_port, unsigned robot_configuration, std::string robot_arm);
+    Core(const MiosConfiguration &configuration);
     ~Core();
 
     bool initialize();
@@ -104,9 +105,8 @@ private:
 
 private:
     bool m_is_ready;
-    unsigned m_robot_configuration;
+    MiosConfiguration m_configuration;
     bool m_blend_skill;
-    std::string m_robot_arm;
     std::mutex m_mtx_is_busy;
     std::mutex m_mtx_FCI;
 

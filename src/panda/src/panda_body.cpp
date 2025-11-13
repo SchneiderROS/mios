@@ -16,29 +16,64 @@
 
 namespace mios {
 
-PandaBody::PandaBody(Memory *memory):m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(nullptr),m_has_arm(false),m_hand(PandaHandNone),m_arm_connected(false),m_hand_connected(false),
-m_memory(memory){
-    spdlog::trace("PandaBody::PandaBody");
-    m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+PandaBody::PandaBody(Memory *memory):
+    m_panda_arm(nullptr),
+    m_panda_model(nullptr),
+    m_panda_hand(nullptr),
+    m_has_arm(false),
+    m_hand(PandaHandNone),
+    m_arm_connected(false),
+    m_hand_connected(false),
+    m_memory(memory){
+        spdlog::trace("PandaBody::PandaBody");
+        m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 }
 
-bool PandaBody::initialize(){
+bool PandaBody::initialize(const MiosConfiguration &configuration){
     spdlog::trace("PandaBody::initialize()");
-    m_has_arm=m_memory->read_parameters()->system.has_robot;
-    //m_hand=m_memory->read_parameters()->system.gripper; // get hand automatically form desk
-    
+    m_configuration = configuration;
+
+    switch(m_configuration.robot_configuration){
+        case 0:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandDefault;    // will be overwritten by ensure_robot_ready (deskapi)  
+            break;
+        case 1:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandNone;      // will be overwritten by ensure_robot_ready (deskapi)  
+            break;
+        case 2:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandSofthand2;      
+            break;
+        case 3:    
+            m_has_arm=false;
+            m_hand=PandaHand::PandaHandNone;     
+            break;
+        case 4:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandDefault;    
+            break;
+        case 5:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandNone;    
+            break;
+        default:
+            spdlog::error("Robot configuration " + std::to_string(m_configuration.robot_configuration) + " does not exist.");
+            return false;
+    }
     std::optional<std::string> ip;
     if(m_has_arm){
     //request control and activate FCI
         spdlog::debug("PandaBody::initialize()");
-        ip = PandaBody::ping_robot(m_memory->get_parameters()->system.robot_ip);     
+        ip = PandaBody::ping_robot(m_configuration.robot_ip);     
     }
 
-    m_memory->get_parameters()->system.robot_ip = ip.value_or("127.0.0.1");
-    if(!connect_to_robot(m_memory->read_parameters()->system.robot_ip)){
+    // m_configuration.robot_ip = ip.value_or("127.0.0.1");
+    if(!connect_to_robot(m_configuration.robot_ip)){
         return false;
     }
-    if(!connect_to_gripper(m_memory->read_parameters()->system.robot_ip)){
+    if(!connect_to_gripper(m_configuration.robot_ip)){
         return false;
     }
     load_gripper_configuration();
@@ -231,7 +266,7 @@ bool PandaBody::pre_run_checks() const{
 bool PandaBody::is_robot(const std::string &ip){
     spdlog::debug("PandaBody::is_robot("+ip+")" );
     bool result = false;
-    while(!result){
+    while(!result && m_configuration.robot_configuration<2){
         result = ensure_robot_ready();
     }
     m_memory->set_default_parameters();
@@ -946,7 +981,7 @@ bool PandaBody::shutdown_robot(){
         disconnect_from_robot();
         std::this_thread::sleep_for(std::chrono::seconds(5));
         result=false;
-        while(!this->initialize()){
+        while(!this->initialize(m_configuration)){
             spdlog::warn("Robot initialization failed. Wait and retry...");
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }   
@@ -956,8 +991,6 @@ bool PandaBody::shutdown_robot(){
 
 bool PandaBody::reboot_robot(){
     spdlog::trace("PandaBody::reboot_robot");
-    bool reconnect_arm = m_has_arm;
-    bool reconnect_hand = m_arm_connected;
 
     //deactivate_fci();
     bool result;
@@ -982,7 +1015,7 @@ bool PandaBody::reboot_robot(){
         disconnect_from_robot();
         std::this_thread::sleep_for(std::chrono::seconds(5));
         result=false;
-        while(!this->initialize()){
+        while(!this->initialize(m_configuration)){
             spdlog::warn("Robot initialization failed. Wait and retry...");
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }

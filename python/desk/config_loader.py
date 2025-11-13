@@ -23,7 +23,7 @@ if ROBOT_USER is None:
 ROBOT_PASSWORD = os.getenv("ROBOT_PASSWORD")
 if ROBOT_PASSWORD is None:
   ROBOT_PASSWORD = "<user-password>"
-MONGONAME = os.getenv("MONGONAME")
+MONGONAME = os.getenv("database_name")
 if MONGONAME is None:
   MONGONAME = "mios"
 

@@ -10,6 +10,7 @@
 
 #include "mios/data_structures/parameters.hpp"
 #include "mios/utils/types.hpp"
+#include "mios/utils/configuration.hpp"
 
 #include <string>
 #include <optional>
@@ -28,7 +29,7 @@ class Memory;
 class PandaBody{
 public:
     PandaBody(Memory* memory);
-    bool initialize();
+    bool initialize(const MiosConfiguration &configuration);
     bool connect_to_robot(const std::optional<std::string> &ip);
     bool connect_to_gripper(const std::optional<std::string> &ip);
     void disconnect_from_robot();
@@ -116,6 +117,7 @@ private:
 
 private:
     Memory* m_memory;
+    MiosConfiguration m_configuration;
 };
 
 }

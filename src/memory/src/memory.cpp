@@ -3,11 +3,10 @@
 
 namespace mios {
 
-Memory::Memory(unsigned database_port, std::string robot_arm):m_lt_memory(database_port, robot_arm){
+Memory::Memory(const MiosConfiguration &configuration):m_lt_memory(configuration),m_configuration(configuration){
     spdlog::trace("Memory::Memory");
     m_st_memory.link_to_lt_memory(&m_lt_memory);
     m_lt_memory.link_to_st_memory(&m_st_memory);
-    m_robot_arm = robot_arm;
 }
 
 bool Memory::is_ok() const{
@@ -23,11 +22,11 @@ bool Memory::is_ok() const{
     return true;
 }
 
-bool Memory::initialize(SkillLibrary *skill_library, unsigned robot_configuration){
+bool Memory::initialize(SkillLibrary *skill_library){
     spdlog::trace("Memory::initialize");
     spdlog::info("Initializing long-term memory...");
     m_lt_memory.link_to_skill_library(skill_library);
-    if(!m_lt_memory.initialize(robot_configuration)){
+    if(!m_lt_memory.initialize()){
         spdlog::error("Could not initialize long-term memory.");
         return false;
     }

@@ -6,6 +6,7 @@
 #include "mios/data_structures/parameters.hpp"
 #include "mios/data_structures/task_data.hpp"
 #include "mios/data_structures/percept.hpp"
+#include "mios/utils/configuration.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -20,12 +21,12 @@ class Core;
 
 class Memory{
 public:
-    Memory(unsigned database_port, std::string robot_arm);
+    Memory(const MiosConfiguration &configuration);
     Memory(const Memory&) = delete;
     void operator=(Memory const&) = delete;
     bool is_ok() const;
 
-    bool initialize(SkillLibrary* skill_library, unsigned robot_configuration);
+    bool initialize(SkillLibrary* skill_library);
     bool load_default_parameters(nlohmann::json& parameters);
     bool set_default_parameters();
     bool apply_skill_context(const nlohmann::json& context, const std::string skill_id);
@@ -64,7 +65,7 @@ public:
     bool get_task_data(const std::string uuid,TaskData& data) const;
     Object *get_object(const std::string& name);
     const Event* get_event(const std::string& name);
-    std::string m_robot_arm;
+    MiosConfiguration m_configuration;
 
     LTMemory m_lt_memory;
 private:

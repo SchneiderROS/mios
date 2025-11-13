@@ -3,6 +3,7 @@
 #include "mios/mongodb_client/mongodb_client.hpp"
 #include "mios/data_structures/object.hpp"
 #include "mios/data_structures/task_data.hpp"
+#include "mios/utils/configuration.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -20,11 +21,11 @@ class SkillLibrary;
 
 class LTMemory{
 public:
-    LTMemory(unsigned database_port, std::string robot_arm);
+    LTMemory(const MiosConfiguration &configuration);
     bool is_ok() const;
     void link_to_st_memory(STMemory* st_memory);
     void link_to_skill_library(SkillLibrary* skill_library);
-    bool initialize(unsigned robot_configuration);
+    bool initialize();
     bool load_default_parameters(nlohmann::json &parameters);
 
     bool get_task_data(const std::string uuid,TaskData& data) const;
@@ -41,7 +42,7 @@ public:
     bool upload_log_element(const nlohmann::json& log_entry);
     bool update_database();
 
-    unsigned m_database_port;
+    MiosConfiguration m_configuration;
 
 private:
     bool make_database_consistent();

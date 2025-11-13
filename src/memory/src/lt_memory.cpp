@@ -8,9 +8,11 @@
 
 namespace mios {
 
-LTMemory::LTMemory(unsigned database_port, std::string robot_arm):m_mongodb_client((robot_arm == "left") ? "miosL" : "miosR", database_port){
-    spdlog::trace("LTMemory::LTMemory");
-    m_database_port= database_port;
+LTMemory::LTMemory(const MiosConfiguration &configuration):
+    m_mongodb_client(configuration.database_name, configuration.database_port),
+    m_configuration(configuration){
+        spdlog::trace("LTMemory::LTMemory");
+
 }
 
 bool LTMemory::is_ok() const{
@@ -32,39 +34,39 @@ void LTMemory::link_to_skill_library(SkillLibrary *skill_library){
     m_skill_library=skill_library;
 }
 
-bool LTMemory::initialize(unsigned robot_configuration){
+bool LTMemory::initialize(){
     spdlog::trace("LTMemory::initialize");
     if(!make_database_consistent()){
         return false;
     }
 
-    nlohmann::json system_parameters;
-    m_mongodb_client.read_document("system","parameters",system_parameters);
-    switch(robot_configuration){
-    case 0:
-        system_parameters["has_robot"]=true;
-        system_parameters["gripper"]="Default";
-        m_mongodb_client.write_document("system","parameters",system_parameters,true);
-        break;
-    case 1:
-        system_parameters["has_robot"]=true;
-        system_parameters["gripper"]="None";
-        m_mongodb_client.write_document("system","parameters",system_parameters,true);
-        break;
-    case 2:
-        system_parameters["has_robot"]=true;
-        system_parameters["gripper"]="Softhand2";
-        m_mongodb_client.write_document("system","parameters",system_parameters,true);
-        break;
-    case 3:
-        system_parameters["has_robot"]=false;
-        system_parameters["gripper"]="None";
-        m_mongodb_client.write_document("system","parameters",system_parameters,true);
-        break;
-    default:
-        spdlog::error("Robot configuration " + std::to_string(robot_configuration) + " does not exist.");
-        return false;
-    }
+    // nlohmann::json system_parameters;
+    // m_mongodb_client.read_document("system","parameters",system_parameters);
+    // switch(m_configuration.robot_configuration){
+    // case 0:
+    //     system_parameters["has_robot"]=true;
+    //     system_parameters["gripper"]="Default";
+    //     m_mongodb_client.write_document("system","parameters",system_parameters,true);
+    //     break;
+    // case 1:
+    //     system_parameters["has_robot"]=true;
+    //     system_parameters["gripper"]="None";
+    //     m_mongodb_client.write_document("system","parameters",system_parameters,true);
+    //     break;
+    // case 2:
+    //     system_parameters["has_robot"]=true;
+    //     system_parameters["gripper"]="Softhand2";
+    //     m_mongodb_client.write_document("system","parameters",system_parameters,true);
+    //     break;
+    // case 3:
+    //     system_parameters["has_robot"]=false;
+    //     system_parameters["gripper"]="None";
+    //     m_mongodb_client.write_document("system","parameters",system_parameters,true);
+    //     break;
+    // default:
+    //     spdlog::error("Robot configuration " + std::to_string(m_configuration.robot_configuration) + " does not exist.");
+    //     return false;
+    // }
 
     return true;
 }
@@ -72,11 +74,11 @@ bool LTMemory::initialize(unsigned robot_configuration){
 bool LTMemory::make_database_consistent(){
     spdlog::trace("LTMemory::make_database_consistent");
     nlohmann::json default_values;
-    default_values=SystemParameters().to_json();
-    default_values["name"]="system";
-    if(!m_mongodb_client.make_document_consistent("system","parameters",default_values)){
-        return false;
-    }
+    // default_values=SystemParameters().to_json();
+    // default_values["name"]="system";
+    // if(!m_mongodb_client.make_document_consistent("system","parameters",default_values)){
+    //     return false;
+    // }
     default_values=SafetyParameters().to_json();
     default_values["name"]="safety";
     if(!m_mongodb_client.make_document_consistent("safety","parameters",default_values)){
@@ -318,9 +320,9 @@ bool LTMemory::load_default_parameters(nlohmann::json &parameters){
     if(!m_mongodb_client.read_document("safety","parameters",parameters["safety"])){
         return false;
     }
-    if(!m_mongodb_client.read_document("system","parameters",parameters["system"])){
-        return false;
-    }
+    // if(!m_mongodb_client.read_document("system","parameters",parameters["system"])){
+    //     return false;
+    // }
     if(!m_mongodb_client.read_document("user","parameters",parameters["user"])){
         return false;
     }
@@ -390,9 +392,9 @@ bool LTMemory::upload_log_element(const nlohmann::json& log_entry){
 
 bool LTMemory::update_database(){
     spdlog::trace("LTMemory::update_database");
-    if(!m_mongodb_client.write_document("system","parameters",m_st_memory->read_parameters()->system.to_json(),true)){
-        return false;
-    }
+    // if(!m_mongodb_client.write_document("system","parameters",m_st_memory->read_parameters()->system.to_json(),true)){
+    //     return false;
+    // }
     //    if(!m_mongodb_client.write_document("user","parameters",m_st_memory->read_parameters()->user.to_json(),true)){
     //        return false;
     //    }

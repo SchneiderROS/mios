@@ -418,7 +418,7 @@ std::string Task::get_uuid() const{
 bool Task::check_context(const nlohmann::json &default_context, const nlohmann::json &user_context) const{
 
     std::unordered_set<std::string> top_level={"name","parameters","skills","_id","subtasks"};
-    std::unordered_set<std::string> skill_level={"skill","control","limits","system","safety","frames","user","type"};
+    std::unordered_set<std::string> skill_level={"skill","control","limits","safety","frames","user","type"};  //,"system"
 
     try{
         for(const auto& el : default_context.items()){

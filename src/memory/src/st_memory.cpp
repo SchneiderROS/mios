@@ -144,10 +144,10 @@ bool STMemory::apply_skill_context(const nlohmann::json task_context, const std:
         spdlog::error("Could not apply safety parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_parameters.system.from_json(task_context["skills"][skill_id]["system"])){
-        spdlog::error("Could not apply system parameters from context for skill " + skill_id);
-        return false;
-    }
+    // if(!m_parameters.system.from_json(task_context["skills"][skill_id]["system"])){
+    //     spdlog::error("Could not apply system parameters from context for skill " + skill_id);
+    //     return false;
+    // }
     if(!m_parameters.user.from_json(task_context["skills"][skill_id]["user"])){
         spdlog::error("Could not apply user parameters from context for skill " + skill_id);
         return false;
@@ -199,10 +199,10 @@ bool STMemory::reserve_parameters(const nlohmann::json task_context, const std::
         spdlog::error("Could not apply safety parameters from context for skill " + skill_id);
         return false;
     }
-    if(!m_reserved_parameters[skill_id].system.from_json(task_context["skills"][skill_id]["system"])){
-        spdlog::error("Could not apply system parameters from context for skill " + skill_id);
-        return false;
-    }
+    // if(!m_reserved_parameters[skill_id].system.from_json(task_context["skills"][skill_id]["system"])){
+    //     spdlog::error("Could not apply system parameters from context for skill " + skill_id);
+    //     return false;
+    // }
     if(!m_reserved_parameters[skill_id].user.from_json(task_context["skills"][skill_id]["user"])){
         spdlog::error("Could not apply user parameters from context for skill " + skill_id);
         return false;
@@ -235,9 +235,9 @@ bool STMemory::set_default_parameters(){
     if(!m_parameters.limits.from_json(default_parameters["limits"])){
         return false;
     }
-    if(!m_parameters.system.from_json(default_parameters["system"])){
-        return false;
-    }
+    // if(!m_parameters.system.from_json(default_parameters["system"])){
+    //     return false;
+    // }
     if(!m_parameters.safety.from_json(default_parameters["safety"])){
         return false;
     }

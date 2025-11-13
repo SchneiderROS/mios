@@ -20,6 +20,7 @@ target_link_libraries(mios
     ${PROJECT_NAME}::${PROJECT_NAME}_project_deps
     PUBLIC
     ${PROJECT_NAME}::core
+    ${PROJECT_NAME}::utils
     pybind11::pybind11
     cxxopts::cxxopts
     stdc++fs
