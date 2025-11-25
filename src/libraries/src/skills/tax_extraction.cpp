@@ -136,6 +136,12 @@ std::shared_ptr<ManipulationPrimitive> TaxExtraction::create_wiggle_mp(const Per
     mp->get_strategy<FFWiggleStrategy>("wiggle_x")->set_coefficients(Eigen::Matrix<double,6,1>::Zero(),skill_params->p0.search_a,
                                                                    Eigen::Matrix<double,6,1>::Zero(),skill_params->p0.search_f,
                                                                    Eigen::Matrix<double,6,1>::Zero(),Eigen::Matrix<double,6,1>::Zero());
+    // orientate to container pose to loosen up wedged objects
+    mp->create_strategy<MoveToPoseStrategy>("orientation",1);
+    std::shared_ptr<MoveToPoseStrategy> orientation = mp->get_strategy<MoveToPoseStrategy>("orientation");
+    Eigen::Matrix<double,4,4> T_g=get_object_pose_T("ExtractTo");
+    T_g.block<3,1>(0,3)=p.proprioception.T_T_EE.block<3,1>(0,3);
+    orientation->set_goal(T_g,skill_params->p1.dX_d,skill_params->p1.ddX_d);
 
     // ((((((((((((((((((((((((((((()))))))))))))))))))))))))))))
     // mp->create_strategy<MoveToPoseStrategy>("move",1);
