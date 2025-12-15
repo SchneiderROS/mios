@@ -120,12 +120,12 @@ public:
     bool from_json(const nlohmann::json& parameters);
     nlohmann::json to_json() const;
 
-    std::string robot_ip;
+    // std::string robot_ip;
     //std::string desk_user;
     //std::string desk_pwd;
 
-    bool has_robot;
-    PandaHand gripper;
+    // bool has_robot;
+    // PandaHand gripper;
 
     std::string spoc_token;
     //bool spoc_in_control;

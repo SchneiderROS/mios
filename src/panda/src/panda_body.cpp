@@ -16,29 +16,56 @@
 
 namespace mios {
 
-PandaBody::PandaBody(Memory *memory):m_panda_arm(nullptr),m_panda_model(nullptr),m_panda_hand(nullptr),m_has_arm(false),m_hand(PandaHandNone),m_arm_connected(false),m_hand_connected(false),
-m_memory(memory){
-    spdlog::trace("PandaBody::PandaBody");
-    m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+PandaBody::PandaBody(Memory *memory,const MiosContext &context):
+    m_panda_arm(nullptr),
+    m_panda_model(nullptr),
+    m_panda_hand(nullptr),
+    m_has_arm(false),
+    m_hand(PandaHandNone),
+    m_arm_connected(false),
+    m_hand_connected(false),
+    m_context(context),
+    m_memory(memory){
+        spdlog::trace("PandaBody::PandaBody");
+        m_robot_state.O_T_EE={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 }
 
 bool PandaBody::initialize(){
     spdlog::trace("PandaBody::initialize()");
-    m_has_arm=m_memory->read_parameters()->system.has_robot;
-    //m_hand=m_memory->read_parameters()->system.gripper; // get hand automatically form desk
-    
+
+    switch(m_context.config.robot_configuration){
+        case 0:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandDefault;    // will be overwritten by ensure_robot_ready (deskapi)  
+            break;
+        case 1:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandNone;      // will be overwritten by ensure_robot_ready (deskapi)  
+            break;
+        case 2:     
+            m_has_arm=true;
+            m_hand=PandaHand::PandaHandSofthand2;      
+            break;
+        case 3:    
+            m_has_arm=false;
+            m_hand=PandaHand::PandaHandNone;     
+            break;
+        default:
+            spdlog::error("Robot configuration " + std::to_string(m_context.config.robot_configuration) + " does not exist.");
+            return false;
+    }
     std::optional<std::string> ip;
     if(m_has_arm){
     //request control and activate FCI
         spdlog::debug("PandaBody::initialize()");
-        ip = PandaBody::ping_robot(m_memory->get_parameters()->system.robot_ip);     
+        ip = PandaBody::ping_robot(m_context.config.robot_ip);     
     }
 
-    m_memory->get_parameters()->system.robot_ip = ip.value_or("127.0.0.1");
-    if(!connect_to_robot(m_memory->read_parameters()->system.robot_ip)){
+    // m_context.config.robot_ip = ip.value_or("127.0.0.1");
+    if(!connect_to_robot(m_context.config.robot_ip)){
         return false;
     }
-    if(!connect_to_gripper(m_memory->read_parameters()->system.robot_ip)){
+    if(!connect_to_gripper(m_context.config.robot_ip)){
         return false;
     }
     load_gripper_configuration();
@@ -61,12 +88,18 @@ bool PandaBody::initialize(){
 std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string> &last_ip){
     spdlog::trace("PandaBody::ping_robot("+last_ip.value()+")");
     std::optional<std::string> new_ip={};
+    unsigned count=0;
     spdlog::debug("PandaBody: ping_robot("+last_ip.value_or("127.0.0.1")+")");
     //check given IP:
     while(!new_ip.has_value()){
         if(last_ip.has_value()){
-            if(mirmi_utils::ping(last_ip.value().c_str())==false){
-                spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
+            if(m_context.shutdown_signal){
+                break;
+            }
+            if(mirmi_utils::ping(last_ip.value().c_str())==false ){
+                if(count%10000==0){
+                    spdlog::warn("IP was set to "+last_ip.value()+" but no device has been found. Searching for new connection...");
+                }  
             }else{
                 if(is_robot(last_ip.value_or("127.0.0.1"))){ // 
                     new_ip=last_ip;
@@ -74,30 +107,31 @@ std::optional<std::string> PandaBody::ping_robot(const std::optional<std::string
                 }
             }
         }
+        count++;
     }
-    // search for robot IP:
-    if(!new_ip.has_value()){
-        std::map<std::string,std::string> ifaces = mirmi_utils::get_subnets();
-        std::string address;
-        for(const auto& i : ifaces){
-            if(i.first=="lo" || i.first=="docker0" || i.first=="tap0" || i.first=="flannel.1" || i.first.substr(0,3)=="enx" || i.first.substr(0,3)=="wlp" || i.first.substr(0,2)=="br" || i.first.substr(0,4)=="enp4"){
-                continue;
-            }
-            for(unsigned j=2;j<255;j++){
-                address=i.second +std::to_string(j);
-                if(!mirmi_utils::ping(address.c_str())){
-                    spdlog::debug("Cannot find device at "+address+" on interface "+i.first+".");
-                    continue;
-                }else{
-                    spdlog::info("Found device at ip "+address+" at interface "+i.first+".");
-                    if(is_robot(address)){  // 
-                        new_ip = address;
-                        return new_ip;
-                    }
-                }
-            }
-        }
-    }
+    // // search for robot IP:
+    // if(!new_ip.has_value()){
+    //     std::map<std::string,std::string> ifaces = mirmi_utils::get_subnets();
+    //     std::string address;
+    //     for(const auto& i : ifaces){
+    //         if(i.first=="lo" || i.first=="docker0" || i.first=="tap0" || i.first=="flannel.1" || i.first.substr(0,3)=="enx" || i.first.substr(0,3)=="wlp" || i.first.substr(0,2)=="br" || i.first.substr(0,4)=="enp4"){
+    //             continue;
+    //         }
+    //         for(unsigned j=2;j<255;j++){
+    //             address=i.second +std::to_string(j);
+    //             if(!mirmi_utils::ping(address.c_str())){
+    //                 spdlog::debug("Cannot find device at "+address+" on interface "+i.first+".");
+    //                 continue;
+    //             }else{
+    //                 spdlog::info("Found device at ip "+address+" at interface "+i.first+".");
+    //                 if(is_robot(address)){  // 
+    //                     new_ip = address;
+    //                     return new_ip;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     spdlog::warn("PandaBody::ping_robot: Cannot find Robot");
     return new_ip;
 
@@ -231,7 +265,7 @@ bool PandaBody::pre_run_checks() const{
 bool PandaBody::is_robot(const std::string &ip){
     spdlog::debug("PandaBody::is_robot("+ip+")" );
     bool result = false;
-    while(!result){
+    while(!result && m_context.config.use_desk && !m_context.shutdown_signal){
         result = ensure_robot_ready();
     }
     m_memory->set_default_parameters();
@@ -877,6 +911,10 @@ void PandaBody::get_default_gripper_state(franka::GripperState &state) const{
 
 bool PandaBody::activate_fci(){
     spdlog::trace("PandaBody::activate_fci()");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -900,6 +938,10 @@ bool PandaBody::activate_fci(){
 
 bool PandaBody::deactivate_fci(){
     spdlog::trace("PandaBody::deactivate_fci()");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -924,6 +966,10 @@ bool PandaBody::deactivate_fci(){
 
 bool PandaBody::shutdown_robot(){
     spdlog::trace("PandaBody::shutdown_robot");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -956,9 +1002,10 @@ bool PandaBody::shutdown_robot(){
 
 bool PandaBody::reboot_robot(){
     spdlog::trace("PandaBody::reboot_robot");
-    bool reconnect_arm = m_has_arm;
-    bool reconnect_hand = m_arm_connected;
-
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     //deactivate_fci();
     bool result;
     try{
@@ -993,6 +1040,10 @@ bool PandaBody::reboot_robot(){
 
 bool PandaBody::unlock_brakes(){  // make sure it is waiting until all brakes are unlocked
     spdlog::trace("PandaBody::unlock_brakes");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -1016,6 +1067,10 @@ bool PandaBody::unlock_brakes(){  // make sure it is waiting until all brakes ar
 
 bool PandaBody::lock_brakes(){  // make sure it is waiting until all brakes are locked
     spdlog::trace("PandaBody::lock_brakes");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -1039,6 +1094,10 @@ bool PandaBody::lock_brakes(){  // make sure it is waiting until all brakes are 
 
 bool PandaBody::ensure_robot_ready(){  // put this in interface
     spdlog::trace("PandaBody::ensure_robot_ready");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("keep_alive");
@@ -1072,6 +1131,10 @@ bool PandaBody::ensure_robot_ready(){  // put this in interface
 
 bool PandaBody::programming(){  // put this in interface
     spdlog::trace("PandaBody::programming");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -1095,6 +1158,10 @@ bool PandaBody::programming(){  // put this in interface
 
 bool PandaBody::execution(){  // put this in interface
     spdlog::trace("PandaBody::execution");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -1118,6 +1185,10 @@ bool PandaBody::execution(){  // put this in interface
 
 bool PandaBody::release_control(){
     spdlog::trace("PandaBody::release_control");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");
@@ -1140,6 +1211,10 @@ bool PandaBody::release_control(){
 }
 bool PandaBody::take_control(){
     spdlog::trace("PandaBody::take_control");
+    if(!m_context.config.use_desk){
+        spdlog::error("DESK features are not activated.");
+        return false;
+    }
     bool result;
     try{
         pybind11::module deskapi = pybind11::module::import("deskapi");

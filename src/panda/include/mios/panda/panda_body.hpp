@@ -10,6 +10,7 @@
 
 #include "mios/data_structures/parameters.hpp"
 #include "mios/utils/types.hpp"
+#include "mios/utils/context.hpp"
 
 #include <string>
 #include <optional>
@@ -27,7 +28,7 @@ class Memory;
 
 class PandaBody{
 public:
-    PandaBody(Memory* memory);
+    PandaBody(Memory* memory, const MiosContext &conftext);
     bool initialize();
     bool connect_to_robot(const std::optional<std::string> &ip);
     bool connect_to_gripper(const std::optional<std::string> &ip);
@@ -116,6 +117,7 @@ private:
 
 private:
     Memory* m_memory;
+    MiosContext m_context;
 };
 
 }

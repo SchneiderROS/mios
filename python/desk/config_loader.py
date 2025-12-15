@@ -14,7 +14,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent.resolve()
 CONFIG_FILE = SCRIPT_DIR/'config.json'
 
-ROBOT_IP = os.getenv("ROBOT_IP")
+ROBOT_IP = os.getenv("robot_ip")
 if ROBOT_IP is None:
   ROBOT_IP = "127.0.0.1"
 ROBOT_USER = os.getenv("ROBOT_USER")
@@ -23,7 +23,7 @@ if ROBOT_USER is None:
 ROBOT_PASSWORD = os.getenv("ROBOT_PASSWORD")
 if ROBOT_PASSWORD is None:
   ROBOT_PASSWORD = "<user-password>"
-MONGONAME = os.getenv("MONGONAME")
+MONGONAME = os.getenv("database_name")
 if MONGONAME is None:
   MONGONAME = "mios"
 
@@ -32,7 +32,7 @@ DEFAULT_CONFIG = {
     "robot_ip": "https://"+ROBOT_IP,
     "username": ROBOT_USER,
     "password": ROBOT_PASSWORD,
-    "mongo_name": MONGONAME,
+    "database_name": MONGONAME,
     "enable_proxy": False,
     "socks5_proxy": "socks5h://127.0.0.1:1080"
   },

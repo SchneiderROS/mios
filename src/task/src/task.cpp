@@ -391,6 +391,9 @@ TaskResult Task::get_subtask_result(const std::string &subtask_name) const{
 
 void Task::sleep_1ms() const{
     while(!m_flag_stop){
+        if(m_core->m_context.shutdown_signal){
+            break;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
@@ -418,7 +421,7 @@ std::string Task::get_uuid() const{
 bool Task::check_context(const nlohmann::json &default_context, const nlohmann::json &user_context) const{
 
     std::unordered_set<std::string> top_level={"name","parameters","skills","_id","subtasks"};
-    std::unordered_set<std::string> skill_level={"skill","control","limits","system","safety","frames","user","type"};
+    std::unordered_set<std::string> skill_level={"skill","control","limits","safety","frames","user","type"};  //,"system"
 
     try{
         for(const auto& el : default_context.items()){
